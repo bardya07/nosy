@@ -11,6 +11,8 @@ An on-device lecture recorder and transcriber for Mac.
 - Search, edit, export, and play back recordings in the transcripts window.
 - Add custom vocabulary for each course.
 - Automatically boost quiet audio for transcription.
+- Transcription, volume boost, and audio compression run at background utility priority.
+- Transcription waits or pauses when the Mac is hot or on battery below 20%, then resumes automatically. Recording continues independently.
 - Sleep prevention, recording-stall detection, and crash recovery protect long sessions. Keep the lid open while recording.
 - Import M4A/WAV audio; optionally compress retained recordings to M4A.
 - Native light and dark themes.
@@ -21,7 +23,7 @@ Recording and transcription are 100% on-device. Nothing you record, transcribe, 
 
 ## Requirements and setup
 
-- macOS 26.0 or later.
+- macOS 14.0 or later.
 - Apple Silicon recommended; the current build script produces an arm64 app.
 - [Homebrew](https://brew.sh/) and whisper.cpp:
 
@@ -31,7 +33,7 @@ brew install whisper-cpp
 
 Open Nosy and download the Whisper large-v3-turbo model (about 1.6 GB) in the setup window. Allow microphone access to record. Choose a lecture and session, then start recording or drop an audio file onto the window.
 
-Use **Vocabulary** to add course terms, or put a `vocab.txt` in the course's transcript folder. Choose the transcript location and audio retention in Settings.
+Use **Vocabulary** to add course terms, or put a `vocab.txt` in the course's transcript folder. Put the most useful terms first: Nosy fits complete terms into a 160-token prompt, reused across decoder windows without carrying decoded text. whisper.cpp omits this prompt during high-temperature fallback and the final short tail; see the [lecture validation](tests/vocabulary.md). Choose the transcript location and audio retention in Settings.
 
 ## Build from source
 
@@ -62,7 +64,7 @@ See [SPEC.md](SPEC.md) for the historical development specification.
 
 ## Roadmap
 
-Moonshine engine with STEM vocabulary packs — in progress.
+Bigger STEM vocabulary support (packs in Resources/Vocabulary).
 
 The [vocabulary packs](Resources/Vocabulary/SOURCES.md) are development data and are not yet used by the app.
 

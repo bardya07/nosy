@@ -41,6 +41,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var inputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
     @Published private(set) var activeInputName: String?
     @Published var transcriptionProgress = 0.0
+    @Published private(set) var transcriptionPauseReason: String?
     @Published var silenceWarning = false
     @Published var stalled = false
     @Published var sleepNotice: String?
@@ -63,6 +64,8 @@ final class AppModel: ObservableObject {
     private var worker: Task<Void, Never>?
     private var activity: NSObjectProtocol?
     private var timer: Timer?
+    private var powerTimer: Timer?
+    private var activityOptions: ProcessInfo.ActivityOptions = []
     private var transcriptionStarted: Date?
     private var sleptAt: Date?
     // Recorded length at the last "still recording" reminder; 0 means none sent yet.
@@ -137,6 +140,12 @@ final class AppModel: ObservableObject {
     }
 
     private func observeSystem() {
+        observers.append(NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.updateStress() }
+        })
+        powerTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.updateStress() }
+        }
         let workspace = NSWorkspace.shared.notificationCenter
         observers.append(workspace.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { if self?.recording == true { self?.sleptAt = Date() } }
@@ -155,6 +164,7 @@ final class AppModel: ObservableObject {
     }
     // Closing the lid sleeps the Mac no matter what an app asks; say so instead of leaving a silent gap.
     private func woke() {
+        updateStress()
         guard let sleptAt else { return }
         self.sleptAt = nil
         guard recording else { return }
@@ -186,9 +196,15 @@ final class AppModel: ObservableObject {
     }
     // Keeps the Mac from idling to sleep while anything is recording or transcribing.
     private func updateActivity() {
-        let needed = recording || transitioning || job != nil || !queue.isEmpty
+        let needed = recording || transitioning || (transcriptionPauseReason == nil && (job != nil || !queue.isEmpty))
+        let options: ProcessInfo.ActivityOptions = recording || transitioning ? [.idleSystemSleepDisabled, .userInitiated] : [.idleSystemSleepDisabled]
+        if let activity, options != activityOptions {
+            ProcessInfo.processInfo.endActivity(activity)
+            self.activity = nil
+        }
         if needed, activity == nil {
-            activity = ProcessInfo.processInfo.beginActivity(options: [.idleSystemSleepDisabled, .userInitiated], reason: "Recording and transcribing a lecture")
+            activityOptions = options
+            activity = ProcessInfo.processInfo.beginActivity(options: options, reason: "Recording and transcribing a lecture")
         } else if !needed, let activity {
             ProcessInfo.processInfo.endActivity(activity)
             self.activity = nil
@@ -410,8 +426,29 @@ final class AppModel: ObservableObject {
         updateActivity()
         pump()
     }
+    private func refreshStress() {
+        let power = Core.powerState()
+        transcriptionPauseReason = Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent)
+        if transcriptionPauseReason != nil {
+            job?.suspend()
+            if let transcriptionStarted {
+                transcriptionElapsed = Date().timeIntervalSince(transcriptionStarted)
+                self.transcriptionStarted = nil
+            }
+        } else {
+            job?.resume()
+            if active != nil, transcriptionStarted == nil { transcriptionStarted = Date().addingTimeInterval(-transcriptionElapsed) }
+        }
+        updateActivity()
+    }
+    private func updateStress() {
+        refreshStress()
+        if transcriptionPauseReason == nil { pump() }
+    }
     private func pump() {
         guard job == nil, !quitting, !queue.isEmpty else { updateActivity(); return }
+        refreshStress()
+        guard transcriptionPauseReason == nil else { return }
         let record = queue.removeFirst()
         let job = TranscriptionJob()
         self.job = job
@@ -440,6 +477,7 @@ final class AppModel: ObservableObject {
         }
     }
     private func finished(_ record: SessionRecord, result: SessionRecord?, error: Error?) {
+        transcriptionStarted = nil
         job = nil
         active = nil
         let foreground = phase == .transcribing && current?.id == record.id

@@ -426,7 +426,7 @@ private struct StatusPill: View {
         switch model.phase {
         case .idle: "Ready"
         case .recording: model.paused ? "Paused" : "Recording"
-        case .transcribing: model.waiting ? "Queued" : "Transcribing"
+        case .transcribing: model.transcriptionPauseReason != nil ? "Paused" : (model.waiting ? "Queued" : "Transcribing")
         case .done: "Saved"
         case .failed: "Attention"
         }
@@ -513,7 +513,7 @@ struct StagePanel: View {
                 // An earlier lecture is still being written up in the background.
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.mini)
-                    Text("Also transcribing \(active.lecture) · \(Int((model.transcriptionProgress * 100).rounded()))%")
+                    Text(model.transcriptionPauseReason.map { "Paused — \($0)" } ?? "Also transcribing \(active.lecture) · \(Int((model.transcriptionProgress * 100).rounded()))%")
                         .font(Theme.text(11, .medium)).foregroundStyle(Theme.faint).lineLimit(1)
                 }
             }
@@ -549,6 +549,7 @@ struct StagePanel: View {
         .accessibilityElement(children: .combine)
     }
     private var remainingText: String {
+        if let reason = model.transcriptionPauseReason { return "Paused — \(reason)" }
         if model.waiting, let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
         guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(model.transcriptionElapsed)) elapsed" }
         let minutes = Int((remaining / 60).rounded(.up))

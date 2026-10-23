@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import IOKit.ps
 
 enum LectureError: LocalizedError, Sendable {
     case message(String)
@@ -122,6 +123,26 @@ struct SessionRecord: Codable, Sendable, Equatable {
 enum Core {
     static let bytesPerSecond: Int64 = 32_000
     static let whisperInstallCommand = "brew install whisper-cpp"
+
+    static func stressReason(thermal: ProcessInfo.ThermalState, onBattery: Bool, percent: Double?) -> String? {
+        if thermal == .serious || thermal == .critical { return "Mac is hot" }
+        if onBattery, let percent, percent >= 0, percent < 20 { return "battery low" }
+        return nil
+    }
+
+    static func powerState() -> (onBattery: Bool, percent: Double?) {
+        guard let info = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let sources = IOPSCopyPowerSourcesList(info)?.takeRetainedValue() as? [CFTypeRef] else { return (false, nil) }
+        for source in sources {
+            guard let description = IOPSGetPowerSourceDescription(info, source)?.takeUnretainedValue() as? [String: Any],
+                  description[kIOPSTypeKey] as? String == kIOPSInternalBatteryType else { continue }
+            let onBattery = description[kIOPSPowerSourceStateKey] as? String == kIOPSBatteryPowerValue
+            guard let current = description[kIOPSCurrentCapacityKey] as? Double,
+                  let maximum = description[kIOPSMaxCapacityKey] as? Double, maximum > 0 else { return (onBattery, nil) }
+            return (onBattery, current / maximum * 100)
+        }
+        return (false, nil)
+    }
 
     static func setupMessage(paths: AppPaths) -> String? {
         var messages: [String] = []

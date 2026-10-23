@@ -238,6 +238,15 @@ enum CoreTests {
         check(!FileManager.default.fileExists(atPath: paths.audioFile(record.id, "json").path), "retention deletes sidecar")
         check(FileManager.default.fileExists(atPath: paths.audioFile(failed.id, "wav").path), "retention keeps failed audio")
         check(FileManager.default.fileExists(atPath: first.path), "retention keeps transcripts")
+        check(Core.stressReason(thermal: .nominal, onBattery: false, percent: nil) == nil, "desktop has no battery stress")
+        check(Core.stressReason(thermal: .fair, onBattery: true, percent: 20) == nil, "fair temperature and exactly 20 percent can transcribe")
+        check(Core.stressReason(thermal: .nominal, onBattery: true, percent: 19.9) == "battery low", "battery below 20 pauses transcription")
+        check(Core.stressReason(thermal: .nominal, onBattery: true, percent: 0) == "battery low", "empty battery pauses transcription")
+        check(Core.stressReason(thermal: .nominal, onBattery: false, percent: 1) == nil, "plugged-in low battery can transcribe")
+        check(Core.stressReason(thermal: .nominal, onBattery: true, percent: nil) == nil, "unknown battery capacity does not block queue")
+        check(Core.stressReason(thermal: .nominal, onBattery: true, percent: -1) == nil, "invalid battery capacity does not block queue")
+        check(Core.stressReason(thermal: .serious, onBattery: false, percent: 100) == "Mac is hot", "serious thermal state pauses on AC")
+        check(Core.stressReason(thermal: .critical, onBattery: true, percent: 1) == "Mac is hot", "thermal stress takes precedence")
         print("UNIT PASS: \(assertions) assertions (including afinfo WAV validation)")
     }
 }
