@@ -1,0 +1,52 @@
+build/
+.build/
+.swiftpm/
+*.app
+*.dSYM/
+*.o
+*.dylib
+*.dmg
+*.pkg
+*.zip
+
+# macOS, Xcode, and local editor state
+.DS_Store
+._*
+xcuserdata/
+*.xcuserstate
+.idea/
+.vscode/
+
+# Local credentials and signing material
+.env
+.env.*
+*.p12
+*.p8
+*.pem
+*.keychain*
+*.mobileprovision
+
+# Models, recordings, transcripts, and test/build output
+models/
+audio/
+support/
+Lecture Transcripts/
+*.bin
+*.gguf
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.wav
+*.m4a
+*.pcm
+*.aif
+*.aiff
+*.mp3
+*.caf
+*.log
+test-output*/
+test-results/
+nosy-test*/
+build-codex-result.md
+review-codex.md
