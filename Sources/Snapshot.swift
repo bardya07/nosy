@@ -78,6 +78,19 @@ enum Snapshot {
             try manager.createDirectory(at: support, withIntermediateDirectories: true)
             try Data(text.utf8).write(to: transcript)
             try Data(vocabulary.utf8).write(to: course.appendingPathComponent("vocab.txt"))
+            let paths = AppPaths()
+            try paths.prepareSupport()
+            let previewRecord = SessionRecord(id: "preview-audio", lecture: "MBB322", session: "2026-10-23",
+                startedAt: date, endedAt: date.addingTimeInterval(79 * 60), status: .done,
+                transcriptPath: transcript.path, markers: [SessionMarker(t: 760, label: "Exam hint")],
+                vocabularyTerms: Vocabulary.entries(vocabulary))
+            try previewRecord.save(in: paths)
+            let audio = paths.audioFile(previewRecord.id, "wav")
+            try Core.wavHeader(pcmBytes: 32_000).write(to: audio)
+            let audioFile = try FileHandle(forWritingTo: audio)
+            try audioFile.seekToEnd()
+            try audioFile.write(contentsOf: Data(repeating: 0, count: 32_000))
+            try audioFile.close()
             let other = transcripts.appendingPathComponent("CHEM281")
             try manager.createDirectory(at: other, withIntermediateDirectories: true)
             let earlier = other.appendingPathComponent("2026-10-21.md")
@@ -170,6 +183,20 @@ enum Snapshot {
             try? Data(text.utf8).write(to: longURL)
             let longSaved = model(.done)
             longSaved.current?.transcriptPath = longURL.path
+            let recent = model(.idle)
+            let recentHome = model(.transcribing)
+            let recentListView = PreviewWindow { MainView(model: recent, previewRecent: true) }
+            let recentTranscriptView = PreviewWindow {
+                MainView(model: model(.idle), previewRecent: true, previewRecentSelection: transcript)
+            }
+            let recentAudioView = PreviewWindow {
+                MainView(model: model(.idle), previewRecent: true, previewRecentSelection: transcript, previewRecentAudio: true)
+            }
+            let homeView = PreviewWindow { MainView(model: recentHome, previewTranscribingHome: true) }
+            guard save(recentListView.padding(36).background(PreviewBackdrop()), "recent.\(mode)"),
+                  save(recentTranscriptView.padding(36).background(PreviewBackdrop()), "recent-transcript.\(mode)"),
+                  save(recentAudioView.padding(36).background(PreviewBackdrop()), "recent-audio.\(mode)"),
+                  save(homeView.padding(36).background(PreviewBackdrop()), "transcribing-home.\(mode)") else { return 1 }
             let recovery = model(.idle)
             recovery.transitioning = true
             recovery.recovery = [earlier]
