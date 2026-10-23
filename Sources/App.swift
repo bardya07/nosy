@@ -505,7 +505,7 @@ private struct LecturePicker: View {
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .combine)
         .onHover { inside in
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
