@@ -28,7 +28,7 @@ struct SettingsView: View {
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     }
                     Toggle("Smarter vocabulary (beta)", isOn: $smarterVocabulary)
-                    note("Uses your course subject to check uncertain spellings. Takes extra time and can make mistakes.")
+                    note("Checks uncertain spellings against your course vocabulary. Can make mistakes.")
                     note("Each lecture gets its own folder. Add a vocab.txt to a lecture's folder to teach Nosy its terms.")
                 }
             }

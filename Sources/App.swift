@@ -347,6 +347,11 @@ private struct VocabularyButton: View {
                 if subjects.resolved(course: lecture).contains("arts-social-sciences") {
                     Text("Built-in vocabulary coming later; your terms still work.").font(Theme.text(11)).foregroundStyle(Theme.muted)
                 }
+                Text("Subject terms are used by Smarter vocabulary (beta) in Settings.")
+                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
+                if !Set(subjects.resolved(course: lecture)).isDisjoint(with: ["engineering", "health-medicine", "psychology"]) {
+                    Text("Includes related STEM vocabulary; add specialist course terms below.").font(Theme.text(11)).foregroundStyle(Theme.muted)
+                }
                 Text("Names, acronyms and terms, separated by commas or new lines. Put your most useful terms first.")
                     .font(Theme.text(11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
                 TextEditor(text: $text)

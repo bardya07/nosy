@@ -62,6 +62,7 @@ struct VocabularyIndex: Sendable {
     private let phones: [String]
     private let postings: [String: [Int]]
     private let phoneticPostings: [String: [Int]]
+    private let queryCache = VocabularyQueryCache()
 
     init(terms: [String]) {
         self.terms = Array(Set(terms)).sorted()
@@ -88,6 +89,13 @@ struct VocabularyIndex: Sendable {
                 guard key.count >= 5, key.count <= 60 else { continue }
                 // Exact canonical words cannot trigger retries, including their plural forms.
                 if exact.contains(key) || (key.hasSuffix("s") && exact.contains(String(key.dropLast()))) { continue }
+                guard phoneticPostings[phone] != nil else { continue }
+                if let cached = queryCache.get(key) {
+                    if let hit = cached.first {
+                        found.append(.init(term: hit.term, source: source, location: range.location, length: range.length, spelling: hit.spelling, phonetic: hit.phonetic, margin: hit.margin))
+                    }
+                    continue
+                }
                 var votes: [Int: Int] = [:]
                 for gram in VocabularySimilarity.grams(key) { for id in postings[gram] ?? [] { votes[id, default: 0] += 1 } }
                 for id in phoneticPostings[phone] ?? [] { votes[id, default: 0] += 20 }
@@ -106,9 +114,11 @@ struct VocabularyIndex: Sendable {
                     ranked.append((id, spelling, phonetic, max(spelling, phonetic * 0.95)))
                 }
                 ranked.sort { $0.3 == $1.3 ? terms[$0.0] < terms[$1.0] : $0.3 > $1.3 }
-                guard let best = ranked.first else { continue }
-                found.append(.init(term: terms[best.0], source: source, location: range.location, length: range.length,
-                                   spelling: best.1, phonetic: best.2, margin: best.3 - (ranked.dropFirst().first?.3 ?? 0)))
+                guard let best = ranked.first else { queryCache.put(key, []); continue }
+                let hit = VocabularyCandidate(term: terms[best.0], source: source, location: range.location, length: range.length,
+                                              spelling: best.1, phonetic: best.2, margin: best.3 - (ranked.dropFirst().first?.3 ?? 0))
+                queryCache.put(key, [hit])
+                found.append(hit)
             }
         }
         return Array(found.sorted {
@@ -142,78 +152,23 @@ enum VocabularyAcceptance {
         }
         return false
     }
-    static func safe(_ candidate: VocabularyCandidate, confidence: Double?, requireConfidence: Bool = true) -> Bool {
-        guard (!requireConfidence || (confidence ?? 1) < 0.65), !VocabularySimilarity.risky(candidate.term),
-              !VocabularySimilarity.risky(candidate.source), candidate.margin >= 0.1 else { return false }
-        return candidate.spelling >= 0.90 || (candidate.phonetic >= 0.85 && candidate.spelling >= 0.65)
+    static func safe(_ candidate: VocabularyCandidate, confidence: Double?) -> Bool {
+        guard let confidence, confidence < 0.65,
+              !VocabularySimilarity.risky(candidate.term), !VocabularySimilarity.risky(candidate.source),
+              words(candidate.source).count == words(candidate.term).count else { return false }
+        return candidate.phonetic == 1 && candidate.spelling >= 0.85 && candidate.margin >= 0.15
     }
-    static func edits(original: String, retry: String?, candidates: [VocabularyCandidate],
-                      confidence: (NSRange) -> Double?, substitute: Bool = false, requireConfidence: Bool = true) -> [VocabularyEdit] {
-        guard let retry else {
-            guard substitute else { return [] }
-            var edits: [VocabularyEdit] = []
-            for c in candidates where safe(c, confidence: confidence(c.range)) && c.phonetic >= 0.94 && c.spelling >= 0.85 && c.margin >= 0.15 && (confidence(c.range) ?? 1) < 0.65 {
-                guard !edits.contains(where: { NSIntersectionRange(NSRange(location: $0.location, length: $0.length), c.range).length > 0 }) else { continue }
-                edits.append(.init(source: c.source, replacement: c.term, location: c.location, length: c.length, method: "substitution"))
-            }
-            return edits
+    static func edits(original: String, candidates: [VocabularyCandidate], confidence: (NSRange) -> Double?) -> [VocabularyEdit] {
+        guard !loops(original) else { return [] }
+        var edits: [VocabularyEdit] = []
+        let ns = original as NSString
+        for c in candidates where safe(c, confidence: confidence(c.range)) {
+            guard c.location >= 0, c.length > 0, NSMaxRange(c.range) <= ns.length,
+                  ns.substring(with: c.range) == c.source,
+                  !edits.contains(where: { NSIntersectionRange(NSRange(location: $0.location, length: $0.length), c.range).length > 0 }) else { continue }
+            edits.append(.init(source: c.source, replacement: c.term, location: c.location, length: c.length, method: "phonetic"))
         }
-        let b = words(retry)
-        guard !loops(retry), b.count <= max(8, Int(Double(words(original).count) * 1.5)),
-              let regex = try? NSRegularExpression(pattern: #"[\p{L}\p{N}]+"#) else { return [] }
-        let matches = regex.matches(in: original, range: NSRange(original.startIndex..., in: original))
-        let a = matches.map { (original as NSString).substring(with: $0.range).lowercased() }
-        guard !a.isEmpty, !b.isEmpty, max(a.count, b.count) < 500 else { return [] }
-        struct Choice { let candidate: VocabularyCandidate; let count: Int; let words: [String]; let replacement: String }
-        var choices: [Int: [Choice]] = [:]
-        for c in candidates where safe(c, confidence: confidence(c.range), requireConfidence: requireConfidence) {
-            guard let first = matches.firstIndex(where: { $0.range.location == c.location }),
-                  let last = matches.firstIndex(where: { NSMaxRange($0.range) == NSMaxRange(c.range) }) else { continue }
-            let term = words(c.term)
-            guard !term.isEmpty else { continue }
-            choices[first, default: []].append(.init(candidate: c, count: last-first+1, words: term, replacement: c.term))
-            // Conservative regular plurals; no invented Greek/Latin inflections.
-            if let tail = term.last, !tail.hasSuffix("s") {
-                var plural = term; plural[plural.count-1] += "s"
-                choices[first, default: []].append(.init(candidate: c, count: last-first+1, words: plural, replacement: c.term + "s"))
-            }
-        }
-        // Align all supported term edits together. Other retry changes are counted,
-        // then discarded; only exact source ranges enter the final transcript.
-        struct Step { let i: Int; let j: Int; let choice: Choice? }
-        let width = b.count+1, size = (a.count+1)*width
-        var costs = [Int](repeating: 1_000_000, count: size)
-        var steps = [Step?](repeating: nil, count: size)
-        costs[0] = 0
-        func at(_ i: Int, _ j: Int) -> Int { i*width+j }
-        for i in 0...a.count {
-            for j in 0...b.count {
-                let cost = costs[at(i,j)]
-                if cost == 1_000_000 { continue }
-                func offer(_ ni: Int, _ nj: Int, _ penalty: Int, _ choice: Choice? = nil) {
-                    let index = at(ni,nj)
-                    if cost+penalty < costs[index] { costs[index] = cost+penalty; steps[index] = Step(i:i,j:j,choice:choice) }
-                }
-                if i<a.count && j<b.count { offer(i+1,j+1,a[i] == b[j] ? 0 : 1) }
-                if i<a.count { offer(i+1,j,1) }
-                if j<b.count { offer(i,j+1,1) }
-                for choice in choices[i] ?? [] {
-                    let end = j+choice.words.count
-                    if end<=b.count, Array(b[j..<end]) == choice.words { offer(i+choice.count,end,0,choice) }
-                }
-            }
-        }
-        guard Double(costs[at(a.count,b.count)]) <= Double(max(a.count,b.count))*0.05 else { return [] }
-        var i=a.count, j=b.count, edits:[VocabularyEdit]=[]
-        while i>0 || j>0 {
-            guard let step=steps[at(i,j)] else { return [] }
-            if let choice=step.choice {
-                let c=choice.candidate
-                edits.append(.init(source:c.source,replacement:choice.replacement,location:c.location,length:c.length,method:"redecode"))
-            }
-            i=step.i; j=step.j
-        }
-        return edits.sorted { $0.location < $1.location }
+        return edits
     }
     static func applying(_ edits: [VocabularyEdit], to text: String) -> String {
         var result = text as NSString
@@ -222,13 +177,15 @@ enum VocabularyAcceptance {
         }
         return result as String
     }
-    static func wordDistance(_ a: [String], _ b: [String]) -> Int {
-        var row = Array(0...b.count)
-        for (i, word) in a.enumerated() {
-            var next = [i + 1]
-            for (j, other) in b.enumerated() { next.append(min(next[j] + 1, row[j + 1] + 1, row[j] + (word == other ? 0 : 1))) }
-            row = next
-        }
-        return row.last!
+}
+
+private final class VocabularyQueryCache: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String: [VocabularyCandidate]] = [:]
+    func get(_ key: String) -> [VocabularyCandidate]? { lock.lock(); defer { lock.unlock() }; return values[key] }
+    func put(_ key: String, _ value: [VocabularyCandidate]) {
+        lock.lock(); defer { lock.unlock() }
+        if values.count >= 20_000 { values.removeAll() }
+        values[key] = value
     }
 }

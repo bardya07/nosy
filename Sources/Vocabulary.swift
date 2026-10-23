@@ -30,8 +30,16 @@ enum Vocabulary {
     static func entries(_ text: String) -> [String] {
         text.split(whereSeparator: { $0 == "," || $0.isNewline }).map { Core.collapseWhitespace(String($0)) }.filter { !$0.isEmpty }
     }
+    static func remember(_ term: String, folder: URL) throws {
+        let url = folder.appendingPathComponent("vocab.txt")
+        let existing = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        guard !entries(existing).contains(term) else { return }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data((term + "\n" + existing).utf8).write(to: url, options: .atomic)
+    }
     static func prompt(_ text: String, model: URL) -> (text: String, tokens: Int)? {
-        guard let vocabulary = modelVocabulary(model) else { return nil }
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let vocabulary = modelVocabulary(model) else { return nil }
         return prompt(entries(text), vocabulary: vocabulary)
     }
     static func prompt(_ text: String, vocabulary: Set<Data>) -> (text: String, tokens: Int)? {

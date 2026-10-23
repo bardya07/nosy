@@ -26,4 +26,4 @@ The Nosy app icon and mark are original artwork by Bardya, the app's owner, and 
 
 ## Vocabulary data
 
-The development-only term lists and provenance CSV in `Resources/Vocabulary/` have separate source attribution and unresolved redistribution questions documented in [SOURCES.md](Resources/Vocabulary/SOURCES.md). They are not automatically licensed as a whole under Nosy's MIT license and are not bundled by the current build script. Review the flagged sources before public or commercial redistribution.
+`Resources/Vocabulary` contains plain UTF-8 word lists and the umbrella-to-pack manifest, as selected for distribution by the repository owner. The app bundles these lists without source metadata or provenance CSV files. No external retrieval, phonetic, or contextual-biasing implementation was copied into the app.

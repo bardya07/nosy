@@ -15,6 +15,8 @@ struct FixWordView: NSViewRepresentable {
         view.isSelectable = true
         view.drawsBackground = false
         view.textContainerInset = NSSize(width: 28, height: 22)
+        view.minSize = .zero
+        view.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         view.isVerticallyResizable = true
         view.isHorizontallyResizable = false
         view.autoresizingMask = [.width]
@@ -29,11 +31,21 @@ struct FixWordView: NSViewRepresentable {
         // Retain raw-source offsets; styling keeps the editable source and selection identical.
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 5
-        let text = NSMutableAttributedString(string: markdown, attributes: [.font: NSFont.systemFont(ofSize: 15), .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraph])
+        let text = NSMutableAttributedString(string: markdown, attributes: [.font: NSFont(name: "Hanken Grotesk", size: 15) ?? NSFont.systemFont(ofSize: 15), .foregroundColor: NSColor.labelColor, .paragraphStyle: paragraph])
         let ns = markdown as NSString
         if let regex = try? NSRegularExpression(pattern: #"(?m)^#{1,2} .+$"#) {
             for match in regex.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
                 text.addAttribute(.font, value: NSFont.boldSystemFont(ofSize: ns.substring(with: match.range).hasPrefix("##") ? 13 : 24), range: match.range)
+            }
+        }
+        if let markers = try? NSRegularExpression(pattern: #"(?m)^#{1,2} +"#) {
+            for match in markers.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
+                text.addAttributes([.font: NSFont.systemFont(ofSize: 0.1), .foregroundColor: NSColor.clear], range: match.range)
+            }
+        }
+        if let metadata = try? NSRegularExpression(pattern: #"(?m)^- .+$"#) {
+            for match in metadata.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
+                text.addAttributes([.font: NSFont.systemFont(ofSize: 12), .foregroundColor: NSColor.secondaryLabelColor], range: match.range)
             }
         }
         view.textStorage?.setAttributedString(text)

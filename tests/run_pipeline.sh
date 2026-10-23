@@ -180,3 +180,14 @@ mode = 'AAC compression' if os.environ['NOSY_TEST_AAC'] == '1' else 'WAV preserv
 print('PIPELINE PASS: real Whisper, import 44.1 kHz stereo M4A, resampling, ' + mode + ', Retry from M4A, vocabulary, failure safety, unique markdown')
 PY
 if [[ -f "$NOSY_CPU_MARKER" ]]; then printf 'PIPELINE NOTE: Metal allocation failed in the restricted runner; real Whisper ran on CPU via the test CLI override.\n'; fi
+# Exercise the opt-in refinement path with real timestamp/confidence JSON.
+NOSY_VOCAB_STAGES=router,substitute NOSY_VOCABULARY_DIR="$PWD/Resources/Vocabulary" "$APP" --headless-transcribe "$ID"
+python3 - "$ID" <<'PY'
+import json, os, pathlib, sys
+support = pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])
+ledger = json.loads((support/'routing'/f'{sys.argv[1]}.json').read_text())
+assert ledger['schemaVersion'] == 1 and ledger['baseline'].strip()
+assert isinstance(ledger['packs'], list) and isinstance(ledger['edits'], list)
+assert not list((support/'audio').glob('.whisper-*')), 'Refinement leaked temporary files'
+print('VOCABULARY PIPELINE PASS: real Whisper confidence JSON, local baseline/edit ledger, cleanup')
+PY

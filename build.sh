@@ -13,13 +13,6 @@ swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
 cp -R Resources/Vocabulary "$APP/Contents/Resources/"
-WHISPER_PREFIX="${NOSY_WHISPER_PREFIX:-/opt/homebrew/opt/whisper.cpp}"
-if [[ -f "$WHISPER_PREFIX/include/whisper.h" ]]; then
-    clang++ -O2 -std=c++17 -mmacosx-version-min=14.0 -I"$WHISPER_PREFIX/include" -I/opt/homebrew/include \
-        -L"$WHISPER_PREFIX/lib" -L/opt/homebrew/lib -lwhisper -lggml -lggml-base -framework Foundation Helpers/VocabularyWorker.mm \
-        -o "$APP/Contents/MacOS/NosyVocabularyWorker"
-    codesign --force --sign - "$APP/Contents/MacOS/NosyVocabularyWorker"
-fi
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png "$APP/Contents/Resources/"
 if [[ -d Resources/Fonts ]]; then

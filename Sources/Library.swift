@@ -282,12 +282,7 @@ struct LibraryView: View {
                     FixWordView(markdown: item.text) { range, replacement in
                         let folder = item.url.deletingLastPathComponent()
                         do {
-                            let vocab = folder.appendingPathComponent("vocab.txt")
-                            let existing = (try? String(contentsOf: vocab, encoding: .utf8)) ?? ""
-                            let terms = Vocabulary.entries(existing)
-                            if !terms.contains(replacement) {
-                                try Data((replacement + "\n" + existing).utf8).write(to: vocab, options: .atomic)
-                            }
+                            try Vocabulary.remember(replacement, folder: folder)
                             let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
                             _ = library.save(corrected, to: item.url, paths: model.paths)
                         } catch { NSAlert(error: error).runModal() }
@@ -552,49 +547,6 @@ private struct OpenWithMenu: View {
         let image = NSWorkspace.shared.icon(forFile: app.path)
         image.size = NSSize(width: 16, height: 16)
         return image
-    }
-}
-
-// Renders Nosy's own markdown: title, metadata bullets, headings, paragraphs.
-private struct TranscriptText: View {
-    let markdown: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
-                switch block {
-                case .title(let text): Text(text).font(Theme.display(24, .bold)).foregroundStyle(Theme.ink)
-                case .meta(let items):
-                    HStack(spacing: 8) {
-                        ForEach(items, id: \.self) { item in
-                            Text(item).font(Theme.text(11.5, .semibold)).foregroundStyle(Theme.muted)
-                                .padding(.horizontal, 9).frame(height: 22).background(Theme.surface, in: Capsule())
-                        }
-                    }
-                case .heading(let text):
-                    Text(text.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted).padding(.top, 6)
-                        .accessibilityAddTraits(.isHeader)
-                case .paragraph(let text):
-                    Text((try? AttributedString(markdown: text)) ?? AttributedString(text))
-                        .font(Theme.text(15)).foregroundStyle(Theme.ink).lineSpacing(5)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-        .textSelection(.enabled)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-    private enum Block { case title(String), meta([String]), heading(String), paragraph(String) }
-    private var blocks: [Block] {
-        var result: [Block] = []
-        for chunk in markdown.components(separatedBy: "\n\n") {
-            let lines = chunk.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-            guard let first = lines.first else { continue }
-            if first.hasPrefix("# ") { result.append(.title(String(first.dropFirst(2)))) }
-            else if first.hasPrefix("## ") { result.append(.heading(String(first.dropFirst(3)))) }
-            else if lines.allSatisfy({ $0.hasPrefix("- ") }) { result.append(.meta(lines.map { String($0.dropFirst(2)) })) }
-            else { result.append(.paragraph(lines.joined(separator: " "))) }
-        }
-        return result
     }
 }
 

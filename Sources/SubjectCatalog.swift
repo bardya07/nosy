@@ -48,7 +48,11 @@ struct SubjectCatalog: Sendable {
     ]
     static func guess(_ course: String) -> [String] {
         let tokens = course.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }
-        return subjects.filter { subject in subject.aliases.contains { tokens.contains($0) } }.map(\.id)
+        let phrase = " " + tokens.joined(separator: " ") + " "
+        return subjects.filter { subject in
+            let name = subject.name.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }.joined(separator: " ")
+            return subject.aliases.contains { tokens.contains($0) } || phrase.contains(" " + name + " ")
+        }.map(\.id)
     }
     static let bundled = SubjectCatalog(directory: ProcessInfo.processInfo.environment["NOSY_VOCABULARY_DIR"].map { URL(fileURLWithPath: $0) }
         ?? Bundle.main.resourceURL!.appendingPathComponent("Vocabulary"))

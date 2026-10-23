@@ -576,7 +576,7 @@ final class AppModel: ObservableObject {
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                try? FileManager.default.removeItem(at: url)
+                if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
             } else {
                 try Data(text.utf8).write(to: url, options: .atomic)
             }

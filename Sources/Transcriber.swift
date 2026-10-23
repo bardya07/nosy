@@ -59,11 +59,11 @@ enum Transcriber {
         } catch { }
         return max(4, ProcessInfo.processInfo.activeProcessorCount)
     }
-    static func arguments(paths: AppPaths, wav: URL, temporaryBase: URL, lecture: String) -> [String] {
+    static func arguments(paths: AppPaths, wav: URL, temporaryBase: URL, lecture: String, vocabularyText: String? = nil) -> [String] {
         var args = ["-m", paths.model.path, "-f", wav.path, "-l", "en", "-otxt", "-of", temporaryBase.path, "-np", "-pp", "-t", String(threadCount),
                     "-mc", "0"]
         let vocab = paths.lectureFolder(lecture).appendingPathComponent("vocab.txt")
-        if let text = try? String(contentsOf: vocab, encoding: .utf8),
+        if let text = vocabularyText ?? (try? String(contentsOf: vocab, encoding: .utf8)),
            let prompt = Vocabulary.prompt(text, model: paths.model) {
             // N static tokens + the previous-token marker leave no room for decoded history.
             // whisper.cpp omits prompts at fallback temperatures >= 0.5 and in its short tail.
@@ -103,6 +103,13 @@ enum Transcriber {
     private static func run(record: SessionRecord, paths: AppPaths, job: TranscriptionJob,
                             progress: @escaping @Sendable (Double) -> Void) async throws -> SessionRecord {
         var record = record
+        // Freeze course choices and user terms before audio preparation or inference.
+        let folder = paths.lectureFolder(record.lecture)
+        let vocabularyText = (try? String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8)) ?? ""
+        let settings = (try? SubjectSettings.load(folder: folder)) ?? SubjectSettings(subject: "off")
+        let userTerms = Vocabulary.entries(vocabularyText)
+        let smart = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"] != nil || UserDefaults.standard.bool(forKey: "smarterVocabulary")
+        let flags = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map { Set($0.split(separator: ",").map(String.init)) }
         do {
             try job.checkCancellation()
             progress(0)
@@ -117,10 +124,6 @@ enum Transcriber {
             let stderrURL = base.appendingPathExtension("stderr")
             let textURL = base.appendingPathExtension("txt")
             let jsonURL = base.appendingPathExtension("json")
-            let smart = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"] != nil || UserDefaults.standard.bool(forKey: "smarterVocabulary")
-            let stages = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map(VocabularyStages.internalFlags) ?? VocabularyStages()
-            let settings = (try? SubjectSettings.load(folder: paths.lectureFolder(record.lecture))) ?? SubjectSettings(subject: "off")
-            let userTerms = Vocabulary.entries((try? String(contentsOf: paths.lectureFolder(record.lecture).appendingPathComponent("vocab.txt"), encoding: .utf8)) ?? "")
             let louderURL = base.appendingPathExtension("wav")
             defer {
                 try? FileManager.default.removeItem(at: stderrURL)
@@ -137,7 +140,7 @@ enum Transcriber {
             let process = Process()
             process.qualityOfService = .utility
             process.executableURL = executable
-            process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture)
+            process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture, vocabularyText: vocabularyText)
             if smart { process.arguments! += ["-ojf"] }
             process.standardOutput = FileHandle.nullDevice
             let stderrPipe = Pipe()
@@ -165,8 +168,14 @@ enum Transcriber {
             }
             var text = try String(contentsOf: textURL, encoding: .utf8)
             if smart {
-                do { text = try VocabularyRepair.run(json: jsonURL, original: text, wav: input, base: base, paths: paths,
-                                                     lecture: record.lecture, settings: settings, userTerms: userTerms, stages: stages, job: job) }
+                do {
+                    let refined = try VocabularyRefinement.refine(original: text, data: Data(contentsOf: jsonURL), catalog: .bundled,
+                                                                 subjects: settings.resolved(course: record.lecture), userTerms: userTerms,
+                                                                 router: flags?.contains("router") ?? true, substitute: flags?.contains("substitute") ?? true, job: job)
+                    try job.checkCancellation()
+                    try VocabularyRefinement.save(refined, baseline: text, id: record.id, paths: paths)
+                    text = refined.text
+                }
                 catch is CancellationError { throw CancellationError() }
                 catch { /* Optional refinement failure keeps the successful first pass. */ }
             }

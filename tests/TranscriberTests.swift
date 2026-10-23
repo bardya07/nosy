@@ -43,7 +43,7 @@ private final class TerminationProbe: Process, @unchecked Sendable {
 enum TranscriberTests {
     static func main() async throws {
         // Keep test preferences process-local and independent of the user's Settings.
-        UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
         let manager = FileManager.default
         let root = manager.temporaryDirectory.appendingPathComponent("nosy-transcriber-unit-\(UUID().uuidString)")
         defer { try? manager.removeItem(at: root) }
@@ -188,7 +188,7 @@ enum TranscriberTests {
         let uncompressed = try await Transcriber.transcribe(record: record("keep-wav"), paths: paths)
         check(uncompressed.status == .done && manager.fileExists(atPath: paths.audioFile("keep-wav", "wav").path), "compression preference keeps WAV")
         check(!manager.fileExists(atPath: paths.audioFile("keep-wav", "m4a").path), "compression preference does not create M4A")
-        UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
         var invalidAudio = try record("bad-compression")
         try manager.removeItem(at: paths.audioFile(invalidAudio.id, "pcm"))
         try Data("invalid WAV".utf8).write(to: paths.audioFile(invalidAudio.id, "wav"))
