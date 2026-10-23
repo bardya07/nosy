@@ -48,8 +48,18 @@ enum Theme {
     static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { text(size, weight) }
     static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font { mono(size, weight) }
     static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        NSFont(name: "JetBrainsMono-Regular", size: size) != nil
-            ? .custom("JetBrainsMono-Regular", fixedSize: size).weight(weight)
+        let face: String
+        switch weight {
+        case .ultraLight, .thin: face = "JetBrainsMonoRoman-Thin"
+        case .light: face = "JetBrainsMonoRoman-Light"
+        case .regular: face = "JetBrainsMono-Regular"
+        case .medium, .semibold: face = "JetBrainsMonoRoman-Medium"
+        case .bold, .heavy: face = "JetBrainsMonoRoman-Bold"
+        case .black: face = "JetBrainsMonoRoman-ExtraBold"
+        default: face = "JetBrainsMono-Regular"
+        }
+        return NSFont(name: face, size: size) != nil
+            ? .custom(face, fixedSize: size)
             : .system(size: size, weight: weight, design: .monospaced)
     }
     static let label = mono(11, .medium)
@@ -352,8 +362,56 @@ private struct SoftModifier: ViewModifier {
     }
 }
 
-// AppKit places help outside the hovered control and handles window/screen edges.
-// Keep copy short so the native tooltip stays on one line.
+private struct TipModifier: ViewModifier {
+    let text: String
+    let edge: VerticalEdge
+    @State private var hovering = false
+    @State private var visible = false
+    @State private var hoverTask: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .onHover(perform: setHovering)
+            .overlay(alignment: edge == .top ? .top : .bottom) {
+                if visible {
+                    Text(text)
+                        .font(Theme.mono(9, .medium))
+                        .foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Theme.raised, in: Capsule())
+                        .overlay(Capsule().strokeBorder(Theme.panelBorder, lineWidth: 1))
+                        .shadow(color: Theme.ink.opacity(0.14), radius: 8, y: 3)
+                        .offset(y: edge == .top ? -25 : 25)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                        .allowsHitTesting(false)
+                        .zIndex(1000)
+                }
+            }
+            .onDisappear {
+                hoverTask?.cancel()
+                visible = false
+            }
+    }
+
+    private func setHovering(_ inside: Bool) {
+        hovering = inside
+        hoverTask?.cancel()
+        guard inside else {
+            withAnimation(Motion.hover) { visible = false }
+            return
+        }
+        hoverTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(320))
+            guard !Task.isCancelled, hovering else { return }
+            withAnimation(Motion.hover) { visible = true }
+        }
+    }
+}
+
 extension View {
-    func tip(_ text: String, edge: VerticalEdge = .bottom) -> some View { help(text) }
+    func tip(_ text: String, edge: VerticalEdge = .top) -> some View {
+        modifier(TipModifier(text: text, edge: edge))
+    }
 }

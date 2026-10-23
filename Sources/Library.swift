@@ -260,7 +260,7 @@ struct LibraryView: View {
                         if library.unfinished.contains(where: { !model.isLive($0.id) }), library.query.isEmpty { unfinishedSection }
                         ForEach(library.grouped, id: \.lecture) { group in
                             Text(group.lecture.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted)
-                                .lineLimit(1).help(group.lecture)
+                                .lineLimit(1).tip("Lecture name")
                                 .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 2)
                                 .accessibilityAddTraits(.isHeader)
                             ForEach(group.items) { item in row(item).id(item.url) }
@@ -286,7 +286,7 @@ struct LibraryView: View {
         .padding(14)
         .disabled(editing)
         .opacity(editing ? 0.5 : 1)
-        .help(editing ? "Save or cancel your edit first" : "")
+        .tip(editing ? "Finish transcript edit" : "Transcripts list")
         .frame(width: 250)
         .background(Theme.surface.opacity(0.45))
     }
@@ -309,10 +309,10 @@ struct LibraryView: View {
                 .accessibilityLabel("Show \(item.session) in Finder")
         }
         .contextMenu {
-            Button("Rename…") { library.rename(item, paths: model.paths) }
-            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
+            Button("Rename…") { library.rename(item, paths: model.paths) }.tip("Rename transcript")
+            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }.tip("Show in Finder")
             Divider()
-            Button("Move to Trash", role: .destructive) { library.trash(item.url, paths: model.paths) }
+            Button("Move to Trash", role: .destructive) { library.trash(item.url, paths: model.paths) }.tip("Move to Trash")
         }
     }
 
@@ -395,7 +395,7 @@ struct LibraryView: View {
     private func readerHeader(_ item: TranscriptItem) -> some View {
         HStack(spacing: 4) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.session).font(Theme.display(20, .bold)).foregroundStyle(Theme.ink).lineLimit(1).help(item.session)
+                Text(item.session).font(Theme.display(20, .bold)).foregroundStyle(Theme.ink).lineLimit(1).tip("Session name")
                 Text(item.lecture).font(Theme.text(12, .medium)).foregroundStyle(Theme.muted).lineLimit(1)
             }
             Spacer()
@@ -416,7 +416,7 @@ struct LibraryView: View {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
-                .tip(copied ? "Copied" : "Copy transcript").accessibilityLabel("Copy transcript")
+                .tip(copied ? "Transcript copied" : "Copy transcript").accessibilityLabel("Copy transcript")
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
@@ -424,7 +424,7 @@ struct LibraryView: View {
                 Button { library.trash(item.url, paths: model.paths) } label: { Image(systemName: "trash") }
                     .buttonStyle(IconButtonStyle(size: 32, destructive: true))
                     .keyboardShortcut(focus == .list ? KeyboardShortcut(.delete, modifiers: .command) : nil)
-                    .tip("Move to Trash  ⌘⌫")
+                    .tip("Move to Trash")
                     .accessibilityLabel("Move transcript to Trash")
             }
         }
@@ -443,23 +443,25 @@ struct LibraryView: View {
 // in the main window while the full library remains available from the toolbar.
 struct RecentView: View {
     @ObservedObject var model: AppModel
-    var previewItem: URL? = nil
-    var previewAudio = false
+    @Binding var selection: URL?
+    @Binding var showingAudio: Bool
+    var compact = false
+    var onHome: () -> Void = {}
     @StateObject private var library = TranscriptLibrary()
-    @State private var selectedURL: URL?
-    @State private var showingAudio = false
+    @Environment(\.openWindow) private var openWindow
 
-    init(model: AppModel, previewItem: URL? = nil, previewAudio: Bool = false) {
+    init(model: AppModel, selection: Binding<URL?>, showingAudio: Binding<Bool>,
+         compact: Bool = false, onHome: @escaping () -> Void = {}) {
         self.model = model
-        self.previewItem = previewItem
-        self.previewAudio = previewAudio
-        _selectedURL = State(initialValue: previewItem)
-        _showingAudio = State(initialValue: previewAudio)
+        _selection = selection
+        _showingAudio = showingAudio
+        self.compact = compact
+        self.onHome = onHome
     }
 
     private var selected: TranscriptItem? {
-        guard let selectedURL else { return nil }
-        let path = selectedURL.standardizedFileURL.path
+        guard let selection else { return nil }
+        let path = selection.standardizedFileURL.path
         return library.items.first { $0.url.standardizedFileURL.path == path }
     }
     private var selectedAudio: URL? {
@@ -472,89 +474,86 @@ struct RecentView: View {
         Group {
             if let selected {
                 detail(selected)
+            } else if compact {
+                compactList
             } else {
-                list
+                compactList
             }
         }
-        .onAppear {
-            reload()
-            if let previewItem {
-                selectedURL = previewItem
-                showingAudio = previewAudio
-            }
-        }
+        .onAppear { reload() }
         .onChange(of: model.paths.transcripts) { reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
         .onChange(of: model.active?.id) { reload() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
     }
 
-    private var list: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private var compactList: some View {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Text("Recent transcripts").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
+                Text("Recent").font(Theme.label).foregroundStyle(Theme.muted)
                 Spacer()
-                Text("\(library.items.count) saved").font(Theme.mono(9)).foregroundStyle(Theme.muted)
+                Button("See all") { openWindow(id: "library") }
+                    .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                    .tip("Open transcripts")
             }
             if library.items.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "doc.text").font(.system(size: 20)).foregroundStyle(Theme.muted)
-                    Text("No transcripts yet").font(Theme.text(11, .medium)).foregroundStyle(Theme.ink)
-                    Text("Saved sessions will appear here.").font(Theme.mono(9)).foregroundStyle(Theme.muted)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                Text("No saved sessions yet")
+                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading).frame(height: 22)
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 3) {
-                        ForEach(Array(library.items.prefix(5))) { item in
-                            HStack(spacing: 3) {
-                                Button {
-                                    selectedURL = item.url
-                                    showingAudio = false
-                                } label: {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(item.session).font(Theme.text(11, .medium)).lineLimit(1)
-                                        Text("\(item.lecture) · \(item.recorded.formatted(date: .abbreviated, time: .shortened))")
-                                            .font(Theme.mono(9)).foregroundStyle(Theme.muted).lineLimit(1)
-                                    }
-                                }
-                                .buttonStyle(RowButtonStyle(selected: false))
-                                .tip("Open transcript")
-                                .accessibilityLabel("Open \(item.lecture), \(item.session)")
-                                Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: {
-                                    Image(systemName: "folder")
-                                }
-                                .buttonStyle(IconButtonStyle(size: 26))
+                VStack(spacing: 2) {
+                    ForEach(Array(library.items.prefix(3))) { item in
+                        HStack(spacing: 4) {
+                            Button {
+                                selection = item.url
+                                showingAudio = false
+                            } label: {
+                                Text("\(item.session) · \(item.recorded.formatted(date: .abbreviated, time: .omitted))")
+                                    .font(Theme.text(11, .medium)).lineLimit(1).truncationMode(.middle)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(RowButtonStyle(selected: false))
+                            .tip("Open transcript")
+                            .accessibilityLabel("Open \(item.lecture), \(item.session)")
+                            Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: {
+                                Image(systemName: "folder")
+                            }
+                            .buttonStyle(IconButtonStyle(size: 24))
+                            .tip("Show in Finder")
+                            .accessibilityLabel("Show \(item.session) in Finder")
+                        }
+                        .frame(height: 24)
+                        .contextMenu {
+                            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
                                 .tip("Show in Finder")
-                                .accessibilityLabel("Show \(item.session) in Finder")
-                            }
-                            .contextMenu {
-                                Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
-                            }
                         }
                     }
                 }
-                .scrollIndicators(.never)
             }
         }
+        .padding(.horizontal, 10).padding(.vertical, 8).card()
     }
 
     private func detail(_ item: TranscriptItem) -> some View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
-                Button { selectedURL = nil; showingAudio = false } label: {
-                    Label("Recent", systemImage: "chevron.left")
+                Button { onHome() } label: {
+                    Label("Home", systemImage: "house")
                 }
                 .buttonStyle(LinkButtonStyle(tint: Theme.navy))
-                .tip("Back to recent")
+                .tip("Back to ready")
                 Spacer(minLength: 2)
-                Button { showingAudio = false } label: { Text("Transcript") }
-                    .buttonStyle(RecentToggleStyle(selected: !showingAudio))
-                    .tip("Read transcript")
-                Button { showingAudio = true } label: { Text("Audio") }
-                    .buttonStyle(RecentToggleStyle(selected: showingAudio))
-                    .disabled(selectedAudio == nil)
-                    .tip(selectedAudio == nil ? "Audio unavailable" : "Play recording")
+                HStack(spacing: 2) {
+                    Button { showingAudio = false } label: { Text("Transcript") }
+                        .buttonStyle(RecentToggleStyle(selected: !showingAudio))
+                        .tip("Read transcript")
+                    Button { showingAudio = true } label: { Text("Audio") }
+                        .buttonStyle(RecentToggleStyle(selected: showingAudio))
+                        .disabled(selectedAudio == nil)
+                        .tip(selectedAudio == nil ? "Audio unavailable" : "Play recording")
+                }
+                .padding(2).background(Theme.surface.opacity(0.68), in: Capsule())
+                .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 25))
                     .tip("Show in Finder")
@@ -584,8 +583,8 @@ struct RecentView: View {
 
     private func reload() {
         library.reload(paths: model.paths)
-        if let selectedURL, !library.items.contains(where: { $0.url.standardizedFileURL.path == selectedURL.standardizedFileURL.path }) {
-            self.selectedURL = nil
+        if let selection, !library.items.contains(where: { $0.url.standardizedFileURL.path == selection.standardizedFileURL.path }) {
+            self.selection = nil
             showingAudio = false
         }
     }
@@ -635,12 +634,13 @@ private struct AudioStrip: View {
             Text(Core.timer(player.time)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Slider(value: Binding(get: { player.time }, set: { player.seek($0) }), in: 0...max(1, player.duration))
                 .controlSize(.small)
-                .help("Seek audio")
+                .tip("Seek audio")
                 .accessibilityLabel("Playback position")
             Text(Core.timer(player.duration)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Menu {
                 ForEach([0.75, 1.0, 1.25, 1.5, 2.0], id: \.self) { rate in
                     Button(rateLabel(rate)) { player.rate = Float(rate) }
+                        .tip("Set playback speed")
                 }
             } label: {
                 Text(rateLabel(Double(player.rate))).font(Theme.text(12, .semibold))
@@ -697,10 +697,10 @@ private struct ExportMenu: View {
     let item: TranscriptItem
     var body: some View {
         Menu {
-            Button("Save as Plain Text…") { saveText() }
-            Button("Save as PDF…") { savePDF() }
+            Button("Save as Plain Text…") { saveText() }.tip("Export plain text")
+            Button("Save as PDF…") { savePDF() }.tip("Export PDF")
             Divider()
-            Button("Print…") { printOperation(saveTo: nil).run() }
+            Button("Print…") { printOperation(saveTo: nil).run() }.tip("Print transcript")
         } label: {
             Image(systemName: "square.and.arrow.up")
         }
@@ -796,6 +796,7 @@ private struct OpenWithMenu: View {
                     Label { Text(FileManager.default.displayName(atPath: app.path).replacingOccurrences(of: ".app", with: "")) }
                         icon: { Image(nsImage: icon(app)) }
                 }
+                .tip("Open with this app")
             }
         } label: {
             Image(systemName: "arrow.up.forward.app")

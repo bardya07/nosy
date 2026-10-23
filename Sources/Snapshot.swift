@@ -185,12 +185,12 @@ enum Snapshot {
             longSaved.current?.transcriptPath = longURL.path
             let recent = model(.idle)
             let recentHome = model(.transcribing)
-            let recentListView = PreviewWindow { MainView(model: recent, previewRecent: true) }
+            let recentListView = PreviewWindow { MainView(model: recent) }
             let recentTranscriptView = PreviewWindow {
-                MainView(model: model(.idle), previewRecent: true, previewRecentSelection: transcript)
+                MainView(model: model(.idle), previewRecentSelection: transcript)
             }
             let recentAudioView = PreviewWindow {
-                MainView(model: model(.idle), previewRecent: true, previewRecentSelection: transcript, previewRecentAudio: true)
+                MainView(model: model(.idle), previewRecentSelection: transcript, previewRecentAudio: true)
             }
             let homeView = PreviewWindow { MainView(model: recentHome, previewTranscribingHome: true) }
             guard save(recentListView.padding(36).background(PreviewBackdrop()), "recent.\(mode)"),

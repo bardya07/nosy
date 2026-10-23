@@ -91,14 +91,23 @@ struct VocabularyEditor: View {
             HStack(spacing: 12) {
                 Text("Subject").foregroundStyle(Theme.muted)
                 Spacer(minLength: 0)
-                Picker("Subject", selection: Binding(get: { draft.subjects.subject }, set: {
-                    draft.selectSubject($0)
-                })) {
-                    Text("Auto").tag("auto")
-                    Text("General").tag("general")
-                    ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
+                Menu {
+                    subjectOption("auto", "Auto")
+                    subjectOption("general", "General")
+                    ForEach(SubjectCatalog.subjects) { subject in
+                        subjectOption(subject.id, subject.name)
+                    }
+                } label: {
+                    HStack(spacing: 7) {
+                        Text(subjectTitle).font(Theme.mono(12)).lineLimit(1)
+                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
+                    }
+                    .foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 10).frame(height: 28)
+                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
+                    .contentShape(RoundedRectangle(cornerRadius: 8))
                 }
-                .labelsHidden().pickerStyle(.menu)
+                .menuStyle(.button).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
                 .tip("Choose vocabulary subject")
                 .frame(maxWidth: 220)
                 .accessibilityLabel("Subject").accessibilityValue(subjectTitle)
@@ -139,6 +148,13 @@ struct VocabularyEditor: View {
         draft.subjects.subject == "auto" ? autoMenuTitle
             : SubjectCatalog.name(for: draft.subjects.canonicalSubject)
     }
+    private func subjectOption(_ id: String, _ title: String) -> some View {
+        Button { draft.selectSubject(id) } label: {
+            if draft.subjects.subject == id { Label(title, systemImage: "checkmark") }
+            else { Text(title) }
+        }
+        .tip("Choose vocabulary subject")
+    }
     private var editor: some View {
         ZStack(alignment: .topLeading) {
             if draft.text.isEmpty {
@@ -149,6 +165,7 @@ struct VocabularyEditor: View {
             textEditor
                 .accessibilityLabel("Custom vocabulary for \(draft.lecture)")
                 .scrollContentBackground(.hidden)
+                .tip("Edit vocabulary")
         }
         .font(Theme.text(13))
         .padding(8)

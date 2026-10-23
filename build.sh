@@ -17,7 +17,7 @@ swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
 cp -R Resources/Vocabulary "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
-cp Resources/AppIcon.icns Resources/NosyMark.png "$APP/Contents/Resources/"
+cp Resources/AppIcon.icns Resources/NosyMark.png Resources/GitHubMark.png "$APP/Contents/Resources/"
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"
 cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 if [[ -d Resources/Fonts ]]; then

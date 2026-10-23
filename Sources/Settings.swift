@@ -22,7 +22,7 @@ struct SettingsView: View {
                         Text(abbreviated(model.paths.transcripts))
                             .font(Theme.mono(12)).foregroundStyle(Theme.ink)
                             .lineLimit(1).truncationMode(.middle)
-                            .help(model.paths.transcripts.path)
+                            .tip("Transcript folder")
                         Spacer(minLength: 0)
                     }
                     .fieldChrome()
@@ -30,12 +30,12 @@ struct SettingsView: View {
                         Button("Change…") { model.chooseTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                             .disabled(model.working)
-                            .help(model.working ? "Available when Nosy finishes" : "Change folder")
+                            .tip(model.working ? "Finish current work" : "Change folder")
                         Button("Show in Finder") { model.revealTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                             .tip("Show in Finder")
                     }
-                    note("Each folder groups its transcripts. Add a vocab.txt inside a folder to teach Nosy its terms.")
+                    note("Folders group transcripts; vocab.txt adds course terms.", tip: "Add course vocabulary")
                 }
             }
             section("Audio") {
@@ -54,8 +54,8 @@ struct SettingsView: View {
                             Text("Full quality — WAV, about 115 MB per hour").tag(false)
                         }
                     }
-                    note(compressAudio ? "About 22 MB per hour of audio." : "About 115 MB per hour of audio.")
-                    note("Audio is deleted only after its transcript is saved. Unfinished recordings are always kept.")
+                    note(compressAudio ? "About 22 MB per hour." : "About 115 MB per hour.", tip: "Storage estimate")
+                    note("Audio deleted after transcript saves; unfinished stays.", tip: "Audio cleanup rules")
                 }
             }
             section("While recording") {
@@ -68,7 +68,7 @@ struct SettingsView: View {
                             Text("Never").tag(0)
                         }
                     }
-                    note("Nosy stops your Mac from dozing off while it works, but closing the lid still sleeps it — keep the lid open while recording. You'll be warned if the mic goes quiet.")
+                    note("Keep lid open; closed Macs sleep. Mic silence warns.", tip: "Mac sleep behavior")
                 }
             }
         }
@@ -116,8 +116,9 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
     }
-    private func note(_ text: String) -> some View {
-        Text(text).font(Theme.text(11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
+    private func note(_ text: String, tip: String) -> some View {
+        Text(text).font(Theme.text(10)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.tail)
+            .tip(tip)
     }
     private func abbreviated(_ url: URL) -> String {
         if let preview = Snapshot.displayPath(url.path) { return preview }

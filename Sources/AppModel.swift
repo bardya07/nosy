@@ -635,9 +635,11 @@ final class AppModel: ObservableObject {
         openWindow?(id: "library")
     }
     var inputName: String {
-        let mic = (recording ? activeInputName : nil)
+        recordingSource.inputName(mic: microphoneName)
+    }
+    var microphoneName: String {
+        (recording ? activeInputName : nil)
             ?? inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
-        return recordingSource.inputName(mic: mic)
     }
     private func requestMicrophoneAccess() async throws {
         let permission: Bool
