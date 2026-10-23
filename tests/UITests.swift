@@ -102,6 +102,27 @@ enum UITests {
         check(model.inputName == "MacBook Pro Microphone", "Idle mic has no routing or dB suffix")
         check(!AudioInputs.isUserVisible(.init(id: "proxy", name: "CADefaultDeviceAggregate-45310-0")), "Hide the private CoreAudio proxy")
         check(AudioInputs.isUserVisible(.init(id: "user-aggregate", name: "My Studio Aggregate")), "Keep intentional aggregates")
+        let previousSource = UserDefaults.standard.string(forKey: "recordingSource")
+        defer { UserDefaults.standard.set(previousSource, forKey: "recordingSource") }
+        if RecordingSource.macAudioAvailable {
+            model.selectSource(.macAudio)
+            check(model.inputName == "Mac audio", "Mac source label")
+            check(AppModel().recordingSource == .macAudio, "Remember the source")
+            model.phase = .recording
+            model.paused = false
+            model.selectSource(.both)
+            check(model.recordingSource == .macAudio, "Active recording locks source changes")
+            model.paused = true
+            model.transitioning = true
+            model.selectSource(.both)
+            check(model.recordingSource == .macAudio, "Transitions lock source changes even when paused")
+            model.transitioning = false
+            model.selectSource(.both)
+            check(model.inputName == "MacBook Pro Microphone + Mac audio", "Paused source changes and Both label")
+            model.phase = .idle
+            model.paused = false
+            model.selectSource(.mic)
+        }
         var record = SessionRecord(id: "test", lecture: "MBB322", session: "First", startedAt: Date(), status: .done,
                                    transcriptPath: first.path, vocabularyTerms: ["ATP"])
         model.current = record

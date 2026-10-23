@@ -40,6 +40,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var systemInput: AudioInputs.Device?
     @Published private(set) var inputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
     @Published private(set) var activeInputName: String?
+    @Published private(set) var recordingSource = RecordingSource.restored(UserDefaults.standard.string(forKey: "recordingSource"))
+    @Published private(set) var macAudioDenied = false
+    @Published private(set) var macAudioQuiet = false
     @Published var transcriptionProgress = 0.0
     @Published private(set) var transcriptionPauseReason: String?
     @Published var silenceWarning = false
@@ -92,7 +95,7 @@ final class AppModel: ObservableObject {
     }
     // The foreground lecture is waiting behind another transcription.
     var waiting: Bool { phase == .transcribing && current != nil && current?.id != active?.id }
-    var micLocked: Bool { transitioning || (recording && !paused) }
+    var micLocked: Bool { !RecordingSource.canChange(recording: recording, paused: paused, transitioning: transitioning) }
     var transcriptionRemaining: TimeInterval? {
         guard transcriptionProgress > 0.04, transcriptionProgress < 1 else { return nil }
         return transcriptionElapsed / transcriptionProgress * (1 - transcriptionProgress)
@@ -170,6 +173,7 @@ final class AppModel: ObservableObject {
         guard let sleptAt else { return }
         self.sleptAt = nil
         guard recording else { return }
+        recorder?.recoverAfterWake()
         let minutes = max(1, Int((Date().timeIntervalSince(sleptAt) / 60).rounded()))
         sleepNotice = "Recording paused while your Mac was asleep (\(minutes) min). Keep the lid open during lectures."
         notify("Nosy missed \(minutes) min while your Mac was asleep")
@@ -239,16 +243,9 @@ final class AppModel: ObservableObject {
                 // An existing folder is used as-is so its name (and vocab.txt) always match.
                 let lecture = selectedLecture == "__new__" ? try resolvedNewLecture() : selectedLecture
                 let session = try Core.sanitize(session)
-                let permission: Bool
-                switch AVCaptureDevice.authorizationStatus(for: .audio) {
-                case .authorized: permission = true
-                case .notDetermined: permission = await AVCaptureDevice.requestAccess(for: .audio)
-                default: permission = false
-                }
-                guard permission else {
-                    microphoneDenied = true
-                    throw LectureError.message("Microphone access is denied. Enable it in System Settings, then Start again.")
-                }
+                if recordingSource.usesMic { try await requestMicrophoneAccess() }
+                macAudioDenied = false
+                macAudioQuiet = false
                 microphoneDenied = false
                 try paths.prepareSupport()
                 if try Core.availableDiskSpace(at: paths.support) < 2_000_000_000 {
@@ -264,7 +261,7 @@ final class AppModel: ObservableObject {
                 try record.save(in: paths)
                 current = record
                 activeInputName = nil
-                let recorder = Recorder(inputUID: inputUID) { [weak self = self] event in Task { @MainActor in self?.handle(event, id: record.id) } }
+                let recorder = Recorder(inputUID: inputUID, source: recordingSource) { [weak self = self] event in Task { @MainActor in self?.handle(event, id: record.id) } }
                 self.recorder = recorder
                 updateActivity()
                 try await recorder.start(at: paths.audioFile(record.id, "pcm"))
@@ -293,6 +290,7 @@ final class AppModel: ObservableObject {
                 UserDefaults.standard.set(lecture, forKey: "lastLecture")
                 notify("Recording \(lecture) · \(session)")
             } catch {
+                if error is MacAudioError { macAudioDenied = true }
                 if let record = current, record.status == .recording, record.id != previous?.id {
                     await failRecording(error.localizedDescription)
                 } else {
@@ -324,14 +322,18 @@ final class AppModel: ObservableObject {
         case .stalled:
             guard recording, !paused else { return }
             stalled = true
-            notify("Nosy isn't receiving any audio — check your microphone")
+            notify(recordingSource.usesMacAudio ? "Nosy lost a recording source — check Mac audio and your microphone" : "Nosy isn't receiving any audio — check your microphone")
         case .flowing:
             stalled = false
+        case .macAudioQuiet(let quiet):
+            guard recording, recordingSource.usesMacAudio else { return }
+            macAudioQuiet = quiet
         case .silence:
             guard recording else { return }
             silenceWarning = true
             notify("Mic hears nothing — check your input")
         case .failed(let message, let bytes):
+            if message.contains("Mac audio access was denied") { macAudioDenied = true }
             guard recording || transitioning, !completing else { return }
             completing = true
             transitioning = true
@@ -387,6 +389,7 @@ final class AppModel: ObservableObject {
         paused.toggle()
         recorder.setPaused(paused)
         if paused {
+            macAudioQuiet = false
             silenceWarning = false
             stalled = false
             levels = Array(repeating: -160, count: Self.waveformLength)
@@ -632,8 +635,45 @@ final class AppModel: ObservableObject {
         openWindow?(id: "library")
     }
     var inputName: String {
-        if recording, let activeInputName { return activeInputName }
-        return inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
+        let mic = (recording ? activeInputName : nil)
+            ?? inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
+        return recordingSource.inputName(mic: mic)
+    }
+    private func requestMicrophoneAccess() async throws {
+        let permission: Bool
+        switch AVCaptureDevice.authorizationStatus(for: .audio) {
+        case .authorized: permission = true
+        case .notDetermined: permission = await AVCaptureDevice.requestAccess(for: .audio)
+        default: permission = false
+        }
+        microphoneDenied = !permission
+        guard permission else {
+            throw LectureError.message("Microphone access is denied. Enable it in System Settings, then Start again.")
+        }
+    }
+    func selectSource(_ source: RecordingSource) {
+        guard !micLocked, source != recordingSource, RecordingSource.available.contains(source) else { return }
+        guard recording, paused, let recorder else { commitSource(source); return }
+        transitioning = true
+        Task {
+            do {
+                if source.usesMic { try await requestMicrophoneAccess() }
+                try await recorder.switchSource(source, inputUID: inputUID)
+                commitSource(source)
+            } catch {
+                if error is MacAudioError { macAudioDenied = true }
+                showError(error.localizedDescription)
+            }
+            transitioning = false
+        }
+    }
+    private func commitSource(_ source: RecordingSource) {
+        recordingSource = source
+        UserDefaults.standard.set(source.rawValue, forKey: "recordingSource")
+        macAudioDenied = false
+        macAudioQuiet = false
+        microphoneDenied = false
+        clearError()
     }
     func refreshInputs() {
         let systemDefault = AudioInputs.systemDefault()
@@ -665,6 +705,7 @@ final class AppModel: ObservableObject {
         queue = queued
         transcriptionPauseReason = pauseReason
         inputUID = nil
+        recordingSource = .mic
         systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone")
     }
     func chooseTranscriptsFolder() {
@@ -694,6 +735,9 @@ final class AppModel: ObservableObject {
     func revealTranscriptsFolder() {
         try? FileManager.default.createDirectory(at: paths.transcripts, withIntermediateDirectories: true)
         NSWorkspace.shared.open(paths.transcripts)
+    }
+    func openMacAudioSettings() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AudioCapture")!)
     }
     func openMicrophoneSettings() {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone")!)

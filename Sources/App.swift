@@ -223,9 +223,12 @@ struct MainView: View {
                 }.disabled(model.busy)
             }.transition(.soft(reduceMotion))
         }
-        if model.phase != .failed, (!model.recording || (!model.stalled && !model.silenceWarning)), let error = model.errorMessage {
+        if (model.phase != .failed || model.macAudioDenied), (!model.recording || (!model.stalled && !model.silenceWarning)), let error = model.errorMessage {
             Banner(symbol: "exclamationmark.circle.fill", tint: Theme.coral, text: error) {
                 HStack(spacing: 14) {
+                    if model.macAudioDenied {
+                        Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                    }
                     if model.microphoneDenied {
                         Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
                     }
@@ -240,8 +243,14 @@ struct MainView: View {
                 Button("OK") { model.sleepNotice = nil }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
             }.transition(.soft(reduceMotion))
         }
+        if model.recording, !model.paused, model.macAudioQuiet, !model.macAudioDenied {
+            Banner(symbol: "speaker.wave.2", tint: Theme.muted,
+                   text: "Mac audio is silent. If other apps are playing or you denied access, enable Nosy in System Settings → Privacy & Security → Screen & System Audio Recording.") {
+                Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+            }
+        }
         if model.stalled {
-            Banner(symbol: "waveform.slash", tint: Theme.coral, text: "Nosy isn't receiving any audio. Check that your microphone is connected.") { EmptyView() }
+            Banner(symbol: "waveform.slash", tint: Theme.coral, text: model.recordingSource.usesMacAudio ? "Nosy lost a recording source. Check Mac audio access and your connected microphone; Nosy is trying to reconnect." : "Nosy isn't receiving any audio. Check that your microphone is connected.") { EmptyView() }
                 .transition(.soft(reduceMotion))
         } else if model.silenceWarning {
             Banner(symbol: "mic.slash.fill", tint: Theme.coral, text: "Nosy can't hear anything. Check your microphone.") { EmptyView() }
@@ -396,6 +405,15 @@ private struct MicMenu: View {
     @ObservedObject var model: AppModel
     var body: some View {
         Menu {
+            if RecordingSource.macAudioAvailable {
+                Section("Source") {
+                    ForEach(RecordingSource.available, id: \.self) { source in
+                        Button { model.selectSource(source) } label: { checked(model.recordingSource == source, source.title) }
+                    }
+                }
+                Divider()
+            }
+
             Button { model.selectInput(nil) } label: {
                 checked(model.inputUID == nil, "System default" + (model.systemInput.map { " (\($0.name))" } ?? ""))
             }
@@ -411,8 +429,8 @@ private struct MicMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .onHover { if $0 { model.refreshInputs() } }
-        .tip(model.recording && !model.paused ? "Pause to change mic" : "Change microphone")
-        .accessibilityLabel("Choose microphone, currently \(model.inputName)")
+        .tip(model.recording && !model.paused ? "Pause to change source or mic" : "Change recording source or microphone")
+        .accessibilityLabel("Choose recording source or microphone, currently \(model.inputName)")
     }
     @ViewBuilder private func checked(_ on: Bool, _ title: String) -> some View {
         if on { Label(title, systemImage: "checkmark") } else { Text(title) }
@@ -541,7 +559,7 @@ struct StagePanel: View {
             .font(Theme.mono(11)).foregroundStyle(Theme.muted)
             .lineLimit(1).truncationMode(.middle)
             .frame(maxWidth: .infinity)
-            .accessibilityLabel("Microphone: \(model.inputName)")
+            .accessibilityLabel("Recording source: \(model.inputName)")
     }
 
     private var recording: some View {
@@ -559,7 +577,7 @@ struct StagePanel: View {
             Waveform(levels: model.levels, tint: Theme.wavePlayed, active: !model.paused)
                 .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
                 .background(Theme.waveform, in: Capsule())
-                .accessibilityLabel("Live microphone input").accessibilityValue("\(Int(model.level)) decibels")
+                .accessibilityLabel("Live recording input").accessibilityValue("\(Int(model.level)) decibels")
             RecordingMarkers(model: model)
             if let active = model.active {
                 HStack(spacing: 6) {
