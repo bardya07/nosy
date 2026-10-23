@@ -1,0 +1,84 @@
+2-SAT
+3-SAT
+AC0
+AC1
+alternating Turing machine
+BDD
+BPP
+business process Execution Language
+Büchi automaton
+CFG
+CFL
+Chomsky hierarchy
+Church-Turing thesis
+CNF
+co-NP
+Cook reduction
+Cook's theorem
+Cook-Levin theorem
+cryptographic primitives
+cryptographic protocols
+CYK
+DCFL
+DFA
+DFTA
+DPDA
+EXPSPACE
+EXPTIME
+generating random combinatorial structures
+GNF
+Gödel numbering
+Immerman-Szelepcsényi theorem
+IP
+Kleene star
+Kolmogorov complexity
+L
+LBA
+Myhill-Nerode theorem
+NC
+neural Turing machine
+NEXPTIME
+NFA
+NFTA
+NL
+nondeterministic Turing machine
+NP
+NP-complete
+NP-complete language
+NP-completeness
+NP-hard
+NP-hardness
+NP/poly
+OBDD
+oracle Turing machine
+P-complete
+P/poly
+PDA
+Post correspondence problem
+PP
+PRAM
+probabilistic Turing machine
+PSPACE
+PTAS
+QBF
+quadtree complexity theorem
+R
+RE
+recursive functions
+recursive language
+recursively enumerable language
+Rice theorem
+RP
+SAT
+Savitch theorem
+stochastic approximation
+strongly NP-hard
+suffix automaton
+TC0
+TQBF
+Turing machine
+Turing reduction
+Turing test
+Turing transducer
+universal Turing machine
+ZPP

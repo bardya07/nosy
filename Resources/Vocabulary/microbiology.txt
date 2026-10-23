@@ -1,0 +1,157 @@
+Acinetobacter baumannii
+Actinomyces israelii
+Agrobacterium tumefaciens
+ammonification
+Anabaena
+anoxic
+arbuscular mycorrhizae
+ascocarp
+Ascomycota
+Aspergillus fumigatus
+aspergillus nidulans
+Aspergillus niger
+autotrophic
+Bacillus anthracis
+Bacillus cereus
+Bacillus subtilis
+Bacteroides fragilis
+basidiocarp
+Basidiomycota
+biofilm
+bioluminescence
+bioremediation
+Bordetella pertussis
+Borrelia burgdorferi
+Brucella abortus
+CA-MRSA
+Campylobacter jejuni
+Candida albicans
+capsid
+capsomeres
+chemotroph
+Chlamydia pneumoniae
+Chlamydia trachomatis
+chytridiomycetes
+Clostridioides difficile
+Clostridium botulinum
+Clostridium perfringens
+Clostridium tetani
+commensalism
+conidiospores
+Corynebacterium diphtheriae
+Coxiella burnetii
+Cryptococcus neoformans
+Cryptosporidium parvum
+cyanobacteria
+cytopathic effects
+Deinococcus radiodurans
+deuteromycota
+dikaryon
+ectomycorrhizae
+endomycorrhizae
+endosymbiosis
+endosymbiotic theory
+Entamoeba histolytica
+Enterococcus faecalis
+Enterococcus faecium
+Escherichia coli
+Francisella tularensis
+Giardia duodenalis
+Giardia lamblia
+Glomeromycota
+Gram negative
+Gram positive
+Haemophilus influenzae
+halobacterium salinarum
+haustoria
+Helicobacter pylori
+heterothallic
+heterotrophic
+Histoplasma capsulatum
+HIV
+homothallic
+human immunodeficiency virus
+hyperplasia
+hypoplasia
+imperfect Fungi
+karyogamy
+Klebsiella pneumoniae
+Koch's postulates
+Lactobacillus acidophilus
+Lactococcus lactis
+Legionella pneumophila
+Leishmania donovani
+Leptospira interrogans
+Listeria monocytogenes
+Methanobrevibacter smithii
+methicillin-resistant Staphylococcus aureus
+mixotrophs
+MRSA
+Mycobacterium leprae
+Mycobacterium smegmatis
+Mycobacterium tuberculosis
+Mycoplasma pneumoniae
+mycorrhiza
+mycorrhizae
+mycosis
+mycotoxicosis
+Naegleria fowleri
+Neisseria gonorrhoeae
+Neisseria meningitidis
+neurospora crassa
+Nocardia asteroides
+noncellular
+Nostoc
+oncogenic viruses
+Pasteurella multocida
+Penicillium chrysogenum
+peptidoglycan
+phagolysosome
+phototrophs
+Plasmodium falciparum
+Plasmodium vivax
+plastid
+Pneumocystis jirovecii
+polyphyletic
+prions
+prophage
+Proteus mirabilis
+Pseudomonas aeruginosa
+pseudopeptidoglycan
+Pyrococcus furiosus
+reverse transcriptase
+Rhizobium leguminosarum
+Rickettsia rickettsii
+Saccharomyces cerevisiae
+Salmonella enterica
+saprobes
+schizosaccharomyces pombe
+Serratia marcescens
+Shigella dysenteriae
+Shigella flexneri
+sporangium
+Staphylococcus aureus
+Staphylococcus epidermidis
+Streptococcus mutans
+Streptococcus pneumoniae
+Streptococcus pyogenes
+Sulfolobus solfataricus
+symbiosis
+symbiotic nitrogen fixation
+Synechocystis
+tetrahymena thermophila
+Thermus aquaticus
+tobacco mosaic disease
+Toxoplasma gondii
+Treponema pallidum
+Trichomonas vaginalis
+Trypanosoma brucei
+Trypanosoma cruzi
+Ureaplasma urealyticum
+viable-but-non-culturable
+Vibrio cholerae
+virions
+viroids
+Yersinia enterocolitica
+Yersinia pestis
+Zygomycota

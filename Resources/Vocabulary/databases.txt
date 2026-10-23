@@ -1,0 +1,32 @@
+2PC
+2PL
+3PC
+conflict serializability
+DB2
+DBMS
+efficient XML Interchange
+inodes
+MVCC
+MySQL
+oracle Database
+OWL
+phase change memory
+RAID
+RDF
+RESTful web services
+SPARQL
+SQL
+SQL injection
+SQL Server
+strict two-phase locking
+top-k retrieval in databases
+two-phase locking
+two-Phase Locking Concurrency Control
+view serializability
+WAL
+XML
+XML namespaces
+XML Schema
+XML Schema Document
+XPath
+XQuery

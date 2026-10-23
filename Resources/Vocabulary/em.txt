@@ -1,0 +1,57 @@
+AC voltage
+Ampère
+Ampère's law
+BCS theory
+Biot
+Biot-Savart law
+Cooper
+Coulomb force
+Coulomb's law
+cyclotron
+diamagnetic materials
+diamagnetism
+Electrochemical cell
+electron paramagnetic resonance
+electronvolt
+Faraday
+Faraday constant
+Faraday's law
+ferromagnetic material
+ferromagnetism
+Gaussian surface
+Gilbert
+half-wave antenna
+Henry (H)
+hysteresis
+impedance
+induced electric-dipole moment
+Kirchhoff
+Kirchhoff's circuit laws
+Kirchhoff's rules
+LC circuit
+lead acid battery
+Lenz's law
+Lorentz force equation
+mass spectrometer
+Maxwell's equations
+Meissner effect
+multi-loop circuit
+Ohm's law
+parallel-plate capacitor
+paramagnetic material
+Permanent dipole
+permeability of free space
+permittivity of free space
+permittivity of vacuum
+piezoelectricity
+Poynting vector
+RC circuit
+RLC circuit
+RLC series circuit
+Savart
+solenoid
+SQUID
+Thomson
+TMS
+transformer
+X-ray

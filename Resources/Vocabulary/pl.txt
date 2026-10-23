@@ -1,0 +1,89 @@
+ABI
+Ackermann's function
+ActionScript
+ActiveX
+Ajax
+ANSI C
+AOT
+API
+API languages
+AppleScript
+applicative functor
+AST
+BASIC
+BNF
+C#
+C++
+Clang
+collective recursion
+concave function
+continuation-passing style
+CORBA
+coroutines
+CPS
+Curry-Howard correspondence
+Damas-Milner
+Datalog
+dataset API (tf.data)
+de Bruijn index
+DSL
+EBNF
+Elixir
+Erlang
+ford-Fulkerson method
+Fortran
+functor
+GADT
+GCC
+GHC
+Haskell
+Hindley-Milner
+Hindley-Milner type inference
+Hindley-Milner type system
+inverse Ackermann function
+Java
+JAVA ME
+JavaScript
+JIT
+JSP
+Julia
+JVM
+lambda
+lambda calculus
+layers API (tf.layers)
+Linux
+LLVM
+memory API
+metrics API (tf.metrics)
+monad
+OCaml
+OpenMP
+parsers
+partial recursive function
+Petri nets
+polymorphism
+prefix code
+primitive recursive
+process API
+program lifecycle phase
+Prolog
+Python
+R. Milner
+Racket
+recursion
+recursion termination
+recursive
+recursive doubling
+recursively solvable
+Rice's method
+Rust
+Scala
+Scheme
+Smalltalk
+SSA
+tail recursion
+thread API
+UML
+VHDL
+WS-I Basic Security Profile
+ZigBee

@@ -1,0 +1,192 @@
+A2C
+A3C
+AdaDelta
+AdaGrad
+Adam
+AdamW
+AlphaGo
+AUC
+autoencoder
+backpropagation
+backpropagation through structure
+backpropagation through time
+Bayesian analysis
+Bayesian computation
+Bayesian network models
+Bayesian networks
+Bayesian neural network
+Bayesian nonparametric models
+Bayesian optimization
+Bayesian programming
+Bellman equation
+BERT
+bigram
+BLEU
+BLEURT
+Boltzmann machine
+BoolQ
+case-based reasoning
+CB
+CDF
+character N-Gram F-score
+cloud TPU
+CNN
+convex function
+convex set
+convolution
+convolutional neural network
+COPA
+cross-entropy
+CTC
+DataFrame
+DPO
+DQN
+dropout
+ELU
+EMD
+ERM
+F1
+F1 score
+FFN
+FN
+FP
+FPR
+GAN
+GAT
+GBT
+GCN
+GELU
+generative pretrained transformer
+GNN
+GPT
+GRU
+hidden Markov model
+Hill climbing
+HITL
+HMM
+hyperparameter
+hyperparameter optimization
+JAX
+KL divergence
+KL-ONE
+KSVMs
+L0 regularization
+L1 loss
+L1 regularization
+L2 loss
+L2 regularization
+latent Dirichlet allocation
+Leaky ReLU
+LIT
+LLM
+LLM evaluations (evals)
+logits
+LSTM
+MAE
+Markov chain
+Markov decision process
+Markov decision processes
+Markov networks
+Markov processes
+Markov property
+Markov-chain Monte Carlo methods
+MBPP
+MDP
+MIMO
+MIMO Systems
+mini-batch stochastic gradient descent
+ML
+MMIT
+MNIST
+modus ponens
+MOE
+MSE
+MT
+multilayer perceptron
+N-Gram
+naive Bayes classifier
+NAS
+Nesterov momentum
+NLP
+NLU
+node (TensorFlow graph)
+NORA
+nouvelle AI
+Occam's razor
+one-hot encoding
+ORA
+out-of-bag evaluation (OOB evaluation)
+overfitting
+partially-observable Markov decision processes
+PCA
+perceptron
+PLM
+POMDP
+post-processing
+post-trained model
+PPO
+PR curve
+PS
+PyTorch
+QLoRA
+RAG
+rank (ordinality)
+recursive self-improvement
+ReLU
+restricted Boltzmann machine
+RL
+RLHF
+RMSE
+RMSProp
+RNN
+ROC
+ROUGE
+ROUGE-L
+ROUGE-N
+RTE
+SAC
+SARSA
+SELU
+sepCNN
+SGD
+sigmoid function
+SiLU
+skip-Gram
+softmax
+sparse dictionary learning
+SQuAD
+SRM
+stochastic gradient descent
+stochastic optimization
+stochastic semantic analysis
+subword token
+SVM
+Swish
+T5
+T5X
+tensor network theory
+tensor Processing Unit
+TensorBoard
+TensorFlow
+TensorFlow Serving
+TensorStore
+TN
+tokenizer
+TP
+TPR
+TPU
+transformer
+trigram
+TRPO
+TTL
+UCR
+underfitting
+VAE
+variational autoencoder
+Watson
+WER
+WMT
+WSC
+XGBoost
+XL-Sum (xlsum)
+XLA

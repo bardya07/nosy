@@ -1,0 +1,111 @@
+ALICE detector
+alpha decay
+antineutrino
+antiquark
+asymptotic freedom
+atomic nucleus
+baryon
+baryon number
+BE
+BEN
+beta decay
+Bethe
+binding energy per nucleon
+boson
+bottom quark
+Breit-Wigner distribution
+carbon-14 dating
+charm quark
+chart of the nuclides
+CKM matrix
+CP violation
+CPT theorem
+Curie
+daughter nucleus
+daughter nuclide
+deuterium
+down antiquarks
+down quark
+Drell-Yan process
+electron neutrino
+electron volts (eV)
+fermion
+Feynman
+Feynman diagram
+Feynman rule
+gamma emission (γ emission)
+gamma rays (γ)
+Gell-Mann
+Graham's law of diffusion
+hadron
+hadronization
+Hahn
+half-life
+Higgs boson
+high dose
+Hubble's constant
+Hubble's law
+large Hadron Collider
+lepton
+lepton number
+LHC
+low dose
+mass-energy equivalence equation
+moderate dose
+muon neutrino
+neutrino
+neutrinoless double beta decay
+neutron number
+nuclear binding energy
+nuclear Chemistry
+nuclear force
+nuclear fusion
+nuclear fusion reactor
+nuclear moderator
+nuclear physics
+nuclear reaction
+nuclear reactor
+nuclear transmutation
+nucleon
+nucleosynthesis
+nuclide
+parent nucleus
+parent nuclide
+PET
+PMNS matrix
+positron
+positron emission
+positron emission tomography
+proton-proton chain
+QCD
+QED
+quantum chromodynamics
+quark
+radiation absorbed dose (rad)
+radiation dose unit
+radioactive label
+radius of a nucleus
+RBE
+s-channel
+Sievert
+single-photon-emission CT
+SPECT
+strange quark
+strong nuclear force
+synchrotron
+synchrotron radiation
+t-channel
+tau lepton
+tau neutrino
+top quark
+tritium
+u-channel
+up antiquark
+up quark
+W and Z boson
+W boson
+weak nuclear force
+Wilkinson Microwave Anisotropy Probe
+Wilson
+WMAP
+Z boson

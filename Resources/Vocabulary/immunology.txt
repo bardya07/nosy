@@ -1,0 +1,869 @@
+12/23 rule
+4-1BB
+ACKR1
+ACKR2
+ACKR3
+ACKR4
+adjuvant
+AICDA
+AID
+AIM2
+AIRE
+allelic exclusion
+alpha allele
+alpha chain
+alpha-beta T cell
+alpha-beta T-cell antigen receptor
+alternative complement pathway
+alveolar macrophage
+anaphylatoxin
+antigen
+antigen presentation
+antigen processing
+antigen processing and presentation
+antigen receptor
+antigen-presenting cell
+antigenic determinant
+APRIL
+Artemis
+ASC
+B2M
+BAFF
+BALT
+basophil
+BCR
+bcr-abl fusion protein
+beta allele
+beta chain
+BLNK
+bronchus-associated lymphoid tissue
+BTK
+C1
+C1-INH
+C1q
+C1r
+C1s
+C2
+C2a
+C2b
+C3
+C3 convertase
+C3(H2O)
+C3a
+C3aR
+C3b
+C3bBb
+C3bBbC3b
+C3c
+C3d
+C3dg
+C4
+C4a
+C4b
+C4b2a
+C4b2a3b
+C4d
+C5
+C5 convertase
+C5a
+C5aR1
+C5aR2
+C5b
+C5b-6
+C5b-7
+C5b-8
+C5b-9
+C6
+C7
+C8
+C9
+calnexin
+calreticulin
+carcinoembryonic antigen
+caspase-1
+CCL1
+CCL11
+CCL13
+CCL14
+CCL15
+CCL16
+CCL17
+CCL18
+CCL19
+CCL2
+CCL20
+CCL21
+CCL22
+CCL23
+CCL24
+CCL25
+CCL26
+CCL27
+CCL28
+CCL3
+CCL3L1
+CCL4
+CCL4L1
+CCL5
+CCL7
+CCL8
+CCR1
+CCR10
+CCR2
+CCR3
+CCR4
+CCR5
+CCR6
+CCR7
+CCR8
+CCR9
+CD10
+CD100
+CD103
+CD105
+CD106
+CD107a
+CD115
+CD117
+CD11a
+CD11b
+CD11c
+CD122
+CD123
+CD124
+CD125
+CD127
+CD132
+CD134
+CD137
+CD138
+CD14
+CD141
+CD15
+CD152
+CD154
+CD16
+CD161
+CD163
+CD169
+CD172a
+CD18
+CD183
+CD184
+CD185
+CD19
+CD194
+CD196
+CD197
+CD1a
+CD1b
+CD1c
+CD1d
+CD2
+CD20
+CD200
+CD206
+CD209
+CD21
+CD22
+CD223
+CD226
+CD23
+CD24
+CD244
+CD247
+CD25
+CD27
+CD274
+CD279
+CD28
+CD29
+CD3
+CD30
+CD303
+CD304
+CD31
+CD32
+CD33
+CD34
+CD35
+CD36
+CD38
+CD39
+CD3D
+CD3E
+CD3G
+CD4
+CD4 antigen
+CD4+
+CD40
+CD40L
+CD41
+CD42b
+CD43
+CD44
+CD45
+CD45 antigen
+CD45RA
+CD45RO
+CD46
+CD47
+CD49a
+CD49d
+CD49e
+CD5
+CD51
+CD54
+CD55
+CD56
+CD57
+CD58
+CD59
+CD6
+CD61
+CD62E
+CD62L
+CD62P
+CD63
+CD64
+CD66b
+CD68
+CD69
+CD7
+CD70
+CD71
+CD73
+CD74
+CD79a
+CD79b
+CD8
+CD8+
+CD80
+CD81
+CD82
+CD83
+CD86
+CD8a
+CD8b
+CD9
+CD90
+CD95
+CD95 antigen
+CD95L
+CD96
+CD97
+CD98
+CD99
+cDC1
+cDC2
+CDR1
+CDR2
+CDR3
+central tolerance
+centroblast
+centrocyte
+cGAS
+chemokine
+chemokine receptor
+chemokine signaling pathway
+chromatin immunoprecipitation
+class-switch recombination
+classical complement pathway
+CLIP
+clonal anergy
+clonal deletion
+complement 3A
+complement 5A
+cortical epithelial cell
+CR1
+CR2
+CR3
+CR4
+cross-presentation
+CSF1
+CSF2
+CSF3
+cTEC
+CTL
+CTLA-4
+CX3CL1
+CX3CR1
+CXCL1
+CXCL10
+CXCL11
+CXCL12
+CXCL13
+CXCL14
+CXCL16
+CXCL17
+CXCL2
+CXCL3
+CXCL4
+CXCL4L1
+CXCL5
+CXCL6
+CXCL7
+CXCL8
+CXCL9
+CXCR1
+CXCR2
+CXCR3
+CXCR4
+CXCR5
+CXCR6
+cytokeratin
+cytokine
+cytokine receptor
+cytokine-cytokine receptor interaction
+cytosol
+cytotoxic T cell
+cytotoxic T lymphocytes
+D segment
+DAF
+DAP10
+DAP12
+degranulation
+delayed hypersensitivity
+dendritic cell
+diapedesis
+DiGeorge anomaly
+DiGeorge syndrome
+DJ
+DJ recombination
+DLL1
+DLL4
+DNA-PKcs
+DNTT
+double-negative thymocyte
+double-positive thymocyte
+E-selectin
+EBI3
+endosome
+eosinophil
+eotaxin
+epithelial cell
+epitope
+epitope mapping
+epitope retrieval
+epitope spreading
+ERAP1
+ERAP2
+erythroblastosis fetalis
+erythropoiesis
+exocytosis
+extravasation
+F(ab')2
+Fab
+fab immunoglobulin
+factor B
+factor D
+factor H
+factor I
+FADD
+Fas
+Fas ligand
+FasL
+Fc
+fc immunoglobulin
+FcRn
+FcγRI
+FcγRII
+FcγRIII
+FcεRI
+FEZF2
+FOXP3
+fractalkine
+Fyn
+G-CSF
+gamma-chain immunoglobulin
+gamma-delta T cell
+gamma-delta T-cell antigen receptor
+gasdermin D
+germinal center
+GM-CSF
+graft-versus-host disease
+granule exocytosis
+granulocyte-macrophage colony-stimulating factor
+granulocyte-macrophage colony-stimulating factor receptor
+granulopoiesis
+granulysin
+granzyme
+granzyme A
+granzyme B
+gut-associated lymphoid tissue
+hapten
+haptenic
+Hassall corpuscle
+heavy-chain immunoglobulin
+hematopoiesis
+heptamer
+high endothelial venules
+HLA
+HLA-A
+HLA-B
+HLA-C
+HLA-DM
+HLA-DO
+HLA-DP
+HLA-DPA1
+HLA-DPB1
+HLA-DQ
+HLA-DQA1
+HLA-DQB1
+HLA-DR
+HLA-DRA
+HLA-DRB1
+HLA-E
+HLA-F
+HLA-G
+human immunodeficiency virus
+hypersensitivities
+iC3b
+ICAM
+ICAM-1
+ICAM-2
+ICAM-3
+ICOS
+ICOSL
+IFN-α
+IFN-β
+IFN-γ
+IFN-λ
+IFNAR1
+IFNAR2
+IFNGR1
+IFNGR2
+IFNLR1
+IgA
+IgA1
+IgA2
+IgD
+IgE
+IgE receptor
+IgG
+IgG1
+IgG2
+IgG3
+IgG4
+IGH
+IGHA1
+IGHA2
+IGHD
+IGHE
+IGHG1
+IGHG2
+IGHG3
+IGHG4
+IGHM
+IGK
+IGKC
+IGL
+IGLC
+IGLL1
+IgM
+IL-1
+IL-10
+IL-10R
+IL-11
+IL-12
+IL-12p35
+IL-12p40
+IL-12R
+IL-13
+IL-14
+IL-15
+IL-16
+IL-17
+IL-17RA
+IL-18
+IL-19
+IL-1Ra
+IL-1α
+IL-1β
+IL-2
+IL-20
+IL-21
+IL-21R
+IL-22
+IL-23
+IL-23p19
+IL-23R
+IL-24
+IL-25
+IL-26
+IL-27
+IL-27p28
+IL-28
+IL-28A
+IL-28B
+IL-29
+IL-2R
+IL-3
+IL-30
+IL-31
+IL-32
+IL-33
+IL-34
+IL-35
+IL-36
+IL-36Ra
+IL-36α
+IL-36β
+IL-36γ
+IL-37
+IL-4
+IL-4R
+IL-5
+IL-6
+IL-6R
+IL-7
+IL-7R
+IL-8
+IL-9
+ILC1
+ILC2
+ILC3
+immediate hypersensitivity
+immunodeficiency
+immunoglobulin
+immunoglobulin joining region
+immunoglobulin variable region
+immunolabeling
+immunologic receptor
+immunological memory
+immunological synapse
+immunoprecipitation
+inflammasome
+integrin
+integrin signaling
+interferon
+interferon receptor
+interferon type I
+interferon type II
+interferon-alpha
+interferon-beta
+interleukin
+interleukin receptor
+interleukin-1
+interleukin-1 receptor
+interleukin-10
+interleukin-11
+interleukin-12
+interleukin-13
+interleukin-14
+interleukin-15
+interleukin-16
+interleukin-17
+interleukin-18
+interleukin-19
+interleukin-2
+interleukin-2 receptor
+interleukin-20
+interleukin-21
+interleukin-22
+interleukin-23
+interleukin-24
+interleukin-25
+interleukin-26
+interleukin-27
+interleukin-28
+interleukin-29
+interleukin-3
+interleukin-3 receptor
+interleukin-30
+interleukin-31
+interleukin-32
+interleukin-33
+interleukin-34
+interleukin-35
+interleukin-36
+interleukin-37
+interleukin-4
+interleukin-5
+interleukin-6
+interleukin-7
+interleukin-8
+interleukin-9
+intracellular domain
+invariant chain
+IRF3
+IRF7
+isotype switching
+ITAM
+ITGA4
+ITGAL
+ITGAM
+ITGAX
+ITGB1
+ITGB2
+ITIM
+J chain
+J segment
+JAK1
+JAK2
+JAK3
+junctional diversity
+kappa-chain immunoglobulin
+KIR
+Ku70
+Ku80
+L-selectin
+LAG-3
+LAT
+Lck
+lectin complement pathway
+LFA-1
+LFA-2
+LFA-3
+lymphocyte
+lymphocyte homing receptor
+lymphoid progenitor
+lymphoma
+lymphopoiesis
+M-CSF
+Mac-1
+macrophage
+macrophage colony-stimulating factor
+macrophage oxidative metabolism
+MAdCAM-1
+MAIT cell
+MALT
+MASP-1
+MASP-2
+mast cell
+MAVS
+MBL
+MCP-1
+MDA5
+medulla
+medullary epithelial cell
+membrane attack complex
+MHC
+MHC class I
+MHC class II
+MHC polygeny
+MHC polymorphism
+MICA
+MICB
+MIP-1α
+MIP-1β
+monocyte
+mTEC
+mu-chain immunoglobulin
+mucosa-associated lymphoid tissue
+MyD88
+myeloid progenitor
+N-nucleotide addition
+naïve lymphocyte
+neutrophil
+neutrophil extracellular trap formation
+NF-κB
+NHEJ
+NICD
+NK
+NK cell
+NKG2A
+NKG2C
+NKG2D
+NKp30
+NKp44
+NKp46
+NKT cell
+NLRP3
+NOD1
+NOD2
+nonamer
+Notch
+Notch ligand
+Notch receptor
+NOTCH1
+NOTCH2
+O-Antigen repeat unit biosynthesis
+opsonin
+opsonization
+OX40
+P-nucleotide addition
+P-selectin
+PAMP
+paratope
+pathogen-associated molecular patterns
+PD-1
+PD-L1
+PD-L2
+pDC
+PECAM-1
+perforin
+peripheral tolerance
+PF4
+phagocytosis
+pIgR
+plasma cell
+plasmablast
+polyomavirus transforming antigen
+PPBP
+pre-B cell
+pre-B-cell receptor
+pre-BCR
+pre-T cell
+pre-T-cell receptor
+pre-TCR
+pro-B cell
+pro-T cell
+properdin
+PRR
+PSGL-1
+psychoneuroimmunology
+PTCRA
+pTα
+RAG
+RAG1
+RAG2
+RANTES
+receptor editing
+recombinant interferon-gamma
+recombination signal sequence
+RIG-I
+RLR
+RSS
+SCID
+SDF-1
+secretory component
+selectin
+severe combined immunodeficiency disease
+sialyl Lewis X
+single-positive thymocyte
+SLP-76
+SOCS1
+SOCS3
+somatic hypermutation
+somatic recombination
+STAT1
+STAT2
+STAT3
+STAT4
+STAT5
+STAT6
+STING
+stroma
+surface immunoglobulin
+surrogate alpha chain
+surrogate light chain
+surrogate α chain
+SYK
+T cell-dependent antigen
+T cell-independent antigen
+T-cell antigen receptors
+T-cell receptor
+TAP1
+TAP2
+tapasin
+TBK1
+TCR
+TCRα
+TCRβ
+TCRγ
+TCRδ
+TdT
+Tfh
+TGF-β
+TH
+Th1
+Th17
+Th2
+Th22
+Th9
+thymic cortex
+thymic epithelium
+thymic medulla
+thymic stroma
+thymocyte
+thymosins
+thymus
+TIGIT
+TIM-3
+tissue-resident macrophage
+TLR
+TLR1
+TLR10
+TLR2
+TLR3
+TLR4
+TLR5
+TLR6
+TLR7
+TLR8
+TLR9
+TNF
+TNF signaling pathway
+TNF-α
+TNFR1
+TNFR2
+TRA
+TRAC
+TRAF6
+TRAIL
+TRAILR
+TRAJ
+transcription factor
+TRAV
+TRB
+TRBC1
+TRBC2
+TRBD
+TRBJ
+TRBV
+TRD
+TRDC
+TRDD
+TRDJ
+TRDV
+Treg
+TRG
+TRGC1
+TRGC2
+TRGJ
+TRGV
+TRIF
+two-site immunoradiometric assay
+TYK2
+type I hypersensitivity
+type I interferon
+type II hypersensitivity
+type III hypersensitivity
+ULBP1
+ULBP2
+ULBP3
+V segment
+V(D)J recombination
+VCAM-1
+VDJ
+VDJ recombinase
+VDJ recombination
+VJ
+VJ recombination
+VLA-4
+VLA-5
+VpreB
+VPREB1
+XCL1
+XCL2
+XCR1
+ZAP-70
+α allele
+α chain
+α4β1
+α4β7
+αLβ2
+αMβ2
+αβ T cell
+αβ T-cell receptor
+β allele
+β chain
+β-selection
+β2 integrin
+β2-microglobulin
+β7 integrin
+γ-interferon
+γδ T cell
+γδ T-cell receptor
+λ5

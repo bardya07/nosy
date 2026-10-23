@@ -1,0 +1,339 @@
+acrosomal reaction
+acrosome
+AFLP
+AICDA
+AID
+AIRE
+allele
+allele frequency
+allo-parapatric speciation
+allo-sympatric speciation
+allometry
+allopatric taxa
+allopatry
+ambystoma mexicanum
+amniotic cavity
+anagenesis
+aneuploid
+apomorphy
+Artemis
+ATAC-seq
+autapomorphy
+autopolyploid
+autosomal chromosomes
+balancer chromosome
+base editing
+bateson-Dobzhansky-Muller model
+BCR
+blastocoel
+blastomere
+BLNK
+Braxton Hicks contractions
+Brown adipose tissue
+BTK
+capacitation
+Cas12a
+Cas13
+Cas9
+CD spectroscopy
+CD247
+CD3D
+CD3E
+CD3G
+cDNA
+CDR1
+CDR2
+CDR3
+centimorgans (cM)
+ChIP-seq
+chorionic membrane
+chorionic villi
+chromosome conformation capture
+chromosome inversion
+cistron
+cladogenesis
+cladogram
+co-operation
+coadaptation
+coevolution
+cohesin
+complementary DNA libraries
+contig
+corona radiata
+cospeciation
+court jester hypothesis
+CRISPR
+crRNA
+cryo-EM
+CUT&RUN
+CUT&Tag
+cytogenetic mapping
+dCas9
+ddPCR
+De-extinction
+deoxynucleotide
+dideoxynucleotides
+DJ
+DLL1
+DLL4
+DNA microarrays
+DNA-PKcs
+DNTT
+Dobzhansky-Muller model
+Drosophila melanogaster
+DSC
+ectopic pregnancy
+ELISA
+ELISPOT
+EMSA
+epiblast
+epistasis
+ESI-MS
+EST
+euploid
+euploidy
+evolutionary (Darwinian) fitness
+exaptation
+expressivity
+F1
+F2
+FACS
+FEZF2
+FISH
+foreign DNA
+FOXP3
+FPLC
+FRAP
+frequency-dependent selection
+FRET
+Fyn
+gametophyte
+GC-MS
+genetic recombination
+good genes hypothesis
+Green-beard effect
+Haldane's rule
+haplodiploidy
+haplogroup
+haploinsufficiency
+haplotype
+Hardy-Weinberg principle
+hCG
+HDR
+hemizygous
+heterosis
+heterozygous
+Hi-C
+hnRNA
+homoallele
+homologous chromosomes
+homologous recombination
+homoplasy
+homozygous
+host DNA
+HPLC
+human chorionic gonadotropin
+hypermorphosis
+hypoblast
+hypomorph
+IGH
+IGHA1
+IGHA2
+IGHD
+IGHE
+IGHG1
+IGHG2
+IGHG3
+IGHG4
+IGHM
+IGK
+IGKC
+IGL
+IGLC
+IGLL1
+implantation
+introgression
+involution
+isomeric genes
+ITAM
+ITC
+ITIM
+K -strategist
+karyogram
+karyotype
+Ku70
+Ku80
+lactation
+lanugo
+LAT
+LC-MS
+LC-MS/MS
+Lck
+let-down reflex
+LGT
+lncRNA
+MACS
+MALDI-TOF
+MCS
+meiosis II
+Mendelian inheritance
+MERFISH
+microallopatric
+microsatellite polymorphisms
+minor allele frequency
+miRNA
+mitochondrial Eve
+monophyly
+monosomy
+morula
+mosaic sympatry
+mRNA
+Muller's ratchet
+neurulation
+next-generation sequencing
+nexus hypothesis
+NHEJ
+NICD
+non-Mendelian inheritance
+non-random segregation of chromosomes
+nonhomologous recombination
+nonreciprocal recombination
+Notch
+NOTCH1
+NOTCH2
+null allele
+nullisomy
+oikopleura dioica
+ORF
+ortholog
+P0
+pairwise-end sequencing
+paleopolyploidy
+PALM
+PAM
+para-allopatric speciation
+paralog
+parapatric speciation
+parasitic DNA
+penetrance
+peripatric speciation
+phosphoproteomics
+phylogenetic bracketing
+phylogeography
+piRNA
+placenta previa
+placentation
+pleiotropy
+plesiomorphy
+ploidy
+polymorphism
+polyphyly
+polyploid
+pre-BCR
+pre-TCR
+prolactin
+proteases
+pseudoallele
+pseudogene
+pseudopolyploidy
+PTCRA
+pTα
+qPCR
+RAG
+RAG1
+RAG2
+recombinant DNA
+recombinant protein
+recombination frequency
+recombination nodules
+red Queen hypothesis
+restriction fragment length polymorphisms
+reverse transcriptase PCR
+RFLP
+Ribo-seq
+ribosome profiling
+RNA-seq
+rRNA
+RSS
+RT-PCR
+RT-qPCR
+scRNA-seq
+SEC
+secondary Contact
+sex chromosomes
+sexual dimorphisms
+sgRNA
+shRNA
+single nucleotide polymorphisms
+single-cell RNA sequencing
+siRNA
+SLP-76
+smFISH
+snoRNA
+SNP
+snRNA
+somatic cell
+sporophyte
+SPR
+STED
+STORM
+STR
+suture zone
+SYK
+sympatry
+symplesiomorphy
+synapomorphy
+synapsis
+synaptonemal complex
+syncytiotrophoblast
+synteny
+TCR
+TCRα
+TCRβ
+TCRγ
+TCRδ
+TdT
+ti plasmids
+TIRF
+TRA
+TRAC
+tracrRNA
+TRAJ
+transgenic
+TRAV
+TRB
+TRBC1
+TRBC2
+TRBD
+TRBJ
+TRBV
+TRD
+TRDC
+TRDD
+TRDJ
+TRDV
+TRG
+TRGC1
+TRGC2
+TRGJ
+TRGV
+trimesters
+trisomy
+tRNA
+UTR
+V(D)J recombination
+VDJ
+vernix caseosa
+vicariance biogeography
+vicariant speciation
+VJ
+VNTR
+VpreB
+VPREB1
+whole-genome sequencing
+X-linked
+X-linked dominant
+X-linked recessive
+Y-chromosomal Adam
+ZAP-70
+λ5

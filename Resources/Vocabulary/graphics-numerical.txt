@@ -1,0 +1,60 @@
+algebraic topology
+antialiasing
+Arnoldi iteration
+BFGS
+BiCGSTAB
+Bresenham's algorithm
+Cholesky decomposition
+combinatorial algorithms
+combinatorial optimization
+combinatoric problems
+combinatorics
+combinatorics on words
+convex optimization
+DCT
+DFT
+DST
+FFT
+Gauss-Seidel method
+Gaussian processes
+geometric topology
+Gibbs sampling
+Givens rotation
+GMRES
+HCI
+Householder transformation
+hyperbolic trees
+Jacobi method
+Krylov subspace
+L-BFGS
+Lanczos algorithm
+LAPACK
+LU decomposition
+MATLAB
+maximum entropy modeling
+MINRES
+nonconvex optimization
+NumPy
+Nyquist frequency
+Nyquist-Shannon theorem
+ODE
+PDE
+perceptron algorithm
+point-set topology
+QR decomposition
+quadrature
+rasterization
+renewal theory
+RK4
+SciPy
+SDE
+SOR
+spline models
+stochastic differential equations
+stochastic games
+stochastic processes
+SVD
+texturing
+topology
+VRML
+X3D

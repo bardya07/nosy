@@ -1,0 +1,38 @@
+adiabatic compressions
+adiabatic expansion
+adiabatic heating
+adiabatic process
+Avogadro
+Avogadro's number
+Boltzmann
+Boltzmann constant
+Boyle's law
+calorimetry
+Carnot
+Carnot cycle
+Carnot engine
+Carnot's principle
+Celsius scale
+Charles
+Charles's law
+Clausius
+constant-volume gas thermometer
+Dalton's law of partial pressures
+Debye temperature
+degree Celsius
+endothermic
+enthalpy
+Gay-Lussac's law
+isentropic
+isothermal expansion
+isothermal process
+Kelvin scale
+Maxwell
+Maxwell-Boltzmann distribution
+non-quasi-static processes
+pV diagram
+quasi-static process
+root-mean-square (rms) speed
+Stefan-Boltzmann law of radiation
+Stirling engine
+STP

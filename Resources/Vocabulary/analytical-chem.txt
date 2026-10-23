@@ -1,0 +1,346 @@
+13C NMR
+13C-HMQC-NOESY
+13C-NOESY-HSQC
+15N-NOESY-HSQC
+15N-TOCSY-HSQC
+180° pulse
+19F NMR
+1H NMR
+31P NMR
+90° pulse
+a-ion
+AAS
+additional gases
+adiabatic pulse
+adsorption chromatography
+adsorption isotherm
+adsorptive stripping voltammetry
+AES
+affinity chromatography
+AFM
+aliased effects
+alkyl cation
+all-glass heated inlet system
+all-solid-state ion-selective electrode
+ambient mass spectrometry
+amniotic fluid
+amperometry
+ATR-FTIR
+base peak
+BET
+blaze-angle
+Bloch equations
+Bloch-Siegert shift
+bomb-digestion
+bonded phase
+boron-doped diamond electrode
+bottom-up proteomics
+CA
+CE
+chemically-modified electrode
+chemically-sensitive field effect transistor
+chemiluminescence
+Chiral additive
+Chiral mobile phase
+Chiral selector
+Chiral stationary phase
+chromatin immunoprecipitation
+chromatogram
+chromatograph
+chromatographic bed
+chromatographic detector
+chromatography
+chronoamperometry
+chronocoulometric constant
+chronocoulometry
+CO
+cold fibre solid-phase microextraction
+cold neutrons
+collisional broadening
+column chromatography
+comparative glycoproteomics
+comparative proteoglycomics
+COSY
+CV
+delta scale
+DEPT
+DEPT-NMR
+diastereotopic
+dispersive liquid-liquid microextraction
+dispersive spectrometer
+displacement chromatography
+distribution constant calibration
+distribution isotherm
+disulfide bond cleavage
+DLS
+DM-interference
+donor phase
+Doppler broadening
+dose
+DOSY
+double-beam spectrometer
+DPV
+DSC
+DTA
+EDX
+EDXRF
+EIS
+electrophoretic velocity
+electrothermal atomic absorption spectroscopy
+elution chromatography
+enantioselective chromatography
+enantiotopic
+end-point error
+endonuclease
+FID
+flow-programmed chromatography
+flow-through extraction
+flow-through solid-phase spectrometry
+fluorous extraction
+foamed polyurethane sorbent
+Fourier-transform infrared spectroscopy
+Fourier-transform mass spectrometry
+Fourier-transform Raman spectroscopy
+fractional-factorial design
+frequency, ν
+Fresnel reflection
+frontal chromatography
+FT-NMR
+FTIR
+GC
+GC-FID
+Hilbert transform
+HILIC
+HMBC
+HN(CA)CO
+HN(CO)CA
+HNCA
+HNCO
+hold-back carrier
+hold-up time
+hold-up volume
+hollow-cathode discharge source
+hollow-cathode lamp
+hollow-fibre liquid-phase microextraction
+homogeneous line-broadening
+homonuclear decoupling
+homotopic
+HSQC
+hybrid mass spectrometer
+hydrodynamic chromatography
+hydrodynamic injection
+hydrodynamic voltammetry
+hydrogen/deuterium exchange
+hydrophilic-interaction liquid chromatography
+hydrophobic-interaction chromatography
+hyper-Raman spectroscopy
+hyperlayer focusing field-flow fractionation
+hyphenated mass spectrometry technique
+hypo-phase
+ICP-MS
+ICP-OES
+ideal chromatography
+ideal, non-linear chromatography
+ilkovič equation
+in situ micro-X-ray diffraction
+in-vivo neutron activation analysis
+infrared spectroscopy
+IR
+IRTRAN™
+Ising model
+isobaric mass-change determination
+isoelectric focusing
+isomeric state
+isomeric transition
+isothermal chromatography
+isotope dilution mass spectrometry
+isotope ratio mass spectrometry
+LC-MS
+lifetime broadening
+ligand exchange chromatography
+limiting Catalytic current
+line-broadening
+linear chromatography
+linear distribution isotherm
+linear-scan voltammetry
+linearity of calibration
+lipooligosaccharide
+lipopolysaccharidomics
+liquid chromatography
+liquid chromatography-mass spectrometry
+liquid excimer laser
+liquid ion laser
+liquid laser
+liquid-coated stationary phase
+liquid-gel chromatography
+liquid-liquid distribution
+liquid-liquid extraction
+liquid-metal ion gun
+liquid-phase film thickness
+liquid-phase loading
+liquid-phase microextraction
+lock-in amplifier
+logit
+low-energy collision-induced dissociation
+low-energy ion scattering spectrometry
+low-pass filter
+low-specificity sorbents
+luminescence
+luminescence quenching
+luminescence spectrometer
+Mohr amplification process
+molecular beam mass spectrometry
+molecular laser
+molecular spectroscopy
+molecularly imprinted polymer sorbent
+momentum separator
+mono-energetic radiation
+MS/MS data based identification
+MS/MS spectrum
+multi-channel pulse height analyser
+multi-dimensional chromatography
+multi-way data
+Mössbauer effect
+Mössbauer spectrometry
+n + 1 rule
+NAA
+negative-ion yield
+neutralization-reionization mass spectrometry
+neutron activation analysis
+neutron density
+neutron depth profiling
+neutron diffraction analysis
+neutron energy
+neutron multiplication
+neutron scattering analysis
+neutron temperature
+nier-Johnson geometry
+nikolsky-Eisenman equation
+NMR
+no-load indication
+NOESY
+non-aqueous capillary electrophoresis
+non-certified property value
+non-crystalline electrodes
+non-crystalline membrane
+non-destructive activation analysis
+non-dispersive infrared spectroscopies
+non-ideal chromatography
+non-ideal, linear chromatography
+non-ideal, non-linear chromatography
+non-isotopic labelling
+non-linear chromatography
+non-linear distribution isotherm
+non-linearity error
+non-porous membrane
+non-radiative quenching
+peak width at base
+peptide De novo sequencing
+peptide fragment ion
+peptide fragmentation technique
+peptide mass fingerprinting
+peptide nucleic acid
+peptide precursor ion
+peptide sequence tag
+peptidomics
+perfusion stationary phase
+Periodic voltage
+Permanent modifier
+permeation chromatography
+perturbed angular correlation spectrometry
+pH glass electrode
+pH-sensitive electrode
+pH-zone-refining counter-current chromatography
+pH0.5 or pH1/2
+phase correction
+phase cycling
+phase inversion
+photothermal spectroscopy
+pile-up
+PIN semiconductor detector
+pIon
+plackett-Burman design
+planar chromatography
+plasma gases
+plasma lipoproteins
+plasmon
+precursor peak
+rapid-scan Fourier-transform infrared spectroscopy
+rate of nucleation
+Rayleigh limit
+re-extraction
+reaction chromatography
+real-time polymerase chain reaction
+ROESY
+RP-HPLC
+SEM
+SFC
+spectrochemical buffer
+spectrochemical carrier
+spectroelectrochemistry
+spectrogram
+spectrograph
+spectrometer
+spectrometer response function
+spectrometer transmission function
+spectroscope
+specular X-ray reflectrometry
+sphingolipids
+spin-lattice relaxation
+spin-lattice relaxation time
+spin-spin relaxation
+spin-spin relaxation time
+spin-spin splitting
+split-flow thin-cell fractionation
+STM
+stoichiometric sputtering
+Stokes type radiation
+Stokes-Raman scattering
+stop-flow conditions
+stopped-flow cell
+stripping phase
+stripping voltammetry
+substoichiometric extraction
+substoichiometric isotope dilution analysis
+sum frequency generation spectroscopy
+sum-frequency spectroscopy
+supercritical fluid chromatography
+supercritical fluid chromatography-mass spectrometry
+support-coated open-tubular column
+SWV
+synchrotron X-ray spectroscopy
+szilard-Chalmers effect
+t1
+t1 noise
+t2
+take-it-or-leave-it data
+take-off angle
+Taylor cone
+telomerase
+TEM
+temperature-programmed chromatography
+TGA
+theoretical scattered-ion intensity
+thermal field-flow fractionation
+thermal neutrons
+TLC
+TOCSY
+transverse relaxation optimized spectroscopy
+triple quadrupole mass spectrometer
+triplet-triplet absorption
+trypsin
+tucker tri-linear analysis
+tunable laser
+two-dimensional chromatography
+two-dimensional correlation spectroscopy
+two-dimensional correlation spectrum
+two-dimensional gel electrophoresis
+two-phase aqueous partition
+two-site immunoradiometric assay
+type-J coil planet centrifuge
+UHPLC
+UV-Vis
+wavelength, λ
+XPS
+XRD
+XRF

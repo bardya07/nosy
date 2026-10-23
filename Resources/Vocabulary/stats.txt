@@ -1,0 +1,76 @@
+ANCOVA
+AND" Event
+ANOVA
+Bartlett test
+Bayes' theorem
+Benjamini-Hochberg procedure
+Bernoulli Trial
+Bonferroni correction
+Breusch-Pagan test
+CDF
+Cohen d
+Cohen kappa
+Cohen's d
+Cox proportional hazards
+Cramér V
+Cramér-Rao bound
+Cronbach alpha
+Dirichlet distribution
+Durbin-Watson statistic
+eukaryote
+Euler-Poisson differential equations
+Euler-Poisson-Darboux equation
+FDR
+Fisher information
+Fleiss kappa
+Gibbs sampling
+Hedges g
+HMC
+Holm-Bonferroni method
+homeostasis
+hypergeometric probability
+hypothesis-based science
+IRB
+Jarque-Bera test
+Kaplan-Meier estimator
+Kendall tau
+Kolmogorov-Smirnov test
+Kruskal-Wallis test
+Levene test
+MANCOVA
+Mann-Whitney U
+MANOVA
+MAP
+Markov chain
+Markov's theorem
+MCMC
+Metropolis-Hastings algorithm
+MLE
+neurobiology
+Neyman-Pearson lemma
+NUTS
+ordinal scale
+Pearson
+Pearson chi-square
+peer-reviewed manuscripts
+Poisson bracket
+Poisson identity
+Poisson integral
+Poisson kernel
+Poisson probability distribution
+Poisson regression
+Poisson's equation
+Poisson's integral
+Poisson's summation formula
+review Articles
+Shapiro-Wilk test
+Spearman correlation
+SSE
+Student t-distribution
+Student's t-distribution
+type II error
+Wald test
+Weibull distribution
+Welch t-test
+Wilcoxon test
+Wishart distribution

@@ -1,0 +1,196 @@
+above-ground biomass
+abyssal zone
+acid rain
+acoelomates
+Actinopterygii
+aggressive displays
+agnatha
+algal Bloom
+allantois
+allopatric speciation
+allopolyploid
+amnion
+amniote embryo
+amniotic egg
+amoebocytes
+analytical model
+Anura
+apocrine glands
+arboreal hypothesis
+archenteron
+archosaurs
+atrium
+autopolyploidy
+bacterivore
+basal taxon
+Batesian mimicry
+benthic realm
+benthos
+bio-invader
+biomagnification
+blastopore
+blastula
+brumation
+caecilians
+Cephalochordata
+cephalothorax
+chelicerae
+Chordata
+chorioallantoic placenta
+chorion
+chytridiomycosis
+clitellum
+Cnidaria
+cnidocyte
+coelom
+coelomic pouches
+commensal
+courtship display
+Craniata (or Vertebrata)
+Crocodilia
+cryogenian period
+cryosphere
+cryptobiosis
+demographic-based models
+denitrification
+density-dependent
+density-independent
+detritivore
+deuterostomes
+diploblasts
+distraction displays
+DNA barcoding
+eccrine glands
+ecdysis
+Ecdysozoa
+ecotone
+ecotope
+ecotoxicology
+el Niño
+embryonic mesoderm
+end-Cretaceous extinction
+end-Permian extinction
+endoskeleton
+enterocoelom
+environmental degradation
+environmental disturbances
+environmental restoration
+environmental science
+ephemerality
+eucoelomates
+eukaryote-first
+eumetazoa
+eutrophication
+extreme environment
+fecundity
+gastrulation
+Gause's law
+Gloger's rule
+gnathostomes
+greenhouse gases
+GTAs
+haze-effect cooling
+HGT
+homeotherms
+HOMO
+Homo sapiens sapiens
+homologous structures
+homology
+intermediate disturbance hypothesis
+intrasexual selection
+iteroparity
+J-shaped growth curve
+Jacobson's organ
+K-selected species
+keratin
+La Niña
+lepidosaurs
+leucophores
+Lophotrochozoa
+Lotka-Volterra equation
+mesohyl
+mesopredator release hypothesis
+metazoa
+micro-climate
+mitochondria-first
+monophyletic
+monophyletic group
+monotremes
+morganucodonts
+mutualism
+müllerian mimicry
+nematocysts
+neritic zone
+nitrification
+notochord
+NPE
+nucleus-first
+one-child Policy
+ordovician-Silurian extinction
+organogenesis
+Osteichthyes
+parabronchi
+parasitoid
+pedipalps
+pelagic realm
+pharyngeal nerve ring
+pharyngeal slits
+phosphorus cycle
+phylogenetic tree
+phylogeny
+pioneer species
+plant nutrition
+Porifera
+post-anal tail
+protostomes
+pseudocoelomates
+pyloric caeca
+r-selected species
+radial cleavage
+radial symmetry
+radula
+red list
+S-shaped curve
+saprotrophic nutrition
+Sarcopterygii
+sauropsids
+schizocoelom
+semelparity
+setae
+source-sink dynamics
+species-area relationship
+spermatophore
+sphenodontia
+spongocoel
+spring-and-fall turnover
+Squamata
+stereoscopic vision
+symbioses
+sympatric speciation
+synapsids
+syncytium
+taxis
+taxon
+Taylor's law
+teloblastic growth
+temporal fenestrae
+temporal isolation
+terrestrial hypothesis
+Testudines
+thermocline
+threat display
+TLTE
+tragedy of the Commons
+triassic-Jurassic extinction
+triploblasts
+trochophore larva
+tunicates
+Urochordata
+vertebrae
+vicariance
+virology
+visceral mass
+vomerine teeth
+white-nose syndrome
+yolk sac
+zoonotic diseases

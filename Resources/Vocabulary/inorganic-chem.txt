@@ -1,0 +1,161 @@
+18-electron rule
+acetonides
+acetylides
+aci-nitro compounds
+actinide series
+actinides
+actinoid series
+acyl carbenes
+aglycon
+aldazines
+aldimines
+alkoxyamines
+alkyl radicals
+alkylenes
+alkylidene groups
+alkylideneaminoxyl radicals
+alkylideneaminyl radicals
+alkylidenes
+alkylidynes
+Allylic groups
+Allylic intermediates
+alpha particles (α particles)
+amide oximes
+amine imides
+amine oxides
+amine ylides
+aminoxides
+aminoxyl radicals
+ammonium ylides
+anhydro bases
+annulenylidenes
+anthocyanidins
+anthocyanins
+arene epoxides
+arsanylidenes
+arsine oxides
+Bartlett
+bicarbonate anion
+bidentate ligands
+binary acid
+Born-Haber cycle
+CFSE
+chalcogens
+chelate
+chelate effect
+chelating ligands
+chlor-alkali process
+coordination isomers
+d-block elements
+Dalton
+Dalton's atomic theory
+diamagnetic
+electron-pair geometry
+f-block elements
+germylidenes
+glycosamines
+glycoses
+glycosyl group
+glycosylamines
+Grignard reagent
+Haber process
+hall-Héroult cell
+hapticity
+hemoglobin
+Herz compounds
+hetarenes
+hetaryl groups
+heteroalkenes
+heteroarenes
+heteroaryl groups
+high-spin complexes
+homonuclear diatomic molecules
+héroult
+inert gases
+ionization isomers
+Jahn-Teller effect
+ketazines
+ketenimines
+ketimines
+keto carbenes
+lanthanide series
+lanthanides
+lanthanoid series
+lariat ethers
+lattice energy (ΔHlattice)
+LCAO
+leuco bases
+leukotrienes
+Lewis symbol
+LFSE
+ligand field stabilization energy
+lignin
+linkage isomers
+lipopolysaccharides
+lipoprotein
+low-spin complexes
+LS coupling
+Main-group elements
+mancude-ring systems
+Meisenheimer adduct
+metal-carbene complexes
+metal-carbyne complexes
+metallocenes
+Meyer
+Millikan
+molecular orbital (Ψ2)
+monoterpenoids
+mucopolysaccharides
+neoflavones
+nitramines
+nitrenes
+nitrile imides
+nitrile oxides
+nitrile sulfides
+nitrile ylides
+nitrilium betaines
+nitrilium ions
+nitrimines
+nitrosamides
+nitrosamines
+nitrosimines
+nucleoproteins
+number of pseudo-generations
+optical isomers
+Orgel diagram
+ortho amides
+ortho esters
+osotriazoles
+Ostwald process
+oxime O-ethers
+Oxo carboxylic acids
+oxonium ylides
+paramagnetism
+peptidoglycan
+Periodic law
+peroxides
+peroxy acids
+pi bond (π bond)
+pi bonding molecular orbital
+polydentate ligand
+polymorphs
+Racah parameter
+Russell-Saunders coupling
+Rutherford
+s-p mixing
+sigma bonds (σ bonds)
+sp2 hybrid orbitals
+sp3 hybrid orbitals
+sp3d hybrid orbitals
+sp3d2 hybrid orbitals
+spectrochemical series
+spin-orbit coupling
+strong-field ligands
+superoxide
+t2g orbitals
+Tanabe-Sugano diagram
+Thomson
+weak-field ligands
+Δoct
+π* antibonding molecular orbital
+σs molecular orbital

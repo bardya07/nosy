@@ -1,0 +1,37 @@
+accommodation
+antinode
+Bragg
+Bragg planes
+Brewster's angle
+Brewster's law
+CCD
+charge-coupled device
+concave lens
+concave mirror
+convex lens
+convex mirror
+Doppler effect
+Doppler shift
+electro-optic effect
+Hubble space Telescope
+Hubble telescope
+Huygens
+Huygens's principle
+Huygens-Fresnel principle
+hyperopia
+Keck telescope
+LCDs
+lens maker's equation
+liquid crystal displays
+Mach number
+Malus's law
+Michelson
+myopia
+Newton's rings
+Newtonian design
+Rayleigh criterion
+Snell
+Snell's law
+spectroscopic dispersion
+thin-film interference
+X-ray diffraction

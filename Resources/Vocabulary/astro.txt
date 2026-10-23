@@ -1,0 +1,107 @@
+A-type main-sequence star
+active galactic nucleus
+alfvén surface
+apoapsis
+apogee
+argument of periapsis
+asteroid belt
+azimuth
+B-type Main-sequence star
+BAO
+baryon acoustic oscillation
+BBN
+big bang nucleosynthesis
+blazar
+Brown dwarf
+Chandrasekhar limit
+chromosphere
+chromospheric activity index
+cis-Neptunian object
+CMB
+CMBR
+CNO
+compact stellar nucleus
+conjunction
+coudé spectrograph
+deep-sky object
+early-type star
+ecliptic
+Eddington luminosity
+ephemeris
+F-type Main-sequence star
+FLRW metric
+Friedmann equations
+Friedmann-Lemaître-Robertson-Walker metric
+G-type Main-sequence star
+galactic nucleus
+galactocentric distance
+Galilean moons
+gamma-ray astronomy
+gamma-ray burst
+geometric albedo
+H II region
+heliosphere
+Hertzsprung-Russell diagram
+Hill sphere
+Hubble constant
+Hubble law
+Hubble parameter
+hybrid-chromosphere star
+Jeans instability
+Jeans mass
+K-type Main-sequence star
+Kelvin-Helmholtz mechanism
+Kepler orbit
+king radius
+Lagrange point
+Lagrangian point
+Lambda-CDM
+late-type star
+libration
+light-year
+lobster-eye optics
+lunar phase
+M-type Main-sequence star
+mean-motion resonance
+micrometeorite
+micrometeoroid
+minor-planet moon
+MMR
+Morgan-Keenan stellar classification system
+multi-messenger astronomy
+near-Earth object
+non-inclined orbit
+nuclear star cluster
+nutation
+O-C diagram
+O-type Main-sequence star
+periapsis
+perigee
+planetary-mass object
+pseudo-synchronous rotation
+pulsar
+quadrature
+radial velocity
+recombination
+red-giant branch
+réseau
+Schwarzschild metric
+semi-diameter
+semi-major axis
+September equinox
+solar radius
+spectroscopic binary
+spectroscopy
+syzygy
+telluric star
+Tisserand's parameter
+Tolman-Oppenheimer-Volkoff limit
+TOV limit
+trans-Neptunian object
+tully-Fisher relation
+UBV photometric system
+virial theorem
+weak-line star
+Wilson-Bappu effect
+X-ray source
+zero-age Main sequence

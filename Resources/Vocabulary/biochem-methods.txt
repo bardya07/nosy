@@ -1,0 +1,229 @@
+2D gel electrophoresis
+acrylamide
+AFLP
+agarose
+agarose gel electrophoresis
+Alexa Fluor 488
+Alexa Fluor 647
+AluI
+amino acid sequence homology
+ampicillin
+APC
+APS
+ATAC-seq
+atomic absorption spectroscopy
+avidin
+BamHI
+BglII
+Bicine
+bisacrylamide
+blasticidin
+BSA
+BsaI
+BsmBI
+carbenicillin
+Cas12a
+Cas13
+Cas9
+CD spectroscopy
+cDNA
+CellTrace Violet
+CFP
+CFSE
+CHAPS
+ChIP
+ChIP-seq
+chloramphenicol
+chromatin immunoprecipitation
+chromatography
+confocal laser scanning microscopy
+Coomassie Brilliant Blue
+CRISPR
+CRISPR-Cas9
+crRNA
+cryo-EM
+CUT&RUN
+CUT&Tag
+DAPI
+dCas9
+ddATP
+ddCTP
+ddGTP
+ddPCR
+ddTTP
+deoxycholate
+desthiobiotin
+DMEM
+DpnI
+DSC
+DTT
+EcoRI
+EcoRV
+EDTA
+EGFP
+EGTA
+electrophoresis
+ELISA
+ELISPOT
+EMSA
+ER insertion sequence
+ESI-MS
+ethidium bromide
+FACS
+FBS
+FISH
+FITC
+FLAG tag
+FPLC
+FRAP
+FRET
+G418
+GC-MS
+gel electrophoresis
+GFP
+glutaraldehyde
+glutathione
+GST tag
+guanidinium chloride
+guanidinium thiocyanate
+HA tag
+HaeIII
+HBSS
+HDR
+HEPES
+Hi-C
+HindIII
+His tag
+hnRNA
+Hoechst 33342
+HpaII
+HPLC
+hygromycin
+imidazole
+immunolabeling
+immunoprecipitation
+infrared spectroscopy
+IPTG
+isothermal titration calorimeter
+ITC
+kanamycin
+KpnI
+LB broth
+LC-MS
+LC-MS/MS
+Lipofectamine
+lncRNA
+MACS
+MALDI-TOF
+mass spectrometer
+MBP tag
+mCherry
+MERFISH
+MES
+miRNA
+mNeonGreen
+MOPS
+mRNA
+MspI
+Myc tag
+Mössbauer spectroscopy
+N-terminal START transfer sequence
+native gel electrophoresis
+NcoI
+NdeI
+NHEJ
+Ni-NTA
+nitrocellulose
+NLS
+NotI
+NP-40
+nuclear localization sequence
+nucleic acid regulatory sequence
+nucleic acid repetitive sequence
+nucleic acid sequence homology
+ORF
+osmium tetroxide
+PAGE
+PALM
+PAM
+paraformaldehyde
+PBS
+PCR
+PE
+phenol-chloroform
+PIPES
+piRNA
+PMSF
+poly-L-lysine
+polyethylenimine
+Ponceau S
+propidium iodide
+Protein A
+Protein G
+PstI
+puromycin
+PVDF
+qPCR
+Raman spectroscopy
+reverse transcriptase PCR
+RFLP
+Ribo-seq
+RNA-seq
+RPMI 1640
+rRNA
+RT-PCR
+RT-qPCR
+SacI
+SalI
+Sanger dideoxy method
+Sanger sequencing
+Sau3AI
+SDS
+SDS-PAGE
+SDS-polyacrylamide gel electrophoresis
+SEC
+SEM
+sequence homology
+sgRNA
+shRNA
+siRNA
+SmaI
+smFISH
+snoRNA
+SNP
+snRNA
+SOC medium
+spectroscopy
+SPR
+STED
+STOP transfer sequence
+STORM
+STR
+streptavidin
+streptomycin
+SYBR Green
+TAPS
+TCEP
+TEMED
+TES
+tetracycline
+TIRF
+tracrRNA
+Tricine
+Tris
+Tris-HCl
+TRITC
+Triton X-100
+TRIzol
+tRNA
+Tween 20
+Tween 80
+UTR
+UV/VIS spectroscopy
+VNTR
+Western blot
+X-gal
+XbaI
+XhoI
+YFP
+β-mercaptoethanol

@@ -1,0 +1,564 @@
+2-DE
+2D gel electrophoresis
+3' untranslated region
+5' untranslated region
+ABC transporters
+ABP
+acetylation
+actin filaments
+actin-binding proteins
+actomyosin cortex
+agarose gel electrophoresis
+AIM2
+AMPK signaling pathway
+anaphase
+anaphase A
+anaphase B
+anaphase-promoting complex
+androgen receptor
+angiotensin receptor
+antiporter
+APC
+apoptosis
+apoptosis - fly
+apoptosis - multiple species
+APRIL
+arp2/3
+aryl hydrocarbon receptor
+ASC
+astral microtubules
+atrial natriuretic factor receptor
+autocrine signals
+autophagy - animal
+autophagy - other
+autophagy - yeast
+autotroph
+bacterial chemotaxis
+bacterial secretion system
+BAFF
+Bcl-2
+binary (prokaryotic) fission
+biogenic amine receptor
+BRCA1
+BRCA2
+cadherin signaling
+calcitonin gene-related peptide receptor
+calcitonin receptor
+CAM
+cAMP
+cAMP signaling pathway
+cAMP-dependent kinase
+carbon-fixation reactions
+caspase-1
+caspase-3
+caveolin
+CCR5 receptor
+cell cycle - Caulobacter
+cell cycle - yeast
+cell-cell signaling
+cell-cycle checkpoints
+cell-surface receptors
+centromere
+centrosome
+cGAS
+cGMP-PKG signaling pathway
+chaperone protein
+chemical synapse
+chemiosmotic coupling
+ChIP
+ChIP-seq
+chlorophyll
+cholecystokinin receptor
+chromatin immunoprecipitation
+chromosome segregation
+chromosome territory
+cilia
+cilium
+clathrin
+clathrin (coated vesicle)
+collagen
+condensin
+condensin proteins
+confocal laser scanning microscopy
+constitutive heterochromatin
+COPI
+COPII
+core histones
+cortical cytoskeleton
+corticotropin-releasing hormone
+corticotropin-releasing hormone receptor
+CREB
+cryofixation
+CSF1
+CSF2
+CSF3
+CXCR4 receptor
+cyclic AMP
+cyclic AMP receptor
+cyclic AMP receptor protein
+cyclin-CDK complex
+cytochrome c
+cytokine-cytokine receptor interaction
+cytokinesis
+cytoplasmic and nuclear receptor
+cytoplasmic chromosome
+cytoplasmic streaming
+cytoplasmic, membrane-bounded vesicle
+cytoskeletal protein binding
+cytoskeleton
+cytoskeleton in muscle cells
+cytoskeleton-dependent intracellular transport
+cytosol
+DAG
+delta G (ΔG)
+delta H (ΔH)
+delta S (ΔS)
+diacylglycerol
+diploid
+disulfide bridge
+DNA binding
+dynein
+E-selectin
+E2F
+ECM
+ECM-receptor interaction
+ectotherm
+efferocytosis
+EGFR
+Electrochemical gradient
+endocrine
+endocrine cells
+endocrine signals
+endocytic pathway
+endocytosis
+endoplasmic reticulum
+endosome
+endosymbiont theory
+endothelin receptor
+enzyme-linked receptors
+epidermal growth factor receptor
+epigenetics
+ER
+ER exit site
+ER insertion sequence
+ER lumen
+ER retention signal
+erbB-2 receptor
+ERK
+erythropoietin receptor
+estradiol receptor
+euchromatin
+eukaryotic cells
+exocytosis
+exportin
+FACS
+facultative heterochromatin
+ferroptosis
+FGF
+fibroblast growth factor receptor
+flagella
+flagellar assembly
+flippase
+flow cytometer
+fluorescence-activated cell sorting
+FRAP
+FSH receptor
+G protein-coupled receptor
+g-actin
+G-CSF
+G-protein-linked receptors
+G-proteins (guanine nucleotide-binding proteins)
+G0 phase
+G1 checkpoint
+G1 phase
+G1/S checkpoint
+G2 of Interphase
+G2 phase
+G2/M checkpoint
+gain-of-function experiment
+gain-of-function mutation
+gamma-tubulin
+GAP
+gasdermin D
+GCE
+GEF
+GFP
+glucagon receptor
+glucocorticoid receptor
+glycine receptor
+glycolipid
+glycosylation
+glycosyltransferase
+GM-CSF
+Golgi apparatus
+GPCR
+grana
+granulocyte colony-stimulating factor receptor
+Green fluorescent protein
+GTFs
+GTP cap
+GTPase
+GTPase-activating protein
+guanine-exchange factor
+HA
+haploid
+hemidesmosomes
+heterochromatin
+heterotroph
+HIF-1 signaling pathway
+histamine H1 receptor
+histamine H2 receptor
+histamine receptor
+histone binding
+histone exchange
+histone proteins
+histone-modifying enzymes
+HIV receptor
+homologous
+hyaluronic acid
+hypertonic
+hypotonic
+ICAM
+ICAM-1
+ICAM-2
+ICAM-3
+IFN-α
+IFN-β
+IFN-γ
+IFN-λ
+IFNAR1
+IFNAR2
+IFNGR1
+IFNGR2
+IFNLR1
+IGF type 1 receptor
+IGF type 2 receptor
+IGF-1
+IgSF CAM signaling
+IMF
+immunolabeling
+immunoprecipitation
+importin
+inositol phospholipids
+inositol triphosphate
+insulin-like growth factor I
+integrin signaling
+internal START transfer sequence
+interphase
+interpolar microtubules
+invertebrate peptide receptor
+invertebrate photoreceptor
+ion channel-linked receptors
+ion-channel-coupled receptors
+IP3
+IRF3
+IRF7
+isotonic
+ISR
+ITGA4
+ITGAL
+ITGAM
+ITGAX
+ITGB1
+ITGB2
+JAK
+JAK-STAT
+JAK-STAT signaling pathway
+JAK1
+JAK2
+JAK3
+juxtacrine
+kainic acid receptor
+karyokinesis
+karyopherin
+KDEL
+KDEL receptor
+kinase
+kinesin
+kinetochore
+kinetochore microtubule
+L-selectin
+LAD
+lag phase
+lamin (nuclear)
+lamin-associated domain
+LDL receptor
+leukotriene B4 receptor
+LFA-1
+LFA-2
+LFA-3
+LH receptor
+LHRH receptor
+ligand
+ligand (signaling)
+linker DNA
+lipid raft
+loss-of-function experiment
+loss-of-function mutation
+lysosomal pathway
+lysosome biogenesis
+M (mitosis) phase
+M-CSF
+M6PR
+Mac-1
+MAdCAM-1
+mannose-6-phosphate
+mannose-6-phosphate receptor
+MAP kinase cascade
+MAPK
+MAPK signaling pathway
+MAVS
+MDA5
+meiosis - yeast
+metaphase
+metaphase checkpoint
+metaphase plate
+methylation
+microtubule organizing center
+mineralocorticoid receptor
+mitochondria
+mitochondrial processing peptidase
+mitophagy - animal
+mitophagy - yeast
+mitotic chromosome
+mitotic nuclear division
+mitotic phase
+monolayer-associated protein
+MPP
+mRNA binding
+mRNA processing
+MT
+MTOC
+mTOR
+mTOR signaling pathway
+MyD88
+N-linked glycosylation
+N-methyl-D-aspartate receptor
+N-terminal START transfer sequence
+native gel electrophoresis
+necroptosis
+NES
+neuroactive ligand signaling
+neuroactive ligand-receptor interaction
+neuronal
+neuropeptide receptor
+neuropeptide Y receptor
+neurotensin receptor
+neurotransmitter receptor
+NF-kappa B
+NF-kappa B signaling pathway
+NF-κB
+NIR
+nitric oxide
+NLRP3
+NLS
+NO
+NOD1
+NOD2
+nonhistone chromatin-associated protein
+NORs
+nuclear bodies
+nuclear chromosome
+nuclear envelope
+nuclear export receptor
+nuclear export signal
+nuclear import receptor
+nuclear lamina
+nuclear lamins
+nuclear localization sequence
+nuclear receptors (signaling)
+nucleation sites
+nucleocytoplasmic transport
+nucleoid
+nucleolus
+nucleolus organizing regions
+nucleoplasm
+nucleosome
+nucleosome eviction
+nucleosome sliding
+O-linked glycosylation
+olfactory receptor neuron
+oncogene
+oocyte meiosis
+osmolarity
+oxytocin receptor
+P-selectin
+p21
+p53
+p53 signaling pathway
+paracrine signals
+parathyroid hormone receptor
+PCM
+PCR
+PDGF
+PECAM-1
+peptide receptor
+perinuclear space
+peroxisome - yeast
+phagosome
+phase-contrast microscopy
+phosphatidylinositol signaling system
+phosphodiesterase
+phospholipase C
+phospholipase D signaling pathway
+phospholipid
+phospholipid bilayer
+phosphomimetics
+phosphotransferase system
+photophosphorylation
+photoreceptor
+phragmoplast
+PI-3-kinase
+PI3K
+PI3K-Akt signaling pathway
+pinocytosis
+PIP (phosphatidylinositol)
+PIP2
+pituitary hormone-regulating hormone receptor
+PKA
+PKC
+plasmodesmata
+plastoglobules
+platelet-derived growth factor receptor
+PLC
+polar microtubules
+polymerase chain reaction
+porin
+potocytosis
+primary endosymbiosis
+progesterone receptor
+prokaryote
+prolactin receptor
+prometaphase
+prophase
+prostaglandin e receptor
+prostaglandin receptor
+protein kinase A
+protein kinase C
+proto-oncogene
+proton-motive force
+PSGL-1
+PTS
+purinergic P1 receptor
+purinergic P2 receptor
+purinergic receptor
+quorum sensing
+Rap1 signaling pathway
+receptor protein-tyrosine kinase
+receptor-mediated endocytosis
+receptor-tyrosine kinases
+regulation of actin cytoskeleton
+regulatory DNA sequences
+rER
+retinoblastoma protein
+retinoic acid receptor
+ribonucleoprotein
+ribonucleoprotein complex assembly
+ribosome biogenesis
+ribozyme
+RIG-I
+RNA binding
+RNA capping (5' cap)
+RNP
+rough endoplasmic reticulum
+rough ER
+rRNA binding
+RTKs
+S (synthesis) phase
+S phase
+scramblase
+SDS-PAGE
+SDS-polyacrylamide gel electrophoresis
+secondary endosymbiosis
+self-assembly
+SEM
+sER
+serine/threonine kinases
+sialyl Lewis X
+signal peptidase
+SMC
+smooth endoplasmic reticulum
+smooth ER
+SNARE
+SOCS1
+SOCS3
+somatomedin receptor
+somatostatin receptor
+somatotropin receptor
+somatotropin-releasing hormone
+sphingolipid signaling pathway
+SPP
+SRP
+STAT
+STAT1
+STAT2
+STAT3
+STAT4
+STAT5
+STAT6
+steroid receptor
+STING
+STOP transfer sequence
+stromal processing peptidase
+structural constituent of ribosome
+symporter
+synaptic signal
+t-SNARE
+TADs
+target-SNARE
+TBK1
+telophase
+telophase and Cytokinesis
+temperature-sensitive mutation
+tether (protein)
+TGF-beta
+TGF-beta signaling pathway
+TGF-β
+TGN
+thromboxane receptor
+thylakoid
+thylakoid membrane
+thyrotropin-releasing hormone receptor
+TLR
+TLR1
+TLR10
+TLR2
+TLR3
+TLR4
+TLR5
+TLR6
+TLR7
+TLR8
+TLR9
+TNF
+TNF signaling pathway
+TNF-α
+TNFR1
+TNFR2
+tonicity
+topologically associated domains
+TRAF6
+trans Golgi network
+transcytosis
+transit peptide
+TRIF
+two-component system
+TYK2
+ubiquitin-like protein binding
+uniporter
+vasoactive intestinal peptide receptor
+vasopressin receptor
+VCAM-1
+VEGF
+VEGF signaling pathway
+VEGFR
+vertebrate photoreceptor
+vesicle-mediated transport
+VLA-4
+VLA-5
+α4β1
+α4β7
+αLβ2
+αMβ2
+β2 integrin
+β7 integrin
