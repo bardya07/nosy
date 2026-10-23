@@ -16,6 +16,10 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/TranscriptBlocks.swift Sources/Transcriber.swift tests/VocabularyTests.swift -o "$BUILD_DIR/VocabularyTests"
 "$BUILD_DIR/VocabularyTests"
+swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/AudioInputs.swift Sources/RecordingSource.swift \
+    Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
+"$BUILD_DIR/AudioCaptureTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" Sources/*.swift tests/UITests.swift -o "$BUILD_DIR/UITests"
 "$BUILD_DIR/UITests"

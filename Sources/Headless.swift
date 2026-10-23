@@ -33,6 +33,53 @@ enum Headless {
                 let record = try AudioFiles.importRecording(from: URL(fileURLWithPath: args[1]), lecture: args[2], session: args[3], paths: paths)
                 let result = try await Transcriber.transcribe(record: record, paths: paths)
                 print("IMPORT PASS: \(result.transcriptPath ?? "")")
+            case "--headless-capture":
+                guard args.count == 4 || (args.count == 5 && args[4] == "--exercise-lifecycle"),
+                      let seconds = Double(args[1]), seconds >= 1, seconds <= 86_400,
+                      let source = RecordingSource(rawValue: args[2]), RecordingSource.available.contains(source) else {
+                    throw LectureError.message("Usage: --headless-capture <seconds> <mic|macAudio|both> <output.wav> [--exercise-lifecycle]")
+                }
+                if source.usesMic {
+                    let permission: Bool
+                    switch AVCaptureDevice.authorizationStatus(for: .audio) {
+                    case .authorized: permission = true
+                    case .notDetermined: permission = await AVCaptureDevice.requestAccess(for: .audio)
+                    default: permission = false
+                    }
+                    guard permission else { print("SKIPPED: microphone permission denied or restricted"); return 77 }
+                }
+                let destination = URL(fileURLWithPath: args[3])
+                guard !FileManager.default.fileExists(atPath: destination.path) else { throw LectureError.message("Capture output already exists.") }
+                let id = Core.newID(in: paths)
+                let events = CaptureEvents()
+                let recorder = Recorder(source: source) { events.receive($0) }
+                try await recorder.start(at: paths.audioFile(id, "pcm"))
+                do {
+                    // Exercise the actual recorder guards/restart paths without producing sound.
+                    if args.count == 5 {
+                        do {
+                            try await recorder.switchSource(source, inputUID: nil)
+                            throw LectureError.message("Recorder allowed a source change while recording.")
+                        } catch let error as LectureError {
+                            guard error.localizedDescription.contains("Pause the recording") else { throw error }
+                        }
+                        recorder.setPaused(true)
+                        let pausedBytes = recorder.byteCount()
+                        try await recorder.switchSource(source, inputUID: nil)
+                        try await Task.sleep(for: .milliseconds(300))
+                        guard recorder.byteCount() == pausedBytes else { throw LectureError.message("Paused recorder wrote audio.") }
+                        recorder.setPaused(false)
+                        recorder.recoverAfterWake()
+                    }
+                    try await Task.sleep(for: .seconds(seconds))
+                    let bytes = try await recorder.stop()
+                    if let failure = events.failure { throw LectureError.message(failure) }
+                    guard !events.stalled else { throw LectureError.message("Capture raised a stall warning.") }
+                    let wav = try Core.finalizeWAV(id: id, paths: paths)
+                    try FileManager.default.copyItem(at: wav, to: destination)
+                    if events.quiet { print("MAC AUDIO SILENCE: Settings recovery hint emitted") }
+                    print("CAPTURE PASS: \(source.title), \(bytes) PCM bytes, \(destination.path)")
+                } catch { _ = try? await recorder.stop(); throw error }
             case "--headless-record":
                 guard args.count == 4, let seconds = Double(args[1]), seconds > 0, seconds <= 86_400 else {
                     throw LectureError.message("Usage: --headless-record <seconds> <lecture> <session>")
@@ -71,5 +118,22 @@ enum Headless {
             FileHandle.standardError.write(Data("ERROR: \(error.localizedDescription)\n".utf8))
             return 1
         }
+    }
+}
+
+// Synchronous observation keeps a late failure/stall from racing the capture result.
+private final class CaptureEvents: @unchecked Sendable {
+    private let lock = NSLock()
+    private var message: String?
+    private var sawStall = false
+    private var sawQuiet = false
+    var quiet: Bool { lock.lock(); defer { lock.unlock() }; return sawQuiet }
+    var failure: String? { lock.lock(); defer { lock.unlock() }; return message }
+    var stalled: Bool { lock.lock(); defer { lock.unlock() }; return sawStall }
+    func receive(_ event: RecorderEvent) {
+        lock.lock(); defer { lock.unlock() }
+        if case .failed(let message, _) = event { self.message = message }
+        if case .stalled = event { sawStall = true }
+        if case .macAudioQuiet(true) = event { sawQuiet = true }
     }
 }
