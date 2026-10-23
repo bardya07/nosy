@@ -81,13 +81,16 @@ final class VocabularyDraft: ObservableObject, Identifiable {
 struct VocabularyEditor: View {
     @ObservedObject var draft: VocabularyDraft
     var close: () -> Void
+    var inline = false
     @State var expanded = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(draft.lecture) vocabulary")
-                .font(Theme.display(15, .bold)).fixedSize(horizontal: false, vertical: true)
+            if !inline {
+                Text("\(draft.lecture) vocabulary")
+                    .font(Theme.display(15, .bold)).fixedSize(horizontal: false, vertical: true)
+            }
             HStack(spacing: 12) {
                 Text("Subject").foregroundStyle(Theme.muted)
                 Spacer(minLength: 0)
@@ -128,10 +131,10 @@ struct VocabularyEditor: View {
         }
         .font(Theme.text(13))
         .foregroundStyle(Theme.ink)
-        .padding(16)
-        .frame(width: 340)
+        .padding(inline ? 12 : 16)
+        .frame(width: inline ? nil : 340)
         .fixedSize(horizontal: false, vertical: true)
-        .background(WindowBackdrop())
+        .background { if !inline { WindowBackdrop() } }
         .tint(Theme.accentText)
         .onExitCommand { draft.flush(); close() }
         .onDisappear { draft.flush(); expanded = false }

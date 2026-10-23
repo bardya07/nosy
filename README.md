@@ -3,7 +3,9 @@
 Private, on-device recording and transcription for lectures and meetings.
 
 ![Nosy ready, recording, and saved](preview/nosy.light.png)
-![Recent recordings and transcripts](preview/nosy.recent.light.png)
+![Choose a save folder](preview/nosy.dropdown-save-to.light.png)
+![Edit the session date](preview/nosy.dropdown-session.light.png)
+![Choose a vocabulary subject and edit custom terms](preview/nosy.dropdown-vocabulary.light.png)
 ![Transcript library](preview/nosy.library.light.png)
 
 ## Record
@@ -12,7 +14,7 @@ Choose **In-person** to capture your microphone, or **Virtual** to capture your 
 
 Choose where to **Save to**, name the **Session**, and select **Vocab**. Vocabulary options include **Auto**, **General**, and subject packs, including **Meetings & Work**. Auto chooses packs from the folder name or course and meeting keywords.
 
-Press **⌘M** or click **Mark moment** while recording to add a timestamped marker. **Recent** gives quick access to saved transcripts and recordings.
+Press **⌘M** or click **Mark moment** while recording to add a timestamped marker. Use the transcripts icon in the title bar to browse past saves.
 
 Nosy transcribes on your Mac. Your recordings, transcripts, and vocabulary stay on your device.
 
@@ -24,7 +26,7 @@ Requires macOS 14 or later and Apple Silicon. The first launch downloads the spe
 
 ## Previews
 
-More current interface states are available in the [preview folder](preview/), including dark mode, Settings, onboarding, and recording activity.
+More interface states are available in the [preview folder](preview/), including dark mode, In-person and Virtual modes, each main control menu, Settings, onboarding, and recording activity.
 
 ## License
 

@@ -701,13 +701,14 @@ final class AppModel: ObservableObject {
     }
 
     // Fixtures must render the real view paths without starting a recorder or queue.
-    func configurePreview(active: SessionRecord? = nil, queued: [SessionRecord] = [], pauseReason: String? = nil) {
+    func configurePreview(active: SessionRecord? = nil, queued: [SessionRecord] = [], pauseReason: String? = nil,
+                          source: RecordingSource = .mic) {
         precondition(Snapshot.isRunning)
         self.active = active
         queue = queued
         transcriptionPauseReason = pauseReason
         inputUID = nil
-        recordingSource = .mic
+        recordingSource = source
         systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone")
     }
     func chooseTranscriptsFolder() {

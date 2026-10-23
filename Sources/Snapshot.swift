@@ -97,11 +97,19 @@ enum Snapshot {
             try Data(text.replacingOccurrences(of: "MBB322", with: "CHEM281").replacingOccurrences(of: "2026-10-23", with: "2026-10-21").utf8).write(to: earlier)
             try manager.setAttributes([.creationDate: date, .modificationDate: date], ofItemAtPath: transcript.path)
             try manager.setAttributes([.creationDate: date.addingTimeInterval(-172_800), .modificationDate: date.addingTimeInterval(-172_800)], ofItemAtPath: earlier.path)
+            try manager.createDirectory(at: transcripts.appendingPathComponent("BISC202"), withIntermediateDirectories: true)
+        } catch { print(error); return 1 }
+        let longCourse = transcripts.appendingPathComponent("Molecular Biology and Biochemistry — advanced seminar")
+        let longURL = longCourse.appendingPathComponent("Review of enzyme regulation and cellular respiration.md")
+        do {
+            try manager.createDirectory(at: longCourse, withIntermediateDirectories: true)
+            try Data("Molecular Biology and Biochemistry".utf8).write(to: longCourse.appendingPathComponent("vocab.txt"))
+            try Data(text.utf8).write(to: longURL)
         } catch { print(error); return 1 }
 
-        func model(_ phase: AppPhase, paused: Bool = false) -> AppModel {
+        func model(_ phase: AppPhase, paused: Bool = false, source: RecordingSource = .mic) -> AppModel {
             let model = AppModel()
-            model.lectures = ["MBB322", "CHEM281", "BISC202"]
+            model.lectures = ["MBB322", "CHEM281", "BISC202", longCourse.lastPathComponent]
             model.selectedLecture = "MBB322"
             model.session = "2026-10-23"
             model.libraryFocus = transcript
@@ -119,7 +127,7 @@ enum Snapshot {
                     markers: [SessionMarker(t: 760, label: "Exam hint"), SessionMarker(t: 1865, label: "Confused — review")],
                     vocabularyTerms: Vocabulary.entries(vocabulary))
             }
-            model.configurePreview(active: phase == .transcribing ? model.current : nil)
+            model.configurePreview(active: phase == .transcribing ? model.current : nil, source: source)
             if phase == .transcribing { model.transcriptionProgress = 0.62; model.transcriptionElapsed = 151 }
             if phase == .failed { model.errorMessage = "Transcription hit a snag. Your audio is safe — try Retry." }
             return model
@@ -150,6 +158,23 @@ enum Snapshot {
             for state in states {
                 guard save(PreviewWindow { MainView(model: state.model) }.padding(36).background(PreviewBackdrop()), "\(state.title.lowercased()).\(mode)") else { return 1 }
             }
+            guard save(PreviewWindow { MainView(model: model(.transcribing)) }.padding(36).background(PreviewBackdrop()),
+                       "transcribing.\(mode)") else { return 1 }
+            let readyInPerson = model(.idle, source: .mic)
+            let readyVirtual = model(.idle, source: .both)
+            guard save(PreviewWindow { MainView(model: readyInPerson) }.padding(36).background(PreviewBackdrop()), "ready-in-person.\(mode)"),
+                  save(PreviewWindow { MainView(model: readyVirtual) }.padding(36).background(PreviewBackdrop()), "ready-virtual.\(mode)") else { return 1 }
+            for (name, dropdown) in [("save-to", MainView.Dropdown.saveTo),
+                                     ("session", MainView.Dropdown.session),
+                                     ("vocabulary", MainView.Dropdown.vocabulary)] {
+                let fixture = model(.idle)
+                guard save(PreviewWindow { MainView(model: fixture, previewDropdown: dropdown) }
+                    .padding(36).background(PreviewBackdrop()), "dropdown-\(name).\(mode)") else { return 1 }
+            }
+            let longFolder = model(.idle)
+            longFolder.selectedLecture = longCourse.lastPathComponent
+            guard save(PreviewWindow { MainView(model: longFolder, previewDropdown: .saveTo) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-long-folder.\(mode)") else { return 1 }
             let emptyURL = course.appendingPathComponent("Silent.md")
             try? Data("# MBB322\n\n## Transcript\n\n_No speech detected._\n".utf8).write(to: emptyURL)
             let empty = model(.done)
@@ -177,26 +202,11 @@ enum Snapshot {
             minimal.current?.vocabularyTerms = []
             let removed = model(.done)
             removed.current?.transcriptPath = nil
-            let longURL = transcripts.appendingPathComponent("Molecular Biology and Biochemistry")
-                .appendingPathComponent("Review of enzyme regulation and cellular respiration.md")
-            try? manager.createDirectory(at: longURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try? Data(text.utf8).write(to: longURL)
             let longSaved = model(.done)
             longSaved.current?.transcriptPath = longURL.path
-            let recent = model(.idle)
-            let recentHome = model(.transcribing)
-            let recentListView = PreviewWindow { MainView(model: recent) }
-            let recentTranscriptView = PreviewWindow {
-                MainView(model: model(.idle), previewRecentSelection: transcript)
-            }
-            let recentAudioView = PreviewWindow {
-                MainView(model: model(.idle), previewRecentSelection: transcript, previewRecentAudio: true)
-            }
-            let homeView = PreviewWindow { MainView(model: recentHome, previewTranscribingHome: true) }
-            guard save(recentListView.padding(36).background(PreviewBackdrop()), "recent.\(mode)"),
-                  save(recentTranscriptView.padding(36).background(PreviewBackdrop()), "recent-transcript.\(mode)"),
-                  save(recentAudioView.padding(36).background(PreviewBackdrop()), "recent-audio.\(mode)"),
-                  save(homeView.padding(36).background(PreviewBackdrop()), "transcribing-home.\(mode)") else { return 1 }
+            let transcribingHome = model(.transcribing)
+            let homeView = PreviewWindow { MainView(model: transcribingHome, previewTranscribingHome: true) }
+            guard save(homeView.padding(36).background(PreviewBackdrop()), "transcribing-home.\(mode)") else { return 1 }
             let recovery = model(.idle)
             recovery.transitioning = true
             recovery.recovery = [earlier]
