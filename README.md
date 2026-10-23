@@ -22,6 +22,7 @@ An on-device lecture recorder and transcriber for Mac.
 ## Features
 
 - Record, pause, and resume lectures; queue transcription while recording another.
+- Press ⌘M while recording to add a marker, then edit its label inline. Markers survive a crash and appear at the nearest Whisper segment boundary in the saved transcript (including in Transcripts).
 - Search, edit, export, and play back recordings in the transcripts window.
 - Choose course subjects, add custom vocabulary, and correct selected words in transcripts.
 - Automatically boost quiet audio for transcription.

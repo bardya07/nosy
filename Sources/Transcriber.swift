@@ -142,6 +142,7 @@ enum Transcriber {
             process.executableURL = executable
             process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture, vocabularyText: vocabularyText)
             if smart { process.arguments! += ["-ojf"] }
+            else if !record.markers.isEmpty { process.arguments! += ["-oj"] }
             process.standardOutput = FileHandle.nullDevice
             let stderrPipe = Pipe()
             defer {
@@ -179,7 +180,13 @@ enum Transcriber {
                 catch is CancellationError { throw CancellationError() }
                 catch { /* Optional refinement failure keeps the successful first pass. */ }
             }
-            let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text)
+            let body: String?
+            if record.markers.isEmpty { body = nil }
+            else {
+                let segments = try JSONDecoder().decode(TranscriptSegments.self, from: Data(contentsOf: jsonURL))
+                body = try Core.markedParagraphs(text, markers: record.markers, segments: segments)
+            }
+            let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text, body: body)
             try job.checkCancellation()
             let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)
             record.transcriptPath = target.path

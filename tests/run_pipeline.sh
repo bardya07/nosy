@@ -77,7 +77,8 @@ audio = pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])/'audio'
 for id in ['20261021-120000', '20261021-120001']:
     (audio/f'{id}.pcm').write_bytes(pcm)
     (audio/f'{id}.json').write_text(json.dumps(dict(id=id, lecture='Biochemistry', session='Energy',
-        startedAt='2026-10-21T19:00:00Z', status='recording')))
+        startedAt='2026-10-21T19:00:00Z', status='recording',
+        markers=[dict(t=0, label='Start'), dict(t=12, label='Exam hint')] if id.endswith('1') else [])))
 PY
 "$APP" --headless-transcribe 20261021-120000
 # A missing executable must preserve the audio and offer a usable retry.
@@ -110,6 +111,12 @@ for id, filename in [('20261021-120000','Energy.md'), ('20261021-120001','Energy
     expected = ['glycolysis', 'glucose', 'pyruvate', 'enzyme', 'nadh'] if os.environ['NOSY_TEST_FIXTURE'] == 'lecture' else ['ask', 'country', 'americans', 'fellow', 'you']
     words = [word for word in expected if word in text.lower()]
     assert len(words) >= 3, text
+    if id.endswith('1'):
+        assert r['markers'] == [dict(t=0, label='Start'), dict(t=12, label='Exam hint')]
+        assert text.count('> [0:00] Start') == 1 and text.count('> [0:12] Exam hint') == 1, text
+        assert text.index('> [0:00] Start') < text.index('> [0:12] Exam hint')
+    else:
+        assert '> [' not in text, 'Unmarked transcripts must retain their existing format'
     assert pathlib.Path(r['transcriptPath']) == transcripts/filename
     assert not (audio/f'{id}.pcm').exists()
     if os.environ['NOSY_TEST_AAC'] == '1':
@@ -123,6 +130,7 @@ args = (root/'arguments.txt').read_text().splitlines()
 assert args[args.index('--prompt')+1] == 'glycolysis, NADH phosphofructokinase, pyruvate ATP'
 assert args[args.index('-l')+1] == 'en' and int(args[args.index('-t')+1]) >= 4
 assert '--carry-initial-prompt' in args
+assert '-oj' in args, 'Marker sessions must request segment timestamp JSON'
 assert 1 < int(args[args.index('-mc')+1]) <= 161
 if (pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])/'models/ggml-silero-v5.1.2.bin').exists():
     assert '--vad' in args and '-vm' in args

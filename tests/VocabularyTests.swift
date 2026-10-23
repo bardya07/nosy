@@ -19,6 +19,15 @@ import Foundation
         check(last.sourceRange(NSRange(location: paragraph.utf16.count, length: 1)) == nil, "stale paragraph range rejected")
         check(blocks[0].sourceRange(NSRange(location: 0, length: 1)) == nil, "reader metadata cannot become a paragraph correction")
 
+        let markedSource = "# 🧬 Course\n\n> [12:40] Exam hint 🧬\n\nCorrect this spelling."
+        let markedBlocks = TranscriptBlock.parse(markedSource)
+        if case .marker(let timestamp, let label) = markedBlocks[1].content {
+            check(timestamp == "12:40" && label == "Exam hint 🧬", "reader renders timestamped marker labels")
+        } else { fatalError("reader lost marker") }
+        check(markedBlocks[1].sourceRange(NSRange(location: 0, length: 4)) == nil, "markers cannot become vocabulary corrections")
+        let afterMarker = markedBlocks[2].sourceRange(NSRange(location: 13, length: 8))!
+        check((markedSource as NSString).substring(with: afterMarker) == "spelling", "corrections after markers retain source offsets")
+
         let catalog = SubjectCatalog(packs: [
             "stem-core": ["gray", "alpha"],
             "immune": ["thymocyte", "Notch ligand", "pre-T-cell receptor", "T-cell receptor", "CD4", "IT", "SO", "shared marker"],

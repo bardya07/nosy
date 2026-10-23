@@ -2,7 +2,7 @@ import Foundation
 
 // Keep displayed paragraphs tied to UTF-16 ranges in the original Markdown.
 struct TranscriptBlock {
-    enum Content { case title(String), meta([String]), heading(String), paragraph(String) }
+    enum Content { case title(String), meta([String]), heading(String), marker(timestamp: String, label: String), paragraph(String) }
     let content: Content
     let offset: Int
 
@@ -22,6 +22,9 @@ struct TranscriptBlock {
             if first.hasPrefix("# ") { content = .title(String(first.dropFirst(2))) }
             else if first.hasPrefix("## ") { content = .heading(String(first.dropFirst(3))) }
             else if lines.allSatisfy({ $0.hasPrefix("- ") }) { content = .meta(lines.map { String($0.dropFirst(2)) }) }
+            else if lines.count == 1, let marker = SessionMarker.parse(first) {
+                content = .marker(timestamp: marker.timestamp, label: marker.label)
+            }
             else { content = .paragraph(chunk) }
             result.append(Self(content: content, offset: offset))
         }

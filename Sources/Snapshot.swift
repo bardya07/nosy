@@ -59,9 +59,13 @@ enum Snapshot {
 
         Today we're following the journey from glucose to ATP. We'll connect glycolysis in the cytosol with the citric acid cycle in the mitochondria, then ask how oxidative phosphorylation brings those pathways together.
 
+        > [12:40] Exam hint
+
         Think of an enzyme as a way to make a reaction happen faster without changing where it ends up. The active site holds a substrate in just the right position, lowering the activation energy. A cofactor can help with that chemistry; a coenzyme is an organic molecule that plays a similar supporting role.
 
         In glycolysis, hexokinase adds the first phosphate to glucose. Phosphofructokinase provides an important point of allosteric regulation. When ATP is abundant, feedback inhibition slows the pathway. When ADP rises, the cell has a reason to make more ATP. These signals let a pathway respond to demand instead of running at the same speed all day.
+
+        > [31:05] Confused — review
 
         Pyruvate then supplies acetyl-CoA for the citric acid cycle. Citrate synthase starts that cycle, and a series of redox reactions captures energy in NADH and FADH2. Remember that these molecules carry electrons, rather than storing the final usable energy in the form of ATP.
 
@@ -98,7 +102,8 @@ enum Snapshot {
             if phase != .idle {
                 model.current = SessionRecord(id: "preview", lecture: "MBB322", session: "2026-10-23", startedAt: date,
                     status: phase == .done ? .done : (phase == .failed ? .failed : .recording),
-                    transcriptPath: phase == .done ? transcript.path : nil)
+                    transcriptPath: phase == .done ? transcript.path : nil,
+                    markers: [SessionMarker(t: 760, label: "Exam hint"), SessionMarker(t: 1865, label: "Confused — review")])
             }
             if phase == .transcribing { model.transcriptionProgress = 0.62; model.transcriptionElapsed = 151 }
             if phase == .failed { model.errorMessage = "Transcription hit a snag. Your audio is safe — try Retry." }

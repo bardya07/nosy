@@ -104,6 +104,34 @@ struct AppPaths: Sendable {
 
 enum RecordStatus: String, Codable, Sendable { case recording, transcribing, done, failed }
 
+struct SessionMarker: Codable, Sendable, Equatable {
+    var t: TimeInterval
+    var label = "Marker"
+
+    var displayLabel: String {
+        let clean = label.components(separatedBy: .newlines).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        return clean.isEmpty ? "Marker" : clean
+    }
+    var markdown: String { "> [\(Core.timer(t))] \(displayLabel)" }
+
+    static func parse(_ text: String) -> (timestamp: String, label: String)? {
+        guard text.hasPrefix("> ["), let end = text.range(of: "] ") else { return nil }
+        let timestamp = String(text[text.index(text.startIndex, offsetBy: 3)..<end.lowerBound])
+        let parts = timestamp.split(separator: ":", omittingEmptySubsequences: false)
+        guard (2...3).contains(parts.count), parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy(\.isNumber) }) else { return nil }
+        return (timestamp, String(text[end.upperBound...]))
+    }
+}
+
+// whisper.cpp JSON offsets are milliseconds, including when VAD is enabled.
+struct TranscriptSegments: Decodable {
+    struct Segment: Decodable {
+        struct Offsets: Decodable { let from: Int; let to: Int }
+        let offsets: Offsets
+    }
+    let transcription: [Segment]
+}
+
 struct SessionRecord: Codable, Sendable, Equatable {
     var id: String
     var lecture: String
@@ -116,6 +144,13 @@ struct SessionRecord: Codable, Sendable, Equatable {
     var dismissed: Bool?
     // When the transcript was saved; retention counts from here (imports can have old start dates).
     var transcribedAt: Date?
+
+    var markers: [SessionMarker] = []
+
+    // Old sidecars predate markers; keep recovery and Retry compatible with them.
+    enum CodingKeys: String, CodingKey {
+        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers
+    }
 
     func save(in paths: AppPaths) throws {
         let encoder = JSONEncoder()
@@ -132,6 +167,26 @@ struct SessionRecord: Codable, Sendable, Equatable {
             throw LectureError.message("Invalid recording sidecar: \(url.lastPathComponent)")
         }
         return record
+    }
+}
+
+extension SessionRecord {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        lecture = try c.decode(String.self, forKey: .lecture)
+        session = try c.decode(String.self, forKey: .session)
+        startedAt = try c.decode(Date.self, forKey: .startedAt)
+        status = try c.decode(RecordStatus.self, forKey: .status)
+        endedAt = try c.decodeIfPresent(Date.self, forKey: .endedAt)
+        transcriptPath = try c.decodeIfPresent(String.self, forKey: .transcriptPath)
+        error = try c.decodeIfPresent(String.self, forKey: .error)
+        dismissed = try c.decodeIfPresent(Bool.self, forKey: .dismissed)
+        transcribedAt = try c.decodeIfPresent(Date.self, forKey: .transcribedAt)
+        markers = try c.decodeIfPresent([SessionMarker].self, forKey: .markers) ?? []
+        guard markers.allSatisfy({ $0.t.isFinite && $0.t >= 0 && $0.t < Double(Int.max) }) else {
+            throw LectureError.message("Invalid marker timestamp in recording sidecar.")
+        }
     }
 }
 
@@ -412,7 +467,40 @@ enum Core {
         if !current.isEmpty { paragraphs.append(current) }
         return paragraphs.isEmpty ? "_No speech detected._" : paragraphs.joined(separator: "\n\n")
     }
-    static func markdown(record: SessionRecord, duration: TimeInterval, text: String) -> String {
+    // Insert only at segment boundaries, retaining the normal paragraph formatter for speech.
+    // The final segment end is also a boundary, so a marker near Stop follows the speech.
+    static func markedParagraphs(_ text: String, markers: [SessionMarker], segments: TranscriptSegments) throws -> String {
+        guard !markers.isEmpty else { return paragraphs(text) }
+        var lines = text.components(separatedBy: "\n")
+        if lines.last == "" { lines.removeLast() }
+        let times = segments.transcription
+        guard times.count == lines.count || (times.isEmpty && text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty),
+              times.allSatisfy({ $0.offsets.from >= 0 && $0.offsets.to >= $0.offsets.from }) else {
+            throw LectureError.message("Could not match marker timestamps to transcript segments. Your recording and markers are kept; try Retry.")
+        }
+        let boundaries = times.enumerated().flatMap {
+            [(line: $0.offset, t: Double($0.element.offsets.from) / 1000),
+             (line: $0.offset + 1, t: Double($0.element.offsets.to) / 1000)]
+        }
+        var insertions: [Int: [SessionMarker]] = [:]
+        for item in markers.enumerated().sorted(by: { $0.element.t == $1.element.t ? $0.offset < $1.offset : $0.element.t < $1.element.t }) {
+            let marker = item.element
+            let nearest = boundaries.min { abs($0.t - marker.t) < abs($1.t - marker.t) }?.line ?? 0
+            insertions[nearest, default: []].append(marker)
+        }
+        var chunks: [String] = [], start = 0
+        for boundary in insertions.keys.sorted() {
+            let speech = paragraphs(lines[start..<boundary].joined(separator: "\n"))
+            if speech != "_No speech detected._" { chunks.append(speech) }
+            chunks += insertions[boundary]!.map(\.markdown)
+            start = boundary
+        }
+        let tail = paragraphs(lines[start...].joined(separator: "\n"))
+        if tail != "_No speech detected._" { chunks.append(tail) }
+        if paragraphs(text) == "_No speech detected._" { chunks.append("_No speech detected._") }
+        return chunks.joined(separator: "\n\n")
+    }
+    static func markdown(record: SessionRecord, duration: TimeInterval, text: String, body: String? = nil) -> String {
         """
         # \(record.lecture) — \(record.session)
 
@@ -422,7 +510,7 @@ enum Core {
 
         ## Transcript
 
-        \(paragraphs(text))
+        \(body ?? paragraphs(text))
 
         """
     }

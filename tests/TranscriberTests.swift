@@ -196,6 +196,44 @@ enum TranscriberTests {
         check(invalidAudio.status == .done && invalidAudio.error == nil, "compression failure does not fail transcript")
         check(manager.fileExists(atPath: paths.audioFile(invalidAudio.id, "wav").path), "compression failure leaves WAV")
 
+        // Marker sessions request timestamp JSON and keep the ordinary transcript header/body style.
+        try installCLI(#"""
+        base=''
+        json=0
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -of) base="$2"; shift 2 ;;
+                -oj|-ojf) json=1; shift ;;
+                *) shift ;;
+            esac
+        done
+        [[ "$json" == 1 ]] || exit 91
+        printf 'Cells use energy.\nATP supplies it.\n' > "$base.txt"
+        printf '%s' '{"transcription":[{"text":"Cells use energy.","offsets":{"from":0,"to":4000},"tokens":[]},{"text":"ATP supplies it.","offsets":{"from":8000,"to":10000},"tokens":[]}]}' > "$base.json"
+        """#)
+        var markerRecord = try record("with-markers")
+        markerRecord.markers = [SessionMarker(t: 7, label: "Exam hint"), SessionMarker(t: 10)]
+        try markerRecord.save(in: paths)
+        for smart in [false, true] {
+            UserDefaults.standard.setVolatileDomain(["compressAudio": false, "smarterVocabulary": smart], forName: UserDefaults.argumentDomain)
+            let marked = try await Transcriber.transcribe(record: SessionRecord.read(paths.audioFile(markerRecord.id, "json")), paths: paths)
+            let text = try String(contentsOfFile: marked.transcriptPath!, encoding: .utf8)
+            check(text.contains("## Transcript\n\nCells use energy.\n\n> [0:07] Exam hint\n\nATP supplies it.\n\n> [0:10] Marker\n"), "markers use Whisper times with and without vocabulary refinement")
+            check(marked.markers == markerRecord.markers && marked.status == .done, "successful transcription and Retry preserve sidecar markers")
+            check(try temporaryOutputs().isEmpty, "marker run cleans timestamp JSON")
+        }
+        // Missing timestamp output must preserve markers for Retry rather than dropping them.
+        try installCLI(#"while [[ $# -gt 0 ]]; do if [[ "$1" == -of ]]; then printf 'Speech.\n' > "$2.txt"; fi; shift; done"#)
+        do {
+            _ = try await Transcriber.transcribe(record: markerRecord, paths: paths)
+            fatalError("Accepted marker session without timestamp JSON")
+        } catch { assertions += 1 }
+        let markerFailure = try SessionRecord.read(paths.audioFile(markerRecord.id, "json"))
+        check(markerFailure.status == .failed && markerFailure.markers == markerRecord.markers, "timestamp failure preserves markers in sidecar")
+        check(manager.fileExists(atPath: paths.audioFile(markerRecord.id, "wav").path), "timestamp failure preserves audio for Retry")
+        check(try temporaryOutputs().isEmpty, "timestamp failure cleans temporary files")
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
+
         // Output exceeds the pipe capacity, ensuring the reader drains stderr while
         // Whisper is running and preserves the existing error tail on failure.
         try installCLI(#"""

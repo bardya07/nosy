@@ -189,6 +189,23 @@ enum CoreTests {
         var record = SessionRecord(id: "20261021-123456", lecture: "Biology", session: "Lesson", startedAt: Date(timeIntervalSince1970: 1_700_000_000), status: .recording)
         try record.save(in: paths)
         check(try SessionRecord.read(paths.audioFile(record.id, "json")) == record, "sidecar round trip")
+        let sidecar = paths.audioFile(record.id, "json")
+        var legacy = try JSONSerialization.jsonObject(with: Data(contentsOf: sidecar)) as! [String: Any]
+        legacy.removeValue(forKey: "markers")
+        try JSONSerialization.data(withJSONObject: legacy).write(to: sidecar, options: .atomic)
+        check(try SessionRecord.read(sidecar).markers.isEmpty, "legacy sidecars recover without markers")
+        record.markers = [SessionMarker(t: 0), SessionMarker(t: 0.75, label: "Exam hint 🧬")]
+        try record.save(in: paths)
+        var recoveredMarkers = try SessionRecord.read(sidecar)
+        check(recoveredMarkers.markers == record.markers, "markers and fractional audio times persist before Stop")
+        recoveredMarkers.markers[1].label = "Review this"
+        try recoveredMarkers.save(in: paths)
+        check(try SessionRecord.read(sidecar).markers[1].label == "Review this", "inline marker edit persists immediately")
+        _ = try Core.recover(paths: paths)
+        check(try SessionRecord.read(sidecar).markers == recoveredMarkers.markers, "crash recovery keeps all saved marker edits")
+        record.markers = []
+        try record.save(in: paths)
+
         try Data(repeating: 0, count: 32_001).write(to: paths.audioFile(record.id, "pcm"))
         let wav = try Core.finalizeWAV(id: record.id, paths: paths)
         check(Core.fileSize(wav) == 32_044, "stream finalization trims partial sample")
@@ -217,6 +234,24 @@ enum CoreTests {
         check(markdown.hasPrefix("# Biology — Lesson\n\n- Date: "), "markdown title/date")
         check(markdown.contains("- Started: ") && markdown.contains("- Length: 2 min\n\n## Transcript\n\nGlycolysis produces NADH."), "markdown metadata and speech")
         check(Core.markdown(record: record, duration: 0, text: "").contains("_No speech detected._"), "empty markdown")
+
+        let segments = try JSONDecoder().decode(TranscriptSegments.self, from: Data(#"{"transcription":[{"offsets":{"from":5000,"to":14000}},{"offsets":{"from":24000,"to":35000}},{"offsets":{"from":50000,"to":60000}}]}"#.utf8))
+        let speech = "First 🧬 sentence.\nSecond sentence.\nThird sentence.\n"
+        let marked = try Core.markedParagraphs(speech, markers: [
+            SessionMarker(t: 59, label: "End"), SessionMarker(t: 0),
+            SessionMarker(t: 20, label: "Exam hint"), SessionMarker(t: 20, label: "Same time"),
+            SessionMarker(t: 48, label: "Review"), SessionMarker(t: 75, label: "After Stop")
+        ], segments: segments)
+        check(marked == "> [0:00] Marker\n\nFirst 🧬 sentence.\n\n> [0:20] Exam hint\n\n> [0:20] Same time\n\nSecond sentence.\n\n> [0:48] Review\n\nThird sentence.\n\n> [0:59] End\n\n> [1:15] After Stop", "nearest millisecond boundaries, silence gaps, endpoints, stable duplicate times, Unicode and chronological markers")
+        check(try Core.markedParagraphs(speech, markers: [], segments: segments) == Core.paragraphs(speech), "unmarked transcript keeps existing paragraph format")
+        let silent = try Core.markedParagraphs("", markers: [SessionMarker(t: 5, label: "  ")], segments: TranscriptSegments(transcription: []))
+        check(silent == "> [0:05] Marker\n\n_No speech detected._", "silence retains markers and default empty label")
+        check(SessionMarker(t: 3661, label: "Exam\n## title").markdown == "> [1:01:01] Exam ## title", "marker labels stay on one literal line")
+        do {
+            _ = try Core.markedParagraphs("Mismatched output.", markers: [SessionMarker(t: 1)], segments: segments)
+            fatalError("Accepted mismatched segment timestamps")
+        } catch { assertions += 1 }
+
         let now = Date()
         record.startedAt = now.addingTimeInterval(-15 * 86_400)
         record.status = .done

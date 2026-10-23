@@ -583,6 +583,16 @@ private struct TranscriptText: View {
                 case .heading(let text):
                     Text(text.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted).padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
+                case .marker(let timestamp, let label):
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: "bookmark.fill").accessibilityHidden(true)
+                        Text(timestamp).font(Theme.mono(12))
+                        Text(label).font(Theme.text(14, .medium)).foregroundStyle(Theme.ink)
+                    }
+                    .foregroundStyle(Theme.navy).padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading).card()
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Marker at \(timestamp): \(label)")
                 case .paragraph(let text):
                     // Replace line breaks one-for-one so selection offsets still address the source.
                     FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")) { range, replacement in

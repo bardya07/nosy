@@ -93,6 +93,9 @@ private struct FileCommands: View {
         }
         .keyboardShortcut("r", modifiers: .command)
         .disabled(model.recording || model.transitioning || (model.phase != .done && !model.canStart))
+        Button("Add Marker") { model.addMarker() }
+            .keyboardShortcut("m", modifiers: .command)
+            .disabled(!model.recording || model.transitioning)
         Divider()
         Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command)
         Button("Import Recording…") { model.importRecording() }
@@ -593,6 +596,7 @@ struct StagePanel: View {
                     .lineLimit(1).truncationMode(.middle)
             }
             .font(Theme.mono(11)).foregroundStyle(Theme.muted)
+            RecordingMarkers(model: model)
             if let active = model.active {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.mini)
@@ -664,6 +668,55 @@ struct StagePanel: View {
     }
 }
 
+private struct RecordingMarkers: View {
+    @ObservedObject var model: AppModel
+    @FocusState private var focusedMarker: Int?
+    private var markers: [SessionMarker] { model.current?.markers ?? [] }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("MARKERS").tracking(0.8)
+                Spacer()
+                Button { model.addMarker() } label: { Text("+  ⌘M") }
+                    .buttonStyle(.plain)
+                    .help("Add a marker at the current recording time")
+                    .accessibilityLabel("Add marker, Command M")
+                    .disabled(model.transitioning)
+            }.font(Theme.mono(11)).foregroundStyle(Theme.muted)
+            if markers.isEmpty {
+                Text("Mark a moment to revisit later")
+                    .font(Theme.text(12)).foregroundStyle(Theme.muted)
+            } else {
+                ScrollViewReader { scroll in
+                    ScrollView {
+                        VStack(spacing: 8) {
+                            ForEach(markers.indices, id: \.self) { index in
+                                HStack(spacing: 14) {
+                                    Text(Core.timer(markers[index].t)).font(Theme.mono(12)).foregroundStyle(Theme.muted)
+                                    TextField("Marker", text: Binding(
+                                        get: { markers.indices.contains(index) ? markers[index].label : "" },
+                                        set: { model.editMarker(at: index, label: $0) }))
+                                        .textFieldStyle(.plain).font(Theme.text(14)).foregroundStyle(Theme.ink)
+                                        .focused($focusedMarker, equals: index)
+                                        .onSubmit { focusedMarker = nil }
+                                        .accessibilityLabel("Marker at \(Core.timer(markers[index].t))")
+                                }.frame(height: 20).id(index)
+                            }
+                        }
+                    }
+                    .frame(height: CGFloat(min(markers.count, 4) * 28 - 8))
+                    .onChange(of: markers.count) { old, count in
+                        if count > old {
+                            scroll.scrollTo(count - 1, anchor: .bottom)
+                            focusedMarker = count - 1
+                        }
+                    }
+                }
+            }
+        }.padding(.vertical, 12).padding(.horizontal, 14).card()
+    }
+}
+
 // UI-only count of custom terms; built-in subjects remain a separate opt-in aid.
 enum CourseVocabularySummary {
     static func terms(_ text: String) -> [String] {
@@ -694,6 +747,7 @@ private struct SavedPanel: View {
             VStack(spacing: 5) {
                 stat("duration", summary.duration.map { Core.timer($0) } ?? "—")
                 stat("words", summary.words.map { $0.formatted() } ?? "—")
+                stat("markers", "\(model.current?.markers.count ?? 0)")
                 stat("vocab hits", summary.vocabHits.map { "\($0) / \(summary.terms)" } ?? "—")
                 if let path = model.current?.transcriptPath {
                     Text("→ \(abbreviated(path))")
@@ -743,7 +797,7 @@ private struct SavedPanel: View {
     }
 }
 
-// Read existing transcript/audio metadata for presentation; no sidecar or pipeline changes.
+// Read existing transcript/audio metadata for presentation.
 private struct SavedSummary {
     var markdown: String?
     var duration: TimeInterval?
@@ -761,6 +815,7 @@ private struct SavedSummary {
         guard let path = record.transcriptPath, let text = try? String(contentsOfFile: path, encoding: .utf8) else { return }
         markdown = text
         let spoken = text.components(separatedBy: "## Transcript").dropFirst().joined(separator: "## Transcript")
+            .components(separatedBy: .newlines).filter { SessionMarker.parse($0) == nil }.joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         words = spoken == "_No speech detected._" ? 0 : spoken.split(whereSeparator: { $0.isWhitespace }).count
         vocabHits = vocabulary.filter { term in

@@ -363,6 +363,23 @@ final class AppModel: ObservableObject {
         resetSession()
         notify("Recording stopped unexpectedly")
     }
+    func addMarker() {
+        guard recording, !transitioning, !completing, !quitting, var record = current else { return }
+        record.markers.append(SessionMarker(t: duration))
+        saveMarkers(record)
+    }
+    func editMarker(at index: Int, label: String) {
+        guard recording, !transitioning, !quitting, var record = current, record.markers.indices.contains(index) else { return }
+        record.markers[index].label = label
+        saveMarkers(record)
+    }
+    private func saveMarkers(_ record: SessionRecord) {
+        do {
+            // Persist before publishing so the list never claims an unsaved marker is safe.
+            try record.save(in: paths)
+            current = record
+        } catch { showError("Could not save marker: \(error.localizedDescription)") }
+    }
     func togglePause() {
         guard recording, !transitioning, let recorder else { return }
         paused.toggle()
