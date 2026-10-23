@@ -207,11 +207,13 @@ struct MainView: View {
         VStack(alignment: .leading, spacing: 14) {
             banners
             if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
-            StagePanel(model: model, dropping: dropping,
-                       showReady: homeFromTranscribing && model.phase == .transcribing,
-                       onHome: {
-                           homeFromTranscribing = true
-                       })
+            if model.phase != .idle || homeFromTranscribing {
+                StagePanel(model: model, dropping: dropping,
+                           showReady: homeFromTranscribing && model.phase == .transcribing,
+                           onHome: {
+                               homeFromTranscribing = true
+                           })
+            }
         }
         .padding(.horizontal, 20).padding(.top, 10)
         .fixedSize(horizontal: false, vertical: true)
@@ -348,9 +350,11 @@ struct MainView: View {
                                                value: geometry.frame(in: .named("nosyMainWindow")))
                     })
                     .transition(.move(edge: .top).combined(with: .opacity))
-            } else {
-                Color.clear.frame(height: 0)
-                    .preference(key: DropdownFramePreference.self, value: .zero)
+            }
+        }
+        .background {
+            if openDropdown == nil {
+                Color.clear.preference(key: DropdownFramePreference.self, value: .zero)
             }
         }
         .disabled(model.busy)
@@ -373,8 +377,9 @@ struct MainView: View {
             .padding(.horizontal, 8)
             .frame(maxWidth: .infinity).frame(height: 34)
             .background(Theme.raised, in: Capsule())
-            .overlay(Capsule().strokeBorder(openDropdown == control ? Theme.accentText.opacity(0.72) : Theme.line,
-                                             lineWidth: openDropdown == control ? 1.2 : 1))
+            .overlay(RoundedRectangle(cornerRadius: 17, style: .circular)
+                .strokeBorder(openDropdown == control ? Theme.accentText.opacity(0.72) : Theme.line,
+                              lineWidth: openDropdown == control ? 1.2 : 1))
             .contentShape(Capsule())
         }
         .focusEffectDisabled()
@@ -643,8 +648,7 @@ struct NosyMark: View {
     var body: some View {
         Image(nsImage: Self.image).resizable().interpolation(.high)
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size / 4, style: .continuous))
-            .shadow(color: Theme.stop.opacity(0.3), radius: 5, y: 2)
+            .clipShape(RoundedRectangle(cornerRadius: size * 0.32, style: .continuous))
             .accessibilityHidden(true)
     }
 }
@@ -677,7 +681,7 @@ private struct CaptureModePicker: View {
         }
         .padding(3)
         .background(Theme.surface.opacity(0.68), in: Capsule())
-        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 17, style: .circular).strokeBorder(Theme.line, lineWidth: 1))
         .disabled(model.micLocked)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Recording mode")
