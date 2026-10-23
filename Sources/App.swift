@@ -94,7 +94,7 @@ private struct FileCommands: View {
         .keyboardShortcut("r", modifiers: .command)
         .disabled(model.recording || model.transitioning || (model.phase != .done && !model.canStart))
         Button("Add Marker") { model.addMarker() }
-            .keyboardShortcut("m", modifiers: .command)
+            .keyboardShortcut(model.recording ? KeyboardShortcut("m", modifiers: .command) : nil)
             .disabled(!model.recording || model.transitioning)
         Divider()
         Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command)
@@ -110,37 +110,37 @@ private struct FileCommands: View {
 
 struct MainView: View {
     @ObservedObject var model: AppModel
+    var bodyHeightLimit: CGFloat?
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Field?
     @State private var dropping = false
+    @State private var titlebarInset: CGFloat = 0
     enum Field { case lecture, session }
 
     var body: some View {
         VStack(spacing: 0) {
             titlebar.zIndex(3)
-            VStack(alignment: .leading, spacing: model.phase == .idle ? 18 : 16) {
-                banners
-                if model.phase == .idle { brand }
-                if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
-                StagePanel(model: model, dropping: dropping)
-                controls
+            ViewThatFits(in: .vertical) {
+                details
+                ScrollView { details }.scrollBounceBehavior(.basedOnSize)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 18)
-            .padding(.bottom, 20)
+            .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 220))
+            .padding(.bottom, 16)
             .dropDestination(for: URL.self) { urls, _ in
                 guard let url = urls.first, !model.busy else { return false }
                 model.importRecording(url)
                 return true
             } isTargeted: { dropping = $0 && !model.busy }
+            controls.padding(.horizontal, 20).padding(.bottom, 20)
         }
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)
         .background(WindowBackdrop())
+        .background(MainWindowChrome(titlebarInset: $titlebarInset))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
-        .ignoresSafeArea(.container, edges: .top)
+        .padding(.top, -titlebarInset)
         .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: model.phase)
         .animation(Motion.state(reduceMotion), value: model.paused)
@@ -153,6 +153,20 @@ struct MainView: View {
         .onChange(of: model.selectedLecture) { _, lecture in
             if lecture == "__new__" { focus = .lecture }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.refreshSavedTranscript()
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: model.phase == .idle ? 18 : 16) {
+            banners
+            if model.phase == .idle { brand }
+            if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
+            StagePanel(model: model, dropping: dropping)
+        }
+        .padding(.horizontal, 20).padding(.top, 18)
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     // Leave room for the native traffic lights, with the retained utility actions alongside status.
@@ -166,7 +180,7 @@ struct MainView: View {
                     .accessibilityLabel("Show transcripts")
                 Button { model.chooseTranscriptsFolder() } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 26))
-                    .tip("Saving to “\(model.paths.transcripts.lastPathComponent)” — click to change")
+                    .tip("Change folder")
                     .accessibilityLabel("Choose where transcripts are saved, currently \(model.paths.transcripts.lastPathComponent)")
                     .disabled(model.working)
                 MicMenu(model: model).disabled(model.micLocked)
@@ -189,7 +203,7 @@ struct MainView: View {
     }
 
     @ViewBuilder private var banners: some View {
-        if let setup = model.setupMessage {
+        if !model.recording, let setup = model.setupMessage {
             Banner(symbol: "exclamationmark.triangle.fill", tint: Theme.amber, text: setup) {
                 HStack(spacing: 14) {
                     Button("Set up…") { openWindow(id: "welcome") }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
@@ -197,7 +211,7 @@ struct MainView: View {
                 }
             }.transition(.soft(reduceMotion))
         }
-        if let record = model.recovery.first {
+        if !model.recording, let record = model.recovery.first {
             Banner(symbol: "arrow.counterclockwise", tint: Theme.amber,
                    text: "Unfinished lecture: \(record.lecture) · \(record.session), \(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min"
                     + (model.recovery.count > 1 ? " (+\(model.recovery.count - 1) more)" : "")) {
@@ -209,7 +223,7 @@ struct MainView: View {
                 }.disabled(model.busy)
             }.transition(.soft(reduceMotion))
         }
-        if model.phase != .failed, let error = model.errorMessage {
+        if model.phase != .failed, (!model.recording || (!model.stalled && !model.silenceWarning)), let error = model.errorMessage {
             Banner(symbol: "exclamationmark.circle.fill", tint: Theme.coral, text: error) {
                 HStack(spacing: 14) {
                     if model.microphoneDenied {
@@ -221,7 +235,7 @@ struct MainView: View {
             .help(model.errorDetail ?? "")
             .transition(.soft(reduceMotion))
         }
-        if let notice = model.sleepNotice {
+        if (!model.recording || (!model.stalled && !model.silenceWarning && model.errorMessage == nil)), let notice = model.sleepNotice {
             Banner(symbol: "moon.zzz.fill", tint: Theme.amber, text: notice) {
                 Button("OK") { model.sleepNotice = nil }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
             }.transition(.soft(reduceMotion))
@@ -298,7 +312,7 @@ struct MainView: View {
             .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48))
             // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
             .keyboardShortcut(.return, modifiers: model.recording ? .command : [])
-            .tip(model.recording ? "Stop  ⌘↩" : (model.canStart ? "\(primaryTitle)  ⌘R / ↩" : "Name the course first"), edge: .top)
+            .help(model.recording ? "Stop  ⌘↩" : "")
             .disabled(model.recording ? model.transitioning : (model.phase != .done && !model.canStart))
         }
     }
@@ -311,7 +325,7 @@ struct MainView: View {
     private var primaryTitle: String {
         if model.recording { return "Stop & transcribe" }
         switch model.phase {
-        case .transcribing, .done, .failed: return "Record another"
+        case .done: return "Record another"
         default: return "Start recording"
         }
     }
@@ -358,68 +372,84 @@ private struct VocabularyButton: View {
             HStack {
                 Text("Vocabulary").font(Theme.text(13)).foregroundStyle(Theme.muted)
                 Spacer()
-                Text("\(CourseVocabularySummary.terms(model.vocabulary(for: model.lectureName)).count) custom terms")
-                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
+                Text(model.vocabularySubject)
+                    .font(Theme.mono(13)).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.tail)
             }
             .padding(.horizontal, 14).frame(height: 41)
             .contentShape(Rectangle())
         }
         .buttonStyle(InsetButtonStyle())
         .disabled(model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .tip("Terms Nosy should expect in this lecture", edge: .top)
         .popover(isPresented: $open, arrowEdge: .bottom) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("\(lecture) vocabulary").font(Theme.display(15, .bold)).foregroundStyle(Theme.ink)
-                Picker("Subject", selection: $subjects.subject) {
-                    Text("Auto").tag("auto")
-                    Text("Custom vocabulary only").tag("off")
-                    ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
-                }
-                if subjects.subject != "off" {
-                    Picker("Also include", selection: $subjects.additionalSubject) {
-                        Text("None").tag("")
-                        ForEach(SubjectCatalog.subjects.filter { $0.id != subjects.subject }) { Text($0.name).tag($0.id) }
-                    }
-                }
-                if let settingsError { Text(settingsError).font(Theme.text(11)).foregroundStyle(Theme.coral) }
-                if subjects.subject == "auto" {
-                    let names = SubjectCatalog.subjects.filter { subjects.resolved(course: lecture).contains($0.id) }.map(\.name)
-                    Text(names.isEmpty ? "Choose a subject if your course name gives no clues." : names.joined(separator: " + ") + " · guessed from course name")
-                        .font(Theme.text(11)).foregroundStyle(Theme.muted)
-                }
-                if subjects.resolved(course: lecture).contains("arts-social-sciences") {
-                    Text("Built-in vocabulary coming later; your terms still work.").font(Theme.text(11)).foregroundStyle(Theme.muted)
-                }
-                Text("Subject terms are used by Smarter vocabulary (beta) in Settings.")
-                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
-                if !Set(subjects.resolved(course: lecture)).isDisjoint(with: ["engineering", "health-medicine", "psychology"]) {
-                    Text("Includes related STEM vocabulary; add specialist course terms below.").font(Theme.text(11)).foregroundStyle(Theme.muted)
-                }
-                Text("Names, acronyms and terms, separated by commas or new lines. Put your most useful terms first.")
-                    .font(Theme.text(11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
-                TextEditor(text: $text)
-                    .font(Theme.text(13))
-                    .scrollContentBackground(.hidden)
-                    .padding(8)
-                    .frame(height: 120)
-                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
-                HStack {
-                    Spacer()
-                    Button("Cancel") { open = false }.buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
-                        .keyboardShortcut(.cancelAction)
-                    Button("Save") { if model.saveVocabulary(text, for: lecture, settings: subjects) { open = false } }
-                        .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
-                        .keyboardShortcut("s", modifiers: .command)
+            VocabularyEditor(model: model, lecture: lecture, text: $text, subjects: $subjects,
+                             settingsError: settingsError) { open = false }
+        }
+    }
+}
+
+struct VocabularyEditor: View {
+    @ObservedObject var model: AppModel
+    let lecture: String
+    @Binding var text: String
+    @Binding var subjects: SubjectSettings
+    let settingsError: String?
+    var close: () -> Void
+    @AppStorage("smarterVocabulary") private var smarterVocabulary = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("\(lecture) vocabulary").font(Theme.display(15, .bold)).foregroundStyle(Theme.ink)
+            Picker("Subject", selection: $subjects.subject) {
+                Text("Auto").tag("auto")
+                Text("Custom vocabulary only").tag("off")
+                ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
+            }
+            if subjects.subject != "off" {
+                Picker("Also include", selection: $subjects.additionalSubject) {
+                    Text("None").tag("")
+                    ForEach(SubjectCatalog.subjects.filter { $0.id != subjects.subject }) { Text($0.name).tag($0.id) }
                 }
             }
-            .font(Theme.text(13))
-            .foregroundStyle(Theme.ink)
-            .padding(16)
-            .frame(width: 340)
-            .background(WindowBackdrop())
-            .tint(Theme.accentText)
+            if let settingsError { Text(settingsError).font(Theme.text(11)).foregroundStyle(Theme.coral) }
+            if subjects.subject == "auto" {
+                let names = SubjectCatalog.subjects.filter { subjects.resolved(course: lecture).contains($0.id) }.map(\.name)
+                Text(names.isEmpty ? "Choose a subject if your course name gives no clues." : names.joined(separator: " + ") + " · guessed from course name")
+                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
+            }
+            if subjects.resolved(course: lecture).contains("arts-social-sciences") {
+                Text("Built-in vocabulary coming later; your terms still work.").font(Theme.text(11)).foregroundStyle(Theme.muted)
+            }
+            Text(smarterVocabulary
+                 ? "Subject vocabulary is on."
+                 : "Subject vocabulary is off. Enable Smarter vocabulary in Settings.")
+                .font(Theme.text(11)).foregroundStyle(Theme.muted)
+            if !Set(subjects.resolved(course: lecture)).isDisjoint(with: ["engineering", "health-medicine", "psychology"]) {
+                Text("Includes related STEM vocabulary; add specialist course terms below.").font(Theme.text(11)).foregroundStyle(Theme.muted)
+            }
+            Text("Names, acronyms and terms, separated by commas or new lines. Put your most useful terms first.")
+                .font(Theme.text(11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
+            TextEditor(text: $text)
+                .accessibilityLabel("Custom vocabulary for \(lecture)")
+                .font(Theme.text(13))
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .frame(height: 120)
+                .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
+            HStack {
+                Spacer()
+                Button("Cancel") { close() }.buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                    .keyboardShortcut(.cancelAction)
+                Button("Save") { if model.saveVocabulary(text, for: lecture, settings: subjects) { close() } }
+                    .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                    .keyboardShortcut("s", modifiers: .command)
+            }
         }
+        .font(Theme.text(13))
+        .foregroundStyle(Theme.ink)
+        .padding(16)
+        .frame(width: 340)
+        .background(WindowBackdrop())
+        .tint(Theme.accentText)
     }
 }
 
@@ -442,7 +472,7 @@ private struct MicMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .onHover { if $0 { model.refreshInputs() } }
-        .tip(model.recording && !model.paused ? "Mic: \(model.inputName) — pause to switch" : "Mic: \(model.inputName)")
+        .tip(model.recording && !model.paused ? "Pause to change mic" : "Change microphone")
         .accessibilityLabel("Choose microphone, currently \(model.inputName)")
     }
     @ViewBuilder private func checked(_ on: Bool, _ title: String) -> some View {
@@ -466,6 +496,7 @@ private struct LecturePicker: View {
                     .foregroundStyle(model.selectedLecture == "__new__" ? Theme.muted : Theme.ink)
                     .lineLimit(1)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
+                    .accessibilityHidden(true)
             }
             .font(Theme.mono(13))
             .brightness(hovering ? -0.06 : 0)
@@ -474,6 +505,7 @@ private struct LecturePicker: View {
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
+        .accessibilityElement(children: .ignore)
         .onHover { inside in
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
@@ -503,8 +535,8 @@ private struct StatusPill: View {
         case .idle: "idle"
         case .recording: model.paused ? "paused" : "REC"
         case .transcribing: model.transcriptionPauseReason != nil ? "Paused" : (model.waiting ? "Queued" : "Transcribing")
-        case .done: "saved"
-        case .failed: "Attention"
+        case .done: model.savedSummary.noSpeech ? "No speech" : (model.savedSummary.markdown == nil ? "Unavailable" : "saved")
+        case .failed: "Failed"
         }
     }
     private var tint: Color {
@@ -512,7 +544,7 @@ private struct StatusPill: View {
         case .idle: Theme.muted
         case .recording: model.paused ? Theme.amber : Theme.recordingText
         case .transcribing: Theme.amber
-        case .done: Theme.savedText
+        case .done: model.savedSummary.noSpeech || model.savedSummary.markdown == nil ? Theme.muted : Theme.savedText
         case .failed: Theme.coral
         }
     }
@@ -566,12 +598,11 @@ struct StagePanel: View {
     }
 
     private var idle: some View {
-        Text("mic: \(Snapshot.isRunning ? "MacBook Pro" : model.inputName) · \(Snapshot.isRunning ? "\(Int(model.level))" : "—") dB")
+        Text(model.inputName)
             .font(Theme.mono(11)).foregroundStyle(Theme.muted)
             .lineLimit(1).truncationMode(.middle)
             .frame(maxWidth: .infinity)
-            .help("Microphone: \(model.inputName). Input level appears while recording. Drop an audio file here to transcribe it.")
-            .accessibilityLabel("Microphone: \(model.inputName). \(Snapshot.isRunning ? "\(Int(model.level)) decibels" : "Level available while recording")")
+            .accessibilityLabel("Microphone: \(model.inputName)")
     }
 
     private var recording: some View {
@@ -590,12 +621,6 @@ struct StagePanel: View {
                 .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
                 .background(Theme.waveform, in: Capsule())
                 .accessibilityLabel("Live microphone input").accessibilityValue("\(Int(model.level)) decibels")
-            HStack(spacing: 6) {
-                Image(systemName: model.paused ? "pause.fill" : "mic.fill").font(.system(size: 10))
-                Text(model.paused ? "Paused · nothing is being recorded" : "\(Snapshot.isRunning ? "MacBook Pro" : model.inputName) · \(Int(model.level)) dB")
-                    .lineLimit(1).truncationMode(.middle)
-            }
-            .font(Theme.mono(11)).foregroundStyle(Theme.muted)
             RecordingMarkers(model: model)
             if let active = model.active {
                 HStack(spacing: 6) {
@@ -610,32 +635,27 @@ struct StagePanel: View {
 
     private var transcribing: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(model.waiting ? "In line" : "Writing it up").font(Theme.display(17, .bold)).foregroundStyle(Theme.ink)
-                Spacer()
-                if !model.waiting {
+            if !model.waiting && model.transcriptionPauseReason == nil {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Transcribing").font(Theme.display(17, .bold)).foregroundStyle(Theme.ink)
+                    Spacer()
                     Text("\(Int((model.transcriptionProgress * 100).rounded()))%")
                         .font(Theme.text(13, .semibold)).monospacedDigit().foregroundStyle(Theme.ink)
                         .contentTransition(.numericText())
                 }
+                ProgressTrack(value: model.transcriptionProgress, tint: Theme.stop)
             }
-            ProgressTrack(value: model.waiting ? 0 : model.transcriptionProgress, tint: Theme.stop)
             Text(remainingText).font(Theme.text(12)).foregroundStyle(Theme.muted)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
-            if let record = model.current {
-                Text("\(record.lecture) · \(record.session) — you can start the next lecture now")
-                    .font(Theme.text(11)).foregroundStyle(Theme.faint).lineLimit(1)
-            }
         }
-        .padding(14).card()
         .accessibilityElement(children: .combine)
     }
     private var remainingText: String {
         if let reason = model.transcriptionPauseReason { return "Paused — \(reason)" }
         if model.waiting {
             if let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
-            return "Waiting for transcription to begin…"
+            return "Queued for transcription"
         }
         guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(model.transcriptionElapsed)) elapsed" }
         let minutes = Int((remaining / 60).rounded(.up))
@@ -717,29 +737,24 @@ private struct RecordingMarkers: View {
     }
 }
 
-// UI-only count of custom terms; built-in subjects remain a separate opt-in aid.
-enum CourseVocabularySummary {
-    static func terms(_ text: String) -> [String] {
-        var seen = Set<String>()
-        return text.components(separatedBy: .newlines)
-            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }
-            .flatMap { $0.components(separatedBy: ",") }
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }
-    }
-}
-
 private struct SavedPanel: View {
     @ObservedObject var model: AppModel
-    @State private var summary = SavedSummary()
+    private var summary: SavedSummary { model.savedSummary }
     @State private var copied = false
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
-                Image(systemName: "checkmark").font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
-                    .frame(width: 40, height: 40).background(Theme.green, in: Circle()).accessibilityHidden(true)
+                Image(systemName: summary.noSpeech ? "waveform.slash" : (summary.markdown == nil ? "doc" : "checkmark"))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(summary.noSpeech || summary.markdown == nil ? Theme.muted : .white)
+                    .frame(width: 40, height: 40)
+                    .background(summary.noSpeech || summary.markdown == nil ? Theme.surface : Theme.green, in: Circle())
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Transcript saved").font(Theme.display(20, .bold)).tracking(-0.4).foregroundStyle(Theme.ink)
+                    Text(summary.noSpeech ? "No speech detected" : (summary.markdown == nil ? "Transcript unavailable" : "Transcript saved"))
+                        .font(Theme.display(summary.noSpeech || summary.markdown == nil ? 18 : 20, .bold))
+                        .tracking(-0.4).foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text("\(model.current?.lecture ?? model.lectureName) · \(savedSession)")
                         .font(Theme.mono(11)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.middle)
                 }
@@ -747,36 +762,32 @@ private struct SavedPanel: View {
             VStack(spacing: 5) {
                 stat("duration", summary.duration.map { Core.timer($0) } ?? "—")
                 stat("words", summary.words.map { $0.formatted() } ?? "—")
-                stat("markers", "\(model.current?.markers.count ?? 0)")
-                stat("vocab hits", summary.vocabHits.map { "\($0) / \(summary.terms)" } ?? "—")
+                if let count = model.current?.markers.count, count > 0 { stat("markers", "\(count)") }
+                if summary.terms > 0, let hits = summary.vocabHits, hits > 0 { stat("vocab hits", "\(hits) / \(summary.terms)") }
                 if let path = model.current?.transcriptPath {
                     Text("→ \(abbreviated(path))")
                         .font(Theme.mono(11)).foregroundStyle(Theme.muted)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .lineLimit(2).truncationMode(.middle).textSelection(.enabled).help(path)
+                        .lineLimit(1).truncationMode(.middle)
                         .padding(.top, 3)
                 }
             }
             .padding(.vertical, 12).padding(.horizontal, 14).card()
             HStack(spacing: 8) {
                 Button("Open") { model.showInLibrary(model.current?.transcriptPath.map { URL(fileURLWithPath: $0) }) }
-                    .tip("Open in Transcripts", edge: .top)
-                Button("Reveal") { model.revealTranscript() }.tip("Show in Finder", edge: .top)
+                Button("Reveal") { model.revealTranscript() }
                 Button(copied ? "Copied" : "Copy") {
-                    guard let text = summary.markdown else { return }
+                    model.refreshSavedTranscript()
+                    guard let text = model.savedSummary.markdown else { return }
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(text, forType: .string)
                     copied = true
                     Task { try? await Task.sleep(for: .seconds(1.4)); copied = false }
                 }
                 .disabled(summary.markdown == nil)
-                .tip("Copy transcript", edge: .top)
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 38))
-            .disabled(model.current?.transcriptPath == nil)
-        }
-        .task(id: model.current?.transcriptPath) {
-            summary = SavedSummary(record: model.current, model: model)
+            .disabled(summary.markdown == nil)
         }
     }
     private var savedSession: String {
@@ -798,26 +809,25 @@ private struct SavedPanel: View {
 }
 
 // Read existing transcript/audio metadata for presentation.
-private struct SavedSummary {
+struct SavedSummary {
     var markdown: String?
     var duration: TimeInterval?
     var words: Int?
     var terms = 0
     var vocabHits: Int?
+    var noSpeech: Bool { words == 0 }
     init() {}
     @MainActor init(record: SessionRecord?, model: AppModel) {
         guard let record else { return }
         let audioLength = Core.audioDuration(id: record.id, paths: model.paths)
         let elapsed = record.endedAt.map { $0.timeIntervalSince(record.startedAt) } ?? 0
         duration = audioLength > 0 ? audioLength : (model.duration > 0 ? model.duration : (elapsed > 0 ? elapsed : nil))
-        let vocabulary = CourseVocabularySummary.terms(model.vocabulary(for: record.lecture))
+        let vocabulary = record.vocabularyTerms ?? []
         terms = vocabulary.count
         guard let path = record.transcriptPath, let text = try? String(contentsOfFile: path, encoding: .utf8) else { return }
         markdown = text
-        let spoken = text.components(separatedBy: "## Transcript").dropFirst().joined(separator: "## Transcript")
-            .components(separatedBy: .newlines).filter { SessionMarker.parse($0) == nil }.joined(separator: "\n")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        words = spoken == "_No speech detected._" ? 0 : spoken.split(whereSeparator: { $0.isWhitespace }).count
+        let spoken = Core.spokenText(text)
+        words = Core.wordCount(text)
         vocabHits = vocabulary.filter { term in
             spoken.range(of: "(?<![\\p{L}\\p{N}])" + NSRegularExpression.escapedPattern(for: term) + "(?![\\p{L}\\p{N}])",
                          options: [.regularExpression, .caseInsensitive]) != nil
@@ -865,6 +875,7 @@ struct ProgressTrack: View {
     }
 }
 
+#if !NOSY_UI_TEST
 @main
 enum EntryPoint {
     @MainActor static func main() async {
@@ -879,3 +890,4 @@ enum EntryPoint {
         NosyApp.main()
     }
 }
+#endif

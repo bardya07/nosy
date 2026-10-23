@@ -12,13 +12,19 @@ enum AudioInputs {
     static func list() -> [Device] {
         let defaultID = defaultDeviceID()
         return deviceIDs().compactMap { id -> (id: AudioDeviceID, device: Device)? in
-            guard hasInput(id), let device = description(id) else { return nil }
+            guard hasInput(id), let device = description(id), isUserVisible(device) else { return nil }
             return (id, device)
         }.sorted { lhs, rhs in
             if (lhs.id == defaultID) != (rhs.id == defaultID) { return lhs.id == defaultID }
             let order = lhs.device.name.localizedStandardCompare(rhs.device.name)
             return order == .orderedSame ? lhs.device.id < rhs.device.id : order == .orderedAscending
         }.map(\.device)
+    }
+
+    static func isUserVisible(_ device: Device) -> Bool {
+        // CoreAudio's private default-device proxy is not a selectable microphone.
+        // Do not hide named aggregates intentionally created in Audio MIDI Setup.
+        !device.name.hasPrefix("CADefaultDeviceAggregate-") && !device.id.hasPrefix("CADefaultDeviceAggregate-")
     }
 
     static func systemDefault() -> Device? {

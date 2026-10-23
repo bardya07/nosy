@@ -154,6 +154,11 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    init(model: AppModel, setup: OnboardingModel = OnboardingModel()) {
+        self.model = model
+        _setup = StateObject(wrappedValue: setup)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
@@ -174,6 +179,10 @@ struct OnboardingView: View {
         }
         .frame(width: 520, height: 470)
         .onDisappear { setup.cancelRehearsal() }
+        .onAppear { if !Snapshot.isRunning { setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio) } }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        }
         .background(WindowBackdrop())
         .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: setup.step)
@@ -210,6 +219,7 @@ struct OnboardingView: View {
                 .frame(width: 340)
                 Button("Choose another folder…") { model.chooseTranscriptsFolder() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
+                    .disabled(model.working)
             }
         case .engine:
             page(title: "The speech engine", body: "Nosy includes whisper.cpp. Download the 1.6 GB speech model to get started. Everything stays on your Mac.") {
@@ -237,7 +247,7 @@ struct OnboardingView: View {
                                     .buttonStyle(PillButtonStyle(kind: .primary, height: 34, fullWidth: false))
                                 Button("Use downloaded model…") { setup.useDownloadedModel(paths: model.paths) }
                                     .buttonStyle(LinkButtonStyle())
-                                    .tip("For campus networks that block the download", edge: .top)
+                                    .tip("Choose model file", edge: .top)
                             }
                         }
                         if let error = setup.downloadError {

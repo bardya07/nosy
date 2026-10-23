@@ -146,10 +146,13 @@ struct SessionRecord: Codable, Sendable, Equatable {
     var transcribedAt: Date?
 
     var markers: [SessionMarker] = []
+    // Terms available to this transcription, frozen so later vocabulary edits do not
+    // invent hits for an older lecture. Legacy recordings leave this unknown.
+    var vocabularyTerms: [String]?
 
     // Old sidecars predate markers; keep recovery and Retry compatible with them.
     enum CodingKeys: String, CodingKey {
-        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers
+        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers, vocabularyTerms
     }
 
     func save(in paths: AppPaths) throws {
@@ -184,6 +187,7 @@ extension SessionRecord {
         dismissed = try c.decodeIfPresent(Bool.self, forKey: .dismissed)
         transcribedAt = try c.decodeIfPresent(Date.self, forKey: .transcribedAt)
         markers = try c.decodeIfPresent([SessionMarker].self, forKey: .markers) ?? []
+        vocabularyTerms = try c.decodeIfPresent([String].self, forKey: .vocabularyTerms)
         guard markers.allSatisfy({ $0.t.isFinite && $0.t >= 0 && $0.t < Double(Int.max) }) else {
             throw LectureError.message("Invalid marker timestamp in recording sidecar.")
         }
@@ -191,6 +195,16 @@ extension SessionRecord {
 }
 
 enum Core {
+    static func spokenText(_ markdown: String) -> String {
+        let body = markdown.range(of: "## Transcript").map { String(markdown[$0.upperBound...]) } ?? markdown
+        return body
+            .components(separatedBy: .newlines).filter { SessionMarker.parse($0) == nil }
+            .joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    static func wordCount(_ markdown: String) -> Int {
+        let speech = spokenText(markdown)
+        return speech == "_No speech detected._" ? 0 : speech.split(whereSeparator: { $0.isWhitespace }).count
+    }
     static let bytesPerSecond: Int64 = 32_000
     static let missingEngineMessage = "whisper-cli is missing from Nosy. Reinstall Nosy, then Retry — your audio is safe."
 

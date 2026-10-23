@@ -18,10 +18,70 @@ struct TranscriptItem: Identifiable, Hashable {
 final class TranscriptLibrary: ObservableObject {
     @Published private(set) var items: [TranscriptItem] = []
     @Published private(set) var unfinished: [SessionRecord] = []
-    @Published var selection: URL?
+    @Published private(set) var selection: URL?
     @Published var query = "" { didSet { keepSelectionVisible() } }
+    @Published private(set) var editing = false
+    @Published var draft = ""
+    private var editingItem: TranscriptItem?
+    private var editingPaths: AppPaths?
+    private var loadedRoot: URL?
+    var didChange: ((URL, URL?) -> Void)?
+    enum DraftChoice { case save, discard, cancel }
+    var chooseDraftAction: () -> DraftChoice = {
+        let alert = NSAlert()
+        alert.messageText = "Save your transcript changes?"
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Discard")
+        alert.addButton(withTitle: "Cancel")
+        switch alert.runModal() {
+        case .alertFirstButtonReturn: return .save
+        case .alertSecondButtonReturn: return .discard
+        default: return .cancel
+        }
+    }
+
+    func beginEditing(paths: AppPaths) {
+        guard let selected else { return }
+        editingItem = selected
+        editingPaths = paths
+        draft = selected.text
+        editing = true
+    }
+    func cancelEdit() { editing = false; editingItem = nil; editingPaths = nil }
+    @discardableResult func saveDraft() -> Bool {
+        guard let item = editingItem, let paths = editingPaths,
+              save(draft, to: item.url, paths: paths) else { return false }
+        cancelEdit()
+        return true
+    }
+    @discardableResult func finishEditing() -> Bool {
+        guard editing else { return true }
+        guard draft != editingItem?.text else { cancelEdit(); return true }
+        switch chooseDraftAction() {
+        case .save: return saveDraft()
+        case .discard: cancelEdit(); return true
+        case .cancel: return false
+        }
+    }
+    @discardableResult func select(_ url: URL?) -> Bool {
+        let target = url.map { requested in
+            items.first { $0.url.resolvingSymlinksInPath() == requested.resolvingSymlinksInPath() }?.url ?? requested
+        }
+        guard selection != target else { return true }
+        guard finishEditing() else { return false }
+        selection = target
+        return true
+    }
+    func open(_ url: URL, paths: AppPaths) {
+        guard (selection == url && loadedRoot == paths.transcripts) || finishEditing() else { return }
+        query = ""
+        reload(paths: paths)
+        _ = select(url)
+    }
 
     func reload(paths: AppPaths) {
+        if loadedRoot != paths.transcripts, !finishEditing() { return }
+        loadedRoot = paths.transcripts
         let manager = FileManager.default
         let keys: [URLResourceKey] = [.isDirectoryKey, .creationDateKey]
         let root = paths.transcripts
@@ -39,7 +99,7 @@ final class TranscriptLibrary: ObservableObject {
         unfinished = Core.unfinished(paths: paths)
         keepSelectionVisible()
     }
-    var selected: TranscriptItem? { items.first { $0.url == selection } }
+    var selected: TranscriptItem? { editing ? editingItem : items.first { $0.url == selection } }
     var filtered: [TranscriptItem] {
         let needle = query.trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return items }
@@ -57,6 +117,7 @@ final class TranscriptLibrary: ObservableObject {
     }
     // Searching never leaves a hidden transcript open (where Trash would still act on it).
     private func keepSelectionVisible() {
+        guard !editing else { return }
         let visible = ordered
         if let selection, visible.contains(where: { $0.url == selection }) { return }
         selection = visible.first?.url
@@ -65,11 +126,12 @@ final class TranscriptLibrary: ObservableObject {
         let list = ordered
         guard !list.isEmpty else { return }
         let index = list.firstIndex { $0.url == selection } ?? (step > 0 ? -1 : list.count)
-        selection = list[min(list.count - 1, max(0, index + step))].url
+        _ = select(list[min(list.count - 1, max(0, index + step))].url)
     }
 
     // Moves a transcript to the Trash (recoverable) and selects its neighbour.
     func trash(_ url: URL, paths: AppPaths) {
+        guard finishEditing() else { return }
         let list = ordered
         let index = list.firstIndex(where: { $0.url == url })
         do {
@@ -80,6 +142,7 @@ final class TranscriptLibrary: ObservableObject {
             alert.runModal()
             return
         }
+        didChange?(url, nil)
         let remaining = list.filter { $0.url != url }
         if selection == url {
             selection = index.flatMap { remaining.indices.contains($0) ? remaining[$0].url : remaining.last?.url }
@@ -87,6 +150,7 @@ final class TranscriptLibrary: ObservableObject {
         reload(paths: paths)
     }
     func rename(_ item: TranscriptItem, paths: AppPaths) {
+        guard finishEditing() else { return }
         let alert = NSAlert()
         alert.messageText = "Rename transcript"
         alert.informativeText = item.lecture
@@ -109,6 +173,7 @@ final class TranscriptLibrary: ObservableObject {
                 record.transcriptPath = target.path
                 try? record.save(in: paths)
             }
+            didChange?(item.url, target)
             selection = target
             reload(paths: paths)
         } catch {
@@ -118,6 +183,7 @@ final class TranscriptLibrary: ObservableObject {
     @discardableResult func save(_ text: String, to url: URL, paths: AppPaths) -> Bool {
         do {
             try Data(text.utf8).write(to: url, options: .atomic)
+            didChange?(url, url)
             reload(paths: paths)
             return true
         } catch {
@@ -133,8 +199,7 @@ struct LibraryView: View {
     @Environment(\.openWindow) private var openWindow
     @FocusState private var focus: Focus?
     @State private var copied = false
-    @State private var editing = false
-    @State private var draft = ""
+    private var editing: Bool { library.editing }
     enum Focus { case search, list }
 
     var body: some View {
@@ -148,6 +213,8 @@ struct LibraryView: View {
         .tint(Theme.accentText)
         .onAppear {
             model.openWindow = openWindow
+            library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
+            model.finishLibraryEditing = { [weak library] in library?.finishEditing() ?? true }
             reload()
             applyFocus()
         }
@@ -155,14 +222,12 @@ struct LibraryView: View {
         .onChange(of: model.current?.transcriptPath) { reload() }
         .onChange(of: model.active?.id) { reload() }
         .onChange(of: model.libraryFocus) { reload(); applyFocus() }
-        .onChange(of: library.selection) { editing = false }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
     }
     private func reload() { library.reload(paths: model.paths) }
     private func applyFocus() {
         guard let url = model.libraryFocus else { return }
-        library.query = ""
-        library.selection = url
+        library.open(url, paths: model.paths)
         model.libraryFocus = nil
     }
 
@@ -226,7 +291,7 @@ struct LibraryView: View {
     }
 
     private func row(_ item: TranscriptItem) -> some View {
-        Button { library.selection = item.url; focus = .list } label: {
+        Button { library.select(item.url); focus = .list } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.session).font(Theme.text(13.5, .semibold)).lineLimit(1)
                 Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.mono(10)).foregroundStyle(Theme.muted)
@@ -282,7 +347,7 @@ struct LibraryView: View {
                 readerHeader(item).zIndex(1)
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if editing {
-                    TextEditor(text: $draft)
+                    TextEditor(text: $library.draft)
                         .font(Theme.mono(14))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
@@ -328,14 +393,14 @@ struct LibraryView: View {
             }
             Spacer()
             if editing {
-                Button("Cancel") { editing = false }
+                Button("Cancel") { library.cancelEdit() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     .keyboardShortcut(.cancelAction)
-                Button("Save") { if library.save(draft, to: item.url, paths: model.paths) { editing = false } }
+                Button("Save") { library.saveDraft() }
                     .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
                     .keyboardShortcut("s", modifiers: .command)
             } else {
-                Button { draft = item.text; editing = true } label: { Image(systemName: "pencil") }
+                Button { library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
                     .tip("Edit  ⌘E").accessibilityLabel("Edit transcript")
                 Button { copy(item.text) } label: {

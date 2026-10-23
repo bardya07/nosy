@@ -31,7 +31,8 @@ struct SettingsView: View {
                     HStack(spacing: 8) {
                         Button("Change…") { model.chooseTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
-                            .disabled(model.busy)
+                            .disabled(model.working)
+                            .help(model.working ? "Available when Nosy finishes" : "Change folder")
                         Button("Show in Finder") { model.revealTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     }

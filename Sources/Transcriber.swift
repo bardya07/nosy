@@ -108,6 +108,7 @@ enum Transcriber {
         let vocabularyText = (try? String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8)) ?? ""
         let settings = (try? SubjectSettings.load(folder: folder)) ?? SubjectSettings(subject: "off")
         let userTerms = Vocabulary.entries(vocabularyText)
+        record.vocabularyTerms = Array(Set(userTerms)).sorted()
         let smart = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"] != nil || UserDefaults.standard.bool(forKey: "smarterVocabulary")
         let flags = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map { Set($0.split(separator: ",").map(String.init)) }
         do {

@@ -51,13 +51,15 @@ final class AppModel: ObservableObject {
     @Published var setupMessage: String?
     @Published var recovery: [SessionRecord] = []
     @Published var transitioning = false
-    @Published var current: SessionRecord?
+    @Published var current: SessionRecord? { didSet { refreshSavedTranscript() } }
+    @Published private(set) var savedSummary = SavedSummary()
     @Published private(set) var active: SessionRecord?
     @Published private(set) var queue: [SessionRecord] = []
     // A transcript the Transcripts window should select when it next appears or updates.
     @Published var libraryFocus: URL?
     // Set by any open window so the model can open others (e.g. from a notification).
     var openWindow: OpenWindowAction?
+    var finishLibraryEditing: (() -> Bool)?
 
     private var recorder: Recorder?
     private var job: TranscriptionJob?
@@ -81,7 +83,7 @@ final class AppModel: ObservableObject {
     static var today: String { Core.dateString(Date(), format: "yyyy-MM-dd") }
 
     var recording: Bool { phase == .recording }
-    // Fields and the folder button lock only while a recording starts, runs or stops.
+    // Course/session fields lock while a recording starts, runs or stops.
     var busy: Bool { phase == .recording || transitioning }
     var working: Bool { busy || active != nil || !queue.isEmpty }
     var lectureName: String { selectedLecture == "__new__" ? newLecture : selectedLecture }
@@ -497,7 +499,9 @@ final class AppModel: ObservableObject {
         if let result {
             recovery.removeAll { $0.id == record.id }
             if foreground { current = result; phase = .done }
-            notify("Transcript saved — \(result.lecture) · \(result.session)", path: result.transcriptPath)
+            let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
+            let outcome = markdown.map { Core.wordCount($0) == 0 } == true ? "No speech detected" : "Transcript saved"
+            notify("\(outcome) — \(result.lecture) · \(result.session)", path: result.transcriptPath)
         } else if let error {
             if foreground {
                 current = record
@@ -584,6 +588,12 @@ final class AppModel: ObservableObject {
     func vocabulary(for lecture: String) -> String {
         vocabularyURL(for: lecture).flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
     }
+    var vocabularySubject: String {
+        guard let folder = vocabularyURL(for: lectureName)?.deletingLastPathComponent(),
+              let settings = try? SubjectSettings.load(folder: folder) else { return "None" }
+        let primary = settings.subject == "auto" ? SubjectCatalog.guess(lectureName).first : settings.subject
+        return SubjectCatalog.subjects.first { $0.id == primary }?.name ?? "None"
+    }
     @discardableResult func saveVocabulary(_ text: String, for lecture: String, settings: SubjectSettings? = nil) -> Bool {
         guard let url = vocabularyURL(for: lecture) else { return false }
         do {
@@ -607,7 +617,14 @@ final class AppModel: ObservableObject {
         session = Self.today
     }
     func revealTranscript() {
-        if let path = current?.transcriptPath { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)]) }
+        refreshSavedTranscript()
+        if savedSummary.markdown != nil, let path = current?.transcriptPath { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)]) }
+    }
+    func refreshSavedTranscript() { savedSummary = SavedSummary(record: current, model: self) }
+    func transcriptChanged(from old: URL, to new: URL?) {
+        guard current?.transcriptPath == old.path else { return }
+        current?.transcriptPath = new?.path
+        refreshSavedTranscript()
     }
     func showInLibrary(_ url: URL?) {
         libraryFocus = url
@@ -616,7 +633,7 @@ final class AppModel: ObservableObject {
     }
     var inputName: String {
         if recording, let activeInputName { return activeInputName }
-        return inputs.first(where: { $0.id == inputUID })?.name ?? systemInput.map { "System default (\($0.name))" } ?? "System default"
+        return inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
     }
     func refreshInputs() {
         let systemDefault = AudioInputs.systemDefault()
@@ -626,14 +643,29 @@ final class AppModel: ObservableObject {
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {
         guard !micLocked else { return }
-        inputUID = uid
-        UserDefaults.standard.set(uid, forKey: "inputDeviceUID")
-        guard recording, paused, let recorder else { return }
+        guard recording, paused, let recorder else { commitInput(uid); return }
         transitioning = true
         Task {
-            do { try await recorder.switchInput(uid: uid) } catch { showError(error.localizedDescription) }
+            do {
+                try await recorder.switchInput(uid: uid)
+                commitInput(uid)
+            } catch { showError(error.localizedDescription) }
             transitioning = false
         }
+    }
+    private func commitInput(_ uid: String?) {
+        inputUID = uid
+        UserDefaults.standard.set(uid, forKey: "inputDeviceUID")
+    }
+
+    // Fixtures must render the real view paths without starting a recorder or queue.
+    func configurePreview(active: SessionRecord? = nil, queued: [SessionRecord] = [], pauseReason: String? = nil) {
+        precondition(Snapshot.isRunning)
+        self.active = active
+        queue = queued
+        transcriptionPauseReason = pauseReason
+        inputUID = nil
+        systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone")
     }
     func chooseTranscriptsFolder() {
         guard !working else { return }
@@ -646,6 +678,7 @@ final class AppModel: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.directoryURL = paths.transcripts
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard finishLibraryEditing?() != false else { return }
         UserDefaults.standard.set(url.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
     }

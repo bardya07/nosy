@@ -94,7 +94,7 @@ enum Snapshot {
             model.libraryFocus = transcript
             model.phase = phase
             model.paused = paused
-            model.level = phase == .idle ? -42 : -24
+            model.level = phase == .idle ? -160 : -24
             model.duration = phase == .done ? 4_724 : 2_832
             model.levels = (0..<AppModel.waveformLength).map { i in
                 i < 7 ? -160 : -42 + 22 * abs(sin(Double(i) * 1.3) * cos(Double(i) * 0.21))
@@ -103,8 +103,10 @@ enum Snapshot {
                 model.current = SessionRecord(id: "preview", lecture: "MBB322", session: "2026-10-23", startedAt: date,
                     status: phase == .done ? .done : (phase == .failed ? .failed : .recording),
                     transcriptPath: phase == .done ? transcript.path : nil,
-                    markers: [SessionMarker(t: 760, label: "Exam hint"), SessionMarker(t: 1865, label: "Confused — review")])
+                    markers: [SessionMarker(t: 760, label: "Exam hint"), SessionMarker(t: 1865, label: "Confused — review")],
+                    vocabularyTerms: Vocabulary.entries(vocabulary))
             }
+            model.configurePreview(active: phase == .transcribing ? model.current : nil)
             if phase == .transcribing { model.transcriptionProgress = 0.62; model.transcriptionElapsed = 151 }
             if phase == .failed { model.errorMessage = "Transcription hit a snag. Your audio is safe — try Retry." }
             return model
@@ -134,6 +136,70 @@ enum Snapshot {
             guard save(sheet, mode) else { return 1 }
             for state in states {
                 guard save(PreviewWindow { MainView(model: state.model) }.padding(36).background(PreviewBackdrop()), "\(state.title.lowercased()).\(mode)") else { return 1 }
+            }
+            let emptyURL = course.appendingPathComponent("Silent.md")
+            try? Data("# MBB322\n\n## Transcript\n\n_No speech detected._\n".utf8).write(to: emptyURL)
+            let empty = model(.done)
+            empty.duration = 4
+            empty.current?.markers = []
+            empty.current?.vocabularyTerms = []
+            empty.current?.transcriptPath = emptyURL.path
+            let queued = model(.transcribing)
+            let earlier = SessionRecord(id: "earlier", lecture: "CHEM281", session: "2026-10-21", startedAt: date, status: .transcribing)
+            queued.configurePreview(active: earlier, queued: [queued.current!])
+            let power = model(.transcribing)
+            power.configurePreview(active: power.current, pauseReason: "battery low")
+            let warnings = model(.recording)
+            warnings.errorMessage = "The chosen microphone disconnected. Nosy is using the system microphone."
+            warnings.sleepNotice = "Nosy missed 12 min while your Mac was asleep. Keep the lid open during lectures."
+            warnings.stalled = true
+            warnings.setupMessage = "Speech engine missing"
+            warnings.recovery = [earlier]
+            let long = model(.recording)
+            long.current?.lecture = "Molecular Biology and Biochemistry — advanced seminar"
+            long.current?.session = "A very long session name for October 23"
+            long.current?.markers = (1...8).map { SessionMarker(t: Double($0 * 60), label: "A long marker label to review before the final exam") }
+            let minimal = model(.done)
+            minimal.current?.markers = []
+            minimal.current?.vocabularyTerms = []
+            let removed = model(.done)
+            removed.current?.transcriptPath = nil
+            let longURL = transcripts.appendingPathComponent("Molecular Biology and Biochemistry")
+                .appendingPathComponent("Review of enzyme regulation and cellular respiration.md")
+            try? manager.createDirectory(at: longURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try? Data(text.utf8).write(to: longURL)
+            let longSaved = model(.done)
+            longSaved.current?.transcriptPath = longURL.path
+            let recovery = model(.idle)
+            recovery.transitioning = true
+            recovery.recovery = [earlier]
+            let newCourse = model(.idle)
+            newCourse.selectedLecture = "__new__"
+            let noSubject = model(.idle)
+            noSubject.selectedLecture = "Seminar"
+            for (name, fixture) in [("no-speech", empty), ("queued", queued), ("power-paused", power),
+                                    ("warnings", warnings), ("long-recording", long), ("saved-minimal", minimal),
+                                    ("removed", removed), ("new-course", newCourse), ("no-subject", noSubject),
+                                    ("long-saved", longSaved), ("recovery", recovery)] {
+                guard save(PreviewWindow { MainView(model: fixture) }.padding(36).background(PreviewBackdrop()), "\(name).\(mode)") else { return 1 }
+            }
+            guard save(PreviewWindow { MainView(model: warnings, bodyHeightLimit: 320) }
+                .padding(36).background(PreviewBackdrop()), "small-screen.\(mode)") else { return 1 }
+            for step in OnboardingModel.Step.allCases {
+                let setup = OnboardingModel()
+                setup.step = step
+                setup.micStatus = .denied
+                guard save(PreviewWindow { OnboardingView(model: model(.idle), setup: setup) }
+                    .padding(36).background(PreviewBackdrop()), "setup-\(step).\(mode)") else { return 1 }
+            }
+            guard save(VocabularyEditor(model: model(.idle), lecture: "MBB322", text: .constant(vocabulary),
+                subjects: .constant(SubjectSettings()), settingsError: nil, close: {})
+                .padding(36).background(PreviewBackdrop()), "vocabulary.\(mode)"),
+                save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
+                .padding(36).background(PreviewBackdrop()), "library-minimum.\(mode)") else { return 1 }
+            for phase in [AppPhase.idle, .recording, .done] {
+                guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
+                    to: base.appendingPathExtension("native-\(phase).\(mode).png"), native: true) else { return 1 }
             }
             let activity = HStack(alignment: .top, spacing: 28) {
                 PreviewWindow { MainView(model: model(.recording, paused: true)) }
@@ -178,15 +244,31 @@ private struct PreviewBackdrop: View {
 }
 
 @MainActor
-private func render<V: View>(_ view: V, scheme: ColorScheme, to url: URL) -> Bool {
+private func render<V: View>(_ view: V, scheme: ColorScheme, to url: URL, native: Bool = false) -> Bool {
     let host = NSHostingView(rootView: view)
     host.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
     host.frame = NSRect(origin: .zero, size: host.fittingSize)
-    let window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+    let window = NSWindow(contentRect: host.frame,
+        styleMask: native ? [.titled, .closable, .miniaturizable, .fullSizeContentView] : [.borderless], backing: .buffered, defer: false)
+    window.titleVisibility = .hidden
+    window.titlebarAppearsTransparent = true
     window.appearance = host.appearance
     window.contentView = host
     host.layoutSubtreeIfNeeded()
     RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+    window.setContentSize(host.fittingSize)
+    host.layoutSubtreeIfNeeded()
+    RunLoop.main.run(until: Date().addingTimeInterval(0.15))
+    if native {
+        func surface(in view: NSView) -> NSView? {
+            if view is MainWindowChrome.Anchor { return view }
+            return view.subviews.lazy.compactMap { surface(in: $0) }.first
+        }
+        let chrome = surface(in: host)
+        print("NATIVE \(url.lastPathComponent): window=\(window.frame.size) content=\(host.bounds.size) fitted=\(host.fittingSize) surface=\(String(describing: chrome?.bounds.size)) regions=\(host.safeAreaRegions)")
+        guard abs(host.bounds.height - host.fittingSize.height) < 1,
+              let chrome, abs(chrome.bounds.height - host.bounds.height) < 1 else { print("Native surface mismatch"); return false }
+    }
     guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return false }
     host.cacheDisplay(in: host.bounds, to: rep)
     guard let data = rep.representation(using: .png, properties: [:]) else { return false }

@@ -20,13 +20,13 @@ enum Theme {
     static let panelBorder = dynamic(light: 0xFFFFFF, dark: 0xABDDF3, lightAlpha: 0.90, darkAlpha: 0.16)
     static let ink = dynamic(light: 0x0E2A3B, dark: 0xE5F5FC)
     static let muted = dynamic(light: 0x3B6E8C, dark: 0x9DC3D9)
-    static let faint = dynamic(light: 0x557C92, dark: 0x80A5BB)
+    static let faint = dynamic(light: 0x3B637A, dark: 0x80A5BB)
     static let navy = dynamic(light: 0x0B4466, dark: 0xB4E5FF)
     static let accent = Color(hex: 0x5BD46A)
     static let stop = Color(hex: 0x0B6FB0)
     static let coral = dynamic(light: 0xE8392E, dark: 0xFF786E)
     static let recordingText = dynamic(light: 0xB3140B, dark: 0xFF9D94)
-    static let amber = dynamic(light: 0xA26A12, dark: 0xE8B963)
+    static let amber = dynamic(light: 0x80500A, dark: 0xE8B963)
     static let green = Color(hex: 0x34B84A)
     static let savedText = dynamic(light: 0x1E7A1A, dark: 0x85E28D)
     static let onAccent = Color(hex: 0x062A0C)
@@ -93,6 +93,31 @@ struct WindowBackdrop: View {
             Theme.background
         }.ignoresSafeArea()
     }
+}
+
+// The custom titlebar already includes the native titlebar's safe area. Report
+// that inset so MainView subtracts it once from the hosting view's fitting height.
+struct MainWindowChrome: NSViewRepresentable {
+    @Binding var titlebarInset: CGFloat
+    final class Anchor: NSView {
+        var reportInset: ((CGFloat) -> Void)?
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let window else { return }
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.titlebarAppearsTransparent = true
+            window.hasShadow = false
+            let inset = window.contentView?.safeAreaInsets.top ?? 0
+            DispatchQueue.main.async { [weak self] in self?.reportInset?(inset) }
+        }
+    }
+    func makeNSView(context: Context) -> NSView {
+        let view = Anchor()
+        view.reportInset = { titlebarInset = $0 }
+        return view
+    }
+    func updateNSView(_ view: NSView, context: Context) {}
 }
 
 enum Motion {
@@ -230,13 +255,14 @@ struct LinkButtonStyle: ButtonStyle {
     private struct LinkBody: View {
         let configuration: ButtonStyleConfiguration
         let tint: Color
+        @Environment(\.isEnabled) private var enabled
         @State private var hovering = false
         var body: some View {
             configuration.label
                 .font(Theme.text(12.5, .semibold))
-                .foregroundStyle(tint)
-                .underline(hovering)
-                .opacity(configuration.isPressed ? 0.6 : 1)
+                .foregroundStyle(enabled ? tint : Theme.muted)
+                .underline(hovering && enabled)
+                .opacity(enabled ? (configuration.isPressed ? 0.6 : 1) : 0.45)
                 .onHover { hovering = $0 }
         }
     }
@@ -285,7 +311,7 @@ struct IconButtonStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .font(.system(size: size * 0.45, weight: .semibold))
-                .foregroundStyle(hovering && destructive ? Theme.coral : (active || hovering ? Theme.accentText : Theme.muted))
+                .foregroundStyle(hovering && enabled && destructive ? Theme.coral : (active || (hovering && enabled) ? Theme.accentText : Theme.muted))
                 .frame(width: size, height: size)
                 .background(hovering && enabled ? (destructive ? Theme.coral.opacity(0.14) : Theme.surface) : .clear, in: Circle())
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.9 : 1)
@@ -318,58 +344,8 @@ private struct SoftModifier: ViewModifier {
     }
 }
 
-// Quick hover label. The first one waits a beat so passing the mouse over doesn't flash it;
-// once one has shown, neighbours appear instantly (no delay, no animation).
-@MainActor
-private enum TipClock {
-    static var lastHidden = Date.distantPast
-    static var warm: Bool { Date().timeIntervalSince(lastHidden) < 0.8 }
-}
-
-struct Tip: ViewModifier {
-    let text: String
-    var edge: VerticalEdge = .bottom
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var shown = false
-    @State private var pending: Task<Void, Never>?
-
-    func body(content: Content) -> some View {
-        content
-            .onHover { inside in
-                pending?.cancel()
-                if inside {
-                    if TipClock.warm || reduceMotion { shown = true; return }
-                    pending = Task { @MainActor in
-                        try? await Task.sleep(for: .milliseconds(450))
-                        guard !Task.isCancelled else { return }
-                        withAnimation(.easeOut(duration: 0.14)) { shown = true }
-                    }
-                } else if shown {
-                    TipClock.lastHidden = Date()
-                    shown = false
-                }
-            }
-            .overlay(alignment: edge == .bottom ? .bottom : .top) {
-                if shown {
-                    Text(text)
-                        .font(Theme.text(11.5, .semibold))
-                        .foregroundStyle(Theme.background)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 9).padding(.vertical, 5)
-                        .frame(maxWidth: 190)
-                        .background(Theme.ink, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
-                        .fixedSize()
-                        .alignmentGuide(edge == .bottom ? .bottom : .top) { $0[edge == .bottom ? .top : .bottom] + (edge == .bottom ? -7 : 7) }
-                        .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: edge == .bottom ? .top : .bottom)))
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-            }
-            .zIndex(shown ? 100 : 0)
-    }
-}
-
+// AppKit places help outside the hovered control and handles window/screen edges.
+// Keep copy short so the native tooltip stays on one line.
 extension View {
-    func tip(_ text: String, edge: VerticalEdge = .bottom) -> some View { modifier(Tip(text: text, edge: edge)) }
+    func tip(_ text: String, edge: VerticalEdge = .bottom) -> some View { help(text) }
 }
