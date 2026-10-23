@@ -5,10 +5,10 @@ source scripts/paths.sh
 # Use the current backend even when another engineer's UI rewrite is incomplete.
 if [[ -z "${NOSY_TEST_APP:-}" ]]; then
     mkdir -p "$BUILD_DIR/module-cache"
-    swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos26.0 \
+    swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
         -module-cache-path "$BUILD_DIR/module-cache" \
         Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/AudioInputs.swift \
-        Sources/Recorder.swift Sources/Transcriber.swift Sources/Headless.swift tests/HeadlessMain.swift \
+        Sources/Recorder.swift Sources/Vocabulary.swift Sources/Transcriber.swift Sources/Headless.swift tests/HeadlessMain.swift \
         -o "$BUILD_DIR/NosyHeadless"
     export NOSY_TEST_APP="$BUILD_DIR/NosyHeadless"
 fi
@@ -119,9 +119,10 @@ for id, filename in [('20261021-120000','Energy.md'), ('20261021-120001','Energy
             assert w.getframerate() == 16000 and w.getnchannels() == 1 and w.getsampwidth() == 2
 assert not list(audio.glob('.whisper-*')), 'Temporary outputs leaked'
 args = (root/'arguments.txt').read_text().splitlines()
-assert args[args.index('--prompt')+1] == 'glycolysis NADH phosphofructokinase pyruvate ATP'
+assert args[args.index('--prompt')+1] == 'glycolysis, NADH phosphofructokinase, pyruvate ATP'
 assert args[args.index('-l')+1] == 'en' and int(args[args.index('-t')+1]) >= 4
-assert args[args.index('-mc')+1] == '0'
+assert '--carry-initial-prompt' in args
+assert 1 < int(args[args.index('-mc')+1]) <= 161
 if (pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])/'models/ggml-silero-v5.1.2.bin').exists():
     assert '--vad' in args and '-vm' in args
 print('PIPELINE TRANSCRIPTION PASS: real Whisper, with/without vocab, audio + markdown, unique naming, failure + Retry (' + os.environ['NOSY_TEST_FIXTURE'] + ' fixture)')

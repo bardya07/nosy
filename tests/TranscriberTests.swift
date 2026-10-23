@@ -12,6 +12,33 @@ private final class ProgressProbe: @unchecked Sendable {
     func snapshot() -> [Double] { lock.lock(); defer { lock.unlock() }; return values }
 }
 
+private func processState(_ process: Process) -> String {
+    let probe = Process()
+    probe.executableURL = URL(fileURLWithPath: "/bin/ps")
+    probe.arguments = ["-o", "state=", "-p", String(process.processIdentifier)]
+    let pipe = Pipe()
+    probe.standardOutput = pipe
+    probe.standardError = FileHandle.nullDevice
+    guard (try? probe.run()) != nil else { return "" }
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    probe.waitUntilExit()
+    return String(decoding: data, as: UTF8.self)
+}
+
+private final class TerminationProbe: Process, @unchecked Sendable {
+    let child = Process()
+    private(set) var continuedBeforeTermination = false
+    override var processIdentifier: Int32 { child.processIdentifier }
+    override var isRunning: Bool { child.isRunning }
+    override func run() throws { try child.run() }
+    override func waitUntilExit() { child.waitUntilExit() }
+    override func terminate() {
+        let state = processState(self)
+        continuedBeforeTermination = !state.isEmpty && !state.contains("T")
+        child.terminate()
+    }
+}
+
 @main
 enum TranscriberTests {
     static func main() async throws {
@@ -25,7 +52,14 @@ enum TranscriberTests {
                                           "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("transcripts").path,
                                           "NOSY_WHISPER_CLI": cli.path])
         try paths.prepareSupport()
-        try Data().write(to: paths.model)
+        var model = Data()
+        func integer(_ value: UInt32) { var value = value.littleEndian; withUnsafeBytes(of: &value) { model.append(contentsOf: $0) } }
+        integer(0x67676d6c)
+        for _ in 0..<11 { integer(0) }
+        integer(1); integer(1); integer(0)
+        integer(128)
+        for byte in UInt8(0)...127 { integer(1); model.append(byte) }
+        try model.write(to: paths.model)
         var assertions = 0
         func check(_ value: Bool, _ message: String) {
             assertions += 1
@@ -46,6 +80,67 @@ enum TranscriberTests {
             try manager.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
                 .filter { $0.lastPathComponent.hasPrefix(".whisper-") }
         }
+
+        let folder = paths.lectureFolder("Biology")
+        try manager.createDirectory(at: folder, withIntermediateDirectories: true)
+        let vocab = folder.appendingPathComponent("vocab.txt")
+        let base = root.appendingPathComponent("arguments")
+        let wav = root.appendingPathComponent("input.wav")
+        let plain = Transcriber.arguments(paths: paths, wav: wav, temporaryBase: base, lecture: "Biology")
+        check(!plain.contains("--prompt") && plain[plain.firstIndex(of: "-mc")! + 1] == "0", "plain arguments retain no-history loop guard")
+        try Data("  interferon,  ICAM\nCD4   CD8 ".utf8).write(to: vocab)
+        try Data().write(to: paths.vadModel)
+        let prompted = Transcriber.arguments(paths: paths, wav: wav, temporaryBase: base, lecture: "Biology")
+        let expectedPrompt = "interferon, ICAM, CD4 CD8"
+        check(prompted[prompted.firstIndex(of: "--prompt")! + 1] == expectedPrompt, "vocab.txt preserves complete terms and collapses whitespace")
+        check(prompted[prompted.firstIndex(of: "-mc")! + 1] == String(expectedPrompt.utf8.count + 1), "context fits exactly the native prompt tokens plus marker, with no history slots")
+        check(prompted.contains("--carry-initial-prompt"), "vocabulary prompt is retained across decoder windows")
+        check(prompted.contains("--vad") && prompted[prompted.firstIndex(of: "-vm")! + 1] == paths.vadModel.path, "vocabulary preserves VAD arguments")
+        let bytes = Set((UInt8(0)...127).map { Data([$0]) })
+        let long = Vocabulary.prompt(Array(repeating: "ICAM", count: 74).joined(separator: ", "), vocabulary: bytes)!
+        check(long.tokens <= Vocabulary.tokenBudget && long.tokens == long.text.utf8.count, "long vocabulary respects the native token budget")
+        check(long.text.hasSuffix("ICAM") && long.text.split(separator: ",").count < 74, "prompt truncation keeps complete terms")
+        let pieces = Set(["inter", "feron", " ICAM", ",", " ", "CD", "4"].map { Data($0.utf8) })
+        check(Vocabulary.prompt("interferon, ICAM\nCD4", vocabulary: pieces)?.tokens == 8, "tokenizer uses longest matches within the CLI regex pieces")
+        check(Vocabulary.prompt("   ", vocabulary: bytes) == nil, "empty vocabulary supplies no prompt")
+        check(Vocabulary.prompt("β", vocabulary: bytes) == nil, "unknown tokens cannot enable decoded history")
+        try Data().write(to: paths.model)
+        let invalid = Transcriber.arguments(paths: paths, wav: wav, temporaryBase: base, lecture: "Biology")
+        check(!invalid.contains("--prompt") && invalid[invalid.firstIndex(of: "-mc")! + 1] == "0", "unreadable tokenizer safely retains the loop guard")
+        try model.write(to: paths.model)
+        try manager.removeItem(at: vocab)
+        try manager.removeItem(at: paths.vadModel)
+
+        // Exercise real stop/continue signals, including stress during preparation and quit while stopped.
+        let suspendedJob = TranscriptionJob()
+        let child = TerminationProbe()
+        child.child.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        child.child.arguments = ["30"]
+        child.child.qualityOfService = .utility
+        suspendedJob.suspend()
+        try suspendedJob.launch(child)
+        func waitFor(_ condition: () -> Bool) async throws -> Bool {
+            for _ in 0..<100 {
+                if condition() { return true }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            return false
+        }
+        check(try await waitFor { processState(child).contains("T") }, "suspend before launch stops the child immediately after launch")
+        suspendedJob.suspend()
+        suspendedJob.resume()
+        suspendedJob.resume()
+        check(try await waitFor { child.isRunning && !processState(child).contains("T") }, "repeated suspend/resume is idempotent")
+        suspendedJob.suspend()
+        check(try await waitFor { processState(child).contains("T") }, "running child can be suspended again without losing its process")
+        suspendedJob.cancel()
+        check(child.continuedBeforeTermination, "cancel sends SIGCONT before terminate on a suspended child")
+        check(try await waitFor { !child.isRunning }, "cancelled suspended child exits promptly")
+        child.waitUntilExit()
+        suspendedJob.resume()
+        suspendedJob.cancel()
+        do { try suspendedJob.checkCancellation(); fatalError("Accepted cancelled suspended job") }
+        catch { check(error is CancellationError, "resume cannot undo cancellation") }
 
         // Wait for a callback acknowledgement before exiting. This fails if stderr is
         // buffered until EOF, and also exercises a percentage split over two writes.

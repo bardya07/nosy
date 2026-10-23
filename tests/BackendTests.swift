@@ -115,7 +115,7 @@ enum BackendTests {
         check(boostedFile.fileFormat.commonFormat == .pcmFormatInt16 && boostedFile.fileFormat.sampleRate == 16_000
               && boostedFile.fileFormat.channelCount == 1, "boosted WAV is valid 16-bit mono at the original rate")
         check(boostedFile.length == 160_000, "boost preserves frame count")
-        boostedFile.close()
+        if #available(macOS 15, *) { boostedFile.close() }
         let boostedPCM = try readPCM(boosted)
         check(boostedPCM.count == 160_000 && (0..<160_000).allSatisfy {
             boostedPCM[$0] == ($0.isMultiple(of: 2) ? 4000 : -4000)
@@ -142,14 +142,16 @@ enum BackendTests {
         }
         var stereoSettings = stereoFormat.settings
         stereoSettings[AVLinearPCMIsNonInterleaved] = false
-        let stereoFile = try AVAudioFile(forWriting: stereoQuiet, settings: stereoSettings)
-        try stereoFile.write(from: stereoPCM)
-        stereoFile.close()
+        try autoreleasepool {
+            let stereoFile = try AVAudioFile(forWriting: stereoQuiet, settings: stereoSettings)
+            try stereoFile.write(from: stereoPCM)
+            if #available(macOS 15, *) { stereoFile.close() }
+        }
         check(try AudioFiles.boosted(stereoQuiet, to: boosted) == boosted, "quiet float WAV gets boosted")
         let stereoResult = try AVAudioFile(forReading: boosted)
         check(stereoResult.fileFormat.commonFormat == .pcmFormatInt16 && stereoResult.length == 1024
               && stereoResult.fileFormat.channelCount == 2, "float input becomes 16-bit with channels and length preserved")
-        stereoResult.close()
+        if #available(macOS 15, *) { stereoResult.close() }
         let stereoBoosted = try readPCM(boosted)
         check((0..<1024).allSatisfy {
             abs(Int(stereoBoosted[$0 * 2]) - 3920) <= 40
@@ -166,11 +168,13 @@ enum BackendTests {
                 buffer.floatChannelData![channel][index] = Float(sin(Double(index) * 2 * .pi * 440 / 44_100)) * 0.2
             }
         }
-        let sourceFile = try AVAudioFile(forWriting: source, settings: [AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: 44_100, AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16,
-            AVLinearPCMIsFloatKey: false, AVLinearPCMIsNonInterleaved: false])
-        try sourceFile.write(from: buffer)
-        sourceFile.close()
+        try autoreleasepool {
+            let sourceFile = try AVAudioFile(forWriting: source, settings: [AVFormatIDKey: kAudioFormatLinearPCM,
+                AVSampleRateKey: 44_100, AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 16,
+                AVLinearPCMIsFloatKey: false, AVLinearPCMIsNonInterleaved: false])
+            try sourceFile.write(from: buffer)
+            if #available(macOS 15, *) { sourceFile.close() }
+        }
         let created = Date(timeIntervalSince1970: 1_700_000_000)
         try manager.setAttributes([.creationDate: created], ofItemAtPath: source.path)
         let record = try AudioFiles.importRecording(from: source, lecture: " Test/Lecture ", session: " Session ", paths: paths)
@@ -197,14 +201,16 @@ enum BackendTests {
             check(manager.fileExists(atPath: wav.path), "unavailable encoder preserves WAV")
             // The sandbox blocks AudioComponentRegistrar. A real PCM-in-M4A container
             // still exercises container decoding and the m4a-only Retry branch.
-            let input = try AVAudioFile(forReading: wav)
-            let output = try AVAudioFile(forWriting: m4a, settings: input.fileFormat.settings)
-            let chunk = AVAudioPCMBuffer(pcmFormat: input.processingFormat, frameCapacity: 8192)!
-            while input.framePosition < input.length {
-                try input.read(into: chunk)
-                try output.write(from: chunk)
+            try autoreleasepool {
+                let input = try AVAudioFile(forReading: wav)
+                let output = try AVAudioFile(forWriting: m4a, settings: input.fileFormat.settings)
+                let chunk = AVAudioPCMBuffer(pcmFormat: input.processingFormat, frameCapacity: 8192)!
+                while input.framePosition < input.length {
+                    try input.read(into: chunk)
+                    try output.write(from: chunk)
+                }
+                if #available(macOS 15, *) { output.close() }
             }
-            output.close()
             try manager.removeItem(at: wav)
             print("AAC SKIPPED: sandbox exposes no AAC codecs; testing WAV preservation and real PCM-in-M4A Retry instead.")
         }

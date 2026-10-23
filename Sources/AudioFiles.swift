@@ -41,7 +41,7 @@ enum AudioFiles {
                 AVNumberOfChannelsKey: 1,
                 AVEncoderBitRateKey: 32_000
             ])
-            defer { output.close() }
+            defer { if #available(macOS 15, *) { output.close() } }
             while input.framePosition < input.length {
                 try input.read(into: buffer)
                 guard buffer.frameLength > 0 else { throw LectureError.message("Recorded audio ended unexpectedly.") }
@@ -57,7 +57,7 @@ enum AudioFiles {
         guard probe.frameLength > 0 else {
             throw LectureError.message("Compressed audio could not be read; the WAV is kept.")
         }
-        verified.close()
+        if #available(macOS 15, *) { verified.close() }
         let durable = try FileHandle(forReadingFrom: temporary)
         defer { try? durable.close() }
         try durable.synchronize()
@@ -110,7 +110,7 @@ enum AudioFiles {
         let input = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         let output = try AVAudioFile(forWriting: target, settings: input.processingFormat.settings,
                                      commonFormat: .pcmFormatInt16, interleaved: true)
-        defer { output.close() }
+        defer { if #available(macOS 15, *) { output.close() } }
         while input.framePosition < input.length {
             try input.read(into: buffer)
             guard buffer.frameLength > 0, let samples = buffer.int16ChannelData?[0] else {

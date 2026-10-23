@@ -10,7 +10,7 @@ if [[ ! -f Resources/AppIcon.icns || ! -f Resources/NosyMark.png ]]; then
     swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 fi
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
-    -target arm64-apple-macos26.0 -module-cache-path "$BUILD_DIR/module-cache" \
+    -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png "$APP/Contents/Resources/"

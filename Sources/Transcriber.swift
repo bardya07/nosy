@@ -1,20 +1,39 @@
+import Darwin
 import Foundation
 
 final class TranscriptionJob: @unchecked Sendable {
     private let lock = NSLock()
     private var process: Process?
     private var cancelled = false
+    private var suspended = false
 
     func launch(_ process: Process) throws {
         lock.lock(); defer { lock.unlock() }
         guard !cancelled else { throw CancellationError() }
         self.process = process
         try process.run()
+        if suspended { kill(process.processIdentifier, SIGSTOP) }
+    }
+    func suspend() {
+        lock.lock(); defer { lock.unlock() }
+        guard !cancelled, !suspended else { return }
+        suspended = true
+        if let process, process.isRunning { kill(process.processIdentifier, SIGSTOP) }
+    }
+    func resume() {
+        lock.lock(); defer { lock.unlock() }
+        guard !cancelled, suspended else { return }
+        suspended = false
+        if let process, process.isRunning { kill(process.processIdentifier, SIGCONT) }
     }
     func cancel() {
         lock.lock(); defer { lock.unlock() }
         cancelled = true
-        if let process, process.isRunning { process.terminate() }
+        if let process, process.isRunning {
+            // A stopped child cannot handle termination until it is continued.
+            kill(process.processIdentifier, SIGCONT)
+            process.terminate()
+        }
     }
     func checkCancellation() throws {
         lock.lock(); defer { lock.unlock() }
@@ -42,19 +61,21 @@ enum Transcriber {
     }
     static func arguments(paths: AppPaths, wav: URL, temporaryBase: URL, lecture: String) -> [String] {
         var args = ["-m", paths.model.path, "-f", wav.path, "-l", "en", "-otxt", "-of", temporaryBase.path, "-np", "-pp", "-t", String(threadCount),
-                    // Don't feed earlier text back in, so one misheard phrase can't repeat for the whole lecture.
                     "-mc", "0"]
         let vocab = paths.lectureFolder(lecture).appendingPathComponent("vocab.txt")
-        if let text = try? String(contentsOf: vocab, encoding: .utf8) {
-            let prompt = String(Core.collapseWhitespace(text).prefix(600))
-            if !prompt.isEmpty { args += ["--prompt", prompt] }
+        if let text = try? String(contentsOf: vocab, encoding: .utf8),
+           let prompt = Vocabulary.prompt(text, model: paths.model) {
+            // N static tokens + the previous-token marker leave no room for decoded history.
+            // whisper.cpp omits prompts at fallback temperatures >= 0.5 and in its short tail.
+            args[args.count - 1] = String(prompt.tokens + 1)
+            args += ["--prompt", prompt.text, "--carry-initial-prompt"]
         }
         if FileManager.default.fileExists(atPath: paths.vadModel.path) { args += ["--vad", "-vm", paths.vadModel.path] }
         return args
     }
     static func transcribe(record: SessionRecord, paths: AppPaths, job: TranscriptionJob = TranscriptionJob(),
                            progress: @escaping @Sendable (Double) -> Void = { _ in }) async throws -> SessionRecord {
-        try await Task.detached(priority: .userInitiated) {
+        try await Task.detached(priority: .utility) {
             try await run(record: record, paths: paths, job: job, progress: progress)
         }.value
     }
@@ -108,6 +129,7 @@ enum Transcriber {
             let stderrFile = try FileHandle(forWritingTo: stderrURL)
             defer { try? stderrFile.close() }
             let process = Process()
+            process.qualityOfService = .utility
             process.executableURL = executable
             process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture)
             process.standardOutput = FileHandle.nullDevice
@@ -120,7 +142,7 @@ enum Transcriber {
             try job.launch(process)
             // Close our writer so the reader sees EOF when the child exits.
             try? stderrPipe.fileHandleForWriting.close()
-            let stderrReader = Task.detached(priority: .userInitiated) {
+            let stderrReader = Task.detached(priority: .utility) {
                 try readStderr(stderrPipe.fileHandleForReading, log: stderrFile, progress: progress)
             }
             process.waitUntilExit()
