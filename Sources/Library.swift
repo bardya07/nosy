@@ -144,8 +144,8 @@ struct LibraryView: View {
             reader
         }
         .frame(minWidth: 720, minHeight: 460)
-        .background(Theme.background)
-        .tint(Theme.accent)
+        .background(WindowBackdrop())
+        .tint(Theme.accentText)
         .onAppear {
             model.openWindow = openWindow
             reload()
@@ -169,7 +169,16 @@ struct LibraryView: View {
     // MARK: Sidebar
 
     private var sidebar: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                NosyMark(size: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Transcripts").font(Theme.display(18, .bold)).foregroundStyle(Theme.ink)
+                    Text("\(library.items.count) saved on-device").font(Theme.mono(10)).foregroundStyle(Theme.muted)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 4).padding(.top, 6)
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Theme.muted).font(.system(size: 12, weight: .semibold))
                     .accessibilityHidden(true)
@@ -213,14 +222,14 @@ struct LibraryView: View {
         .opacity(editing ? 0.5 : 1)
         .help(editing ? "Save or cancel your edit first" : "")
         .frame(width: 250)
-        .background(Theme.surface.opacity(0.5))
+        .background(Theme.surface.opacity(0.45))
     }
 
     private func row(_ item: TranscriptItem) -> some View {
         Button { library.selection = item.url; focus = .list } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.session).font(Theme.text(13.5, .semibold)).lineLimit(1)
-                Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.text(11)).foregroundStyle(Theme.muted)
+                Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.mono(10)).foregroundStyle(Theme.muted)
             }
         }
         .buttonStyle(RowButtonStyle(selected: library.selection == item.url))
@@ -274,18 +283,23 @@ struct LibraryView: View {
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if editing {
                     TextEditor(text: $draft)
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(Theme.mono(14))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
                 } else {
-                    FixWordView(markdown: item.text) { range, replacement in
-                        let folder = item.url.deletingLastPathComponent()
-                        do {
-                            try Vocabulary.remember(replacement, folder: folder)
-                            let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
-                            _ = library.save(corrected, to: item.url, paths: model.paths)
-                        } catch { NSAlert(error: error).runModal() }
+                    ScrollView {
+                        TranscriptText(markdown: item.text) { range, replacement in
+                            let folder = item.url.deletingLastPathComponent()
+                            do {
+                                try Vocabulary.remember(replacement, folder: folder)
+                                let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
+                                _ = library.save(corrected, to: item.url, paths: model.paths)
+                            } catch { NSAlert(error: error).runModal() }
+                        }
+                        .padding(.horizontal, 28).padding(.vertical, 22)
+                        .frame(maxWidth: 640, alignment: .leading)
+                        .frame(maxWidth: .infinity)
                     }
                 }
                 if let audio = audioURL(for: item) {
@@ -362,11 +376,11 @@ private struct AudioStrip: View {
             }
             .buttonStyle(RoundButtonStyle(size: 34))
             .accessibilityLabel(player.playing ? "Pause audio" : "Play audio")
-            Text(Core.timer(player.time)).font(Theme.text(11.5, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
+            Text(Core.timer(player.time)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Slider(value: Binding(get: { player.time }, set: { player.seek($0) }), in: 0...max(1, player.duration))
                 .controlSize(.small)
                 .accessibilityLabel("Playback position")
-            Text(Core.timer(player.duration)).font(Theme.text(11.5, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
+            Text(Core.timer(player.duration)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Menu {
                 ForEach([0.75, 1.0, 1.25, 1.5, 2.0], id: \.self) { rate in
                     Button(rateLabel(rate)) { player.rate = Float(rate) }
@@ -482,8 +496,8 @@ enum TranscriptExport {
     }
     static func attributed(_ markdown: String) -> NSAttributedString {
         let result = NSMutableAttributedString()
-        let body = NSFont(name: "Hanken Grotesk", size: 11.5) ?? .systemFont(ofSize: 11.5)
-        let title = NSFont(name: "Bricolage Grotesque", size: 20).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) } ?? .boldSystemFont(ofSize: 20)
+        let body = NSFont(name: "Inter-Regular", size: 11.5) ?? .systemFont(ofSize: 11.5)
+        let title = NSFont(name: "Inter-Regular", size: 20).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) } ?? .boldSystemFont(ofSize: 20)
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         paragraph.paragraphSpacing = 9
@@ -547,6 +561,39 @@ private struct OpenWithMenu: View {
         let image = NSWorkspace.shared.icon(forFile: app.path)
         image.size = NSSize(width: 16, height: 16)
         return image
+    }
+}
+
+// Renders Nosy's own markdown: title, metadata bullets, headings, paragraphs.
+private struct TranscriptText: View {
+    let markdown: String
+    let correct: (NSRange, String) -> Void
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(TranscriptBlock.parse(markdown), id: \.offset) { block in
+                switch block.content {
+                case .title(let text): Text(text).font(Theme.display(24, .bold)).foregroundStyle(Theme.ink)
+                case .meta(let items):
+                    HStack(spacing: 8) {
+                        ForEach(items, id: \.self) { item in
+                            Text(item).font(Theme.text(11.5, .semibold)).foregroundStyle(Theme.muted)
+                                .padding(.horizontal, 9).frame(height: 22).background(Theme.surface, in: Capsule())
+                        }
+                    }
+                case .heading(let text):
+                    Text(text.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted).padding(.top, 6)
+                        .accessibilityAddTraits(.isHeader)
+                case .paragraph(let text):
+                    // Replace line breaks one-for-one so selection offsets still address the source.
+                    FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")) { range, replacement in
+                        if let source = block.sourceRange(range) { correct(source, replacement) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+        .textSelection(.enabled)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

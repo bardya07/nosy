@@ -2,8 +2,22 @@
 
 An on-device lecture recorder and transcriber for Mac.
 
-![Nosy in light mode: ready, recording, transcribing, saved, and retry states](preview/nosy.light.png)
-![The transcripts window with a sample transcript](preview/nosy.library.light.png)
+![Design E in light mode: Ready, Recording, and Saved](preview/nosy.light.png)
+![Design E in dark mode: Ready, Recording, and Saved](preview/nosy.dark.png)
+![Transcripts in light mode with a sample lecture](preview/nosy.library.light.png)
+
+<details>
+<summary>Settings, onboarding, and additional states</summary>
+
+![Settings in light mode](preview/nosy.settings.light.png)
+![Settings in dark mode](preview/nosy.settings.dark.png)
+![Transcripts in dark mode](preview/nosy.library.dark.png)
+![Onboarding in light mode](preview/nosy.onboarding.light.png)
+![Onboarding in dark mode](preview/nosy.onboarding.dark.png)
+![Paused, queued transcription, and retry in light mode](preview/nosy.activity.light.png)
+![Paused, queued transcription, and retry in dark mode](preview/nosy.activity.dark.png)
+
+</details>
 
 ## Features
 
@@ -68,6 +82,19 @@ The script builds the pinned speech engine if needed, then builds the app in `bu
 Before reporting success, it validates both stapled tickets, assesses the DMG with Gatekeeper, and mounts it read-only to confirm the shipped app reports `source=Notarized Developer ID`. It does not launch or install the app. The version comes from `CFBundleShortVersionString` in the built `Info.plist`; the final artifact is `dist/Nosy-<version>.dmg` (for example, `dist/Nosy-1.0.dmg`). Build output, staging files, and notarization JSON logs stay in the checkout's gitignored `build/` and `dist/` directories. Logs remain after failures; temporary staging is cleaned up.
 
 Maintainers using a different Developer ID identity or stored profile can set `NOSY_CODESIGN_IDENTITY` and `NOSY_NOTARY_PROFILE`. Review the artifact before uploading it to a GitHub Release; the script does not publish a release. See Apple's [notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow) for the signing and ticket requirements.
+
+## Design previews
+
+Design E uses native macOS vibrancy, Inter and JetBrains Mono (bundled under OFL 1.1), navy text, green primary actions, and a blue Stop action. Dark mode uses the same hues over deep navy surfaces. Utility buttons, recovery banners, transcription queues, and the Dock controls remain available. Markers are deferred to a later change.
+
+Regenerate the light/dark sheets and individual Ready, Recording, Saved, Transcripts, Settings, and onboarding PNGs in `preview/`:
+
+```sh
+BUILD_DIR="$PWD/build" ./build.sh
+build/Nosy.app/Contents/MacOS/Nosy --headless-snapshot preview/nosy.png
+```
+
+The headless renderer uses isolated sample transcripts and the sky-to-grass fallback backdrop, without recording, playing audio, downloading models, or loading the user's transcript library. The real window uses native vibrancy. Idle microphone levels show `— dB` because input monitoring currently begins with recording. Saved vocabulary hits count distinct configured terms found in the transcript, rather than decoder corrections. The Vocabulary row and saved hit count reflect custom terms. Choose built-in subjects in its popover; subject packs are used when Smarter vocabulary (beta) is enabled.
 
 ## Tests
 

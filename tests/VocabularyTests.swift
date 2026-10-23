@@ -7,6 +7,18 @@ import Foundation
             count += 1
             guard value() else { fatalError("FAIL: \(message)") }
         }
+        let markdown = "# 🧬 Course\n\n- Date: today\n- Length: 1 min\n\n## Transcript\n\nFirst spelling.\n\nRepeated 🧬 spelling\nwith another spelling."
+        let blocks = TranscriptBlock.parse(markdown)
+        check(blocks.count == 5, "reader retains title, metadata, heading and paragraphs")
+        let last = blocks.last!
+        guard case .paragraph(let paragraph) = last.content else { fatalError("missing reader paragraph") }
+        let selected = (paragraph as NSString).range(of: "spelling", options: .backwards)
+        let source = last.sourceRange(selected)!
+        check((markdown as NSString).substring(with: source) == "spelling", "correction maps Unicode paragraph selection to source")
+        check(source == (markdown as NSString).range(of: "spelling", options: .backwards), "repeated spelling corrects only the selected occurrence")
+        check(last.sourceRange(NSRange(location: paragraph.utf16.count, length: 1)) == nil, "stale paragraph range rejected")
+        check(blocks[0].sourceRange(NSRange(location: 0, length: 1)) == nil, "reader metadata cannot become a paragraph correction")
+
         let catalog = SubjectCatalog(packs: [
             "stem-core": ["gray", "alpha"],
             "immune": ["thymocyte", "Notch ligand", "pre-T-cell receptor", "T-cell receptor", "CD4", "IT", "SO", "shared marker"],

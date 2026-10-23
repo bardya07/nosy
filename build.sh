@@ -10,9 +10,8 @@ WHISPER="$PWD/vendor/whisper/whisper-cli"
 otool -L "$WHISPER" | awk 'NR > 1 && $1 !~ /^\/usr\/lib\// && $1 !~ /^\/System\/Library\// { bad = 1 } END { exit bad }'
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources" "$BUILD_DIR/module-cache"
-if [[ ! -f Resources/AppIcon.icns || ! -f Resources/NosyMark.png ]]; then
-    swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
-fi
+# Keep the owner's supplied app icon and header artwork authoritative.
+swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"

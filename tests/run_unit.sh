@@ -14,5 +14,5 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift tests/TranscriberTests.swift -o "$BUILD_DIR/TranscriberTests"
 "$BUILD_DIR/TranscriberTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift tests/VocabularyTests.swift -o "$BUILD_DIR/VocabularyTests"
+    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/TranscriptBlocks.swift Sources/Transcriber.swift tests/VocabularyTests.swift -o "$BUILD_DIR/VocabularyTests"
 "$BUILD_DIR/VocabularyTests"

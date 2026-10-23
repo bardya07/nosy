@@ -87,6 +87,13 @@ private struct FileCommands: View {
     @ObservedObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
     var body: some View {
+        Button(model.phase == .done ? "Record Another" : "Start Recording") {
+            if model.phase == .done { model.phase = .idle }
+            else { model.start() }
+        }
+        .keyboardShortcut("r", modifiers: .command)
+        .disabled(model.recording || model.transitioning || (model.phase != .done && !model.canStart))
+        Divider()
         Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command)
         Button("Import Recording…") { model.importRecording() }
             .keyboardShortcut("i", modifiers: .command)
@@ -107,56 +114,74 @@ struct MainView: View {
     enum Field { case lecture, session }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            header.zIndex(1)
-            banners
-            fields.zIndex(1)
-            StagePanel(model: model, dropping: dropping)
-                .dropDestination(for: URL.self) { urls, _ in
-                    guard let url = urls.first, !model.busy else { return false }
-                    model.importRecording(url)
-                    return true
-                } isTargeted: { dropping = $0 && !model.busy }
-            controls
+        VStack(spacing: 0) {
+            titlebar.zIndex(3)
+            VStack(alignment: .leading, spacing: model.phase == .idle ? 18 : 16) {
+                banners
+                if model.phase == .idle { brand }
+                if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
+                StagePanel(model: model, dropping: dropping)
+                controls
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 20)
+            .dropDestination(for: URL.self) { urls, _ in
+                guard let url = urls.first, !model.busy else { return false }
+                model.importRecording(url)
+                return true
+            } isTargeted: { dropping = $0 && !model.busy }
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 34)
-        .padding(.bottom, 20)
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)
-        .background(Theme.background)
-        .tint(Theme.accent)
+        .background(WindowBackdrop())
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
+        .ignoresSafeArea(.container, edges: .top)
+        .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: model.phase)
         .animation(Motion.state(reduceMotion), value: model.paused)
         .animation(Motion.state(reduceMotion), value: model.selectedLecture == "__new__")
         .animation(Motion.state(reduceMotion), value: model.active?.id)
         .onAppear {
             model.openWindow = openWindow
-            if model.needsOnboarding { openWindow(id: "welcome") }
+            if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
         .onChange(of: model.selectedLecture) { _, lecture in
             if lecture == "__new__" { focus = .lecture }
         }
     }
 
-    private var header: some View {
-        HStack(alignment: .center, spacing: 9) {
-            NosyMark(size: 30)
-            Text("Nosy").font(Theme.display(26, .heavy)).foregroundStyle(Theme.ink)
-            Spacer()
+    // Leave room for the native traffic lights, with the retained utility actions alongside status.
+    private var titlebar: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 76)
             HStack(spacing: 0) {
                 Button { openWindow(id: "library") } label: { Image(systemName: "doc.text") }
-                    .buttonStyle(IconButtonStyle(size: 28))
+                    .buttonStyle(IconButtonStyle(size: 26))
                     .tip("Transcripts  ⌘T")
                     .accessibilityLabel("Show transcripts")
                 Button { model.chooseTranscriptsFolder() } label: { Image(systemName: "folder") }
-                    .buttonStyle(IconButtonStyle(size: 28))
+                    .buttonStyle(IconButtonStyle(size: 26))
                     .tip("Saving to “\(model.paths.transcripts.lastPathComponent)” — click to change")
                     .accessibilityLabel("Choose where transcripts are saved, currently \(model.paths.transcripts.lastPathComponent)")
                     .disabled(model.working)
                 MicMenu(model: model).disabled(model.micLocked)
             }
-            StatusPill(model: model).fixedSize().layoutPriority(1)
+            StatusPill(model: model).fixedSize().frame(minWidth: 50, alignment: .trailing)
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 44)
+        .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+    }
+
+    private var brand: some View {
+        HStack(spacing: 12) {
+            NosyMark(size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Nosy").font(Theme.display(20, .bold)).tracking(-0.4).foregroundStyle(Theme.ink)
+                Text("on-device").font(Theme.mono(11)).foregroundStyle(Theme.muted)
+            }
         }
     }
 
@@ -208,66 +233,77 @@ struct MainView: View {
     }
 
     private var fields: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    FieldLabel("Lecture")
-                    Spacer()
-                    VocabularyButton(model: model)
-                }
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                Text("Course").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Spacer(minLength: 4)
                 LecturePicker(model: model)
-                if model.selectedLecture == "__new__" {
-                    TextField("", text: $model.newLecture, prompt: Text("Name your lecture").foregroundStyle(Theme.faint))
-                        .textFieldStyle(.plain)
-                        .focused($focus, equals: .lecture)
-                        .onSubmit { focus = .session }
-                        .fieldChrome(focused: focus == .lecture)
-                        .accessibilityLabel("New lecture name")
-                        .transition(.soft(reduceMotion))
-                }
             }
-            VStack(alignment: .leading, spacing: 6) {
-                FieldLabel("Session")
+            .padding(.horizontal, 14).frame(height: 41)
+            if model.selectedLecture == "__new__" {
+                TextField("", text: $model.newLecture, prompt: Text("Name your course").foregroundStyle(Theme.faint))
+                    .textFieldStyle(.plain)
+                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
+                    .focused($focus, equals: .lecture)
+                    .onSubmit { focus = .session }
+                    .padding(.horizontal, 14).padding(.bottom, 11)
+                    .accessibilityLabel("New course name")
+                    .transition(.soft(reduceMotion))
+            }
+            Rectangle().fill(Theme.line).frame(height: 1)
+            HStack(spacing: 12) {
+                Text("Session").font(Theme.text(13)).foregroundStyle(Theme.muted)
                 TextField("", text: Binding(get: { model.session }, set: { model.session = $0; model.sessionEdited = true }),
                           prompt: Text("Session").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain)
+                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.trailing)
                     .focused($focus, equals: .session)
                     .onSubmit { focus = nil }
-                    .fieldChrome(focused: focus == .session)
                     .accessibilityLabel("Session name")
             }
+            .padding(.horizontal, 14).frame(height: 41)
+            Rectangle().fill(Theme.line).frame(height: 1)
+            VocabularyButton(model: model)
         }
+        .card()
         .disabled(model.busy)
-        .opacity(model.busy ? 0.55 : 1)
     }
 
     @ViewBuilder private var controls: some View {
         HStack(spacing: 10) {
             if model.recording {
                 Button { model.togglePause() } label: {
-                    Image(systemName: model.paused ? "play.fill" : "pause.fill")
-                        .contentTransition(.symbolEffect(.replace))
+                    Text(model.paused ? "Resume" : "Pause").lineLimit(1).fixedSize()
                 }
-                .buttonStyle(RoundButtonStyle(size: 48))
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 12))
+                .frame(width: 96)
                 .keyboardShortcut("p", modifiers: .command)
                 .tip(model.paused ? "Resume  ⌘P" : "Pause  ⌘P", edge: .top)
                 .accessibilityLabel(model.paused ? "Resume recording" : "Pause recording")
                 .disabled(model.transitioning)
                 .transition(.soft(reduceMotion))
             }
-            Button(action: { model.recording ? model.stop() : model.start() }) {
-                HStack(spacing: 8) {
-                    Image(systemName: model.recording ? "stop.fill" : "record.circle")
-                        .contentTransition(.symbolEffect(.replace))
-                    Text(primaryTitle)
+            Button(action: primaryAction) {
+                HStack(spacing: 10) {
+                    Text(primaryTitle).lineLimit(1).fixedSize()
+                    if !model.recording {
+                        Text("⌘R").font(Theme.mono(11, .medium)).opacity(0.6)
+                    }
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: 48))
-            // Return starts; stopping a lecture takes ⌘Return so a stray keypress can't end it.
+            .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48))
+            // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
             .keyboardShortcut(.return, modifiers: model.recording ? .command : [])
-            .tip(model.recording ? "Stop  ⌘↩" : (model.canStart ? "Start  ↩" : "Name the lecture first"), edge: .top)
-            .disabled(model.recording ? model.transitioning : !model.canStart)
+            .tip(model.recording ? "Stop  ⌘↩" : (model.canStart ? "\(primaryTitle)  ⌘R / ↩" : "Name the course first"), edge: .top)
+            .disabled(model.recording ? model.transitioning : (model.phase != .done && !model.canStart))
         }
+    }
+    private func primaryAction() {
+        focus = nil
+        if model.recording { model.stop() }
+        else if model.phase == .done { model.phase = .idle }
+        else { model.start() }
     }
     private var primaryTitle: String {
         if model.recording { return "Stop & transcribe" }
@@ -284,7 +320,8 @@ struct NosyMark: View {
     var body: some View {
         Image(nsImage: Self.image).resizable().interpolation(.high)
             .frame(width: size, height: size)
-            .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+            .clipShape(RoundedRectangle(cornerRadius: size / 4, style: .continuous))
+            .shadow(color: Theme.stop.opacity(0.3), radius: 5, y: 2)
             .accessibilityHidden(true)
     }
 }
@@ -315,13 +352,16 @@ private struct VocabularyButton: View {
             } catch { subjects = SubjectSettings(subject: "off"); settingsError = error.localizedDescription }
             open = true
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "character.book.closed")
-                Text("Vocabulary")
+            HStack {
+                Text("Vocabulary").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Spacer()
+                Text("\(CourseVocabularySummary.terms(model.vocabulary(for: model.lectureName)).count) custom terms")
+                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
             }
-            .font(Theme.text(11, .semibold))
+            .padding(.horizontal, 14).frame(height: 41)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(LinkButtonStyle(tint: Theme.muted))
+        .buttonStyle(InsetButtonStyle())
         .disabled(model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
         .tip("Terms Nosy should expect in this lecture", edge: .top)
         .popover(isPresented: $open, arrowEdge: .bottom) {
@@ -370,10 +410,12 @@ private struct VocabularyButton: View {
                         .keyboardShortcut("s", modifiers: .command)
                 }
             }
+            .font(Theme.text(13))
+            .foregroundStyle(Theme.ink)
             .padding(16)
             .frame(width: 340)
-            .background(Theme.background)
-            .tint(Theme.accent)
+            .background(WindowBackdrop())
+            .tint(Theme.accentText)
         }
     }
 }
@@ -390,10 +432,10 @@ private struct MicMenu: View {
                 Button { model.selectInput(device.id) } label: { checked(model.inputUID == device.id, device.name) }
             }
         } label: {
-            Image(systemName: model.inputUID == nil ? "mic" : "mic.fill")
+            Image(systemName: model.inputUID == nil || Snapshot.isRunning ? "mic" : "mic.fill")
         }
         .menuStyle(.button)
-        .buttonStyle(IconButtonStyle(size: 28, active: model.inputUID != nil))
+        .buttonStyle(IconButtonStyle(size: 28, active: model.inputUID != nil && !Snapshot.isRunning))
         .menuIndicator(.hidden)
         .fixedSize()
         .onHover { if $0 { model.refreshInputs() } }
@@ -420,11 +462,10 @@ private struct LecturePicker: View {
                 Text(model.selectedLecture == "__new__" ? "New lecture" : model.selectedLecture)
                     .foregroundStyle(model.selectedLecture == "__new__" ? Theme.muted : Theme.ink)
                     .lineLimit(1)
-                Spacer()
-                Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.muted)
+                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
             }
-            .fieldChrome()
-            .brightness(hovering ? -0.015 : 0)
+            .font(Theme.mono(13))
+            .brightness(hovering ? -0.06 : 0)
             .contentShape(Rectangle())
         }
         .menuStyle(.button)
@@ -434,7 +475,7 @@ private struct LecturePicker: View {
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
         }
-        .accessibilityLabel("Lecture")
+        .accessibilityLabel("Course")
         .accessibilityValue(model.selectedLecture == "__new__" ? "New lecture" : model.selectedLecture)
     }
 }
@@ -443,31 +484,32 @@ private struct StatusPill: View {
     @ObservedObject var model: AppModel
     var body: some View {
         HStack(spacing: 6) {
-            Circle().fill(tint).frame(width: 7, height: 7)
-                .opacity(model.recording && !model.paused ? (model.level > -50 ? 1 : 0.5) : 1)
-            Text(title).font(Theme.text(11.5, .semibold)).foregroundStyle(Theme.ink)
+            if model.recording {
+                Circle().fill(model.paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
+                    .opacity(model.paused || model.level > -50 ? 1 : 0.5)
+            }
+            Text(title).font(Theme.mono(11)).foregroundStyle(tint)
                 .contentTransition(.opacity)
         }
-        .padding(.horizontal, 10).frame(height: 24)
-        .background(tint.opacity(0.14), in: Capsule())
+        .frame(height: 24)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Status: \(title)")
     }
     private var title: String {
         switch model.phase {
-        case .idle: "Ready"
-        case .recording: model.paused ? "Paused" : "Recording"
+        case .idle: "idle"
+        case .recording: model.paused ? "paused" : "REC"
         case .transcribing: model.transcriptionPauseReason != nil ? "Paused" : (model.waiting ? "Queued" : "Transcribing")
-        case .done: "Saved"
+        case .done: "saved"
         case .failed: "Attention"
         }
     }
     private var tint: Color {
         switch model.phase {
         case .idle: Theme.muted
-        case .recording: model.paused ? Theme.amber : Theme.coral
+        case .recording: model.paused ? Theme.amber : Theme.recordingText
         case .transcribing: Theme.amber
-        case .done: Theme.green
+        case .done: Theme.savedText
         case .failed: Theme.coral
         }
     }
@@ -510,50 +552,56 @@ struct StagePanel: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 158)
-        .card(dropping ? Theme.accent.opacity(0.12) : Theme.surface)
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .strokeBorder(dropping ? Theme.accent : Theme.line.opacity(0.6), style: StrokeStyle(lineWidth: dropping ? 1.5 : 1, dash: dropping ? [5, 4] : [])))
+        .overlay {
+            if dropping {
+                RoundedRectangle(cornerRadius: 12).fill(Theme.surface)
+                RoundedRectangle(cornerRadius: 12).strokeBorder(Theme.accentText, style: StrokeStyle(lineWidth: 1.5, dash: [5, 4]))
+                Text("Drop to transcribe").font(Theme.text(14, .semibold)).foregroundStyle(Theme.navy)
+            }
+        }
         .animation(Motion.hover, value: dropping)
     }
 
     private var idle: some View {
-        VStack(spacing: 10) {
-            Waveform(levels: model.levels, tint: Theme.faint, active: false).frame(height: 34).padding(.horizontal, 22)
-            Text(dropping ? "Drop to transcribe" : "Ready when you are").font(Theme.display(17, .bold)).foregroundStyle(Theme.ink)
-            Text(model.canStart ? "Press Return to start · or drop an audio file here" : "Name your lecture to start")
-                .font(Theme.text(12)).foregroundStyle(Theme.muted)
-        }.padding(.vertical, 16)
+        Text("mic: \(Snapshot.isRunning ? "MacBook Pro" : model.inputName) · \(Snapshot.isRunning ? "\(Int(model.level))" : "—") dB")
+            .font(Theme.mono(11)).foregroundStyle(Theme.muted)
+            .lineLimit(1).truncationMode(.middle)
+            .frame(maxWidth: .infinity)
+            .help("Microphone: \(model.inputName). Input level appears while recording. Drop an audio file here to transcribe it.")
+            .accessibilityLabel("Microphone: \(model.inputName). \(Snapshot.isRunning ? "\(Int(model.level)) decibels" : "Level available while recording")")
     }
 
     private var recording: some View {
-        VStack(spacing: 8) {
-            Text(Core.timer(model.duration))
-                .font(Theme.display(38, .bold)).monospacedDigit()
-                .foregroundStyle(model.paused ? Theme.muted : Theme.ink)
-                .contentTransition(.numericText())
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(model.duration))
-                .accessibilityLabel("Recorded \(Core.timer(model.duration))")
-            Waveform(levels: model.levels, tint: model.paused ? Theme.faint : Theme.coral, active: !model.paused)
-                .frame(height: 30).padding(.horizontal, 22)
-                .accessibilityLabel("Microphone level").accessibilityValue("\(Int(model.level)) decibels")
-            Text(recordingCaption)
-                .font(Theme.text(12, .medium)).foregroundStyle(Theme.muted).lineLimit(1)
-                .padding(.horizontal, 16)
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(model.current?.lecture ?? model.lectureName) · \(model.current?.session ?? model.session)")
+                    .font(Theme.mono(12)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.middle)
+                Text(Core.timer(model.duration))
+                    .font(Theme.mono(44)).tracking(-1.32)
+                    .foregroundStyle(model.paused ? Theme.muted : Theme.navy)
+                    .contentTransition(.numericText())
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(model.duration))
+                    .accessibilityLabel("Recorded \(Core.timer(model.duration))")
+            }
+            Waveform(levels: model.levels, tint: Theme.wavePlayed, active: !model.paused)
+                .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
+                .background(Theme.waveform, in: Capsule())
+                .accessibilityLabel("Live microphone input").accessibilityValue("\(Int(model.level)) decibels")
+            HStack(spacing: 6) {
+                Image(systemName: model.paused ? "pause.fill" : "mic.fill").font(.system(size: 10))
+                Text(model.paused ? "Paused · nothing is being recorded" : "\(Snapshot.isRunning ? "MacBook Pro" : model.inputName) · \(Int(model.level)) dB")
+                    .lineLimit(1).truncationMode(.middle)
+            }
+            .font(Theme.mono(11)).foregroundStyle(Theme.muted)
             if let active = model.active {
-                // An earlier lecture is still being written up in the background.
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.mini)
                     Text(model.transcriptionPauseReason.map { "Paused — \($0)" } ?? "Also transcribing \(active.lecture) · \(Int((model.transcriptionProgress * 100).rounded()))%")
-                        .font(Theme.text(11, .medium)).foregroundStyle(Theme.faint).lineLimit(1)
+                        .font(Theme.text(11, .medium)).foregroundStyle(Theme.muted).lineLimit(2)
                 }
+                .padding(12).frame(maxWidth: .infinity, alignment: .leading).card()
             }
-        }.padding(.vertical, 12)
-    }
-    private var recordingCaption: String {
-        if model.paused { return "Paused · nothing is being recorded" }
-        let mic = model.activeInputName.map { " · \($0)" } ?? ""
-        return "\(model.current?.lecture ?? model.lectureName)\(mic)"
+        }
     }
 
     private var transcribing: some View {
@@ -567,7 +615,7 @@ struct StagePanel: View {
                         .contentTransition(.numericText())
                 }
             }
-            ProgressTrack(value: model.waiting ? 0 : model.transcriptionProgress, tint: Theme.amber)
+            ProgressTrack(value: model.waiting ? 0 : model.transcriptionProgress, tint: Theme.stop)
             Text(remainingText).font(Theme.text(12)).foregroundStyle(Theme.muted)
                 .lineLimit(2)
                 .contentTransition(.opacity)
@@ -576,38 +624,22 @@ struct StagePanel: View {
                     .font(Theme.text(11)).foregroundStyle(Theme.faint).lineLimit(1)
             }
         }
-        .padding(18)
+        .padding(14).card()
         .accessibilityElement(children: .combine)
     }
     private var remainingText: String {
         if let reason = model.transcriptionPauseReason { return "Paused — \(reason)" }
-        if model.waiting, let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
+        if model.waiting {
+            if let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
+            return "Waiting for transcription to begin…"
+        }
         guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(model.transcriptionElapsed)) elapsed" }
         let minutes = Int((remaining / 60).rounded(.up))
         return remaining < 60 ? "Less than a minute left" : "About \(minutes) min left"
     }
 
     private var done: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "checkmark").font(.system(size: 17, weight: .bold)).foregroundStyle(Theme.onAccent)
-                .frame(width: 38, height: 38).background(Theme.green, in: Circle())
-                .accessibilityHidden(true)
-            Text("Transcript saved").font(Theme.display(17, .bold)).foregroundStyle(Theme.ink)
-            if let record = model.current {
-                Text(savedCaption(record)).font(Theme.text(12, .medium)).foregroundStyle(Theme.muted).lineLimit(1)
-            }
-            HStack(spacing: 16) {
-                Button("Open") { model.showInLibrary(model.current?.transcriptPath.map { URL(fileURLWithPath: $0) }) }
-                    .buttonStyle(LinkButtonStyle())
-                Button("Show in Finder") { model.revealTranscript() }.buttonStyle(LinkButtonStyle())
-            }
-        }.padding(.vertical, 16).padding(.horizontal, 16)
-    }
-    // Mentions when the session name was taken and the file got a -2 suffix.
-    private func savedCaption(_ record: SessionRecord) -> String {
-        guard let path = record.transcriptPath else { return "\(record.lecture) · \(record.session)" }
-        let saved = URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
-        return saved == record.session ? "\(record.lecture) · \(record.session)" : "\(record.lecture) · saved as “\(saved)”"
+        SavedPanel(model: model)
     }
 
     private var failed: some View {
@@ -628,32 +660,135 @@ struct StagePanel: View {
                     Button("Retry") { model.retry() }.buttonStyle(LinkButtonStyle()).disabled(model.isQueued(record.id))
                 }
             }
-        }.padding(.vertical, 16).padding(.horizontal, 18)
+        }.padding(14).frame(maxWidth: .infinity).card()
     }
 }
 
-// Rolling bars of recent mic levels; the newest bar is on the right.
+// UI-only count of custom terms; built-in subjects remain a separate opt-in aid.
+enum CourseVocabularySummary {
+    static func terms(_ text: String) -> [String] {
+        var seen = Set<String>()
+        return text.components(separatedBy: .newlines)
+            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }
+            .flatMap { $0.components(separatedBy: ",") }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && seen.insert($0.lowercased()).inserted }
+    }
+}
+
+private struct SavedPanel: View {
+    @ObservedObject var model: AppModel
+    @State private var summary = SavedSummary()
+    @State private var copied = false
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark").font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 40, height: 40).background(Theme.green, in: Circle()).accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Transcript saved").font(Theme.display(20, .bold)).tracking(-0.4).foregroundStyle(Theme.ink)
+                    Text("\(model.current?.lecture ?? model.lectureName) · \(savedSession)")
+                        .font(Theme.mono(11)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.middle)
+                }
+            }
+            VStack(spacing: 5) {
+                stat("duration", summary.duration.map { Core.timer($0) } ?? "—")
+                stat("words", summary.words.map { $0.formatted() } ?? "—")
+                stat("vocab hits", summary.vocabHits.map { "\($0) / \(summary.terms)" } ?? "—")
+                if let path = model.current?.transcriptPath {
+                    Text("→ \(abbreviated(path))")
+                        .font(Theme.mono(11)).foregroundStyle(Theme.muted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .lineLimit(2).truncationMode(.middle).textSelection(.enabled).help(path)
+                        .padding(.top, 3)
+                }
+            }
+            .padding(.vertical, 12).padding(.horizontal, 14).card()
+            HStack(spacing: 8) {
+                Button("Open") { model.showInLibrary(model.current?.transcriptPath.map { URL(fileURLWithPath: $0) }) }
+                    .tip("Open in Transcripts", edge: .top)
+                Button("Reveal") { model.revealTranscript() }.tip("Show in Finder", edge: .top)
+                Button(copied ? "Copied" : "Copy") {
+                    guard let text = summary.markdown else { return }
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                    copied = true
+                    Task { try? await Task.sleep(for: .seconds(1.4)); copied = false }
+                }
+                .disabled(summary.markdown == nil)
+                .tip("Copy transcript", edge: .top)
+            }
+            .buttonStyle(PillButtonStyle(kind: .quiet, height: 38))
+            .disabled(model.current?.transcriptPath == nil)
+        }
+        .task(id: model.current?.transcriptPath) {
+            summary = SavedSummary(record: model.current, model: model)
+        }
+    }
+    private var savedSession: String {
+        model.current?.transcriptPath.map { URL(fileURLWithPath: $0).deletingPathExtension().lastPathComponent }
+            ?? model.current?.session ?? model.session
+    }
+    private func stat(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label).foregroundStyle(Theme.muted)
+            Spacer()
+            Text(value).foregroundStyle(Theme.ink)
+        }.font(Theme.mono(12)).frame(minHeight: 18)
+    }
+    private func abbreviated(_ path: String) -> String {
+        if let preview = Snapshot.displayPath(path) { return preview }
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        return path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
+    }
+}
+
+// Read existing transcript/audio metadata for presentation; no sidecar or pipeline changes.
+private struct SavedSummary {
+    var markdown: String?
+    var duration: TimeInterval?
+    var words: Int?
+    var terms = 0
+    var vocabHits: Int?
+    init() {}
+    @MainActor init(record: SessionRecord?, model: AppModel) {
+        guard let record else { return }
+        let audioLength = Core.audioDuration(id: record.id, paths: model.paths)
+        let elapsed = record.endedAt.map { $0.timeIntervalSince(record.startedAt) } ?? 0
+        duration = audioLength > 0 ? audioLength : (model.duration > 0 ? model.duration : (elapsed > 0 ? elapsed : nil))
+        let vocabulary = CourseVocabularySummary.terms(model.vocabulary(for: record.lecture))
+        terms = vocabulary.count
+        guard let path = record.transcriptPath, let text = try? String(contentsOfFile: path, encoding: .utf8) else { return }
+        markdown = text
+        let spoken = text.components(separatedBy: "## Transcript").dropFirst().joined(separator: "## Transcript")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        words = spoken == "_No speech detected._" ? 0 : spoken.split(whereSeparator: { $0.isWhitespace }).count
+        vocabHits = vocabulary.filter { term in
+            spoken.range(of: "(?<![\\p{L}\\p{N}])" + NSRegularExpression.escapedPattern(for: term) + "(?![\\p{L}\\p{N}])",
+                         options: [.regularExpression, .caseInsensitive]) != nil
+        }.count
+    }
+}
+
+// Rolling recent input levels, newest at right. This is a meter, never live transcription.
 struct Waveform: View {
     let levels: [Double]
     let tint: Color
     let active: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         Canvas { context, size in
-            let count = levels.count
+            guard !levels.isEmpty else { return }
             let gap: CGFloat = 3
-            let width = max(1.5, (size.width - gap * CGFloat(count - 1)) / CGFloat(count))
+            let width = max(1.5, (size.width - gap * CGFloat(levels.count - 1)) / CGFloat(levels.count))
             for (index, db) in levels.enumerated() {
                 let normalized = active ? min(1, max(0, (db + 55) / 50)) : 0
-                let height = max(width, size.height * CGFloat(0.08 + 0.92 * normalized))
-                let x = CGFloat(index) * (width + gap)
-                let rect = CGRect(x: x, y: (size.height - height) / 2, width: width, height: height)
-                // Older bars fade out toward the left.
-                let age = Double(index) / Double(max(1, count - 1))
-                context.fill(Path(roundedRect: rect, cornerRadius: width / 2), with: .color(tint.opacity(active ? 0.35 + 0.65 * age : 0.55)))
+                let height = max(3, size.height * CGFloat(normalized))
+                let rect = CGRect(x: CGFloat(index) * (width + gap), y: (size.height - height) / 2, width: width, height: height)
+                context.fill(Path(roundedRect: rect, cornerRadius: width / 2), with: .color(active && db > -55 ? tint : Theme.waveIdle))
             }
         }
-        .animation(.linear(duration: 0.1), value: levels)
-        .accessibilityHidden(!active)
+        .animation(reduceMotion ? nil : .linear(duration: 0.1), value: levels)
     }
 }
 
@@ -678,6 +813,7 @@ struct ProgressTrack: View {
 @main
 enum EntryPoint {
     @MainActor static func main() async {
+        Theme.registerFonts()
         if CommandLine.arguments.dropFirst().first == "--headless-snapshot" {
             exit(Snapshot.run(Array(CommandLine.arguments.dropFirst(2))))
         }
