@@ -245,7 +245,7 @@ struct LibraryView: View {
                 HStack(spacing: 6) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(record.lecture) · \(record.session)").font(Theme.text(12.5, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused — \($0)" } ?? "Transcribing…") : "\(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min · not transcribed")
+                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused — \($0)" } ?? (model.active?.id == record.id ? "Transcribing…" : "Queued")) : "\(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min · not transcribed")
                             .font(Theme.text(11)).foregroundStyle(Theme.muted)
                     }
                     Spacer(minLength: 0)
