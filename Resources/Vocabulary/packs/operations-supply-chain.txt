@@ -235,7 +235,6 @@ system kaizen
 Taguchi Methods
 takt time
 theory of constraints
-throughput
 TOC
 total productive maintenance
 total quality control

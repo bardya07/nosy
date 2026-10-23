@@ -25,7 +25,6 @@ ASCII
 ASIC
 ASM
 ASN
-AT
 ATM
 AVP
 BARRNET
@@ -226,7 +225,6 @@ IS-IS
 ISA
 ISO
 ISP
-IT
 ITU-T
 IXP
 JPEG
@@ -252,8 +250,6 @@ LISTEN
 livelock
 LLP
 logical / virtual topologies
-LOGIN
-LOGOUT
 LS
 LSA
 LSP
@@ -313,7 +309,6 @@ NFL
 NFS
 NIC
 NL
-NO
 NPU
 NRZ
 NRZI
@@ -371,7 +366,6 @@ PVC
 QAM
 QID
 quadrature Amplitude Modulation
-QUESTION
 QUIC
 quorum
 Raft

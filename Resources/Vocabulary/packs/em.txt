@@ -1,57 +1,259 @@
 AC voltage
+Alternator
+Ampere
 Ampère
+Ampère's circuital law
 Ampère's law
+Ampère-Maxwell law
+antenna
+antiferromagnetic
+antiferromagnetism
+Arago
+Bandwidth
 BCS theory
 Biot
 Biot-Savart law
+Bohr magneton
+capacitance
+capacitive reactance
+capacitor
+CGS
+Charge density
+Charging capacitor
+Commutator
 Cooper
+Coulomb
+Coulomb constant
 Coulomb force
+Coulomb gauge
+Coulomb's constant
 Coulomb's law
+Critical damping
+Curie point
+Curie temperature
+Curie's law
+Curl
+current density
 cyclotron
+Damped oscillation
 diamagnetic materials
 diamagnetism
+dielectric constant
+dielectric strength
+diode
+dipole radiation
+Dirac delta function
+Discharging capacitor
+displacement current
+divergence
+drift velocity
+Drude
+Drude model
+eddy current
+Electric charge
+electric dipole
+electric field
+electric field lines
+electric flux
+electric potential
+electric potential energy
+Electric shielding
+electric susceptibility
 Electrochemical cell
+electrochemical series
+electrolysis
+electromagnetic induction
+electromagnetic wave
+Electromagnetism
+electromotive force
 electron paramagnetic resonance
+electron volt
 electronvolt
+Electrostatic potential energy
+electrostatics
+elementary charge
+EMF
+Energy stored in a capacitor
+Equipotential
+equipotential surface
+ESR
+Farad
 Faraday
+Faraday cage
 Faraday constant
+Faraday's constant
 Faraday's law
+Faraday's law of induction
+ferrimagnetic
+ferrimagnetism
 ferromagnetic material
 ferromagnetism
+Galvani
+galvanic cell
+Gauss (G)
+Gauss unit
+Gauss's law
+Gauss's law for electricity
+Gauss's law for magnetism
 Gaussian surface
+Gaussian units
 Gilbert
+Gilbert unit
+gradient
+Green's function
 half-wave antenna
+Hall coefficient
+Hall effect
+Hall probe
+Heaviside
+Heaviside step function
+Helmholtz coil
+Henry
 Henry (H)
+Hertzian dipole
 hysteresis
+hysteresis loop
 impedance
 induced electric-dipole moment
+induced emf
+inductance
+inductive reactance
+inductor
+Josephson effect
+Josephson junction
+Joule
+Joule heating
+Joule's law
 Kirchhoff
 Kirchhoff's circuit laws
+Kirchhoff's current law
 Kirchhoff's rules
+Kirchhoff's voltage law
+Langevin
+Langevin function
+Larmor
+Larmor formula
+Larmor frequency
+Larmor precession
 LC circuit
 lead acid battery
+Lenz
 Lenz's law
+Linear charge density
+Liénard-Wiechert potential
+Lorentz force
 Lorentz force equation
+Lorentz gauge
+LR circuit
+magnetic dipole
+magnetic domain
+magnetic field
+magnetic flux
+magnetic moment
+magnetic monopole
+magnetic resonance
+magnetic susceptibility
+magnetization
+magnetomotive force
 mass spectrometer
+Maxwell
+Maxwell unit
+Maxwell's displacement current
 Maxwell's equations
+Maxwell-Faraday law
 Meissner effect
+Millikan oil-drop experiment
+MRI
 multi-loop circuit
+mutual inductance
+Nernst
+Nernst equation
+NMR
+Norton
+Norton equivalent circuit
+Norton's theorem
+Néel temperature
+Oersted
+Oersted (Oe)
+Oersted unit
+Oersted's law
+Ohm
 Ohm's law
+ohmic
+Overdamping
+Parallel capacitors
 parallel-plate capacitor
 paramagnetic material
+paramagnetism
+Peak voltage
 Permanent dipole
+permeability
 permeability of free space
+permittivity
 permittivity of free space
 permittivity of vacuum
+Phasor
+Phasors
 piezoelectricity
+Planck
+Poisson's equation
+polarization
+potential difference
+Potential energy
+Power factor
+Poynting theorem
 Poynting vector
+Q factor
+quality factor
 RC circuit
+reactance
+resistance
+resistivity
+resistor
+resonance
+resonant frequency
+retarded potential
+RL circuit
 RLC circuit
 RLC series circuit
+RMS voltage
+root mean square
 Savart
+scalar potential
+Seebeck effect
+self-inductance
+semiconductor
+Series capacitors
+SI
+SI units
+Siemens
+Siemens (S)
+skin depth
 solenoid
 SQUID
+step-down transformer
+step-up transformer
+superconductivity
+superconductor
+Surface charge density
+Tesla
+Tesla (T)
+Thevenin equivalent circuit
 Thomson
+Thévenin
+Thévenin's theorem
+time constant
 TMS
 transformer
+transistor
+transmission line
+Underdamping
+Van de Graaff generator
+vector potential
+volt
+Volta
+voltaic cell
+Weber
+Weiss domain
+Wheatstone bridge
 X-ray

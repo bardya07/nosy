@@ -674,7 +674,6 @@ sartorius
 scalene muscles
 scaphoid
 scapula
-scar
 sclerotome
 scoliosis
 sebaceous gland
@@ -701,7 +700,6 @@ shaft of the ulna
 short bone
 sinusoid capillary
 skeletal system
-skeleton
 small saphenous vein
 soleal line
 soleus
@@ -818,7 +816,6 @@ transversus abdominis
 trapezium
 trapezius
 trapezoid
-tri
 triceps brachii
 triquetrum
 trochlea

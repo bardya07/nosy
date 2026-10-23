@@ -1,89 +1,361 @@
 ABI
+abstract interpretation
+abstract syntax tree
 Ackermann's function
 ActionScript
 ActiveX
+Actor model
+Ada
+Agda
+ahead-of-time compilation
 Ajax
+algebraic data type
+ALGOL
+alpha conversion
+anonymous function
 ANSI C
+Answer set programming
+ANTLR
 AOT
+Apache Kafka
 API
 API languages
+APL
 AppleScript
 applicative functor
+assembly language
 AST
+attribute grammar
+axiomatic semantics
+backus
 BASIC
+BEAM
+beta reduction
+Bison
 BNF
+Boehm garbage collector
+Bun
+bytecode
+C programming language
 C#
 C++
+call by name
+call by reference
+call by value
+call stack
+Chez Scheme
+Church
+Church numerals
 Clang
+Clojure
+CLOS
+closure
+CLR
 collective recursion
+Combinatory logic
+Common Lisp
+Common Lisp Object System
+compiler
+compiler optimization
 concave function
+Concurrency
+constant folding
+Constraint logic programming
+continuation
 continuation-passing style
+copy elision
+Copying garbage collector
+Coq
+Coq proof assistant
 CORBA
+Coroutine
 coroutines
 CPS
+Crystal
+Curry
+Curry-Howard
 Curry-Howard correspondence
+currying
 Damas-Milner
+Dart
 Datalog
+Datalog language
 dataset API (tf.data)
 de Bruijn index
+dead code elimination
+Deadlock
+Declarative programming
+delimited continuation
+Deno
+denotational semantics
+dependent type
+dependent types
 DSL
+dynamic dispatch
+dynamic typing
 EBNF
+Eiffel
 Elixir
+Elm
+Emacs Lisp
 Erlang
-ford-Fulkerson method
+Erlang/OTP
+escape analysis
+Event-driven programming
+exception handling
+existential type
+F#
+F-sharp
+Fixed-point combinator
+Flex
+Ford-Fulkerson method
+Forth
 Fortran
+Fortran 90
+FSharp
+Functional programming
 functor
 GADT
+garbage collection
+garbage collector
 GCC
+Generational garbage collection
+Generator function
+generics
 GHC
+Go programming language
+Golang
+Gradual typing
+Groovy
 Haskell
+Haskell programming language
+Haskell type class
+Haxe
+Heap allocation
+Hindley
 Hindley-Milner
 Hindley-Milner type inference
 Hindley-Milner type system
+Hoare logic
+Hoare triple
+HOL
+homoiconicity
+Icon
+Idris
+Imperative programming
+inline expansion
+instruction set architecture
+intermediate representation
+interpreter
 inverse Ackermann function
+IR
+Isabelle
+Iterator
 Java
 JAVA ME
+Java Virtual Machine
 JavaScript
+JDK
 JIT
+JRE
 JSP
 Julia
+Julia programming language
+Jupyter
 JVM
+Kotlin
+Kotlin language
+LALR parser
 lambda
 lambda calculus
+Lambda cube
+Lambda lifting
 layers API (tf.layers)
+Lean
+Lex
+lexer
+lexical analysis
+lexical scoping
+Linear logic
+linear types
 Linux
+LISP
+Lisp Machine
+live coding
+LL parser
 LLVM
+LLVM IR
+Logic programming
+LR parser
+Lua
+Lua language
+lvalue
+macro
+macro expansion
+Mark and sweep
+Martin-Löf type theory
+Maybe type
+memoization
 memory API
+Memory safety
+Message passing
+method dispatch
 metrics API (tf.metrics)
+Milner
+Miranda
+mixin
+ML family
+ML programming language
+MLton
+module system
 monad
+monad transformer
+Monitor
+monoid
+Monomorphization
+Moore machine
+MOSFET
+Mutex lock
+name mangling
+namespace
+Newspeak
+Nim
+Node.js
+nominal typing
+Null pointer
+Null safety
+NumPy
+Object-oriented
+object-oriented programming
+Objective-C
 OCaml
+OOP
 OpenMP
+operational semantics
+Option type
+OTP
+Parallelism
+parametric polymorphism
+parser combinator
 parsers
+partial application
+Partial evaluation
 partial recursive function
+Pascal
+Pascal language
+pattern matching
+Perl
 Petri nets
+PHP
+pointer
+Pointer aliasing
+pointer arithmetic
+polymorphic type
 polymorphism
+Pony
 prefix code
+preprocessor
 primitive recursive
+Procedural programming
 process API
+Product type
 program lifecycle phase
 Prolog
+Prolog language
 Python
+Python programming
+Q#
+quicksort
 R. Milner
+Race condition
 Racket
+Racket language
+Rails
+Record type
 recursion
+recursion schemes
 recursion termination
 recursive
 recursive doubling
 recursively solvable
+Reference counting
+Refinement types
+reflection
+regular expressions
 Rice's method
+Ruby
+Ruby on Rails
 Rust
+rvalue
 Scala
+Scala language
 Scheme
+Scheme programming
+scope
+Scratch
+scripting language
+Self language
+self-hosting
+semantic analysis
+Semaphore
+sequent calculus
+Session types
+Simula
+SKI combinator
 Smalltalk
+Smalltalk language
+Smalltalk-80
+SML
 SSA
+Stack allocation
+Stack machine
+Standard ML
+static typing
+strong typing
+structural typing
+subtyping
+Sum type
+Swift
+symbol table
+syntax tree
+Tail call optimization
 tail recursion
+Tcl
 thread API
+Thunk
+Trampoline
+Tuple type
+Turing-complete language
+type checker
+type class
+Type erasure
+type inference
+Type safety
+type system
+type theory
+typeclass
+typedef
+TypeScript
 UML
+undefined behavior
+unification
+unit type
+Ur/Web
+V8
+variable binding
+Variant type
 VHDL
+virtual machine
+Visual Basic
+Visual Basic .NET
+VM
+Wasm
+WebAssembly
+WebKit
+Wirth
 WS-I Basic Security Profile
+Xtend
+Y combinator
+Yacc
+Zig
 ZigBee

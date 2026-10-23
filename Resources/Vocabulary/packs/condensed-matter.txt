@@ -1,43 +1,337 @@
+Abrikosov
+Abrikosov vortex
+acoustic phonon
+Anderson
 Anderson localization
+Anderson model
+Anderson's theorem
+anisotropy
+antiferromagnet
+antiferromagnetic order
+antiferromagnetic phase
+Ashcroft
+band gap
+band structure
+band theory
+bandwidth
+Bardeen
+Bardeen theory
+Bardeen-Cooper-Schrieffer theory
 base current
 BCC
+BCS gap
 BCS theory
 Berezinskii-Kosterlitz-Thouless transition
+Berry curvature
+Berry phase
+Bethe ansatz
+Bloch
+Bloch electron
+Bloch oscillation
 Bloch theorem
+Bloch wave
+Bloch wave function
+Bloch's theorem
 body-centered cubic
+body-centered tetragonal
+Bogoliubov
+Bogoliubov quasiparticle
 Bogoliubov transformation
+Born-Mayer
 Bose-Einstein condensate
+Bose-Einstein condensation
 Bose-Einstein distribution
+Bose-Einstein statistics
 Bose-Hubbard model
+Bragg
+Bragg diffraction
+Bragg peak
+Bravais lattice
+Brillouin
+Brillouin function
+Brillouin scattering
 Brillouin zone
+cesium chloride structure
+charge density wave
+chemical potential
+Chern insulator
+Chern number
+conduction band
+Cooper instability
 Cooper pair
+Cooper pair condensate
+Cooper pairs
+Coulomb blockade
+Coulomb glass
+Coulomb interaction
+critical current
+critical field
+critical magnetic field
+critical temperature
+crystal field
+crystal momentum
+crystal structure
+crystallography
+Curie temperature
+Curie-Weiss law
+Debye frequency
 Debye model
+Debye temperature
+Debye-Waller factor
+degeneracy pressure
+Density functional theory
+density of states
+DFT
+diamagnetism
+diamond structure
+dielectric function
+diffusion
 Dirac cone
+Dirac sea
+Dirac semimetal
+dislocation
+dispersion
+dispersion relation
+donor
+doping
+Dresselhaus
+drift mobility
+Drude model
+effective mass
+Ehrenfest
+Einstein frequency
 Einstein model
+Einstein solid
+Einstein temperature
+electron gas
+electron mobility
+electron scattering
+electron-phonon coupling
+electronic specific heat
+energy gap
+Ettingshausen
+Ewald summation
+exchange interaction
 face-centered cubic
 FCC
+Fermi
 Fermi energy
 Fermi factor
+Fermi gas
+Fermi level
 Fermi liquid
+Fermi sphere
 Fermi surface
 Fermi temperature
+Fermi velocity
+Fermi wave vector
+Fermi's golden rule
 Fermi-Dirac distribution
+Fermi-liquid theory
+ferroelectric
+ferromagnet
+ferromagnetic domain
+ferromagnetic order
+flux quantization
+flux qubit
+Fock
+Frenkel defect
+Frenkel exciton
+Fröhlich
+Fröhlich Hamiltonian
+Gaussian distribution
+Ginzburg
+Ginzburg-Landau equation
+Ginzburg-Landau parameter
 Ginzburg-Landau theory
+grain boundary
+graphene
+graphene sheet
+Hall
+Hall conductance
+Hall effect
+Hall resistance
+Hall voltage
+Hartree
+Hartree-Fock
+HCP
+heavy fermion system
+Heisenberg
 Heisenberg model
+Heitler-London
+hexagonal close-packed
 Hofstadter butterfly
+Hohenberg-Kohn theorem
+hole
+hole mobility
 Holstein-Primakoff transformation
+hopping conduction
+Hubbard
 Hubbard model
+Hubbard-Stratonovich
+Hund's rule
+Hund's rules
+impurity band
+insulator
+intrinsic semiconductor
+Ising
 Ising model
+Josephson effect
+Josephson junction
+Josephson vortex
+Kagome
+Kagome lattice
+Kittel
+Kohn
+Kohn-Sham
+Kondo effect
+Kondo lattice
+Kosterlitz
 Kosterlitz-Thouless transition
+Kramers
+Kramers degeneracy
+Kramers pair
 Kramers-Kronig relations
+Kronig-Penney model
+Landau
 Landau damping
+Landau Fermi liquid
 Landau level
+Landau theory
+Landau-Lifshitz
+lattice constant
+lattice vibration
+Laue
+Lennard-Jones
+Lennard-Jones potential
+Lifshitz
+Lindemann criterion
+Lindhard function
+London equation
+London penetration depth
+Lorentz oscillator
+Luttinger
+Luttinger liquid
+Madelung
 Madelung constant
+magnetic flux quantum
+magnetic order
+magnetic penetration depth
+magnon
+Majorana
 Majorana fermion
+Matthias
+Matthiessen's rule
+Meissner
+Mermin
+Mermin-Wagner theorem
+metal-insulator transition
+Miller
+Miller indices
+Mott
 Mott insulator
+Mott transition
+Mott-Hubbard
 n-type semiconductor
+nearly free electron model
+Nernst effect
+Nernst-Ettingshausen effect
+neutron scattering
+Néel temperature
+optical lattice
+optical phonon
 p-n junction
 p-type semiconductor
+Pauli
+Pauli paramagnetism
+Pauli principle
+Peierls
+Peierls transition
+Peltier
+perovskite
+phase transition
+phonon
+phonon dispersion
+phonon scattering
+photonic crystal
+piezoelectric effect
+plasma frequency
+plasma oscillation
+plasmon
+point defect
+polaron
+polycrystalline
+Potts model
+pyroelectric
+quantum dot
+quantum Hall effect
+quantum well
+quantum wire
+quasiparticle
+quasiparticle excitation
+Raman scattering
+rare earth
+Rashba
+Rashba effect
+reciprocal lattice
+rock salt structure
+Schottky barrier
+second-order phase transition
+Seebeck
+Shockley diode
+simple cubic
+Slater
+Slater determinant
+Sommerfeld model
+spin density wave
+spin glass
+spin Hall effect
+spin wave
+spin-orbit coupling
+spin-orbit interaction
+spintronics
+spontaneous magnetization
+Stoner criterion
+Stoner model
+superconductor
+superfluid
+superfluid helium
+superfluidity
+surface states
+thermal conductivity
+thermoelectric effect
+Thomas-Fermi screening
+Thouless
+Tight-binding model
+topological insulator
+transistor
+transition temperature
+twisted bilayer graphene
+type I superconductor
 type II superconductor
+unit cell
+vacancy
+valence band
+Van Hove singularity
+Van Vleck
+Wannier
 Wannier function
+Weiss molecular field
+Weyl fermion
 Weyl semimetal
+Wiedemann-Franz law
+Wigner
+Wigner crystal
+Wigner-Seitz
+Wigner-Seitz cell
+Wigner-Seitz radius
+Wilson number
+Wyckoff
+x-ray crystallography
+X-ray diffraction
+XY model
+Zeeman splitting
+Zener breakdown
+Zener diode
+Zener tunneling
+zone folding

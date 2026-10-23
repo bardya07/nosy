@@ -96,7 +96,7 @@ struct AppPaths: Sendable {
     }
     func lectureFolder(_ name: String) -> URL { transcripts.appendingPathComponent(name, isDirectory: true) }
     func lectures() -> [String] {
-        let urls = (try? FileManager.default.contentsOfDirectory(at: transcripts, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])) ?? []
+        let urls = (try? FileManager.default.contentsOfDirectory(at: transcripts, includingPropertiesForKeys: [.isDirectoryKey], options: [])) ?? []
         return urls.filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
             .map(\.lastPathComponent).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
     }
@@ -332,6 +332,9 @@ enum Core {
         guard !result.isEmpty, result.contains(where: { $0 != "." }) else {
             throw LectureError.message("Enter a folder and session name; names cannot be empty or only dots.")
         }
+        guard !result.hasPrefix(".") else {
+            throw LectureError.message("Folder and session names cannot start with a dot.")
+        }
         return result
     }
 
@@ -357,9 +360,13 @@ enum Core {
         while true {
             let name = number == 1 ? session : "\(session)-\(number)"
             let url = folder.appendingPathComponent(name).appendingPathExtension("md")
-            if !FileManager.default.fileExists(atPath: url.path) { return url }
+            if !pathEntryExists(at: url) { return url }
             number += 1
         }
+    }
+    private static func pathEntryExists(at url: URL) -> Bool {
+        var metadata = stat()
+        return url.path.withCString { lstat($0, &metadata) == 0 }
     }
     // Publish a complete file atomically, using a hard link to guarantee no overwrite.
     static func writeTranscript(_ markdown: String, folder: URL, session: String) throws -> URL {
@@ -371,7 +378,7 @@ enum Core {
             let target = uniqueTranscript(in: folder, session: session)
             do { try FileManager.default.linkItem(at: temporary, to: target); return target }
             catch {
-                if FileManager.default.fileExists(atPath: target.path) { continue }
+                if pathEntryExists(at: target) { continue }
                 // Some drives (exFAT, network shares) can't hard-link; create exclusively instead.
                 if try exclusiveWrite(Data(markdown.utf8), to: target) { return target }
             }

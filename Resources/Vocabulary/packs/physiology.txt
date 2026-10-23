@@ -776,7 +776,6 @@ sinoatrial node
 sister chromatid
 skeletal muscle
 skeletal muscle tissue
-skull
 small cardiac vein
 smooth muscle
 smooth muscle tissue

@@ -93,7 +93,11 @@ enum VocabularyRefinement {
             }
             position += window.text.utf16.count
         }
-        return Output(text: VocabularyAcceptance.applying(edits, to: original), edits: edits, route: route)
+        let refined = VocabularyAcceptance.applying(edits, to: original)
+        let preservesBoundaries = refined.components(separatedBy: "\n").count == original.components(separatedBy: "\n").count
+            && edits.allSatisfy { !$0.source.contains(where: \.isNewline) && !$0.replacement.contains(where: \.isNewline) }
+        guard preservesBoundaries else { return Output(text: original, edits: [], route: route) }
+        return Output(text: refined, edits: edits, route: route)
     }
     static func save(_ output: Output, baseline: String, id: String, paths: AppPaths) throws {
         let directory = paths.support.appendingPathComponent("routing", isDirectory: true)

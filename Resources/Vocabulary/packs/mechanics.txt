@@ -162,7 +162,6 @@ SI units
 solid-state physics
 sonoluminescence
 space-time
-spacecraft
 Special relativity
 stable nuclide
 Stokes drag

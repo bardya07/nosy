@@ -352,7 +352,6 @@ NIR
 nitric oxide
 NLRP3
 NLS
-NO
 NOD1
 NOD2
 nonhistone chromatin-associated protein

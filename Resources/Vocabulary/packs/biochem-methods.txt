@@ -143,7 +143,6 @@ nucleic acid repetitive sequence
 nucleic acid sequence homology
 ORF
 osmium tetroxide
-PAGE
 PALM
 PAM
 paraformaldehyde

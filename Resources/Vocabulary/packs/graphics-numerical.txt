@@ -1,60 +1,318 @@
+A-stability
+Adams-Bashforth method
+Adams-Moulton method
+adaptive quadrature
+Affine transformation
 algebraic topology
+aliasing
+alpha blending
+ambient occlusion
+anisotropic filtering
+anti-aliasing
 antialiasing
+Arnoldi
 Arnoldi iteration
+B-spline
+back-face culling
+backward Euler method
+Barycentric
+Barycentric coordinates
+Bernoulli
+Bernoulli numbers
+Bernstein polynomial
+Bessel
+Bessel function
 BFGS
 BiCGSTAB
+bicubic interpolation
+bilinear
+bilinear interpolation
+Bisection method
+BLAS
+Blender
+Blinn
+Blinn-Phong
+BRDF
+Brent's method
+Bresenham
 Bresenham's algorithm
+Bresenham's line algorithm
+Bump
+bump mapping
+Butcher tableau
+Bézier
+Bézier curve
+Bézier surface
+Cartesian coordinates
+Catmull-Rom spline
+Cauchy problem
+Cauchy sequence
+CFL condition
+Chebyshev
+Chebyshev polynomial
+Cholesky
 Cholesky decomposition
+Cholesky factorization
+Clenshaw-Curtis quadrature
 combinatorial algorithms
 combinatorial optimization
 combinatoric problems
 combinatorics
 combinatorics on words
+condition number
+conjugate gradient
+conjugate gradient method
 convex optimization
+Cook-Torrance
+Cook-Torrance model
+Coons patch
+Courant number
+Courant-Friedrichs-Lewy condition
+Cramér's rule
+Crank-Nicolson
+Crank-Nicolson method
+Cross product
 DCT
+Delaunay triangulation
+Determinant
 DFT
+diffuse reflection
+Dijkstra's algorithm
+DirectX
+Dirichlet boundary condition
+discrete Fourier transform
+Dormand-Prince method
+Dot product
 DST
+EDA
+Eigen decomposition
+eigenvalue
+eigenvalue problem
+eigenvector
+elliptic PDE
+Euler angles
+Euler's method
+explicit Euler method
+false position
+FEM
 FFT
+finite difference method
+finite element method
+finite volume method
+fixed-point arithmetic
+fixed-point iteration
+Floating-point
+floating-point arithmetic
+Fourier series
+Fourier transform
+fragment shader
+Fresnel term
+Gauss quadrature
+Gauss-Jordan elimination
+Gauss-Legendre quadrature
+Gauss-Newton method
+Gauss-Seidel
 Gauss-Seidel method
+Gaussian blur
+Gaussian elimination
 Gaussian processes
+Gaussian quadrature
 geometric topology
 Gibbs sampling
+Givens
 Givens rotation
+global illumination
 GMRES
+Godunov method
+Gouraud
+Gouraud shading
+GPU
+Gram-Schmidt
+graphics pipeline
+Hadamard
+Halley's method
 HCI
+heat equation
+Hermite interpolation
+Hessenberg matrix
+hidden surface removal
+Hilbert
+Hilbert matrix
+Homogeneous coordinates
+Horner's method
+Hough transform
+Householder
 Householder transformation
+Hyperbolic PDE
 hyperbolic trees
+ill-conditioned
+Implicit Euler method
+integral transform
+Jacobi
+Jacobi eigenvalue algorithm
+Jacobi iteration
 Jacobi method
+Jacobian matrix
+Julia language
+Kaczmarz method
+Kd-tree
+kernel
+Krylov
 Krylov subspace
 L-BFGS
+L-stability
+Lagrange interpolation
+Lambert
+Lambertian reflectance
+Lanczos
 Lanczos algorithm
 LAPACK
+Laplace equation
+Lax-Wendroff method
+Levenberg-Marquardt algorithm
+linear interpolation
+linear system
+Lipschitz
+Lipschitz continuity
+Lorenz system
 LU decomposition
+LU factorization
+Mandelbrot
+Marching cubes
 MATLAB
+Matrix inverse
 maximum entropy modeling
 MINRES
+MIP mapping
+mipmap
+Monte Carlo integration
+Monte Carlo method
+Monte Carlo path tracing
+Monte Carlo simulation
+Moore-Penrose inverse
+Muller's method
+Multigrid method
+Newton's method
+Newton-Cotes formula
+Newton-Raphson method
 nonconvex optimization
+normal map
+numerical differentiation
+numerical integration
+numerical stability
 NumPy
 Nyquist frequency
+Nyquist rate
 Nyquist-Shannon theorem
+Octave
 ODE
+OpenGL
+Ordinary differential equation
+orthogonal projection
+Parabolic PDE
+path tracing
 PDE
 perceptron algorithm
+Phong exponent
+Phong model
+Phong reflection model
+Phong shading
+photon mapping
+Pixar
 point-set topology
+Poisson disk sampling
+Poisson equation
+polygon mesh
+POV-Ray
+Power iteration
+Preconditioned conjugate gradient
+preconditioner
+Prewitt operator
+Procedural texturing
+projection matrix
+pseudorandom number generator
 QR decomposition
 quadrature
+Quaternion
+quaternions
+radiosity
 rasterization
+Ray casting
+ray marching
+ray tracing
+Rayleigh quotient
+regula falsi
+regularization
+relaxation method
 renewal theory
+Richardson
+Richardson extrapolation
+Ridders' method
+Riemann sum
 RK4
+Rodrigues' rotation formula
+Romberg integration
+rotation matrix
+Runge's phenomenon
+Runge-Kutta
+Runge-Kutta method
+Sampling theorem
+scan conversion
+Schur decomposition
 SciPy
 SDE
+secant method
+Shading
+shadow mapping
+Shannon sampling theorem
+signal processing
+Simpson's rule
+singular value decomposition
+Sobel operator
 SOR
+sparse matrix
+spectral method
+spline interpolation
 spline models
+Stability region
+Steffensen's method
+Stiff equation
+stiffness
 stochastic differential equations
 stochastic games
 stochastic processes
+Strassen algorithm
+successive over-relaxation
+Sutherland-Hodgman algorithm
 SVD
+Taylor series
+Texture mapping
 texturing
+Thomas
+Thomas algorithm
+Tikhonov regularization
 topology
+trapezoidal rule
+triangle mesh
+tridiagonal matrix
+trilinear filtering
+Upwind scheme
+UV mapping
+Verlet
+Verlet integration
+vertex shader
+Viterbi algorithm
+Voronoi diagram
 VRML
+Vulkan
+wavelet
+Wavelet transform
+WebGL
+Weierstrass
+Wilkinson
+Winograd
 X3D
+z-buffer
+Z-order curve
+Zernike
+Zero-order hold

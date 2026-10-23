@@ -91,7 +91,6 @@ GASB
 general obligation bonds
 geometric average return
 geometric mean
-GO
 Gordon growth model
 gross working capital
 growing perpetuity

@@ -1,69 +1,341 @@
+access control list
+ACK
+ACL
+Address space layout randomization
+Adleman
+Advanced Encryption Standard
+Advanced persistent threat
 AES
+AES-128
+AES-256
+AES-CBC
+AES-GCM
 AH
+AKA
+APT
 Argon2
 ASLR
+ASN.1
+asymmetric encryption
+attack surface
+authenticated encryption
+authentication
+authorization
+backdoor
 bcrypt
+Bell-LaPadula model
+Biba model
+birthday attack
+birthday paradox
 block ciphers
+Blowfish
+Botnet
+brute force
+buffer overflow
+Buffer overrun
+CA
+Caesar cipher
+Capability-based security
+Carmichael number
 CBC
 CCMP
+Certificate authority
+certificate pinning
+certificate revocation list
+ChaCha
 ChaCha20
+CHAP
+Chinese remainder theorem
 chosen-ciphertext attack
 cipher
 cipher block chaining
+Cipher suite
 ciphertext
+clickjacking
 client nonce
+code signing
+collision resistance
+commitment scheme
+confidentiality
+Container security
+Content Security Policy
+Control-flow integrity
+CORS
 CRL
+Cross-site scripting
+cryptanalysis
 cryptanalyst
+cryptocurrency
 cryptographic checksum
 cryptography
 CSRF
 CTR
+Curve25519
+Dan Boneh
+Data execution prevention
+DDoS
+Defense in depth
+Denial of service
+Denial-of-service attack
 DEP
+DER
 DES
+Dictionary attack
+differential cryptanalysis
+Diffie
 Diffie-Hellman
+Diffie-Hellman key exchange
+Diffie–Hellman problem
+digital certificate
+digital signature
+Discrete logarithm
+Discrete logarithm problem
 DMZ
+DNSSEC
+Dolev-Yao model
+Domain name system
+DoS
 DSS
+Dual EC
 EAP
 ECB
+ECC
 ECDH
 ECDSA
 Ed25519
+ElGamal
+ElGamal encryption
 elliptic curve cryptography
 Elliptic Curve Diffie-Hellman
+Elliptic-curve cryptography
+Encryption
+Enigma machine
+Entropy
 ESP
+Euclidean algorithm
+Euler's totient function
+exclusive or
+Extended Euclidean algorithm
+Feistel network
+Fermat's little theorem
+Fiat-Shamir
+Fiat-Shamir heuristic
+firewall
 fixed Diffie-Hellman
+Format string attack
+forward secrecy
+Galois field
+Galois/Counter Mode
+GCM
+generator element
+hash collision
+hash function
+Hash-based message authentication code
+Hash-based signature
+Heap overflow
+Heartbleed
+HKDF
 HMAC
+Honeynet
+honeypot
+HSTS
+HTTPS
+hybrid encryption
+Hypervisor
+IDS
 IKE
 IND-CCA
 IND-CPA
+Integer overflow
+intrusion detection system
+intrusion prevention system
+IPS
 IPsec
 ISAKMP
+Jacobi symbol
 KDC
+Kerberos
+Kerckhoffs's principle
+key derivation function
+key escrow
+key exchange
+key management
+Key schedule
+key stretching
+Keylogger
+keyspace
+known-plaintext attack
+Lamport
+Lamport signature
+Lattice-based cryptography
+least privilege
+Legendre symbol
+Lucifer
+MAC
+MAC address
+malware
+man-in-the-middle attack
 mathematical foundations of cryptography
 MD5
+Meltdown
+Merkle signature
+Merkle tree
+Mersenne prime
+message authentication code
+MFA
+Miller-Rabin primality test
+MITM
+Mix columns
+modular exponentiation
+modular inverse
+multi-factor authentication
+Non-executable stack
+non-repudiation
 nonce
 NX bit
+OAEP
+OAuth
+one-time pad
+one-way function
+OpenID
+OWASP
+padding oracle attack
+Padding scheme
+password hashing
 PBKDF2
+Pedersen commitment
+PEM
+penetration testing
+perfect secrecy
 PGP
+phishing
+Phishing attack
+PKCS
+PKCS#1
+PKCS#7
 PKI
+Pollard's rho algorithm
 Poly1305
+Post-quantum cryptography
 predistributed keys
+primality test
+prime factorization
+primitive root
+Principle of least privilege
+private key
+privilege escalation
+PRNG
+pseudo-random number generator
 PSK
+PSS
+public key
+public key cryptography
+public-key infrastructure
+QKD
+quantum key distribution
+Quantum-resistant
+Rabin
+race condition
+random oracle model
+ransomware
+RC4
+replay attack
+Return-oriented programming
+Return-to-libc
+Rijndael
+Rijndael algorithm
+Risk assessment
+Rivest
+Rivest-Shamir-Adleman
+rootkit
 ROP
 RSA
+RSA encryption
+RSA key
+RSA-OAEP
 SA
+Salsa20
+salt
+Same-origin policy
+Sandbox
+Sandboxing
+Schnorr
+Schnorr protocol
+Schnorr signature
 scrypt
+Secure Shell
+Secure Sockets Layer
+Security policy
 SELinux
+Session fixation
+Session hijacking
+SFTP
 SHA
 SHA-1
 SHA-2
 SHA-256
 SHA-3
+SHA-512
+Shamir
+Shamir's secret sharing
+Shift rows
+Shor's algorithm
+side-channel attack
+signature forgery
+SIM
+Simon
+single sign-on
+Skipjack
+social engineering
+Spear phishing
+Spectre
 SPI
+spoofing
+Spyware
+SQL injection
+SSH
+SSL
+SSL/TLS
+SSO
+Stack canary
+Stack overflow
+stack smashing
+Stream cipher
+SubBytes
+Symmetric encryption
+symmetric key
+Symmetric-key cryptography
 TCB
 TGS
+Threat model
+TLS
+Tor
+totient
+TPM
+Transport Layer Security
 triple DES
+Trojan horse
 trusted Computing Base
+Trusted Platform Module
+two-factor authentication
+Unix password
+Use-after-free
+user authentication
+Virus
+vulnerability
+Watering hole attack
 WEP
+Worm
 WPA3
+X.509
+X509
+XOR
 XSS
+XSS attack
+Yao
+zero trust
+Zero-day
+Zero-knowledge
+zero-knowledge proof
+Zimmermann
+ZKP

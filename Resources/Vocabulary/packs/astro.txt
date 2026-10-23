@@ -1,107 +1,419 @@
 A-type main-sequence star
+absolute magnitude
+accretion
+accretion disk
 active galactic nucleus
+Aldebaran
+Alfvén
 alfvén surface
+Alfvén waves
+Andromeda
+Andromeda galaxy
+angular diameter
+Antares
+Anti-Stokes
+Aphelion
 apoapsis
 apogee
+apparent magnitude
+apsidal precession
+Arcturus
+Arecibo Observatory
 argument of periapsis
+asteroid
 asteroid belt
+Astrobiology
+astrometry
+astrophysics
 azimuth
 B-type Main-sequence star
 BAO
 baryon acoustic oscillation
+baryon acoustic oscillations
 BBN
+Betelgeuse
+Bethe-Weizsäcker formula
+Big Bang
 big bang nucleosynthesis
+Big Bang theory
+binary star
+black hole
 blazar
+bolometric luminosity
+bolometric magnitude
+Boltzmann
+Bondi accretion
+bright star
 Brown dwarf
+Callisto
+cataclysmic variable
+celestial equator
+celestial sphere
+Cepheid
+Cepheid variable
+Cepheids
+Ceres
+Chandra X-ray Observatory
+Chandrasekhar
 Chandrasekhar limit
+Chandrasekhar mass
+Charon
+Cherenkov
 chromosphere
 chromospheric activity index
+circumstellar disk
 cis-Neptunian object
+cluster
 CMB
 CMBR
 CNO
+COBE
+color index
+colour index
+comet
 compact stellar nucleus
+Compton scattering
 conjunction
+contact binary
+convection zone
+core collapse
+cosmic inflation
+Cosmic microwave background
+cosmic ray
+cosmic rays
+cosmic web
+cosmological constant
+cosmology
 coudé spectrograph
+Coulomb logarithm
+Crab Nebula
+critical density
+dark ages
+dark energy
+dark matter
+dark matter halo
+declination
 deep-sky object
+degenerate matter
+Deimos
+Direct imaging
+Doppler broadening
+Doppler shift
+Drake equation
+dust grain
+dwarf planet
 early-type star
+eccentricity
+eclipsing binary
 ecliptic
+ecliptic plane
+Eddington
+Eddington limit
 Eddington luminosity
+Einstein field equations
+Einstein radius
+Einstein ring
+electron degeneracy
+ellipse
+ellipsoid
+Enceladus
 ephemeris
+epicycle
+equatorial coordinates
+equinox
+Ergosphere
+Eris
+escape velocity
+ESO
+Eta Carinae
+Europa
+Event Horizon Telescope
+exoplanet
+exoplanets
+extinction
+extragalactic
 F-type Main-sequence star
+Fermi
+Fermi gamma-ray space telescope
+Fermi-Dirac
+filament
+flat rotation curve
+flatness problem
 FLRW metric
+Friedmann
 Friedmann equations
 Friedmann-Lemaître-Robertson-Walker metric
+fusion
 G-type Main-sequence star
+Gaia
+Gaia mission
+galactic center
 galactic nucleus
+Galactic plane
 galactocentric distance
+galaxies
+galaxy
+galaxy cluster
 Galilean moons
+Galilean satellites
+gamma ray burst
 gamma-ray astronomy
 gamma-ray burst
+Ganymede
+gas giant
+Gas giants
 geometric albedo
+giant planet
+globular cluster
+Goldilocks zone
+gravitational collapse
+gravitational lensing
+Gravitational microlensing
+gravitational redshift
+gravitational wave
+gravitational waves
 H II region
+Habitable zone
+Haumea
+Hawking
+Hawking radiation
+Hayashi track
+heliocentric
 heliosphere
+Helium flash
+Herbig-Haro object
+Herschel Space Observatory
+Hertzsprung
 Hertzsprung-Russell diagram
 Hill sphere
+Hipparcos
+horizon problem
+Hot Jupiter
+HR diagram
+Hubble
 Hubble constant
+Hubble flow
 Hubble law
 Hubble parameter
+Hubble Space Telescope
+Hubble tension
 hybrid-chromosphere star
+hydrogen burning
+hydrostatic equilibrium
+ice giant
+inclination
+inflation
+infrared astronomy
+interstellar extinction
+interstellar medium
+Io
+ISM
+Jansky
+Jansky unit
+Jeans criterion
 Jeans instability
+Jeans length
 Jeans mass
+Jupiter
+Jupiter's moons
+Jy
 K-type Main-sequence star
 Kelvin-Helmholtz mechanism
+Kepler mission
 Kepler orbit
+Kepler's first law
+Kepler's second law
+Kepler's third law
+Keplerian orbit
+Kerr black hole
+Kerr metric
 king radius
+Kuiper belt
 Lagrange point
 Lagrangian point
+Lagrangian points
 Lambda-CDM
+Lambda-CDM model
+Lane-Emden equation
+Large Magellanic Cloud
+large-scale structure
 late-type star
+latitude
+Lemaître
 libration
+light curve
+light pollution
 light-year
 lobster-eye optics
+longitude
+luminosity class
+luminosity distance
 lunar phase
+Lyman-alpha forest
 M-type Main-sequence star
+Magellanic Clouds
+magnetosphere
+magnitude
+main sequence
+Makemake
+Mars
 mean-motion resonance
+Mercury
+Messier
+Messier object
+metallicity
+meteor
+meteorite
+meteoroid
+microlensing
 micrometeorite
 micrometeoroid
+Milky Way
+Minkowski
 minor-planet moon
 MMR
+molecular cloud
+moon
 Morgan-Keenan stellar classification system
 multi-messenger astronomy
 near-Earth object
+nebula
+nebulae
+Neptune
+neutron degeneracy pressure
+neutron star
 non-inclined orbit
+nova
 nuclear star cluster
+nucleosynthesis
 nutation
 O-C diagram
 O-type Main-sequence star
+Oort cloud
+opacity
+open cluster
+orbit
+orbital eccentricity
+orbital inclination
+orbital period
+Orion Nebula
+parallax
+parsec
+pc
+Penrose
+Penrose process
 periapsis
 perigee
+perihelion
+Phobos
+photometry
+photosphere
+Planck function
+Planck satellite
+planetary nebula
 planetary-mass object
+planetesimal
+plasma
+Pleiades
+Pluto
+polar axis
+Polaris
+Population I stars
+Population II stars
+Population III stars
+precession
+primordial black hole
+proper motion
+protoplanetary disk
+protostar
 pseudo-synchronous rotation
 pulsar
+pulsar wind nebula
 quadrature
+quasar
 radial velocity
+Radial velocity method
+radiative transfer
+Rayleigh-Jeans tail
 recombination
+recombination era
+red dwarf
+red giant
+red shift
 red-giant branch
+redshift
+reionization
+Reissner-Nordström
+Rigel
+Roche limit
+Roche lobe
+Rosse
+Rubin Observatory
 réseau
+Sachs-Wolfe effect
+Saha equation
+Saha ionization equation
+Saturn
 Schwarzschild metric
+Schwarzschild radius
 semi-diameter
 semi-major axis
 September equinox
+Seyfert galaxy
+Sirius
+Small Magellanic Cloud
 solar radius
+Solar System
+solar wind
+spectral type
 spectroscopic binary
 spectroscopy
+spectrum
+Spitzer Space Telescope
+Stefan-Boltzmann
+stellar evolution
+stellar nucleosynthesis
+stellar wind
+sunspot
+Sunyaev-Zeldovich effect
+Super-Earth
+supergiant
+supernova
+supernovae
+synchrotron
 syzygy
 telluric star
+terrestrial planet
+Terrestrial planets
 Tisserand's parameter
+Titan
 Tolman-Oppenheimer-Volkoff limit
 TOV limit
 trans-Neptunian object
-tully-Fisher relation
+Transit method
+Triton
+Tully-Fisher
+Tully-Fisher relation
+Type Ia supernova
+Type II supernova
 UBV photometric system
+Uranus
+Vega
+Venus
+Vera C. Rubin Observatory
+Vera Rubin
+Virgo
 virial theorem
 weak-line star
+white dwarf
+Wien displacement
 Wilson-Bappu effect
+WMAP
+Wolf-Rayet
+Wolf-Rayet star
+X-ray binary
 X-ray source
 zero-age Main sequence
+zodiac
+Zodiacal light
+Zwicky

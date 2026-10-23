@@ -85,10 +85,10 @@ final class TranscriptLibrary: ObservableObject {
         let manager = FileManager.default
         let keys: [URLResourceKey] = [.isDirectoryKey, .creationDateKey]
         let root = paths.transcripts
-        let lectures = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles])) ?? []
+        let lectures = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys, options: [])) ?? []
         items = lectures.flatMap { folder -> [TranscriptItem] in
             guard (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
-            let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles])) ?? []
+            let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [])) ?? []
             return files.filter { $0.pathExtension.lowercased() == "md" }.map { url in
                 // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
                 TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,

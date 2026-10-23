@@ -1,32 +1,308 @@
 2PC
 2PL
 3PC
+ACID
+Analysis pass
+Antijoin
+Apache Spark
+Approximate nearest neighbor
+ARIES
+Atomicity
+Availability
+B+ tree
+B-tree
+BASE
+BCNF
+Bigtable
+Bitmap index
+Bloom
+Bloom filter
+BM25
+Boyce-Codd normal form
+buffer manager
+buffer pool
+Buffer replacement
+bulk load
+candidate key
+CAP theorem
+Cardinality
+cardinality estimation
+Cartesian product
+Cascading rollback
+Cassandra
+Causal consistency
+Chase algorithm
+checkpoint
+checkpointing
+Chen notation
+Clock algorithm
+CLR
+Clustered index
+CockroachDB
+Codd
+Codd's rules
+column store
+Columnar database
+commit
+Compensation log record
+composite key
 conflict serializability
+Consistency
+Consistency model
+consistent hashing
+Cost-based optimization
+CouchDB
+Count-min sketch
+Covering index
+Crash recovery
+Crow's foot notation
+CRUD
+cursor
+Cypher
+data cube
+data lake
+data mart
+data warehouse
 DB2
+DBA
 DBMS
-efficient XML Interchange
+DCL
+DDL
+deadlock
+Deadlock detection
+denormalization
+Dependency-preserving decomposition
+dimension table
+dirty page table
+dirty read
+DML
+Domain relational calculus
+Drill-down
+Durability
+DynamoDB
+Efficient XML Interchange
+Elasticsearch
+ELT
+Embedded SQL
+entity integrity
+entity-relationship model
+ER diagram
+ETL
+Eventual consistency
+extendible hashing
+fact table
+first normal form
+foreign key
+Full-text search
+Functional dependencies
+functional dependency
+Fuzzy checkpoint
+Gap locking
+Geohash
+Grace hash join
+GraphQL
+Gremlin
+group commit
+Hadoop
+Hadoop Distributed File System
+Hash index
+Hash join
+Hash table
+Hash-based join
+HBase
+HDFS
+heap file
+Hibernate
+Hive
+HNSW
+Horizontal partitioning
+Hot standby
+HyperLogLog
+idempotent
+Index scan
+Information Schema
 inodes
+Intention lock
+Intersection
+Inverted file
+Inverted index
+ISAM
+Isolation
+isolation level
+JDBC
+Join
+Join ordering
+JSON
+JSON-LD
+JSONB
+k-d tree
+Kafka
+key-value store
+Knowledge graph
+Lamport clock
+latch
+Linear hashing
+Linearizability
+Linked Data
+Lock compatibility matrix
+Lock escalation
+lock manager
+log sequence number
+log shipping
+Lossless join
+Lost update
+LRU
+LSM tree
+LSN
+MapReduce
+MariaDB
+materialized view
+Memcached
+Microsoft SQL Server
+MongoDB
+Multiversion timestamp ordering
+Mutex
 MVCC
 MySQL
-oracle Database
+N-Triples
+Natural join
+Natural key
+Neo4j
+Nested loop join
+Next-key locking
+Non-clustered index
+Non-repeatable read
+normal forms
+normalization
+NoSQL
+object-relational mapping
+ODBC
+OLAP
+OLTP
+Optimistic concurrency control
+Oracle
+Oracle Database
+ORC
+ORM
+Outer join
 OWL
+Page
+Parquet
+partition tolerance
+Paxos
+pgvector
+Phantom read
 phase change memory
+PL/pgSQL
+PL/SQL
+PostGIS
+PostgreSQL
+Predicate locking
+prepared statement
+Presto
+primary key
+Projection
+Quadtree
+query optimizer
+query plan
+query rewriting
+Quorum
+R-tree
+Raft
 RAID
 RDF
+read committed
+Recovery
+Redis
+Redo pass
+Redshift
+referential integrity
+relational algebra
+relational calculus
+relational division
+relational model
+relational operators
+Repeatable read
+replication
 RESTful web services
+Riak
+Roll-up
+rollback
+Savepoint
+Schedule
+schema
+Selection
+Selectivity
+Semijoin
+Sequential consistency
+Sequential scan
+Serializability
+Serializable
+Set difference
+Shadow paging
+Sharding
+Skyline query
+Slotted page
+Snapshot isolation
+Snowflake
+snowflake schema
+Sort-merge join
+Spanner
+Spark
 SPARQL
+Spatial database
 SQL
 SQL injection
 SQL Server
+SQLite
+Star schema
+stemming
+stored function
+stored procedure
+Strict serializability
 strict two-phase locking
+superkey
+Surrogate key
+Teradata
+TF-IDF
+Theta join
+Timeout
+Timestamp ordering
+Timestamp-based concurrency control
+tokenization
 top-k retrieval in databases
+Torn write
+trigger
+Trino
+Triple store
+tuple
+Tuple relational calculus
+Turtle
 two-phase locking
 two-Phase Locking Concurrency Control
+Two-version two-phase locking
+Undo pass
+Union
+unique index
+Vacuum
+Vector clock
+Vector database
+Vertical partitioning
+view
 view serializability
+Wait-die
+Wait-for graph
+Waits-for graph
 WAL
+Wound-wait
+Write-ahead logging
+Write-back
+Write-through
 XML
 XML namespaces
 XML Schema
 XML Schema Document
 XPath
 XQuery
+YARN
+ZooKeeper

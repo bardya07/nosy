@@ -76,7 +76,7 @@ struct SubjectCatalog: Sendable {
     static func guess(_ folderName: String) -> [String] {
         let tokens = folderName.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }
         let meetingAliases = Set(subjects.first { $0.id == "meetings-work" }?.aliases ?? [])
-        let oneToOne = folderName.range(of: #"(?<![\p{L}\p{N}])1\s*:\s*1(?![\p{L}\p{N}])"#,
+        let oneToOne = folderName.range(of: #"(?<![\p{L}\p{N}])1\s*[:-]\s*1(?![\p{L}\p{N}])"#,
                                         options: .regularExpression) != nil
         if oneToOne || tokens.contains(where: meetingAliases.contains) { return ["meetings-work"] }
         let phrase = " " + tokens.joined(separator: " ") + " "

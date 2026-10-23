@@ -86,6 +86,9 @@ struct VocabularyIndex: Sendable {
             for size in 1...min(4, words.count - start) {
                 let range = NSRange(location: words[start].range.location, length: NSMaxRange(words[start + size - 1].range) - words[start].range.location)
                 let source = ns.substring(with: range), key = VocabularySimilarity.key(source), phone = VocabularySimilarity.phonetic(source)
+                // Newlines separate Whisper segments and are also marker insertion
+                // boundaries. Never retrieve a correction that crosses one.
+                guard !source.contains(where: \.isNewline) else { continue }
                 guard key.count >= 5, key.count <= 60 else { continue }
                 // Exact canonical words cannot trigger retries, including their plural forms.
                 if exact.contains(key) || (key.hasSuffix("s") && exact.contains(String(key.dropLast()))) { continue }

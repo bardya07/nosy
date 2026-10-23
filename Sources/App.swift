@@ -24,6 +24,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         let model = AppModel.shared
+        // A dirty transcript draft must be saved or explicitly discarded before
+        // either the immediate or background-work termination path.
+        guard model.finishLibraryEditing?() ?? true else { return .terminateCancel }
         guard model.working else { return .terminateNow }
         let alert = NSAlert()
         alert.messageText = model.recording ? "A recording is still in progress. Quit anyway?" : "A recording is still transcribing. Quit anyway?"

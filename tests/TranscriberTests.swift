@@ -44,6 +44,8 @@ enum TranscriberTests {
     static func main() async throws {
         // Keep test preferences process-local and independent of the user's Settings.
         UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
+        setenv("NOSY_VOCABULARY_DIR", URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Resources/Vocabulary").path, 1)
         let manager = FileManager.default
         let root = manager.temporaryDirectory.appendingPathComponent("nosy-transcriber-unit-\(UUID().uuidString)")
         defer { try? manager.removeItem(at: root) }
@@ -229,6 +231,27 @@ enum TranscriberTests {
             check(try temporaryOutputs().isEmpty, "marker run cleans timestamp JSON")
         }
         unsetenv("NOSY_EXPECT_FULL_JSON")
+        try SubjectSettings(subject: "biology").save(folder: folder)
+        try Data("immune response\n".utf8).write(to: vocab)
+        try installCLI(#"""
+        base=''
+        while [[ $# -gt 0 ]]; do
+            case "$1" in -of) base="$2"; shift 2 ;; *) shift ;; esac
+        done
+        printf 'The imune\nresponse is here.\n' > "$base.txt"
+        cat > "$base.json" <<'JSON'
+        {"transcription":[{"text":"The imune","offsets":{"from":0,"to":2000},"tokens":[{"text":"The ","id":1,"p":0.9},{"text":"imune","id":2,"p":0.1}]},{"text":"response is here.","offsets":{"from":3000,"to":5000},"tokens":[{"text":"response","id":3,"p":0.1},{"text":" is","id":4,"p":0.9},{"text":" here.","id":5,"p":0.9}]}]}
+        JSON
+        """#)
+        var splitMarkerRecord = try record("cross-segment-markers")
+        splitMarkerRecord.markers = [SessionMarker(t: 2)]
+        try splitMarkerRecord.save(in: paths)
+        let splitMarkerResult = try await Transcriber.transcribe(record: splitMarkerRecord, paths: paths)
+        let splitMarkerText = try String(contentsOfFile: splitMarkerResult.transcriptPath!, encoding: .utf8)
+        check(splitMarkerResult.status == .done &&
+              splitMarkerText.contains("The imune\n\n> [0:02] Marker\n\nresponse is here."),
+              "marked transcription keeps segment boundaries when vocabulary terms span adjacent lines")
+        check(try temporaryOutputs().isEmpty, "cross-segment marked run cleans timestamp JSON")
         try SubjectSettings(subject: "off").save(folder: folder)
         // Missing timestamp output must preserve markers for Retry rather than dropping them.
         try installCLI(#"while [[ $# -gt 0 ]]; do if [[ "$1" == -of ]]; then printf 'Speech.\n' > "$2.txt"; fi; shift; done"#)

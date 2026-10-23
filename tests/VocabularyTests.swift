@@ -60,6 +60,12 @@ import Foundation
         check(route.scores["immune"] == 3.5, "shared term fractional vote")
         check(catalog.route(text: String(repeating: "it SO cd4 gray thymocyte ", count: 50), eligible: ["immune", "other"]).selected.isEmpty, "short, case and repetition traps abstain")
         let index = VocabularyIndex(terms: ["heterochromatin", "CD4", "CD8"])
+        let sanitizedOneToOne = try Core.sanitize("Alex 1:1")
+        check(sanitizedOneToOne == "Alex 1-1" && SubjectCatalog.guess(sanitizedOneToOne) == ["meetings-work"],
+              "Auto recognizes a 1:1 folder after app name sanitization")
+        let splitTermHits = VocabularyIndex(terms: ["immune response"]).retrieve("The imune\nresponse is here.")
+        check(!splitTermHits.contains(where: { $0.source.contains("\n") }),
+              "vocabulary retrieval cannot match a phrase across transcript segments")
         let original = "The heterochromatone is here."
         let hits = index.retrieve(original)
         let accepted = VocabularyAcceptance.edits(original: original, candidates: hits, confidence: { _ in 0.4 })
@@ -126,7 +132,9 @@ import Foundation
         let disabled = try VocabularyRefinement.refine(original: original + "\n", data: data, catalog: small, subjects: ["biology"], userTerms: [], substitute: false)
         check(disabled.edits.isEmpty, "internal ablation switch")
         let resources = SubjectCatalog(directory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("Resources/Vocabulary"))
-        check(resources.subjectPacks.count == 8 && resources.packs.count == 49, "all current subject groups and packs load")
+        let mappedPacks = Set(resources.subjectPacks.values.flatMap { $0 })
+        check(resources.subjectPacks.count == 8 && resources.packs.count == 49 && mappedPacks == Set(resources.packs.keys),
+              "all 49 bundled vocabulary packs are mapped to the eight subject groups")
         print("VOCABULARY PASS: \(count) assertions")
     }
 }

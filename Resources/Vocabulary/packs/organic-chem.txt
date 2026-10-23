@@ -1,9 +1,7 @@
 'A' value
 (2,4-dinitrophenyl)hydrazine
 (9S)-3α,9-epoxy-10,11-dihydrocinchonan-6'-ol
-(acetonitrile)[(2-biphenyl)Di-tert-butylphosphine]gold(I) hexafluoroantimonate
 (dimethylaminomethyleneaminomethylene)dimethylammonium chloride
-(E)-((1,3-diethoxybuta-1,3-dien-1-yl)Oxy)trimethylsilane |
 (E)-1-methoxy-3-trimethylsilyloxy-1,3-butadiene
 (triphenylphosphine)copper hydride hexamer
 1,1,1-triacetoxy-1,1-dihydro-1,2-benziodoxol-3(1H)-one
@@ -14,12 +12,10 @@
 2,2-dimethyl-1,3-dioxane-4,6-dione
 2,4-bis(4-methoxyphenyl)-1,3,2,4-dithiadiphosphetane 2,4-disulfide
 2-(triphenylphosphoranylidene)ethenone
-2-[N,N-Bis(trifluoromethylsulfonyl)amino]-5-chloropyridine
 2-methyl-6-nitrobenzoic anhydride
 3,3-dimethyl-1-(trifluoromethyl)-1,2-benziodoxole
 4,5-dichloro-1,2,3-dithiazolium chloride
 9-BBN
-[Hydroxy(tosyloxy)iodo]benzene
 abeo-
 Abidi alkyne synthesis
 Ac
@@ -163,7 +159,6 @@ Biginelli pyrimidine synthesis
 Biginelli reaction
 Bingel reaction
 Birch reduction
-bis[α,α-bis(trifluoromethyl)benzyloxy]diphenylsulfur
 Bischler-Möhlau indole synthesis
 Bischler-Napieralski reaction
 Biuret test
@@ -1163,7 +1158,6 @@ solvolysis
 Sommelet reaction
 Sonn-Müller method
 Sonogashira coupling
-specific rotation, [α]D
 Staedel-Rugheimer pyrazine synthesis
 Stahl oxidation
 Staudinger reaction
@@ -1294,7 +1288,6 @@ torquoselectivity
 torsional stereoisomers
 TosMIC
 trans-cis isomerism
-trans-Di(μ-acetato)bis[o-(Di-o-tolylphosphino)benzyl]dipalladium(II)
 transamination
 transesterification
 transferases

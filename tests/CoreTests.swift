@@ -160,8 +160,6 @@ enum CoreTests {
         check(try Core.sanitize("a/b\\c:d*e?f\"g<h>i|j\u{0001}k") == "a-b-c-d-e-f-g-h-i-j-k", "forbidden characters")
         check(try Core.sanitize("Lecture\tOne\nTwo") == "Lecture-One-Two", "controls replaced")
         check(try Core.sanitize(String(repeating: "é", count: 100)).count == 80, "unicode character limit")
-        check(try Core.sanitize(".biology.") == ".biology.", "valid dots")
-        rejects(""); rejects("  \n  "); rejects("."); rejects("...")
         let folder = paths.lectureFolder("Biology")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let first = try Core.writeTranscript("original", folder: folder, session: "Lesson")
@@ -172,6 +170,17 @@ enum CoreTests {
         check(try String(contentsOf: first, encoding: .utf8) == "original", "never overwrites")
         let third = try Core.writeTranscript("third", folder: folder, session: "Lesson")
         check(third.lastPathComponent == "Lesson-3.md", "third atomic write")
+        let dangling = folder.appendingPathComponent("Dangling.md")
+        try FileManager.default.createSymbolicLink(atPath: dangling.path, withDestinationPath: "missing-target.md")
+        check(Core.uniqueTranscript(in: folder, session: "Dangling").lastPathComponent == "Dangling-2.md",
+              "dangling transcript symlinks reserve their names")
+        let afterDangling = try Core.writeTranscript("saved beside dangling link", folder: folder, session: "Dangling")
+        let afterDanglingText = try String(contentsOf: afterDangling, encoding: .utf8)
+        check(afterDangling.lastPathComponent == "Dangling-2.md" &&
+              afterDanglingText == "saved beside dangling link",
+              "transcript publication advances past a dangling symlink")
+        rejects(".biology."); rejects(".Private")
+        rejects(""); rejects("  \n  "); rejects("."); rejects("...")
         check(paths.lectures() == ["Biology"], "lecture folder list")
 
         let header = try Core.wavHeader(pcmBytes: 32_000)

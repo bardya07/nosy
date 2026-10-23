@@ -347,7 +347,6 @@ receptive aphasia
 red nucleus
 relative refractory period
 repolarization
-response
 resting membrane potential
 reticular formation
 reticulospinal tract
@@ -395,7 +394,6 @@ spinothalamic tract
 spiral ganglia
 stereocilia
 stereognosis
-stimulus
 straight sinus
 striatum
 subarachnoid space
@@ -432,7 +430,6 @@ terminal ganglia
 thalamus
 thermoreceptor
 third ventricle
-threshold
 TIA
 tibial nerve
 tract

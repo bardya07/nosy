@@ -100,6 +100,39 @@ enum UITests {
         model.selectedLecture = "MBB322"
         model.configurePreview()
         check(model.inputName == "MacBook Pro Microphone", "Idle mic has no routing or dB suffix")
+
+        let sharedModel = AppModel.shared
+        library.reload(paths: paths)
+        _ = library.select(first)
+        library.beginEditing(paths: paths)
+        library.draft = speech + "Unsaved before quit."
+        library.chooseDraftAction = { .cancel }
+        sharedModel.finishLibraryEditing = { library.finishEditing() }
+        check(AppDelegate().applicationShouldTerminate(NSApp) == .terminateCancel,
+              "Quit asks about dirty transcript edits before terminating")
+        let textAfterCancelledQuit = try String(contentsOf: first, encoding: .utf8)
+        check(library.editing && textAfterCancelledQuit == "Keep this in the original folder",
+              "cancelled Quit retains the unsaved transcript draft")
+        library.chooseDraftAction = { .save }
+        check(AppDelegate().applicationShouldTerminate(NSApp) == .terminateNow,
+              "Quit proceeds after saving transcript edits")
+        check(try String(contentsOf: first, encoding: .utf8) == speech + "Unsaved before quit.",
+              "Quit saves the edited transcript to its original file")
+        library.beginEditing(paths: paths)
+        library.draft += " Save failure."
+        sharedModel.finishLibraryEditing = { false }
+        check(AppDelegate().applicationShouldTerminate(NSApp) == .terminateCancel,
+              "Quit is cancelled when saving transcript edits fails")
+        sharedModel.finishLibraryEditing = nil
+
+        let hiddenFolder = paths.transcripts.appendingPathComponent(".Private", isDirectory: true)
+        try FileManager.default.createDirectory(at: hiddenFolder, withIntermediateDirectories: true)
+        let hiddenTranscript = hiddenFolder.appendingPathComponent(".Session.md")
+        try "Hidden draft remains discoverable".write(to: hiddenTranscript, atomically: true, encoding: .utf8)
+        check(paths.lectures().contains(".Private"), "existing hidden transcript folders remain in the save folder list")
+        library.reload(paths: paths)
+        check(library.items.contains(where: { $0.url == hiddenTranscript }), "existing hidden transcripts remain discoverable")
+
         check(!AudioInputs.isUserVisible(.init(id: "proxy", name: "CADefaultDeviceAggregate-45310-0")), "Hide the private CoreAudio proxy")
         check(AudioInputs.isUserVisible(.init(id: "user-aggregate", name: "My Studio Aggregate")), "Keep intentional aggregates")
         let previousSource = UserDefaults.standard.string(forKey: "recordingSource")
