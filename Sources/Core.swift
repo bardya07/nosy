@@ -12,6 +12,8 @@ struct AppPaths: Sendable {
     let support: URL
     let whisperOverride: String?
     let usesDefaultSupport: Bool
+    private let engineBundle: URL
+    private let engineSearchPath: String
     private let retentionOverride: Int?
     private let modelOverride: URL?
     private let vadModelOverride: URL?
@@ -27,7 +29,8 @@ struct AppPaths: Sendable {
     init(environment: [String: String] = ProcessInfo.processInfo.environment,
          home: URL = FileManager.default.homeDirectoryForCurrentUser,
          transcriptsFolder: String? = UserDefaults.standard.string(forKey: AppPaths.transcriptsKey),
-         retentionDays: Int? = nil) {
+         retentionDays: Int? = nil,
+         bundleURL: URL = Bundle.main.bundleURL) {
         transcripts = environment["NOSY_TRANSCRIPTS_DIR"].map { URL(fileURLWithPath: $0, isDirectory: true) }
             ?? transcriptsFolder.map { URL(fileURLWithPath: $0, isDirectory: true) }
             ?? Self.defaultTranscripts(home: home)
@@ -37,6 +40,8 @@ struct AppPaths: Sendable {
         support = environment["NOSY_SUPPORT_DIR"].map { URL(fileURLWithPath: $0, isDirectory: true) }
             ?? home.appendingPathComponent("Library/Application Support/Nosy", isDirectory: true)
         whisperOverride = environment["NOSY_WHISPER_CLI"]
+        engineBundle = bundleURL
+        engineSearchPath = environment["PATH"] ?? ""
         usesDefaultSupport = environment["NOSY_SUPPORT_DIR"] == nil
     }
 
@@ -59,16 +64,26 @@ struct AppPaths: Sendable {
         modelOverride = original.model
         vadModelOverride = original.vadModel
         whisperOverride = original.whisperOverride
+        engineBundle = original.engineBundle
+        engineSearchPath = original.engineSearchPath
         retentionOverride = original.retentionOverride
         usesDefaultSupport = false
     }
     var whisper: URL? {
-        let choices = whisperOverride.map { [$0] } ?? ["/opt/homebrew/bin/whisper-cli", "/usr/local/bin/whisper-cli"]
+        // Shipped apps are self-contained. Only unbundled development/test
+        // executables may use an override or search Homebrew/PATH.
+        if engineBundle.pathExtension == "app" {
+            let bundled = engineBundle.appendingPathComponent("Contents/Helpers/whisper-cli")
+            return FileManager.default.isExecutableFile(atPath: bundled.path) ? bundled : nil
+        }
+        let choices = whisperOverride.map { [$0] } ?? (engineSearchPath.split(separator: ":")
+            .map { URL(fileURLWithPath: String($0)).appendingPathComponent("whisper-cli").path }
+            + ["/opt/homebrew/bin/whisper-cli", "/usr/local/bin/whisper-cli"])
         return choices.first(where: { FileManager.default.isExecutableFile(atPath: $0) }).map { URL(fileURLWithPath: $0) }
     }
     var dependencyWarning: String? {
         var missing: [String] = []
-        if whisper == nil { missing.append("whisper-cli is missing. Install whisper.cpp with Homebrew.") }
+        if whisper == nil { missing.append(Core.missingEngineMessage) }
         if !FileManager.default.isReadableFile(atPath: model.path) {
             missing.append("Model missing: \(model.path)")
         }
@@ -122,7 +137,7 @@ struct SessionRecord: Codable, Sendable, Equatable {
 
 enum Core {
     static let bytesPerSecond: Int64 = 32_000
-    static let whisperInstallCommand = "brew install whisper-cpp"
+    static let missingEngineMessage = "whisper-cli is missing from Nosy. Reinstall Nosy, then Retry — your audio is safe."
 
     static func stressReason(thermal: ProcessInfo.ThermalState, onBattery: Bool, percent: Double?) -> String? {
         if thermal == .serious || thermal == .critical { return "Mac is hot" }
@@ -147,7 +162,7 @@ enum Core {
     static func setupMessage(paths: AppPaths) -> String? {
         var messages: [String] = []
         if paths.whisper == nil {
-            messages.append("Nosy needs whisper.cpp to transcribe. Install it with Homebrew: \(whisperInstallCommand)")
+            messages.append(missingEngineMessage)
         }
         if !FileManager.default.isReadableFile(atPath: paths.model.path) {
             messages.append("Nosy needs its speech model (1.6 GB) before it can transcribe.")

@@ -212,20 +212,12 @@ struct OnboardingView: View {
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
             }
         case .engine:
-            page(title: "The speech engine", body: "Nosy uses whisper.cpp and a 1.6 GB speech model. Both stay on your Mac.") {
+            page(title: "The speech engine", body: "Nosy includes whisper.cpp. Download the 1.6 GB speech model to get started. Everything stays on your Mac.") {
                 VStack(alignment: .leading, spacing: 12) {
-                    status(setup.whisperReady(model.paths) ? "whisper.cpp installed" : "whisper.cpp isn't installed", ok: setup.whisperReady(model.paths))
+                    status(setup.whisperReady(model.paths) ? "Speech engine ready" : "Speech engine missing — reinstall Nosy", ok: setup.whisperReady(model.paths))
                     if !setup.whisperReady(model.paths) {
-                        HStack(spacing: 8) {
-                            Text(Core.whisperInstallCommand).font(.system(size: 12.5, design: .monospaced))
-                                .padding(.horizontal, 10).frame(height: 30)
-                                .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
-                                .textSelection(.enabled)
-                            Button { model.copyInstallCommand() } label: { Image(systemName: "doc.on.doc") }
-                                .buttonStyle(IconButtonStyle(size: 30)).tip("Copy — paste it into Terminal").accessibilityLabel("Copy install command")
-                            Button("Check again") { setup.objectWillChange.send(); model.refreshDependencies() }
-                                .buttonStyle(LinkButtonStyle())
-                        }
+                        Button("Check again") { setup.objectWillChange.send(); model.refreshDependencies() }
+                            .buttonStyle(LinkButtonStyle())
                     }
                     status(setup.modelReady(model.paths) ? "Speech model ready" : "Speech model not downloaded", ok: setup.modelReady(model.paths))
                     if !setup.modelReady(model.paths) {

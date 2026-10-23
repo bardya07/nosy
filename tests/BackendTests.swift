@@ -20,10 +20,9 @@ enum BackendTests {
         func rejects(_ message: String, _ body: () throws -> Void) {
             do { try body(); fatalError("FAIL: \(message)") } catch { assertions += 1 }
         }
-        let whisperMessage = "Nosy needs whisper.cpp to transcribe. Install it with Homebrew: brew install whisper-cpp"
+        let whisperMessage = Core.missingEngineMessage
         let modelMessage = "Nosy needs its speech model (1.6 GB) before it can transcribe."
         let missing = AppPaths(environment: ["NOSY_SUPPORT_DIR": paths.support.path, "NOSY_WHISPER_CLI": "/missing"])
-        check(Core.whisperInstallCommand == "brew install whisper-cpp", "install command")
         check(Core.setupMessage(paths: missing) == whisperMessage + "\n" + modelMessage, "setup lists whisper first")
         check(Core.setupMessage(paths: paths) == modelMessage, "model-only setup message")
         try Data([0]).write(to: paths.model)

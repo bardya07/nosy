@@ -5,9 +5,9 @@ APP="${NOSY_TEST_APP:-$BUILD_DIR/Nosy.app/Contents/MacOS/Nosy}"
 [[ -x "$APP" ]] || { printf 'Build the app with ./build.sh first.\n' >&2; exit 1; }
 REAL_MODEL="$HOME/Library/Application Support/Nosy/models/ggml-large-v3-turbo.bin"
 REAL_VAD="$HOME/Library/Application Support/Nosy/models/ggml-silero-v5.1.2.bin"
-REAL_WHISPER="${NOSY_WHISPER_CLI:-/opt/homebrew/bin/whisper-cli}"
-if [[ ! -x "$REAL_WHISPER" ]]; then REAL_WHISPER=/usr/local/bin/whisper-cli; fi
-[[ -x "$REAL_WHISPER" ]] || { printf 'ERROR: whisper-cli is missing\n' >&2; exit 1; }
+REAL_WHISPER="${NOSY_WHISPER_CLI:-$BUILD_DIR/Nosy.app/Contents/Helpers/whisper-cli}"
+[[ -x "$REAL_WHISPER" ]] || { printf 'Build the bundled speech engine and app first: ./scripts/build-whisper.sh && ./build.sh\n' >&2; exit 1; }
+printf 'TEST ENGINE: %s\n' "$REAL_WHISPER"
 wait_for_model() {
     # Published size of the specified ggml large-v3-turbo model. Read only.
     while [[ ! -f "$REAL_MODEL" ]] || [[ $(stat -f %z "$REAL_MODEL") -lt 1624555275 ]]; do

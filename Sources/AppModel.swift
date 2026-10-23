@@ -179,10 +179,6 @@ final class AppModel: ObservableObject {
     }
     func clearError() { errorMessage = nil; errorDetail = nil }
     func refreshDependencies() { setupMessage = Core.setupMessage(paths: paths) }
-    func copyInstallCommand() {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(Core.whisperInstallCommand, forType: .string)
-    }
     func refreshLectures() {
         lectures = paths.lectures()
         if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }

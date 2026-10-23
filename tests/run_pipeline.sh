@@ -53,9 +53,10 @@ then
         printf 'FAIL: say generated no speech\n' >&2; exit 1
     fi
     # In restricted runners macOS refuses SpeechSynthesisServer extensions.
-    # Still exercise real recognition, using Homebrew whisper.cpp's speech sample.
+    # Still exercise real recognition, using the pinned source's speech sample.
     export NOSY_TEST_FIXTURE=jfk
-    SAMPLE="$(dirname "$(dirname "$(python3 -c 'import os; print(os.path.realpath(os.environ["NOSY_REAL_CLI"]))')")")/share/whisper.cpp/jfk.wav"
+    SAMPLE="$PWD/vendor/cache/whisper.cpp-1.9.5/samples/jfk.wav"
+    [[ -f "$SAMPLE" ]] || { printf 'Run ./scripts/build-whisper.sh to prepare the speech fixture.\n' >&2; exit 1; }
     python3 - "$SAMPLE" "$TEST_ROOT/speech.wav" <<'PY'
 import sys, wave
 with wave.open(sys.argv[1]) as source:
@@ -63,7 +64,7 @@ with wave.open(sys.argv[1]) as source:
 with wave.open(sys.argv[2], 'wb') as target:
     target.setparams(params); target.writeframes(pcm * 2)
 PY
-    printf 'PIPELINE NOTE: sandbox blocks say; using the installed whisper.cpp JFK speech fixture (22 s).\n'
+    printf 'PIPELINE NOTE: sandbox blocks say; using the pinned whisper.cpp JFK speech fixture (22 s).\n'
 fi
 python3 - "$TEST_ROOT" <<'PY'
 import json, os, pathlib, sys, wave
