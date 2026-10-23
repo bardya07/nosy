@@ -197,10 +197,17 @@ struct LibraryView: View {
     @ObservedObject var model: AppModel
     @StateObject private var library = TranscriptLibrary()
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismiss) private var dismiss
     @FocusState private var focus: Focus?
     @State private var copied = false
+    var previewQuery: String?
     private var editing: Bool { library.editing }
     enum Focus { case search, list }
+
+    init(model: AppModel, previewQuery: String? = nil) {
+        self.model = model
+        self.previewQuery = previewQuery
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -210,13 +217,16 @@ struct LibraryView: View {
         }
         .frame(minWidth: 720, minHeight: 460)
         .background(WindowBackdrop())
+        .safeAreaPadding(.top, 20)
         .tint(Theme.accentText)
+        .onExitCommand(perform: closeAndShowMain)
         .onAppear {
             model.openWindow = openWindow
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
             model.finishLibraryEditing = { [weak library] in library?.finishEditing() ?? true }
             reload()
             applyFocus()
+            if let previewQuery { library.query = previewQuery }
         }
         .onChange(of: model.paths.transcripts) { reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
@@ -230,11 +240,31 @@ struct LibraryView: View {
         library.open(url, paths: model.paths)
         model.libraryFocus = nil
     }
+    private func closeAndShowMain() {
+        guard library.finishEditing() else { return }
+        dismiss()
+        openWindow(id: "main")
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.windows.first(where: { $0.title == "Nosy" })?.makeKeyAndOrderFront(nil)
+        }
+    }
 
     // MARK: Sidebar
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 16) {
+            Button(action: closeAndShowMain) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.left")
+                    Text("Nosy")
+                }
+                    .font(Theme.text(12, .semibold))
+            }
+            .buttonStyle(LinkButtonStyle(tint: Theme.muted))
+            .keyboardShortcut("w", modifiers: .command)
+            .accessibilityLabel("Close Transcripts and return to Nosy")
+
             HStack(spacing: 10) {
                 NosyMark(size: 32)
                 VStack(alignment: .leading, spacing: 2) {
@@ -250,7 +280,6 @@ struct LibraryView: View {
                 TextField("", text: $library.query, prompt: Text("Search transcripts").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain).focused($focus, equals: .search)
                     .accessibilityLabel("Search transcripts")
-                    .tip("Search transcripts")
                     .onKeyPress(.downArrow) { focus = .list; library.move(1); return .handled }
             }
             .fieldChrome(focused: focus == .search)
@@ -260,10 +289,17 @@ struct LibraryView: View {
                         if library.unfinished.contains(where: { !model.isLive($0.id) }), library.query.isEmpty { unfinishedSection }
                         ForEach(library.grouped, id: \.lecture) { group in
                             Text(group.lecture.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted)
-                                .lineLimit(1).tip("Lecture name")
+                                .lineLimit(1)
                                 .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 2)
                                 .accessibilityAddTraits(.isHeader)
-                            ForEach(group.items) { item in row(item).id(item.url) }
+                            ForEach(group.items) { item in
+                                TranscriptSidebarRow(item: item, selected: library.selection == item.url,
+                                    open: { library.select(item.url); focus = .list },
+                                    reveal: { NSWorkspace.shared.activateFileViewerSelecting([item.url]) },
+                                    rename: { library.rename(item, paths: model.paths) },
+                                    trash: { library.trash(item.url, paths: model.paths) })
+                                    .id(item.url)
+                            }
                         }
                         if library.grouped.isEmpty {
                             Text(library.query.isEmpty ? "No transcripts yet.\nRecord a session in a folder and it shows up here." : "Nothing matches “\(library.query)”.")
@@ -286,34 +322,8 @@ struct LibraryView: View {
         .padding(14)
         .disabled(editing)
         .opacity(editing ? 0.5 : 1)
-        .tip(editing ? "Finish transcript edit" : "Transcripts list")
         .frame(width: 250)
         .background(Theme.surface.opacity(0.45))
-    }
-
-    private func row(_ item: TranscriptItem) -> some View {
-        HStack(spacing: 2) {
-            Button { library.select(item.url); focus = .list } label: {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.session).font(Theme.text(12, .semibold)).lineLimit(1)
-                    Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.mono(9)).foregroundStyle(Theme.muted)
-                }
-            }
-            .buttonStyle(RowButtonStyle(selected: library.selection == item.url))
-            .tip("Open transcript")
-            .accessibilityLabel("\(item.lecture), \(item.session)")
-            .accessibilityAddTraits(library.selection == item.url ? .isSelected : [])
-            Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
-                .buttonStyle(IconButtonStyle(size: 25))
-                .tip("Show in Finder")
-                .accessibilityLabel("Show \(item.session) in Finder")
-        }
-        .contextMenu {
-            Button("Rename…") { library.rename(item, paths: model.paths) }.tip("Rename transcript")
-            Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }.tip("Show in Finder")
-            Divider()
-            Button("Move to Trash", role: .destructive) { library.trash(item.url, paths: model.paths) }.tip("Move to Trash")
-        }
     }
 
     // Recordings without a transcript (failed, quit, or postponed) stay reachable here.
@@ -355,7 +365,7 @@ struct LibraryView: View {
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if editing {
                     TextEditor(text: $library.draft)
-                        .font(Theme.mono(14))
+                        .font(.custom("Inter-Regular", size: 15))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
@@ -369,10 +379,12 @@ struct LibraryView: View {
                                 _ = library.save(corrected, to: item.url, paths: model.paths)
                             } catch { NSAlert(error: error).runModal() }
                         }
-                        .padding(.horizontal, 28).padding(.vertical, 22)
+                        .padding(.horizontal, 30).padding(.vertical, 24)
                         .frame(maxWidth: 640, alignment: .leading)
-                        .frame(maxWidth: .infinity)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .scrollIndicators(.automatic)
+                    .textSelection(.enabled)
                 }
                 if let audio = audioURL(for: item) {
                     Rectangle().fill(Theme.line).frame(height: 1)
@@ -395,8 +407,9 @@ struct LibraryView: View {
     private func readerHeader(_ item: TranscriptItem) -> some View {
         HStack(spacing: 4) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.session).font(Theme.display(20, .bold)).foregroundStyle(Theme.ink).lineLimit(1).tip("Session name")
+                Text(item.session).font(Theme.display(20, .bold)).foregroundStyle(Theme.ink).lineLimit(1)
                 Text(item.lecture).font(Theme.text(12, .medium)).foregroundStyle(Theme.muted).lineLimit(1)
+                Text(readerMetadata(item)).font(.custom("Inter-Regular", size: 11.5)).foregroundStyle(Theme.muted).lineLimit(1)
             }
             Spacer()
             if editing {
@@ -411,12 +424,12 @@ struct LibraryView: View {
             } else {
                 Button { library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
-                    .tip("Edit transcript").accessibilityLabel("Edit transcript")
+                    .tip("Edit").accessibilityLabel("Edit transcript")
                 Button { copy(item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
-                .tip(copied ? "Transcript copied" : "Copy transcript").accessibilityLabel("Copy transcript")
+                .tip(copied ? "Copied" : "Copy").accessibilityLabel("Copy transcript")
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
@@ -431,11 +444,75 @@ struct LibraryView: View {
         .padding(.horizontal, 22).padding(.vertical, 14)
     }
 
+    private func readerMetadata(_ item: TranscriptItem) -> String {
+        let record = Core.record(forTranscript: item.url, paths: model.paths)
+        let start = record?.startedAt ?? item.recorded
+        let date = Core.dateString(start, format: "MMM d, yyyy")
+        let time = Core.dateString(start, format: "HH:mm")
+        let duration: TimeInterval
+        if let record, let endedAt = record.endedAt {
+            duration = max(0, endedAt.timeIntervalSince(record.startedAt))
+        } else if let record {
+            duration = Core.audioDuration(id: record.id, paths: model.paths)
+        } else if let line = item.text.components(separatedBy: .newlines).first(where: { $0.hasPrefix("- Length:") }),
+                  let minutes = line.dropFirst("- Length:".count).trimmingCharacters(in: .whitespaces).split(separator: " ").first.flatMap({ Double($0) }) {
+            duration = minutes * 60
+        } else {
+            duration = 60
+        }
+        return "\(date) · \(time) · \(Core.minutes(duration)) min"
+    }
+
     private func copy(_ text: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
         withAnimation(Motion.press) { copied = true }
         Task { try? await Task.sleep(for: .seconds(1.4)); withAnimation(Motion.hover) { copied = false } }
+    }
+}
+
+private struct TranscriptSidebarRow: View {
+    let item: TranscriptItem
+    let selected: Bool
+    let open: () -> Void
+    let reveal: () -> Void
+    let rename: () -> Void
+    let trash: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button(action: open) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.session).font(Theme.text(12, .semibold)).lineLimit(1)
+                    Text(item.recorded.formatted(date: .abbreviated, time: .shortened))
+                        .font(Theme.mono(9)).foregroundStyle(Theme.muted)
+                }
+            }
+            .buttonStyle(RowButtonStyle(selected: selected))
+            .accessibilityLabel("\(item.lecture), \(item.session)")
+            .accessibilityAddTraits(selected ? .isSelected : [])
+
+            Button(action: reveal) {
+                Image(systemName: "folder")
+                    .font(.system(size: 12, weight: .medium))
+                    .frame(width: 22, height: 24)
+                    .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 6))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(selected ? Theme.accentText : Theme.muted)
+            .opacity(hovering || selected ? 1 : 0)
+            .accessibilityLabel("Show \(item.session) in Finder")
+            .tip("Show in Finder", edge: .bottom)
+        }
+        .frame(maxWidth: .infinity)
+        .onHover { hovering = $0 }
+        .contextMenu {
+            Button("Rename…", action: rename)
+            Button("Show in Finder", action: reveal)
+            Divider()
+            Button("Move to Trash", role: .destructive, action: trash)
+        }
     }
 }
 
@@ -697,10 +774,10 @@ private struct ExportMenu: View {
     let item: TranscriptItem
     var body: some View {
         Menu {
-            Button("Save as Plain Text…") { saveText() }.tip("Export plain text")
-            Button("Save as PDF…") { savePDF() }.tip("Export PDF")
+            Button("Save as Plain Text…") { saveText() }
+            Button("Save as PDF…") { savePDF() }
             Divider()
-            Button("Print…") { printOperation(saveTo: nil).run() }.tip("Print transcript")
+            Button("Print…") { printOperation(saveTo: nil).run() }
         } label: {
             Image(systemName: "square.and.arrow.up")
         }
@@ -709,7 +786,7 @@ private struct ExportMenu: View {
         .buttonStyle(IconButtonStyle(size: 32))
         .menuIndicator(.hidden)
         .fixedSize()
-        .tip("Export transcript")
+        .tip("Share / Export")
         .accessibilityLabel("Export transcript")
     }
     private func savePanel(_ type: UTType) -> URL? {
@@ -796,7 +873,6 @@ private struct OpenWithMenu: View {
                     Label { Text(FileManager.default.displayName(atPath: app.path).replacingOccurrences(of: ".app", with: "")) }
                         icon: { Image(nsImage: icon(app)) }
                 }
-                .tip("Open with this app")
             }
         } label: {
             Image(systemName: "arrow.up.forward.app")
@@ -824,33 +900,31 @@ private struct OpenWithMenu: View {
     }
 }
 
-// Renders Nosy's own markdown: title, metadata bullets, headings, paragraphs.
+// Renders transcript paragraphs and markers; the session title and details live in the header.
 private struct TranscriptText: View {
     let markdown: String
     let correct: (NSRange, String) -> Void
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            ForEach(TranscriptBlock.parse(markdown), id: \.offset) { block in
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(visibleBlocks, id: \.offset) { block in
                 switch block.content {
-                case .title(let text): Text(text).font(Theme.display(24, .bold)).foregroundStyle(Theme.ink)
+                case .title: EmptyView()
                 case .meta(let items):
-                    HStack(spacing: 8) {
-                        ForEach(items, id: \.self) { item in
-                            Text(item).font(Theme.text(11.5, .semibold)).foregroundStyle(Theme.muted)
-                                .padding(.horizontal, 9).frame(height: 22).background(Theme.surface, in: Capsule())
-                        }
-                    }
+                    Text(items.map { "• \($0)" }.joined(separator: "\n"))
+                        .font(.custom("Inter-Regular", size: 15))
+                        .lineSpacing(5)
                 case .heading(let text):
-                    Text(text.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted).padding(.top, 6)
+                    Text(text).font(.custom("Inter-Regular", size: 16)).bold().foregroundStyle(Theme.ink).padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
                 case .marker(let timestamp, let label):
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: "bookmark.fill").accessibilityHidden(true)
-                        Text(timestamp).font(Theme.mono(12))
-                        Text(label).font(Theme.text(14, .medium)).foregroundStyle(Theme.ink)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "bookmark.fill").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
+                        Text(timestamp).font(.custom("Inter-Regular", size: 12)).foregroundStyle(Theme.accentText)
+                        Text(label).font(.custom("Inter-Regular", size: 15)).foregroundStyle(Theme.ink)
                     }
-                    .foregroundStyle(Theme.navy).padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading).card()
+                    .foregroundStyle(Theme.accentText)
+                    .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Marker at \(timestamp): \(label)")
                 case .paragraph(let text):
@@ -859,11 +933,25 @@ private struct TranscriptText: View {
                         if let source = block.sourceRange(range) { correct(source, replacement) }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
         .textSelection(.enabled)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var visibleBlocks: [TranscriptBlock] {
+        TranscriptBlock.parse(markdown).filter { block in
+            switch block.content {
+            case .title: return false
+            case .meta(let items):
+                let metadataLabels = ["Date:", "Started:", "Length:"]
+                return !items.allSatisfy { item in metadataLabels.contains(where: item.hasPrefix) }
+            case .heading(let text): return text.caseInsensitiveCompare("Transcript") != .orderedSame
+            case .marker, .paragraph: return true
+            }
+        }
     }
 }
 
@@ -876,8 +964,6 @@ struct RowButtonStyle: ButtonStyle {
         let selected: Bool
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isEnabled) private var enabled
-        @Environment(\.isFocused) private var focused
-        @State private var hovering = false
         var body: some View {
             configuration.label
                 .foregroundStyle(Theme.ink)
@@ -887,16 +973,14 @@ struct RowButtonStyle: ButtonStyle {
                 .overlay(alignment: .leading) {
                     Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 18 : 0).offset(x: 1)
                 }
-                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.42)
                 .contentShape(Rectangle())
-                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
                 .animation(Motion.state(reduceMotion), value: selected)
         }
         private var fill: Color {
-            selected ? Theme.accent.opacity(0.14) : (hovering ? Theme.surface : .clear)
+            selected ? Theme.accent.opacity(0.10) : .clear
         }
     }
 }

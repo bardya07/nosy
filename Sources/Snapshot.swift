@@ -19,6 +19,7 @@ enum Snapshot {
         let manager = FileManager.default
         let fixture = manager.temporaryDirectory.appendingPathComponent("Nosy-preview-\(UUID().uuidString)")
         let transcripts = fixture.appendingPathComponent("transcripts")
+        let emptyTranscripts = fixture.appendingPathComponent("empty-transcripts")
         let support = fixture.appendingPathComponent("support")
         let argumentDomain = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
         var previewArguments = argumentDomain
@@ -37,7 +38,7 @@ enum Snapshot {
             transcriptRoot = nil
             isRunning = false
         }
-        let date = Date(timeIntervalSince1970: 1_792_785_600)
+        let date = Calendar(identifier: .gregorian).date(from: DateComponents(year: 2026, month: 10, day: 23, hour: 16, minute: 13))!
         let course = transcripts.appendingPathComponent("MBB322")
         let transcript = course.appendingPathComponent("2026-10-23.md")
         let vocabulary = """
@@ -52,20 +53,20 @@ enum Snapshot {
         # MBB322 — 2026-10-23
 
         - Date: 2026-10-23
-        - Started: 09:30
-        - Length: 79 min
+        - Started: 16:13
+        - Length: 1 min
 
         ## Transcript
 
         Today we're following the journey from glucose to ATP. We'll connect glycolysis in the cytosol with the citric acid cycle in the mitochondria, then ask how oxidative phosphorylation brings those pathways together.
 
-        > [12:40] Exam hint
+        > [0:12] Exam hint
 
         Think of an enzyme as a way to make a reaction happen faster without changing where it ends up. The active site holds a substrate in just the right position, lowering the activation energy. A cofactor can help with that chemistry; a coenzyme is an organic molecule that plays a similar supporting role.
 
         In glycolysis, hexokinase adds the first phosphate to glucose. Phosphofructokinase provides an important point of allosteric regulation. When ATP is abundant, feedback inhibition slows the pathway. When ADP rises, the cell has a reason to make more ATP. These signals let a pathway respond to demand instead of running at the same speed all day.
 
-        > [31:05] Confused — review
+        > [0:31] Confused — review
 
         Pyruvate then supplies acetyl-CoA for the citric acid cycle. Citrate synthase starts that cycle, and a series of redox reactions captures energy in NADH and FADH2. Remember that these molecules carry electrons, rather than storing the final usable energy in the form of ATP.
 
@@ -75,21 +76,22 @@ enum Snapshot {
         """
         do {
             try manager.createDirectory(at: course, withIntermediateDirectories: true)
+            try manager.createDirectory(at: emptyTranscripts, withIntermediateDirectories: true)
             try manager.createDirectory(at: support, withIntermediateDirectories: true)
             try Data(text.utf8).write(to: transcript)
             try Data(vocabulary.utf8).write(to: course.appendingPathComponent("vocab.txt"))
             let paths = AppPaths()
             try paths.prepareSupport()
             let previewRecord = SessionRecord(id: "preview-audio", lecture: "MBB322", session: "2026-10-23",
-                startedAt: date, endedAt: date.addingTimeInterval(79 * 60), status: .done,
-                transcriptPath: transcript.path, markers: [SessionMarker(t: 760, label: "Exam hint")],
+                startedAt: date, endedAt: date.addingTimeInterval(60), status: .done,
+                transcriptPath: transcript.path, markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused — review")],
                 vocabularyTerms: Vocabulary.entries(vocabulary))
             try previewRecord.save(in: paths)
             let audio = paths.audioFile(previewRecord.id, "wav")
-            try Core.wavHeader(pcmBytes: 32_000).write(to: audio)
+            try Core.wavHeader(pcmBytes: 1_920_000).write(to: audio)
             let audioFile = try FileHandle(forWritingTo: audio)
             try audioFile.seekToEnd()
-            try audioFile.write(contentsOf: Data(repeating: 0, count: 32_000))
+            try audioFile.write(contentsOf: Data(repeating: 0, count: 1_920_000))
             try audioFile.close()
             let other = transcripts.appendingPathComponent("CHEM281")
             try manager.createDirectory(at: other, withIntermediateDirectories: true)
@@ -124,7 +126,7 @@ enum Snapshot {
                 model.current = SessionRecord(id: "preview", lecture: "MBB322", session: "2026-10-23", startedAt: date,
                     status: phase == .done ? .done : (phase == .failed ? .failed : .recording),
                     transcriptPath: phase == .done ? transcript.path : nil,
-                    markers: [SessionMarker(t: 760, label: "Exam hint"), SessionMarker(t: 1865, label: "Confused — review")],
+                    markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused — review")],
                     vocabularyTerms: Vocabulary.entries(vocabulary))
             }
             model.configurePreview(active: phase == .transcribing ? model.current : nil, source: source)
@@ -239,6 +241,15 @@ enum Snapshot {
             }
             guard save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
                 .padding(36).background(PreviewBackdrop()), "library-minimum.\(mode)") else { return 1 }
+            guard save(PreviewWindow { LibraryView(model: model(.idle), previewQuery: "ATP") }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-search.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: model(.idle)) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-reader.\(mode)") else { return 1 }
+            setenv("NOSY_TRANSCRIPTS_DIR", emptyTranscripts.path, 1)
+            let emptyLibraryModel = AppModel()
+            setenv("NOSY_TRANSCRIPTS_DIR", transcripts.path, 1)
+            guard save(PreviewWindow { LibraryView(model: emptyLibraryModel) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-empty.\(mode)") else { return 1 }
             for phase in [AppPhase.idle, .recording, .done] {
                 guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
                     to: base.appendingPathExtension("native-\(phase).\(mode).png"), native: true) else { return 1 }
