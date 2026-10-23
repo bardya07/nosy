@@ -46,11 +46,7 @@ enum Theme {
     }
 
     static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { text(size, weight) }
-    static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        NSFont(name: "Inter-Regular", size: size) != nil
-            ? .custom("Inter-Regular", fixedSize: size).weight(weight)
-            : .system(size: size, weight: weight)
-    }
+    static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font { mono(size, weight) }
     static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
         NSFont(name: "JetBrainsMono-Regular", size: size) != nil
             ? .custom("JetBrainsMono-Regular", fixedSize: size).weight(weight)
@@ -121,7 +117,7 @@ struct MainWindowChrome: NSViewRepresentable {
 }
 
 enum Motion {
-    static let press = Animation.easeOut(duration: 0.16)
+    static let press = Animation.spring(duration: 0.2, bounce: 0.08)
     static let hover = Animation.easeOut(duration: 0.15)
     // A subtle spring preserves the existing responsive feel.
     static let state = Animation.spring(duration: 0.38, bounce: 0.16)
@@ -145,6 +141,7 @@ struct PillButtonStyle: ButtonStyle {
         let style: PillButtonStyle
         @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -164,6 +161,7 @@ struct PillButtonStyle: ButtonStyle {
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.45)
                 .contentShape(Capsule())
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
@@ -211,6 +209,7 @@ struct RoundButtonStyle: ButtonStyle {
         let size: CGFloat
         @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -219,9 +218,10 @@ struct RoundButtonStyle: ButtonStyle {
                 .frame(width: size, height: size)
                 .background(hovering && enabled ? Theme.surface : Theme.raised, in: Circle())
                 .overlay(Circle().strokeBorder(Theme.line, lineWidth: 1))
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.94 : 1)
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.45)
                 .contentShape(Circle())
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
@@ -235,12 +235,15 @@ struct InsetButtonStyle: ButtonStyle {
         let configuration: ButtonStyleConfiguration
         @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
                 .brightness(hovering && enabled ? 0.025 : 0)
                 .opacity(configuration.isPressed && enabled ? 0.8 : 1)
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.985 : 1)
+                .opacity(enabled ? 1 : 0.45)
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
@@ -256,6 +259,7 @@ struct LinkButtonStyle: ButtonStyle {
         let configuration: ButtonStyleConfiguration
         let tint: Color
         @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -263,6 +267,8 @@ struct LinkButtonStyle: ButtonStyle {
                 .foregroundStyle(enabled ? tint : Theme.muted)
                 .underline(hovering && enabled)
                 .opacity(enabled ? (configuration.isPressed ? 0.6 : 1) : 0.45)
+                .scaleEffect(configuration.isPressed && enabled ? 0.97 : 1)
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
                 .onHover { hovering = $0 }
         }
     }
@@ -307,6 +313,7 @@ struct IconButtonStyle: ButtonStyle {
         let destructive: Bool
         @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -314,9 +321,10 @@ struct IconButtonStyle: ButtonStyle {
                 .foregroundStyle(hovering && enabled && destructive ? Theme.coral : (active || (hovering && enabled) ? Theme.accentText : Theme.muted))
                 .frame(width: size, height: size)
                 .background(hovering && enabled ? (destructive ? Theme.coral.opacity(0.14) : Theme.surface) : .clear, in: Circle())
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.9 : 1)
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.4)
                 .contentShape(Circle())
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }

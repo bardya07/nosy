@@ -92,47 +92,68 @@ private struct FileCommands: View {
             else { model.start() }
         }
         .keyboardShortcut("r", modifiers: .command)
+        .help(model.phase == .done ? "Record another" : "Start recording")
         .disabled(model.recording || model.transitioning || (model.phase != .done && !model.canStart))
         Button("Add Marker") { model.addMarker() }
             .keyboardShortcut(model.recording ? KeyboardShortcut("m", modifiers: .command) : nil)
+            .help("Mark this moment")
             .disabled(!model.recording || model.transitioning)
         Divider()
-        Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command)
+        Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command).help("Open transcripts")
         Button("Import Recording…") { model.importRecording() }
             .keyboardShortcut("i", modifiers: .command)
+            .help("Import audio")
             .disabled(model.busy)
         Button("Open Transcripts Folder") { model.revealTranscriptsFolder() }
             .keyboardShortcut("o", modifiers: [.command, .shift])
+            .help("Show save folder")
         Divider()
-        Button("Set Up Nosy…") { openWindow(id: "welcome") }
+        Button("Set Up Nosy…") { openWindow(id: "welcome") }.help("Open setup")
     }
 }
 
 struct MainView: View {
     @ObservedObject var model: AppModel
     var bodyHeightLimit: CGFloat?
+    var previewRecent = false
+    var previewRecentSelection: URL?
+    var previewRecentAudio = false
+    var previewTranscribingHome = false
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Field?
     @State private var dropping = false
     @State private var titlebarInset: CGFloat = 0
+    @State private var section: MainSection = .ready
+    @State private var homeFromTranscribing = false
     enum Field { case lecture, session }
+    private enum MainSection { case ready, recent }
 
     var body: some View {
         VStack(spacing: 0) {
             titlebar.zIndex(3)
-            ViewThatFits(in: .vertical) {
-                details
-                ScrollView { details }.scrollBounceBehavior(.basedOnSize)
+            captureMode
+            if !model.recording {
+                sectionPicker
             }
-            .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 220))
-            .padding(.bottom, 16)
-            .dropDestination(for: URL.self) { urls, _ in
-                guard let url = urls.first, !model.busy else { return false }
-                model.importRecording(url)
-                return true
-            } isTargeted: { dropping = $0 && !model.busy }
-            controls.padding(.horizontal, 20).padding(.bottom, 20)
+            if section == .recent && !model.recording {
+                RecentView(model: model, previewItem: previewRecentSelection, previewAudio: previewRecentAudio)
+                    .frame(maxHeight: bodyHeightLimit ?? max(240, (NSScreen.main?.visibleFrame.height ?? 800) - 400))
+                    .padding(.horizontal, 20).padding(.top, 8).padding(.bottom, 12)
+            } else {
+                ViewThatFits(in: .vertical) {
+                    details
+                    ScrollView { details }.scrollBounceBehavior(.basedOnSize)
+                }
+                .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 240))
+                .padding(.bottom, 12)
+                .dropDestination(for: URL.self) { urls, _ in
+                    guard let url = urls.first, !model.busy else { return false }
+                    model.importRecording(url)
+                    return true
+                } isTargeted: { dropping = $0 && !model.busy }
+                controls.padding(.horizontal, 20).padding(.bottom, 16)
+            }
         }
         .frame(width: 360)
         .fixedSize(horizontal: true, vertical: true)
@@ -146,8 +167,11 @@ struct MainView: View {
         .animation(Motion.state(reduceMotion), value: model.paused)
         .animation(Motion.state(reduceMotion), value: model.selectedLecture == "__new__")
         .animation(Motion.state(reduceMotion), value: model.active?.id)
+        .animation(Motion.state(reduceMotion), value: section == .recent)
         .onAppear {
             model.openWindow = openWindow
+            if previewRecent { section = .recent }
+            if previewTranscribingHome { homeFromTranscribing = true }
             if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
         .onChange(of: model.selectedLecture) { _, lecture in
@@ -156,58 +180,96 @@ struct MainView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshSavedTranscript()
         }
+        .onChange(of: model.phase) { _, phase in
+            if phase != .transcribing { homeFromTranscribing = false }
+            if phase == .recording { section = .ready }
+        }
     }
 
     private var details: some View {
-        VStack(alignment: .leading, spacing: model.phase == .idle ? 18 : 16) {
+        VStack(alignment: .leading, spacing: 14) {
             banners
-            if model.phase == .idle { brand }
             if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
-            StagePanel(model: model, dropping: dropping)
+            StagePanel(model: model, dropping: dropping,
+                       showReady: homeFromTranscribing && model.phase == .transcribing,
+                       onHome: {
+                           homeFromTranscribing = true
+                           section = .ready
+                       })
         }
-        .padding(.horizontal, 20).padding(.top, 18)
+        .padding(.horizontal, 20).padding(.top, 10)
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    // Leave room for the native traffic lights, with the retained utility actions alongside status.
+    // Leave room for native traffic lights; keep the app mark and utilities in one compact row.
     private var titlebar: some View {
         HStack(spacing: 8) {
             Spacer(minLength: 76)
+            HStack(spacing: 6) {
+                NosyMark(size: 18)
+                Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
+            }
+            .accessibilityElement(children: .combine)
+            Spacer(minLength: 4)
             HStack(spacing: 0) {
                 Button { openWindow(id: "library") } label: { Image(systemName: "doc.text") }
-                    .buttonStyle(IconButtonStyle(size: 26))
-                    .tip("Transcripts  ⌘T")
+                    .buttonStyle(IconButtonStyle(size: 24))
+                    .tip("Open transcripts")
                     .accessibilityLabel("Show transcripts")
                 Button { model.chooseTranscriptsFolder() } label: { Image(systemName: "folder") }
-                    .buttonStyle(IconButtonStyle(size: 26))
+                    .buttonStyle(IconButtonStyle(size: 24))
                     .tip("Change folder")
                     .accessibilityLabel("Choose where transcripts are saved, currently \(model.paths.transcripts.lastPathComponent)")
                     .disabled(model.working)
                 MicMenu(model: model).disabled(model.micLocked)
+                Button { NSWorkspace.shared.open(URL(string: "https://github.com/bardya07/nosy")!) } label: {
+                    Image(systemName: "cat.fill")
+                }
+                .buttonStyle(IconButtonStyle(size: 24))
+                .tip("Open GitHub")
+                .accessibilityLabel("Open Nosy on GitHub")
             }
-            StatusPill(model: model).fixedSize().frame(minWidth: 50, alignment: .trailing)
+            StatusPill(model: model).fixedSize()
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 12)
         .frame(height: 44)
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
     }
 
-    private var brand: some View {
-        HStack(spacing: 12) {
-            NosyMark(size: 40)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Nosy").font(Theme.display(20, .bold)).tracking(-0.4).foregroundStyle(Theme.ink)
-                Text("on-device").font(Theme.mono(11)).foregroundStyle(Theme.muted)
-            }
+    private var captureMode: some View {
+        CaptureModePicker(model: model)
+            .padding(.horizontal, 20).padding(.top, 10)
+    }
+
+    private var sectionPicker: some View {
+        HStack(spacing: 4) {
+            sectionButton("Ready", selected: section == .ready) { section = .ready }
+            sectionButton("Recent", selected: section == .recent) { section = .recent }
         }
+        .padding(3)
+        .background(Theme.surface.opacity(0.68), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+        .padding(.horizontal, 20).padding(.top, 8)
+    }
+
+    private func sectionButton(_ title: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(Theme.mono(11, .medium))
+                .foregroundStyle(selected ? Theme.ink : Theme.muted)
+                .frame(maxWidth: .infinity).frame(height: 24)
+                .background(selected ? Theme.raised : .clear, in: Capsule())
+        }
+        .buttonStyle(InsetButtonStyle())
+        .tip(title == "Recent" ? "Recent transcripts" : "Ready to record")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     @ViewBuilder private var banners: some View {
         if !model.recording, let setup = model.setupMessage {
             Banner(symbol: "exclamationmark.triangle.fill", tint: Theme.amber, text: setup) {
                 HStack(spacing: 14) {
-                    Button("Set up…") { openWindow(id: "welcome") }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
-                    Button("Check again") { model.refreshDependencies() }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
+                    Button("Set up…") { openWindow(id: "welcome") }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Open setup")
+                    Button("Check again") { model.refreshDependencies() }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Check setup")
                 }
             }.transition(.soft(reduceMotion))
         }
@@ -216,10 +278,10 @@ struct MainView: View {
                    text: "Unfinished recording: \(record.lecture) · \(record.session), \(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min"
                     + (model.recovery.count > 1 ? " (+\(model.recovery.count - 1) more)" : "")) {
                 HStack(spacing: 14) {
-                    Button("Transcribe now") { model.retry(record) }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                    Button("Transcribe now") { model.retry(record) }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Retry transcription")
                     Button("Later") { model.postponeRecovery() }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
-                        .tip("Stays in Transcripts › Unfinished")
-                    Button("Delete…") { model.deleteRecording(record) }.buttonStyle(LinkButtonStyle(tint: Theme.coral))
+                        .tip("Keep unfinished")
+                    Button("Delete…") { model.deleteRecording(record) }.buttonStyle(LinkButtonStyle(tint: Theme.coral)).tip("Delete audio")
                 }.disabled(model.busy)
             }.transition(.soft(reduceMotion))
         }
@@ -227,12 +289,12 @@ struct MainView: View {
             Banner(symbol: "exclamationmark.circle.fill", tint: Theme.coral, text: error) {
                 HStack(spacing: 14) {
                     if model.macAudioDenied {
-                        Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                        Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Mac audio privacy")
                     }
                     if model.microphoneDenied {
-                        Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                        Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Microphone privacy")
                     }
-                    Button("Dismiss") { model.clearError() }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
+                    Button("Dismiss") { model.clearError() }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Dismiss message")
                 }
             }
             .help(model.errorDetail ?? "")
@@ -240,13 +302,13 @@ struct MainView: View {
         }
         if (!model.recording || (!model.stalled && !model.silenceWarning && model.errorMessage == nil)), let notice = model.sleepNotice {
             Banner(symbol: "moon.zzz.fill", tint: Theme.amber, text: notice) {
-                Button("OK") { model.sleepNotice = nil }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
+                Button("OK") { model.sleepNotice = nil }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Dismiss notice")
             }.transition(.soft(reduceMotion))
         }
         if model.recording, !model.paused, model.macAudioQuiet, !model.macAudioDenied {
             Banner(symbol: "speaker.wave.2", tint: Theme.muted,
                    text: "Mac audio is silent. If other apps are playing or you denied access, enable Nosy in System Settings → Privacy & Security → Screen & System Audio Recording.") {
-                Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Mac audio privacy")
             }
         }
         if model.stalled {
@@ -261,34 +323,38 @@ struct MainView: View {
     private var fields: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Text("Folder").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Text("Save to").font(Theme.text(11, .medium)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 4)
                 LecturePicker(model: model)
             }
-            .padding(.horizontal, 14).frame(height: 41)
+            .padding(.horizontal, 12).frame(height: 34)
             if model.selectedLecture == "__new__" {
                 TextField("", text: $model.newLecture, prompt: Text("Name your folder").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain)
-                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
+                    .font(Theme.mono(11)).foregroundStyle(Theme.ink)
                     .focused($focus, equals: .lecture)
                     .onSubmit { focus = .session }
-                    .padding(.horizontal, 14).padding(.bottom, 11)
+                    .padding(.horizontal, 12).padding(.bottom, 8)
                     .accessibilityLabel("New folder name")
+                    .tip("Name new folder")
                     .transition(.soft(reduceMotion))
             }
             Rectangle().fill(Theme.line).frame(height: 1)
             HStack(spacing: 12) {
-                Text("Session").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Text("Session").font(Theme.text(11, .medium)).foregroundStyle(Theme.muted)
                 TextField("", text: Binding(get: { model.session }, set: { model.session = $0; model.sessionEdited = true }),
                           prompt: Text("Session").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain)
-                    .font(Theme.mono(13)).foregroundStyle(Theme.ink)
-                    .multilineTextAlignment(.trailing)
+                    .font(Theme.mono(12)).foregroundStyle(Theme.ink)
+                    .padding(.horizontal, 8).padding(.vertical, 5)
+                    .background(focus == .session ? Theme.raised : .clear, in: RoundedRectangle(cornerRadius: 6))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focus == .session ? Theme.accentText : Theme.line.opacity(0.75), lineWidth: focus == .session ? 1.5 : 1))
                     .focused($focus, equals: .session)
                     .onSubmit { focus = nil }
                     .accessibilityLabel("Session name")
+                    .tip("Edit session name")
             }
-            .padding(.horizontal, 14).frame(height: 41)
+            .padding(.horizontal, 12).frame(height: 36)
             Rectangle().fill(Theme.line).frame(height: 1)
             VocabularyButton(model: model)
         }
@@ -305,11 +371,14 @@ struct MainView: View {
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 12))
                 .frame(width: 96)
                 .keyboardShortcut("p", modifiers: .command)
-                .tip(model.paused ? "Resume  ⌘P" : "Pause  ⌘P", edge: .top)
+                .tip(model.paused ? "Resume recording" : "Pause recording", edge: .top)
                 .accessibilityLabel(model.paused ? "Resume recording" : "Pause recording")
                 .disabled(model.transitioning)
                 .transition(.soft(reduceMotion))
             }
+            MicMenu(model: model)
+                .disabled(model.micLocked)
+                .accessibilityLabel("Change recording source or microphone")
             Button(action: primaryAction) {
                 HStack(spacing: 10) {
                     Text(primaryTitle).lineLimit(1).fixedSize()
@@ -321,7 +390,7 @@ struct MainView: View {
             .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48))
             // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
             .keyboardShortcut(.return, modifiers: model.recording ? .command : [])
-            .help(model.recording ? "Stop  ⌘↩" : "")
+            .tip(model.recording ? "Stop and transcribe" : (model.phase == .done ? "Record another" : "Start recording"))
             .disabled(model.recording ? model.transitioning : (model.phase != .done && !model.canStart))
         }
     }
@@ -384,19 +453,57 @@ private struct VocabularyButton: View {
             }
         } label: {
             HStack {
-                Text("Vocabulary").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Text("Vocab").font(Theme.text(11, .medium)).foregroundStyle(Theme.muted)
                 Spacer()
                 Text(model.vocabularySubject)
-                    .font(Theme.mono(13)).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.tail)
+                    .font(Theme.mono(11)).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.tail)
+                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
             }
-            .padding(.horizontal, 14).frame(height: 41)
+            .padding(.horizontal, 12).frame(height: 34)
             .contentShape(Rectangle())
         }
         .buttonStyle(InsetButtonStyle())
+        .tip("Edit vocabulary")
         .disabled(model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
         .popover(item: $draft, arrowEdge: .bottom) { draft in
             VocabularyEditor(draft: draft) { self.draft = nil }
         }
+    }
+}
+
+private struct CaptureModePicker: View {
+    @ObservedObject var model: AppModel
+    private var selected: RecordingSource? {
+        switch model.recordingSource {
+        case .mic: .mic
+        case .both: .both
+        case .macAudio: nil
+        }
+    }
+    var body: some View {
+        HStack(spacing: 3) {
+            modeButton("In-person", source: .mic, active: selected == .mic)
+            if RecordingSource.macAudioAvailable {
+                modeButton("Virtual", source: .both, active: selected == .both)
+            }
+        }
+        .padding(3)
+        .background(Theme.surface.opacity(0.68), in: Capsule())
+        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+        .disabled(model.micLocked)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Recording mode")
+    }
+    private func modeButton(_ title: String, source: RecordingSource, active: Bool) -> some View {
+        Button { model.selectSource(source) } label: {
+            Text(title).font(Theme.mono(11, .medium))
+                .foregroundStyle(active ? Theme.ink : Theme.muted)
+                .frame(maxWidth: .infinity).frame(height: 26)
+                .background(active ? Theme.raised : .clear, in: Capsule())
+        }
+        .buttonStyle(InsetButtonStyle())
+        .tip(source == .mic ? "Microphone only" : "Mic plus Mac audio")
+        .accessibilityAddTraits(active ? .isSelected : [])
     }
 }
 
@@ -405,10 +512,15 @@ private struct MicMenu: View {
     var body: some View {
         Menu {
             if RecordingSource.macAudioAvailable {
-                Section("Source") {
-                    ForEach(RecordingSource.available, id: \.self) { source in
-                        Button { model.selectSource(source) } label: { checked(model.recordingSource == source, source.title) }
-                    }
+                Section("Mode") {
+                    Button { model.selectSource(.mic) } label: { checked(model.recordingSource == .mic, "In-person · Microphone") }
+                        .help("Select in-person")
+                    Button { model.selectSource(.both) } label: { checked(model.recordingSource == .both, "Virtual · Mic + Mac audio") }
+                        .help("Select virtual audio")
+                }
+                Section("Advanced") {
+                    Button { model.selectSource(.macAudio) } label: { checked(model.recordingSource == .macAudio, "Mac audio only") }
+                        .help("Mac audio only")
                 }
                 Divider()
             }
@@ -416,19 +528,22 @@ private struct MicMenu: View {
             Button { model.selectInput(nil) } label: {
                 checked(model.inputUID == nil, "System default" + (model.systemInput.map { " (\($0.name))" } ?? ""))
             }
+            .help("Use system default")
             if !model.inputs.isEmpty { Divider() }
             ForEach(model.inputs) { device in
                 Button { model.selectInput(device.id) } label: { checked(model.inputUID == device.id, device.name) }
+                    .help("Select microphone")
             }
         } label: {
             Image(systemName: model.inputUID == nil || Snapshot.isRunning ? "mic" : "mic.fill")
         }
         .menuStyle(.button)
-        .buttonStyle(IconButtonStyle(size: 28, active: model.inputUID != nil && !Snapshot.isRunning))
+        .font(Theme.mono(11))
+        .buttonStyle(IconButtonStyle(size: 24, active: model.inputUID != nil && !Snapshot.isRunning))
         .menuIndicator(.hidden)
         .fixedSize()
         .onHover { if $0 { model.refreshInputs() } }
-        .tip(model.recording && !model.paused ? "Pause to change source or mic" : "Change recording source or microphone")
+        .tip("Change audio source")
         .accessibilityLabel("Choose recording source or microphone, currently \(model.inputName)")
     }
     @ViewBuilder private func checked(_ on: Bool, _ title: String) -> some View {
@@ -439,13 +554,14 @@ private struct MicMenu: View {
 private struct LecturePicker: View {
     @ObservedObject var model: AppModel
     @State private var hovering = false
+    @Environment(\.isFocused) private var focused
     var body: some View {
         Menu {
             ForEach(model.lectures, id: \.self) { lecture in
-                Button(lecture) { model.selectedLecture = lecture }
+                Button(lecture) { model.selectedLecture = lecture }.help("Choose this folder")
             }
             if !model.lectures.isEmpty { Divider() }
-            Button("New folder…") { model.selectedLecture = "__new__" }
+            Button("New folder…") { model.selectedLecture = "__new__" }.help("Create new folder")
         } label: {
             HStack {
                 Text(model.selectedLecture == "__new__" ? "New folder" : model.selectedLecture)
@@ -457,11 +573,14 @@ private struct LecturePicker: View {
             .font(Theme.mono(13))
             .brightness(hovering ? -0.06 : 0)
             .contentShape(Rectangle())
+            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
             .accessibilityElement(children: .combine)
         }
         .menuStyle(.button)
+        .font(Theme.mono(11))
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
+        .tip("Choose save folder")
         .onHover { inside in
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
@@ -473,26 +592,27 @@ private struct LecturePicker: View {
 
 private struct StatusPill: View {
     @ObservedObject var model: AppModel
+    @ViewBuilder
     var body: some View {
-        HStack(spacing: 6) {
-            if model.recording {
-                Circle().fill(model.paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
-                    .opacity(model.paused || model.level > -50 ? 1 : 0.5)
+        if let title {
+            HStack(spacing: 6) {
+                if model.recording {
+                    Circle().fill(model.paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
+                        .opacity(model.paused || model.level > -50 ? 1 : 0.5)
+                }
+                Text(title).font(Theme.mono(10, .medium)).foregroundStyle(tint)
+                    .contentTransition(.opacity)
             }
-            Text(title).font(Theme.mono(11)).foregroundStyle(tint)
-                .contentTransition(.opacity)
+            .frame(height: 24)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Status: \(title)")
         }
-        .frame(height: 24)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Status: \(title)")
     }
-    private var title: String {
+    private var title: String? {
         switch model.phase {
-        case .idle: "idle"
-        case .recording: model.paused ? "paused" : "REC"
+        case .idle, .done, .failed: nil
+        case .recording: model.paused ? "Paused" : "REC"
         case .transcribing: model.transcriptionPauseReason != nil ? "Paused" : (model.waiting ? "Queued" : "Transcribing")
-        case .done: model.savedSummary.noSpeech ? "No speech" : (model.savedSummary.markdown == nil ? "Unavailable" : "saved")
-        case .failed: "Failed"
         }
     }
     private var tint: Color {
@@ -531,13 +651,17 @@ struct Banner<Actions: View>: View {
 struct StagePanel: View {
     @ObservedObject var model: AppModel
     var dropping = false
+    var showReady = false
+    var onHome: () -> Void = {}
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         ZStack {
             switch model.phase {
             case .idle: idle.transition(.soft(reduceMotion))
             case .recording: recording.transition(.soft(reduceMotion))
-            case .transcribing: transcribing.transition(.soft(reduceMotion))
+            case .transcribing:
+                if showReady { idle.transition(.soft(reduceMotion)) }
+                else { transcribing.transition(.soft(reduceMotion)) }
             case .done: done.transition(.soft(reduceMotion))
             case .failed: failed.transition(.soft(reduceMotion))
             }
@@ -604,8 +728,15 @@ struct StagePanel: View {
             Text(remainingText).font(Theme.text(12)).foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
+            HStack {
+                Text("This might take a minute.").font(Theme.text(11)).foregroundStyle(Theme.muted)
+                Spacer(minLength: 4)
+                Button("Home", systemImage: "house") { onHome() }
+                    .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                    .tip("Return to ready")
+                    .accessibilityLabel("Home while transcribing")
+            }
         }
-        .accessibilityElement(children: .combine)
     }
     private var remainingText: String {
         if let reason = model.transcriptionPauseReason { return "Paused — \(reason)" }
@@ -634,10 +765,10 @@ struct StagePanel: View {
                 .textSelection(.enabled)
             HStack(spacing: 16) {
                 if model.microphoneDenied {
-                    Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle())
+                    Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle()).tip("Microphone privacy")
                 }
                 if let record = model.current {
-                    Button("Retry") { model.retry() }.buttonStyle(LinkButtonStyle()).disabled(model.isQueued(record.id))
+                    Button("Retry") { model.retry() }.buttonStyle(LinkButtonStyle()).tip("Retry transcription").disabled(model.isQueued(record.id))
                 }
             }
         }.padding(14).frame(maxWidth: .infinity).card()
@@ -647,27 +778,36 @@ struct StagePanel: View {
 private struct RecordingMarkers: View {
     @ObservedObject var model: AppModel
     @FocusState private var focusedMarker: Int?
+    @State private var confirming = false
     private var markers: [SessionMarker] { model.current?.markers ?? [] }
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("MARKERS").tracking(0.8)
-                Spacer()
-                Button { model.addMarker() } label: { Text("+  ⌘M") }
-                    .buttonStyle(.plain)
-                    .help("Add a marker at the current recording time")
-                    .accessibilityLabel("Add marker, Command M")
-                    .disabled(model.transitioning)
-            }.font(Theme.mono(11)).foregroundStyle(Theme.muted)
-            if markers.isEmpty {
-                Text("Mark a moment to revisit later")
-                    .font(Theme.text(12)).foregroundStyle(Theme.muted)
-            } else {
+            HStack(spacing: 8) {
+                Button(action: markMoment) {
+                    HStack(spacing: 7) {
+                        Label(confirming ? "Marked" : "Mark moment", systemImage: confirming ? "checkmark" : "bookmark")
+                            .font(Theme.mono(11, .medium))
+                            .contentTransition(.symbolEffect(.replace))
+                        Text("⌘M").font(Theme.mono(9)).opacity(0.58)
+                    }
+                }
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 34, fullWidth: false, horizontalPadding: 12))
+                .tip("Mark this moment")
+                .accessibilityLabel("Mark moment, Command M")
+                .disabled(model.transitioning)
+                Text("\(markers.count)")
+                    .font(Theme.mono(10, .medium)).foregroundStyle(Theme.muted)
+                    .padding(.horizontal, 8).frame(height: 22)
+                    .background(Theme.surface, in: Capsule())
+                    .accessibilityLabel("\(markers.count) markers")
+                Spacer(minLength: 0)
+            }
+            if !markers.isEmpty {
                 ScrollViewReader { scroll in
                     ScrollView {
-                        VStack(spacing: 8) {
+                        VStack(spacing: 5) {
                             ForEach(markers.indices, id: \.self) { index in
-                                HStack(spacing: 14) {
+                                HStack(spacing: 10) {
                                     Text(Core.timer(markers[index].t)).font(Theme.mono(12)).foregroundStyle(Theme.muted)
                                     TextField("Marker", text: Binding(
                                         get: { markers.indices.contains(index) ? markers[index].label : "" },
@@ -680,7 +820,7 @@ private struct RecordingMarkers: View {
                             }
                         }
                     }
-                    .frame(height: CGFloat(min(markers.count, 4) * 28 - 8))
+                    .frame(height: CGFloat(min(markers.count, 3) * 25 - 5))
                     .onChange(of: markers.count) { old, count in
                         if count > old {
                             scroll.scrollTo(count - 1, anchor: .bottom)
@@ -689,7 +829,17 @@ private struct RecordingMarkers: View {
                     }
                 }
             }
-        }.padding(.vertical, 12).padding(.horizontal, 14).card()
+        }
+    }
+    private func markMoment() {
+        let count = markers.count
+        model.addMarker()
+        guard markers.count > count else { return }
+        withAnimation(Motion.state) { confirming = true }
+        Task {
+            try? await Task.sleep(for: .milliseconds(850))
+            withAnimation(Motion.hover) { confirming = false }
+        }
     }
 }
 
@@ -731,7 +881,9 @@ private struct SavedPanel: View {
             .padding(.vertical, 12).padding(.horizontal, 14).card()
             HStack(spacing: 8) {
                 Button("Open") { model.showInLibrary(model.current?.transcriptPath.map { URL(fileURLWithPath: $0) }) }
+                    .tip("Open transcript")
                 Button("Reveal") { model.revealTranscript() }
+                    .tip("Show in Finder")
                 Button(copied ? "Copied" : "Copy") {
                     model.refreshSavedTranscript()
                     guard let text = model.savedSummary.markdown else { return }
@@ -740,6 +892,7 @@ private struct SavedPanel: View {
                     copied = true
                     Task { try? await Task.sleep(for: .seconds(1.4)); copied = false }
                 }
+                .tip(copied ? "Copied transcript" : "Copy transcript")
                 .disabled(summary.markdown == nil)
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 38))

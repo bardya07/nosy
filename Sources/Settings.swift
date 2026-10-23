@@ -12,7 +12,6 @@ struct SettingsView: View {
                 NosyMark(size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Settings").font(Theme.display(20, .bold)).tracking(-0.4)
-                    Text("Nosy · on-device").font(Theme.mono(11)).foregroundStyle(Theme.muted)
                 }
             }
 
@@ -34,6 +33,7 @@ struct SettingsView: View {
                             .help(model.working ? "Available when Nosy finishes" : "Change folder")
                         Button("Show in Finder") { model.revealTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                            .tip("Show in Finder")
                     }
                     note("Each folder groups its transcripts. Add a vocab.txt inside a folder to teach Nosy its terms.")
                 }
@@ -102,7 +102,8 @@ struct SettingsView: View {
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
         }
-        .menuStyle(.button).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
+        .menuStyle(.button).font(Theme.mono(11)).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
+        .tip("Change setting")
         .accessibilityLabel(label).accessibilityValue(value)
     }
 

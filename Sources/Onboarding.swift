@@ -203,9 +203,11 @@ struct OnboardingView: View {
                 if setup.micStatus == .notDetermined {
                     Button("Allow microphone") { Task { await setup.requestMicrophone() } }
                         .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
+                        .tip("Allow microphone")
                 } else if setup.micStatus != .authorized {
                     Button("Open Privacy Settings") { model.openMicrophoneSettings() }
                         .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
+                        .tip("Microphone privacy")
                 }
             }
         case .folder:
@@ -219,6 +221,7 @@ struct OnboardingView: View {
                 .frame(width: 340)
                 Button("Choose another folder…") { model.chooseTranscriptsFolder() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
+                    .tip("Choose save folder")
                     .disabled(model.working)
             }
         case .engine:
@@ -228,6 +231,7 @@ struct OnboardingView: View {
                     if !setup.whisperReady(model.paths) {
                         Button("Check again") { setup.objectWillChange.send(); model.refreshDependencies() }
                             .buttonStyle(LinkButtonStyle())
+                            .tip("Check speech engine")
                     }
                     status(setup.modelReady(model.paths) ? "Speech model ready" : "Speech model not downloaded", ok: setup.modelReady(model.paths))
                     if !setup.modelReady(model.paths) {
@@ -238,13 +242,14 @@ struct OnboardingView: View {
                                     Text(setup.downloadDetail).font(Theme.text(11.5)).foregroundStyle(Theme.muted).monospacedDigit()
                                     Spacer()
                                     Button(setup.cancelling ? "Stopping…" : "Cancel") { setup.cancelDownload() }
-                                        .buttonStyle(LinkButtonStyle(tint: Theme.muted)).disabled(setup.cancelling)
+                                        .buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Cancel download").disabled(setup.cancelling)
                                 }.frame(width: 340)
                             }
                         } else {
                             HStack(spacing: 10) {
                                 Button(setup.downloadError == nil ? "Download model (1.6 GB)" : "Resume download") { setup.startDownload(paths: model.paths) }
                                     .buttonStyle(PillButtonStyle(kind: .primary, height: 34, fullWidth: false))
+                                    .tip("Download speech model")
                                 Button("Use downloaded model…") { setup.useDownloadedModel(paths: model.paths) }
                                     .buttonStyle(LinkButtonStyle())
                                     .tip("Choose model file", edge: .top)
@@ -271,6 +276,7 @@ struct OnboardingView: View {
                 Label("Record 5 seconds", systemImage: "record.circle")
             }
             .buttonStyle(PillButtonStyle(kind: .primary, height: 40, fullWidth: false))
+            .tip("Record test clip")
             .disabled(model.busy || model.setupMessage != nil)
             if model.setupMessage != nil {
                 Text("Finish the speech engine step first.").font(Theme.text(12)).foregroundStyle(Theme.muted)
@@ -295,12 +301,12 @@ struct OnboardingView: View {
                 Text(text.isEmpty ? "Check that the right mic is selected and try again, a little louder." : "“\(text)”")
                     .font(Theme.text(14)).foregroundStyle(text.isEmpty ? Theme.muted : Theme.ink)
                     .multilineTextAlignment(.center).lineLimit(4)
-                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle())
+                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle()).tip("Retry rehearsal")
             }
         case .failed(let message):
             VStack(spacing: 10) {
                 status(message, ok: false)
-                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle())
+                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle()).tip("Retry rehearsal")
             }
         }
     }
@@ -310,12 +316,13 @@ struct OnboardingView: View {
             if setup.step != .welcome {
                 Button("Back") { setup.step = OnboardingModel.Step(rawValue: setup.step.rawValue - 1) ?? .welcome }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
+                    .tip("Previous step")
                     .keyboardShortcut(.cancelAction)
                     .disabled(setup.rehearsing)
             }
             Spacer()
             if setup.step == .engine, model.setupMessage != nil {
-                Button("Skip for now") { setup.step = .tryIt }.buttonStyle(LinkButtonStyle(tint: Theme.muted))
+                Button("Skip for now") { setup.step = .tryIt }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Skip setup step")
             }
             Button(setup.step == .tryIt ? "Start using Nosy" : "Continue") {
                 if let next = OnboardingModel.Step(rawValue: setup.step.rawValue + 1) {
@@ -327,6 +334,7 @@ struct OnboardingView: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
+            .tip(setup.step == .tryIt ? "Finish setup" : "Continue setup")
             .keyboardShortcut(.defaultAction)
             .disabled(continueDisabled)
         }

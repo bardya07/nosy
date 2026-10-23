@@ -99,6 +99,7 @@ struct VocabularyEditor: View {
                     ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
                 }
                 .labelsHidden().pickerStyle(.menu)
+                .tip("Choose vocabulary subject")
                 .frame(maxWidth: 220)
                 .accessibilityLabel("Subject").accessibilityValue(subjectTitle)
             }
@@ -109,6 +110,7 @@ struct VocabularyEditor: View {
                 Text("Custom terms (\(Vocabulary.entries(draft.text).count))")
                     .font(Theme.text(13, .medium))
             }
+            .tip("Edit custom terms")
             .animation(Motion.state(reduceMotion), value: expanded)
             if let error = draft.saveError ?? draft.settingsError {
                 Text(error).font(Theme.text(11)).foregroundStyle(Theme.coral)

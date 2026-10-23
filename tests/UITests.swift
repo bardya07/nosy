@@ -110,15 +110,18 @@ enum UITests {
             check(AppModel().recordingSource == .macAudio, "Remember the source")
             model.phase = .recording
             model.paused = false
+            check(model.micLocked, "Recording locks the source mode and microphone menu")
             model.selectSource(.both)
             check(model.recordingSource == .macAudio, "Active recording locks source changes")
             model.paused = true
+            check(!model.micLocked, "Pausing unlocks source mode and microphone selection")
             model.transitioning = true
             model.selectSource(.both)
             check(model.recordingSource == .macAudio, "Transitions lock source changes even when paused")
             model.transitioning = false
             model.selectSource(.both)
             check(model.inputName == "MacBook Pro Microphone + Mac audio", "Paused source changes and Both label")
+            check(AppModel().recordingSource == .both, "Virtual mode choice is remembered")
             model.phase = .idle
             model.paused = false
             model.selectSource(.mic)

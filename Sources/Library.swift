@@ -239,7 +239,7 @@ struct LibraryView: View {
                 NosyMark(size: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Transcripts").font(Theme.display(18, .bold)).foregroundStyle(Theme.ink)
-                    Text("\(library.items.count) saved on-device").font(Theme.mono(10)).foregroundStyle(Theme.muted)
+                    Text("\(library.items.count) saved").font(Theme.mono(10)).foregroundStyle(Theme.muted)
                 }
                 Spacer(minLength: 0)
             }
@@ -250,6 +250,7 @@ struct LibraryView: View {
                 TextField("", text: $library.query, prompt: Text("Search transcripts").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain).focused($focus, equals: .search)
                     .accessibilityLabel("Search transcripts")
+                    .tip("Search transcripts")
                     .onKeyPress(.downArrow) { focus = .list; library.move(1); return .handled }
             }
             .fieldChrome(focused: focus == .search)
@@ -291,16 +292,22 @@ struct LibraryView: View {
     }
 
     private func row(_ item: TranscriptItem) -> some View {
-        Button { library.select(item.url); focus = .list } label: {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.session).font(Theme.text(13.5, .semibold)).lineLimit(1)
-                Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.mono(10)).foregroundStyle(Theme.muted)
+        HStack(spacing: 2) {
+            Button { library.select(item.url); focus = .list } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.session).font(Theme.text(12, .semibold)).lineLimit(1)
+                    Text(item.recorded.formatted(date: .abbreviated, time: .shortened)).font(Theme.mono(9)).foregroundStyle(Theme.muted)
+                }
             }
+            .buttonStyle(RowButtonStyle(selected: library.selection == item.url))
+            .tip("Open transcript")
+            .accessibilityLabel("\(item.lecture), \(item.session)")
+            .accessibilityAddTraits(library.selection == item.url ? .isSelected : [])
+            Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
+                .buttonStyle(IconButtonStyle(size: 25))
+                .tip("Show in Finder")
+                .accessibilityLabel("Show \(item.session) in Finder")
         }
-        .buttonStyle(RowButtonStyle(selected: library.selection == item.url))
-        .help(item.session)
-        .accessibilityLabel("\(item.lecture), \(item.session)")
-        .accessibilityAddTraits(library.selection == item.url ? .isSelected : [])
         .contextMenu {
             Button("Rename…") { library.rename(item, paths: model.paths) }
             Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
@@ -325,7 +332,7 @@ struct LibraryView: View {
                     Spacer(minLength: 0)
                     Button { model.retry(record) } label: { Image(systemName: "text.badge.plus") }
                         .buttonStyle(IconButtonStyle(size: 26))
-                        .tip("Transcribe").accessibilityLabel("Transcribe \(record.lecture) \(record.session)")
+                        .tip("Transcribe audio").accessibilityLabel("Transcribe \(record.lecture) \(record.session)")
                         .disabled(model.isQueued(record.id))
                     Button { model.deleteRecording(record); reload() } label: { Image(systemName: "trash") }
                         .buttonStyle(IconButtonStyle(size: 26, destructive: true))
@@ -395,14 +402,16 @@ struct LibraryView: View {
             if editing {
                 Button("Cancel") { library.cancelEdit() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                    .tip("Discard changes")
                     .keyboardShortcut(.cancelAction)
                 Button("Save") { library.saveDraft() }
                     .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                    .tip("Save changes")
                     .keyboardShortcut("s", modifiers: .command)
             } else {
                 Button { library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
-                    .tip("Edit  ⌘E").accessibilityLabel("Edit transcript")
+                    .tip("Edit transcript").accessibilityLabel("Edit transcript")
                 Button { copy(item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
@@ -430,6 +439,187 @@ struct LibraryView: View {
     }
 }
 
+// A compact in-window recent list; opening an item keeps transcript reading and audio playback
+// in the main window while the full library remains available from the toolbar.
+struct RecentView: View {
+    @ObservedObject var model: AppModel
+    var previewItem: URL? = nil
+    var previewAudio = false
+    @StateObject private var library = TranscriptLibrary()
+    @State private var selectedURL: URL?
+    @State private var showingAudio = false
+
+    init(model: AppModel, previewItem: URL? = nil, previewAudio: Bool = false) {
+        self.model = model
+        self.previewItem = previewItem
+        self.previewAudio = previewAudio
+        _selectedURL = State(initialValue: previewItem)
+        _showingAudio = State(initialValue: previewAudio)
+    }
+
+    private var selected: TranscriptItem? {
+        guard let selectedURL else { return nil }
+        let path = selectedURL.standardizedFileURL.path
+        return library.items.first { $0.url.standardizedFileURL.path == path }
+    }
+    private var selectedAudio: URL? {
+        guard let selected else { return nil }
+        return Core.record(forTranscript: selected.url, paths: model.paths)
+            .flatMap { AudioFiles.playable(id: $0.id, paths: model.paths) }
+    }
+
+    var body: some View {
+        Group {
+            if let selected {
+                detail(selected)
+            } else {
+                list
+            }
+        }
+        .onAppear {
+            reload()
+            if let previewItem {
+                selectedURL = previewItem
+                showingAudio = previewAudio
+            }
+        }
+        .onChange(of: model.paths.transcripts) { reload() }
+        .onChange(of: model.current?.transcriptPath) { reload() }
+        .onChange(of: model.active?.id) { reload() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
+    }
+
+    private var list: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Recent transcripts").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
+                Spacer()
+                Text("\(library.items.count) saved").font(Theme.mono(9)).foregroundStyle(Theme.muted)
+            }
+            if library.items.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "doc.text").font(.system(size: 20)).foregroundStyle(Theme.muted)
+                    Text("No transcripts yet").font(Theme.text(11, .medium)).foregroundStyle(Theme.ink)
+                    Text("Saved sessions will appear here.").font(Theme.mono(9)).foregroundStyle(Theme.muted)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 3) {
+                        ForEach(Array(library.items.prefix(5))) { item in
+                            HStack(spacing: 3) {
+                                Button {
+                                    selectedURL = item.url
+                                    showingAudio = false
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(item.session).font(Theme.text(11, .medium)).lineLimit(1)
+                                        Text("\(item.lecture) · \(item.recorded.formatted(date: .abbreviated, time: .shortened))")
+                                            .font(Theme.mono(9)).foregroundStyle(Theme.muted).lineLimit(1)
+                                    }
+                                }
+                                .buttonStyle(RowButtonStyle(selected: false))
+                                .tip("Open transcript")
+                                .accessibilityLabel("Open \(item.lecture), \(item.session)")
+                                Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: {
+                                    Image(systemName: "folder")
+                                }
+                                .buttonStyle(IconButtonStyle(size: 26))
+                                .tip("Show in Finder")
+                                .accessibilityLabel("Show \(item.session) in Finder")
+                            }
+                            .contextMenu {
+                                Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([item.url]) }
+                            }
+                        }
+                    }
+                }
+                .scrollIndicators(.never)
+            }
+        }
+    }
+
+    private func detail(_ item: TranscriptItem) -> some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Button { selectedURL = nil; showingAudio = false } label: {
+                    Label("Recent", systemImage: "chevron.left")
+                }
+                .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                .tip("Back to recent")
+                Spacer(minLength: 2)
+                Button { showingAudio = false } label: { Text("Transcript") }
+                    .buttonStyle(RecentToggleStyle(selected: !showingAudio))
+                    .tip("Read transcript")
+                Button { showingAudio = true } label: { Text("Audio") }
+                    .buttonStyle(RecentToggleStyle(selected: showingAudio))
+                    .disabled(selectedAudio == nil)
+                    .tip(selectedAudio == nil ? "Audio unavailable" : "Play recording")
+                Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
+                    .buttonStyle(IconButtonStyle(size: 25))
+                    .tip("Show in Finder")
+                    .accessibilityLabel("Show in Finder")
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.session).font(Theme.text(12, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
+                Text(item.lecture).font(Theme.mono(9)).foregroundStyle(Theme.muted).lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            Rectangle().fill(Theme.line).frame(height: 1)
+            if showingAudio, let audio = selectedAudio {
+                AudioStrip(url: audio).id(audio)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                ScrollView {
+                    Text(item.text)
+                        .font(Theme.mono(10.5)).foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .scrollIndicators(.visible)
+            }
+        }
+    }
+
+    private func reload() {
+        library.reload(paths: model.paths)
+        if let selectedURL, !library.items.contains(where: { $0.url.standardizedFileURL.path == selectedURL.standardizedFileURL.path }) {
+            self.selectedURL = nil
+            showingAudio = false
+        }
+    }
+}
+
+private struct RecentToggleStyle: ButtonStyle {
+    let selected: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        RecentToggleBody(configuration: configuration, selected: selected)
+    }
+    private struct RecentToggleBody: View {
+        let configuration: ButtonStyleConfiguration
+        let selected: Bool
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .font(Theme.mono(9, .medium))
+                .foregroundStyle(selected ? Theme.ink : Theme.muted)
+                .padding(.horizontal, 8).frame(height: 23)
+                .background(selected ? Theme.raised : (hovering && enabled ? Theme.surface : .clear), in: Capsule())
+                .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
+                .opacity(enabled ? 1 : 0.42)
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .contentShape(Capsule())
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .animation(Motion.press, value: configuration.isPressed)
+        }
+    }
+}
+
 // Play the lecture back while reading, at study speeds.
 private struct AudioStrip: View {
     let url: URL
@@ -440,10 +630,12 @@ private struct AudioStrip: View {
                 Image(systemName: player.playing ? "pause.fill" : "play.fill").contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(RoundButtonStyle(size: 34))
+            .tip(player.playing ? "Pause audio" : "Play audio")
             .accessibilityLabel(player.playing ? "Pause audio" : "Play audio")
             Text(Core.timer(player.time)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Slider(value: Binding(get: { player.time }, set: { player.seek($0) }), in: 0...max(1, player.duration))
                 .controlSize(.small)
+                .help("Seek audio")
                 .accessibilityLabel("Playback position")
             Text(Core.timer(player.duration)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Menu {
@@ -453,7 +645,7 @@ private struct AudioStrip: View {
             } label: {
                 Text(rateLabel(Double(player.rate))).font(Theme.text(12, .semibold))
             }
-            .menuStyle(.button).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+            .menuStyle(.button).font(Theme.mono(10)).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
             .menuIndicator(.hidden).fixedSize()
             .tip("Playback speed", edge: .top)
             .accessibilityLabel("Playback speed")
@@ -513,10 +705,11 @@ private struct ExportMenu: View {
             Image(systemName: "square.and.arrow.up")
         }
         .menuStyle(.button)
+        .font(Theme.mono(11))
         .buttonStyle(IconButtonStyle(size: 32))
         .menuIndicator(.hidden)
         .fixedSize()
-        .tip("Export")
+        .tip("Export transcript")
         .accessibilityLabel("Export transcript")
     }
     private func savePanel(_ type: UTType) -> URL? {
@@ -608,6 +801,7 @@ private struct OpenWithMenu: View {
             Image(systemName: "arrow.up.forward.app")
         }
         .menuStyle(.button)
+        .font(Theme.mono(11))
         .buttonStyle(IconButtonStyle(size: 32))
         .menuIndicator(.hidden)
         .fixedSize()
@@ -680,6 +874,8 @@ struct RowButtonStyle: ButtonStyle {
         let configuration: ButtonStyleConfiguration
         let selected: Bool
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -690,7 +886,9 @@ struct RowButtonStyle: ButtonStyle {
                 .overlay(alignment: .leading) {
                     Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 18 : 0).offset(x: 1)
                 }
-                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
+                .opacity(enabled ? 1 : 0.42)
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)

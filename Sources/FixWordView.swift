@@ -43,7 +43,8 @@ struct FixWordView: NSViewRepresentable {
         if let regex = try? NSRegularExpression(pattern: #"(?m)^#{1,2} .+$"#) {
             for match in regex.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
                 let size: CGFloat = ns.substring(with: match.range).hasPrefix("##") ? 13 : 24
-                let font = NSFont(name: "Inter-Regular", size: size).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) } ?? NSFont.boldSystemFont(ofSize: size)
+                let font = NSFont(name: "JetBrainsMono-Regular", size: size).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) }
+                    ?? NSFont.monospacedSystemFont(ofSize: size, weight: .bold)
                 text.addAttribute(.font, value: font, range: match.range)
             }
         }

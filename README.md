@@ -4,6 +4,9 @@ On-device recorder and transcriber for lectures and meetings.
 
 ![Design E in light mode: Ready, Recording, and Saved](preview/nosy.light.png)
 ![Design E in dark mode: Ready, Recording, and Saved](preview/nosy.dark.png)
+![Recent transcripts in light mode](preview/nosy.recent.light.png)
+![Recent transcript in light mode](preview/nosy.recent-transcript.light.png)
+![Recent audio player in dark mode](preview/nosy.recent-audio.dark.png)
 ![Transcripts in light mode with a sample lecture](preview/nosy.library.light.png)
 
 <details>
@@ -86,9 +89,9 @@ Maintainers using a different Developer ID identity or stored profile can set `N
 
 ## Design previews
 
-Design E uses native macOS vibrancy, Inter and JetBrains Mono (bundled under OFL 1.1), navy text, green primary actions, and a blue Stop action. Dark mode uses the same hues over deep navy surfaces. Utility buttons, recovery banners, transcription queues, and the Dock controls remain available. Markers are deferred to a later change.
+The UI uses JetBrains Mono throughout, with Inter retained for transcript reading text in the Transcripts window. Both fonts are bundled under OFL 1.1. The main window has a compact recording header, In-person and Virtual source modes, editable save/session/vocabulary controls, a Recent view, and a Mark moment action. Dark mode uses the same hues over deep navy surfaces. Utility buttons, recovery banners, transcription queues, and Dock controls remain available.
 
-Regenerate the light/dark sheets and individual Ready, Recording, Saved, Transcripts, Settings, and onboarding PNGs in `preview/`:
+Regenerate the light/dark sheets and individual Ready, Recording, Saved, transcribing, recent transcript/audio, Transcripts, Settings, onboarding, and edge-case PNGs in `preview/`:
 
 ```sh
 BUILD_DIR="$PWD/build" ./build.sh
