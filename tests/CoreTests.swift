@@ -151,7 +151,7 @@ enum CoreTests {
         for message in ["Could not save microphone audio: ENOSPC", "No space left on device", "Could not finalize WAV (errno 28)", "NSCocoaErrorDomain Code=640"] {
             check(Core.friendlyError(message).hasPrefix("Your disk is full."), "disk full priority: \(message)")
         }
-        check(Core.friendlyError("App closed unexpectedly").hasPrefix("Nosy closed before this lecture finished."), "crash friendly error")
+        check(Core.friendlyError("App closed unexpectedly").hasPrefix("Nosy closed before this recording finished."), "crash friendly error")
         check(Core.friendlyError("Quit before transcription").hasPrefix("Nosy quit before transcription finished."), "quit friendly error")
         check(Core.friendlyError(" \nUnexpected detail\t ") == "Unexpected detail", "unknown error trimmed")
         check(Core.friendlyError("  " + String(repeating: "é", count: 200) + "\n") == String(repeating: "é", count: 160), "unknown error capped by characters")

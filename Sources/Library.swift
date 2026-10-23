@@ -265,7 +265,7 @@ struct LibraryView: View {
                             ForEach(group.items) { item in row(item).id(item.url) }
                         }
                         if library.grouped.isEmpty {
-                            Text(library.query.isEmpty ? "No transcripts yet.\nRecord a lecture and it shows up here." : "Nothing matches “\(library.query)”.")
+                            Text(library.query.isEmpty ? "No transcripts yet.\nRecord a session in a folder and it shows up here." : "Nothing matches “\(library.query)”.")
                                 .font(Theme.text(12.5)).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity).padding(.top, 40)
                         }

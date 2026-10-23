@@ -33,11 +33,27 @@ import Foundation
             "immune": ["thymocyte", "Notch ligand", "pre-T-cell receptor", "T-cell receptor", "CD4", "IT", "SO", "shared marker"],
             "other": ["shared marker", "Notch ligand"]
         ], subjectPacks: ["biology": ["immune", "other", "stem-core"]])
-        check(SubjectCatalog.guess("MBB326") == ["biology"], "compact course prefix")
+        check(SubjectCatalog.guess("MBB322") == ["biology"], "MBB folder name guesses Biology")
+        check(SubjectCatalog.guess("Biochemistry") == ["biology"], "Biochemistry aliases into Biology")
+        check(SubjectCatalog.guess("CHEM 233") == ["chemistry"], "course code guesses Chemistry")
+        check(SubjectCatalog.guess("CPSC 110") == ["computer-science"], "course code guesses Computer Science")
+        check(SubjectCatalog.guess("Team sync") == ["meetings-work"], "meeting keywords guess Meetings & Work")
+        check(SubjectCatalog.guess("Random") == ["general"], "unknown folder name guesses General")
+        for (name, expected) in [("PHYS 101", "physics"), ("STAT 200", "math-statistics"),
+                                 ("HSCI 210", "health-medicine"), ("PSYC 100", "psychology"),
+                                 ("Business & Economics", "meetings-work"), ("Engineering", "general")] {
+            check(SubjectCatalog.guess(name) == [expected], "Auto guesses " + name + " correctly")
+        }
+        check(SubjectCatalog.subjects.map(\.name) == ["Biology", "Chemistry", "Physics", "Computer Science", "Math & Statistics", "Health & Medicine", "Psychology", "Meetings & Work"],
+              "subject catalog has the requested eight options")
+        for keyword in ["standup", "1:1", "client", "interview", "review", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] {
+            check(SubjectCatalog.guess(keyword) == ["meetings-work"], "meeting keyword " + keyword + " guesses Meetings & Work")
+        }
         check(SubjectCatalog.guess("Computer Science 110") == ["computer-science"], "full subject title")
-        check(SubjectCatalog.guess("Week 3 discussion").isEmpty, "no substring CS guess")
+        check(SubjectCatalog.guess("Week 3 discussion") == ["general"], "unknown names do not get a substring CS guess")
         check(SubjectSettings(subject: "chemistry").resolved(course: "MBB 326") == ["chemistry"], "manual wins")
-        check(SubjectSettings(subject: "off").resolved(course: "MBB326").isEmpty, "custom only")
+        check(SubjectSettings(subject: "general").resolved(course: "MBB322").isEmpty, "General disables subject packs")
+        check(SubjectSettings(subject: "auto").resolved(course: "Random") == ["general"], "Auto resolves unknown folders to General")
         let route = catalog.route(text: "thymocytes, Notch ligand, pre T cell receptor, CD4. it so gray alpha.", eligible: ["immune", "other", "stem-core"])
         check(route.selected == ["immune"], "audited route with distinct markers")
         check(route.distinct["immune"] == 4, "longest phrase owns overlap")
@@ -66,19 +82,36 @@ import Foundation
         try Vocabulary.remember("thymocyte", folder: folder)
         try Vocabulary.remember("thymocyte", folder: folder)
         let remembered = try String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8)
-        check(remembered == "thymocyte\nheterochromatin\n", "corrections prepend once in captured course folder")
+        check(remembered == "thymocyte\nheterochromatin\n", "corrections prepend once in captured folder")
         let initial = try SubjectSettings.load(folder: folder)
-        check(initial.subject == "auto" && initial.isEnabled, "courses without a choice default to Auto and enable subject vocabulary")
+        check(initial.subject == "auto" && initial.isEnabled, "folders without a choice default to Auto and enable subject vocabulary")
         UserDefaults.standard.setVolatileDomain(["smarterVocabulary": false], forName: UserDefaults.argumentDomain)
-        check((try? SubjectSettings.load(folder: folder))?.isEnabled == true, "obsolete global off cannot override per-course Auto")
+        check((try? SubjectSettings.load(folder: folder))?.isEnabled == true, "obsolete global off cannot override folder Auto")
         let settings = SubjectSettings(subject: "biology", additionalSubject: "chemistry")
         try settings.save(folder: folder)
         let loaded = try SubjectSettings.load(folder: folder)
         check(loaded == settings, "explicit legacy subject and secondary choice survive round trip")
         check(loaded.isEnabled, "explicit subject enables vocabulary")
-        try SubjectSettings(subject: "off").save(folder: folder)
+        try SubjectSettings(subject: "general").save(folder: folder)
         let disabledSettings = try SubjectSettings.load(folder: folder)
-        check(!disabledSettings.isEnabled && disabledSettings.resolved(course: "Biology").isEmpty, "explicit None remains disabled")
+        check(!disabledSettings.isEnabled && disabledSettings.resolved(course: "Biology").isEmpty, "explicit General remains disabled")
+
+        func legacySettings(_ name: String, subject: String, additionalSubject: String = "") throws -> URL {
+            let directory = folder.appendingPathComponent(name, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let json = try JSONSerialization.data(withJSONObject: ["schemaVersion": 1, "subject": subject, "additionalSubject": additionalSubject])
+            try json.write(to: directory.appendingPathComponent("vocabulary.json"))
+            return directory
+        }
+        let oldBiochemistry = try SubjectSettings.load(folder: legacySettings("legacy-biochemistry", subject: "biochemistry"))
+        check(oldBiochemistry.subject == "biology", "Biochemistry setting migrates to Biology")
+        let oldBusiness = try SubjectSettings.load(folder: legacySettings("legacy-business", subject: "business-economics", additionalSubject: "biochemistry"))
+        check(oldBusiness.subject == "meetings-work" && oldBusiness.additionalSubject == "biology", "Business & Economics and Biochemistry settings migrate to Meetings & Work and Biology")
+        let oldNoneFolder = try legacySettings("legacy-none", subject: "off")
+        let oldNone = try SubjectSettings.load(folder: oldNoneFolder)
+        check(oldNone.subject == "general" && !oldNone.isEnabled, "old None setting migrates to General")
+        let rewritten = try JSONSerialization.jsonObject(with: Data(contentsOf: oldNoneFolder.appendingPathComponent("vocabulary.json"))) as! [String: Any]
+        check(rewritten["subject"] as? String == "general", "migrated folder setting is saved in canonical form")
         try Data("{\"schemaVersion\":99,\"subject\":\"biology\",\"additionalSubject\":\"\"}".utf8).write(to: folder.appendingPathComponent("vocabulary.json"))
         do { _ = try SubjectSettings.load(folder: folder); fatalError("accepted unsupported settings") } catch { count += 1 }
         let bytes = Set((UInt8(0)...127).map { Data([$0]) })
@@ -93,7 +126,7 @@ import Foundation
         let disabled = try VocabularyRefinement.refine(original: original + "\n", data: data, catalog: small, subjects: ["biology"], userTerms: [], substitute: false)
         check(disabled.edits.isEmpty, "internal ablation switch")
         let resources = SubjectCatalog(directory: URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appendingPathComponent("Resources/Vocabulary"))
-        check(resources.subjectPacks.count == 10 && resources.packs.count == 49, "all exported subjects and packs load")
+        check(resources.subjectPacks.count == 8 && resources.packs.count == 49, "all current subject groups and packs load")
         print("VOCABULARY PASS: \(count) assertions")
     }
 }

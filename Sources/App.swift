@@ -26,7 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let model = AppModel.shared
         guard model.working else { return .terminateNow }
         let alert = NSAlert()
-        alert.messageText = model.recording ? "A lecture is still recording. Quit anyway?" : "A lecture is still transcribing. Quit anyway?"
+        alert.messageText = model.recording ? "A recording is still in progress. Quit anyway?" : "A recording is still transcribing. Quit anyway?"
         alert.informativeText = "Your audio is kept, so you can transcribe it the next time you open Nosy."
         // Cancel is the default so a stray Return never ends a lecture.
         let quit = alert.addButton(withTitle: "Quit")
@@ -213,7 +213,7 @@ struct MainView: View {
         }
         if !model.recording, let record = model.recovery.first {
             Banner(symbol: "arrow.counterclockwise", tint: Theme.amber,
-                   text: "Unfinished lecture: \(record.lecture) · \(record.session), \(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min"
+                   text: "Unfinished recording: \(record.lecture) · \(record.session), \(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min"
                     + (model.recovery.count > 1 ? " (+\(model.recovery.count - 1) more)" : "")) {
                 HStack(spacing: 14) {
                     Button("Transcribe now") { model.retry(record) }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
@@ -252,19 +252,19 @@ struct MainView: View {
     private var fields: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                Text("Course").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Text("Folder").font(Theme.text(13)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 4)
                 LecturePicker(model: model)
             }
             .padding(.horizontal, 14).frame(height: 41)
             if model.selectedLecture == "__new__" {
-                TextField("", text: $model.newLecture, prompt: Text("Name your course").foregroundStyle(Theme.faint))
+                TextField("", text: $model.newLecture, prompt: Text("Name your folder").foregroundStyle(Theme.faint))
                     .textFieldStyle(.plain)
                     .font(Theme.mono(13)).foregroundStyle(Theme.ink)
                     .focused($focus, equals: .lecture)
                     .onSubmit { focus = .session }
                     .padding(.horizontal, 14).padding(.bottom, 11)
-                    .accessibilityLabel("New course name")
+                    .accessibilityLabel("New folder name")
                     .transition(.soft(reduceMotion))
             }
             Rectangle().fill(Theme.line).frame(height: 1)
@@ -428,10 +428,10 @@ private struct LecturePicker: View {
                 Button(lecture) { model.selectedLecture = lecture }
             }
             if !model.lectures.isEmpty { Divider() }
-            Button("New lecture…") { model.selectedLecture = "__new__" }
+            Button("New folder…") { model.selectedLecture = "__new__" }
         } label: {
             HStack {
-                Text(model.selectedLecture == "__new__" ? "New lecture" : model.selectedLecture)
+                Text(model.selectedLecture == "__new__" ? "New folder" : model.selectedLecture)
                     .foregroundStyle(model.selectedLecture == "__new__" ? Theme.muted : Theme.ink)
                     .lineLimit(1)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
@@ -449,8 +449,8 @@ private struct LecturePicker: View {
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
         }
-        .accessibilityLabel("Course")
-        .accessibilityValue(model.selectedLecture == "__new__" ? "New lecture" : model.selectedLecture)
+        .accessibilityLabel("Folder")
+        .accessibilityValue(model.selectedLecture == "__new__" ? "New folder" : model.selectedLecture)
     }
 }
 

@@ -315,7 +315,7 @@ enum Core {
             return "Nosy couldn't record from your microphone. Check your input and try again — your saved audio is safe."
         }
         if text.contains("app closed unexpectedly") {
-            return "Nosy closed before this lecture finished. Your audio is safe — click Retry to transcribe it."
+            return "Nosy closed before this recording finished. Your audio is safe — click Retry to transcribe it."
         }
         if text.contains("quit before transcription") {
             return "Nosy quit before transcription finished. Your audio is safe — click Retry."
@@ -330,7 +330,7 @@ enum Core {
         }))
         let result = String(collapseWhitespace(replaced).prefix(80)).trimmingCharacters(in: .whitespaces)
         guard !result.isEmpty, result.contains(where: { $0 != "." }) else {
-            throw LectureError.message("Enter a lecture and session name; names cannot be empty or only dots.")
+            throw LectureError.message("Enter a folder and session name; names cannot be empty or only dots.")
         }
         return result
     }

@@ -55,10 +55,10 @@ enum UITests {
         check(try String(contentsOf: first, encoding: .utf8) == "Keep this in the original folder", "Folder changes save to captured paths")
         model.selectedLecture = "MBB322"
         check(model.vocabularySubject == "Biology", "Ready resolves the configured subject")
-        try SubjectSettings(subject: "off").save(folder: folder)
-        check(model.vocabularySubject == "None", "Subject off is None")
+        try SubjectSettings(subject: "general").save(folder: folder)
+        check(model.vocabularySubject == "General", "General disables subject vocabulary")
         // Rapid edits coalesce; dismissal flushes the latest value to the captured
-        // course even if the Ready window has since selected another course.
+        // folder even if the Ready window has since selected another folder.
         var writes: [(String, SubjectSettings?)] = []
         let draft = VocabularyDraft(lecture: "MBB322", text: "") { text, settings in
             writes.append((text, settings))
@@ -85,18 +85,18 @@ enum UITests {
         retained.flush()
         check(!retained.hasChanges && retained.saveError == nil, "retained drafts can retry")
         var repairedSettings: SubjectSettings?
-        let repair = VocabularyDraft(lecture: "MBB322", text: "", subjects: SubjectSettings(subject: "off"), settingsError: "Invalid settings") { _, settings in
+        let repair = VocabularyDraft(lecture: "MBB322", text: "", subjects: SubjectSettings(subject: "general"), settingsError: "Invalid settings") { _, settings in
             repairedSettings = settings
         }
-        repair.selectSubject("off")
+        repair.selectSubject("general")
         repair.flush()
-        check(repairedSettings?.subject == "off" && repair.settingsError == nil, "selecting None repairs settings even when the safe fallback was already off")
+        check(repairedSettings?.subject == "general" && repair.settingsError == nil, "selecting General repairs settings when it is already selected")
         let captured = VocabularyDraft(lecture: "MBB322", folder: folder, didSave: {})
         model.selectedLecture = "CHEM281"
         captured.text = "  ATP, NADH\n"
         captured.flush()
-        check(try String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8) == captured.text, "close writes exact text into the original course")
-        check(!FileManager.default.fileExists(atPath: paths.lectureFolder("CHEM281").appendingPathComponent("vocab.txt").path), "switching courses cannot redirect a pending save")
+        check(try String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8) == captured.text, "close writes exact text into the original folder")
+        check(!FileManager.default.fileExists(atPath: paths.lectureFolder("CHEM281").appendingPathComponent("vocab.txt").path), "switching folders cannot redirect a pending save")
         model.selectedLecture = "MBB322"
         model.configurePreview()
         check(model.inputName == "MacBook Pro Microphone", "Idle mic has no routing or dB suffix")

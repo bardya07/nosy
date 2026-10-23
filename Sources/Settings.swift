@@ -35,7 +35,7 @@ struct SettingsView: View {
                         Button("Show in Finder") { model.revealTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     }
-                    note("Each lecture gets its own folder. Add a vocab.txt to a lecture's folder to teach Nosy its terms.")
+                    note("Each folder groups its transcripts. Add a vocab.txt inside a folder to teach Nosy its terms.")
                 }
             }
             section("Audio") {
@@ -68,7 +68,7 @@ struct SettingsView: View {
                             Text("Never").tag(0)
                         }
                     }
-                    note("Nosy stops your Mac from dozing off while it works, but closing the lid still sleeps it — keep the lid open during lectures. You'll be warned if the mic goes quiet.")
+                    note("Nosy stops your Mac from dozing off while it works, but closing the lid still sleeps it — keep the lid open while recording. You'll be warned if the mic goes quiet.")
                 }
             }
         }
