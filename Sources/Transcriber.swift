@@ -112,7 +112,7 @@ enum Transcriber {
             try record.save(in: paths)
             let wav = try AudioFiles.decodeToWAV(id: record.id, paths: paths)
             if let warning = paths.dependencyWarning { throw LectureError.message(warning) }
-            guard let executable = paths.whisper else { throw LectureError.message("whisper-cli is missing. Audio is kept; install whisper.cpp and Retry.") }
+            guard let executable = paths.whisper else { throw LectureError.message(Core.missingEngineMessage) }
             let base = paths.audio.appendingPathComponent(".whisper-\(record.id)-\(UUID().uuidString)")
             let stderrURL = base.appendingPathExtension("stderr")
             let textURL = base.appendingPathExtension("txt")

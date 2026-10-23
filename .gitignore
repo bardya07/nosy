@@ -1,6 +1,8 @@
 build/
+dist/
 .build/
 .swiftpm/
+vendor/
 *.app
 *.dSYM/
 *.o
