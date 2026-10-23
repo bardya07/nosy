@@ -501,11 +501,11 @@ private struct LecturePicker: View {
             .font(Theme.mono(13))
             .brightness(hovering ? -0.06 : 0)
             .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
-        .accessibilityElement(children: .combine)
         .onHover { inside in
             if inside { model.refreshLectures() }
             withAnimation(Motion.hover) { hovering = inside }
