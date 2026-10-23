@@ -2,7 +2,8 @@ import SwiftUI
 import AppKit
 
 @MainActor
-final class VocabularyDraft: ObservableObject {
+final class VocabularyDraft: ObservableObject, Identifiable {
+    let id = UUID()
     let lecture: String
     @Published var text: String { didSet { if text != oldValue { scheduleSave() } } }
     @Published var subjects: SubjectSettings {

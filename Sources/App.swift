@@ -364,7 +364,9 @@ struct FieldLabel: View {
 // replaces unsaved text with the older file on disk.
 private struct VocabularyButton: View {
     @ObservedObject var model: AppModel
-    @State private var open = false
+    // One optional item drives presentation, so the popover content always receives
+    // the draft itself. A separate Bool plus an optional draft let the first
+    // presentation render before the draft arrived, leaving an empty bubble.
     @State private var draft: VocabularyDraft?
     @State private var drafts: [URL: VocabularyDraft] = [:]
     var body: some View {
@@ -380,7 +382,6 @@ private struct VocabularyButton: View {
                 drafts[url] = loaded
                 draft = loaded
             }
-            open = true
         } label: {
             HStack {
                 Text("Vocabulary").font(Theme.text(13)).foregroundStyle(Theme.muted)
@@ -393,10 +394,8 @@ private struct VocabularyButton: View {
         }
         .buttonStyle(InsetButtonStyle())
         .disabled(model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .popover(isPresented: $open, arrowEdge: .bottom) {
-            if let draft {
-                VocabularyEditor(draft: draft) { open = false }
-            }
+        .popover(item: $draft, arrowEdge: .bottom) { draft in
+            VocabularyEditor(draft: draft) { self.draft = nil }
         }
     }
 }
