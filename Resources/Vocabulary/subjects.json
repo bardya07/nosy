@@ -1,0 +1,105 @@
+{
+  "Biology": [
+    "anatomy",
+    "biochem-metabolism",
+    "biochem-methods",
+    "cell-bio",
+    "ecology-evolution",
+    "genetics",
+    "immunology",
+    "microbiology",
+    "molecular-bio",
+    "neurobio",
+    "physiology",
+    "plant-bio",
+    "stem-core"
+  ],
+  "Chemistry": [
+    "analytical-chem",
+    "biochem-metabolism",
+    "biochem-methods",
+    "environmental-chem",
+    "inorganic-chem",
+    "materials-chem",
+    "organic-chem",
+    "physical-chem",
+    "stem-core"
+  ],
+  "Physics": [
+    "astro",
+    "condensed-matter",
+    "em",
+    "mechanics",
+    "nuclear-particle",
+    "optics-waves",
+    "quantum",
+    "thermo-stat",
+    "stem-core"
+  ],
+  "Computer Science": [
+    "algorithms",
+    "databases",
+    "graphics-numerical",
+    "ml-ai",
+    "pl",
+    "security",
+    "systems-networking",
+    "theory",
+    "stem-core"
+  ],
+  "Math & Statistics": [
+    "graphics-numerical",
+    "math-advanced",
+    "math-core",
+    "ml-ai",
+    "stats",
+    "stem-core"
+  ],
+  "Engineering": [
+    "condensed-matter",
+    "em",
+    "environmental-chem",
+    "graphics-numerical",
+    "materials-chem",
+    "math-core",
+    "mechanics",
+    "optics-waves",
+    "physical-chem",
+    "systems-networking",
+    "thermo-stat",
+    "stem-core"
+  ],
+  "Health & Medicine": [
+    "anatomy",
+    "biochem-metabolism",
+    "biochem-methods",
+    "cell-bio",
+    "genetics",
+    "immunology",
+    "microbiology",
+    "molecular-bio",
+    "neurobio",
+    "physiology",
+    "stem-core"
+  ],
+  "Business & Economics": [
+    "accounting",
+    "business-law-ethics",
+    "econometrics-stats",
+    "economics-macro",
+    "economics-micro",
+    "finance",
+    "information-systems-analytics",
+    "management-org-behaviour",
+    "marketing",
+    "operations-supply-chain",
+    "strategy-entrepreneurship"
+  ],
+  "Psychology": [
+    "neurobio",
+    "physiology",
+    "stats",
+    "stem-core"
+  ],
+  "Arts & Social Sciences": []
+}

@@ -1,0 +1,198 @@
+absolute advantage
+accounting profit
+adverse selection
+agglomeration
+allocative efficiency
+antitrust laws
+arbitrage
+asymmetric information
+average cost curve
+average total cost
+average variable cost
+barriers to entry
+behavioral economics
+Bertrand
+bilateral monopoly
+budget constraint
+budget line
+bundling
+cartel
+ceteris paribus
+circular flow diagram
+Coase theorem
+coinsurance
+collective bargaining
+collusion
+command economy
+command-and-control regulation
+common resources
+comparative advantage
+complements
+concentration ratio
+constant returns to scale
+constant-cost industry
+consumer equilibrium
+consumer surplus
+consumption budget constraint
+contractual rights
+core competency
+cost-plus regulation
+Cournot model
+cross-price elasticity of demand
+deadweight loss
+decreasing-cost industry
+demand curve
+demand deposits
+demand schedule
+derived demand
+differentiated products
+diminishing marginal productivity
+diminishing marginal utility
+diseconomies of scale
+division of labor
+double coincidence of wants
+dumping
+duopoly
+economic efficiency
+economic surplus
+economies of scale
+elastic demand
+elastic supply
+elasticity of savings
+equilibrium price
+equilibrium quantity
+excess demand
+excess supply
+excise tax
+exclusive dealing
+external costs
+externality
+factors of production
+fee-for-service
+financial capital market
+free rider
+fungible
+gain from trade
+game theory
+GATT
+Herfindahl-Hirschman Index
+HHI
+imperfect information
+imperfectly competitive
+implicit contract
+income effect
+income elasticity of demand
+increasing-cost industry
+indifference curve
+inelastic demand
+inelastic supply
+infant industry argument
+inferior good
+intellectual property
+intertemporal choices
+intertemporal decision making
+intra-industry trade
+invisible hand
+kinked demand curve
+labor-leisure budget constraint
+labor-leisure diagram
+law of demand
+law of diminishing marginal product
+law of diminishing marginal utility
+law of diminishing returns
+law of supply
+leviathan effect
+long-run average cost curve
+long-run equilibrium
+loss aversion
+LRAC
+marginal analysis
+marginal benefits
+marginal cost
+marginal cost of labor
+marginal product
+marginal rate of substitution
+marginal revenue
+marginal utility
+market failure
+market structure
+marketable permit program
+maximizing utility
+median voter theory
+monopolistic competition
+monopoly
+monopsony
+moral hazard
+Nash equilibrium
+natural monopoly
+negative externality
+non-rival
+nonexcludable
+normal good
+normative statements
+oligopoly
+opportunity cost
+opportunity set
+perfect competition
+perfect elasticity
+perfect inelasticity
+perfectly competitive firm
+perfectly elastic
+pollution charge
+pork-barrel spending
+poverty trap
+PPF
+predatory pricing
+price cap regulation
+price ceiling
+price elasticity of demand
+price elasticity of supply
+price floor
+price taker
+prisoner's dilemma
+private benefits
+private rates of return
+producer surplus
+product differentiation
+production function
+production possibilities frontier
+progressive tax
+proportional tax
+protectionism
+public good
+quintiles
+race to the bottom
+rational ignorance
+real options
+regressive tax
+regulatory capture
+relative wage coordination argument
+restrictive practices
+Rubin causal model
+securitization
+short-run average cost curves
+social benefits
+social costs
+social rate of return
+social surplus
+spillovers
+SRAC
+Stackelberg
+straight-line demand curve
+substitution effect
+sunk costs
+supply curve
+supply schedule
+tariff
+tax incidence
+the law of increasing opportunity cost
+thick market
+thin market
+total surplus
+total utility
+unit of account
+usury laws
+utility-maximizing choice
+value chain
+voting cycle
+wage elasticity of labor supply

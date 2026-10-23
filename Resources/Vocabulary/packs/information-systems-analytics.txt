@@ -1,0 +1,254 @@
+A/B testing
+ACID
+advanced encryption standard
+adversarial debiasing
+AES
+Agile Manifesto
+AI
+API
+application programming interface
+artificial intelligence
+asymmetric encryption
+augmented reality
+B-tree index
+bare metal server
+BI
+bitmap index
+blockchain
+BPI
+BPM
+BPO
+BPR
+BRD
+brute-force attack
+buffer overflow
+business intelligence
+business process improvement
+business process management
+business process outsourcing
+business process reengineering
+business requirements document
+California Consumer Privacy Act
+CCPA
+CEH
+Certified Ethical Hacker
+CIA triad
+CIDR
+CISM
+CISSP
+classless inter-domain routing
+client/server architecture
+cloud computing
+COBIT
+CRM
+cross-site scripting
+cryptographic key
+cryptography
+customer relationship management
+cyber espionage
+dark patterns
+data dictionary
+data flow diagram
+data governance
+data independence
+data integrity
+data interoperability
+data lake
+data localization
+data minimization
+data mining
+data normalization
+data protection impact assessment
+data provenance
+data redundancy
+data warehouse
+Database as a Service
+database management system
+database schema
+DBaaS
+DBMS
+DDoS
+de-identification
+decision support system
+defense in depth
+denormalization
+descriptive analytics
+DFD
+diagnostic analytics
+digital signature
+DIKW pyramid
+distributed denial-of-service
+DNS
+Domain Name System
+DPIA
+DSS
+dynamic IP address
+EIS
+enterprise resource planning
+entity relationship diagram
+ERD
+ERP
+ETL
+executive information system
+extract-transform-load
+extreme programming
+FAIS
+federated learning
+fileless malware
+Firewall as a Service
+FISMA
+foreign key
+functional area information system
+functional dependency
+FWaaS
+GDPR
+General Data Protection Regulation
+GLIS
+global logistics information system
+global supply chain management
+Gorry and Scott Morton framework
+GSCM
+hash index
+hashing
+HCI
+homomorphic encryption
+hot site storage
+HRIS
+HTTP
+HTTPS
+Human Resources Information System
+human-computer interaction
+human-in-the-loop system
+hybrid cloud
+Hypertext Transfer Protocol
+IaaS
+IDPS
+IDS
+Industrial Internet of Things
+Industry 4.0
+information security management system
+information security risk management
+Information Technology Infrastructure Library
+Infrastructure as a Service
+Internet of Things
+Internet Protocol Security
+interoperability
+IoT
+IPS
+IPsec
+IPv4
+IPv6
+ISACA
+ISMS
+ISO/IEC 27001
+ISO/IEC 27701
+ISRM
+ITIL
+k-means
+Kanban
+keylogger
+least privilege principle
+machine learning
+man-in-the-middle attack
+management information system
+master data
+McKinsey 7-S Framework
+media access control address
+MFA
+MIS
+NAS
+natural language processing
+network-attached storage
+neural network
+NIST
+NoSQL
+NumPy
+object-oriented database management system
+OODBMS
+operational technology
+orphaned record
+OWASP Secure Coding Practices
+PaaS
+packet sniffer
+Pandas
+Payment Card Industry Data Security Standard
+PCI DSS
+peer-to-peer architecture
+Personal Information Protection and Electronic Documents Act
+phishing
+PIMS
+PIPEDA
+Platform as a Service
+PMBOK
+PMO
+point-of-sale system
+prescriptive analytics
+pretexting
+primary key
+PRINCE2
+Privacy by Design
+privacy information management system
+Project Management Body of Knowledge
+project management office
+ransomware
+RBAC
+RDBMS
+referential constraint
+relational database
+requirements traceability matrix
+risk-based authentication
+Robert Anthony framework
+role-based access control
+rootkit
+RSA encryption
+RTM
+SaaS
+SAN
+SCM
+scrum
+SDLC
+SDN
+SECaaS
+Secure Sockets Layer
+Security as a Service
+security information and event management
+semistructured data
+service-level agreement
+SFIA
+SIEM
+SLA
+social engineering
+Software as a Service
+software development life cycle
+software-defined network
+SQL
+SQL injection
+SSL
+storage-area network
+Structured Query Language
+subnet mask
+supply chain management
+symmetric encryption
+TaaS
+TCP/IP
+Testing as a Service
+TLS
+TOGAF
+TPS
+transaction processing system
+Transport Layer Security
+UML
+user acceptance testing
+virtual private network
+virtual reality
+virtualization
+VPN
+WBS
+WCAG
+web content accessibility guidelines
+web scraping
+work breakdown structure
+XP
+XSS
+Zachman Framework
+zero trust

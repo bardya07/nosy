@@ -571,8 +571,8 @@ final class AppModel: ObservableObject {
     func vocabulary(for lecture: String) -> String {
         vocabularyURL(for: lecture).flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? ""
     }
-    func saveVocabulary(_ text: String, for lecture: String) {
-        guard let url = vocabularyURL(for: lecture) else { return }
+    @discardableResult func saveVocabulary(_ text: String, for lecture: String, settings: SubjectSettings? = nil) -> Bool {
+        guard let url = vocabularyURL(for: lecture) else { return false }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -580,8 +580,10 @@ final class AppModel: ObservableObject {
             } else {
                 try Data(text.utf8).write(to: url, options: .atomic)
             }
+            if let settings { try settings.save(folder: url.deletingLastPathComponent()) }
             refreshLectures()
-        } catch { showError(error.localizedDescription) }
+            return true
+        } catch { showError(error.localizedDescription); return false }
     }
 
     // MARK: Session, inputs, folders

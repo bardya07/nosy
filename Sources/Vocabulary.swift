@@ -4,9 +4,8 @@ import Foundation
 enum Vocabulary {
     static let tokenBudget = 160
 
-    static func prompt(_ text: String, model: URL) -> (text: String, tokens: Int)? {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let data = try? Data(contentsOf: model, options: .mappedIfSafe) else { return nil }
+    static func modelVocabulary(_ model: URL) -> Set<Data>? {
+        guard let data = try? Data(contentsOf: model, options: .mappedIfSafe) else { return nil }
         var offset = 0
         func integer() -> Int? {
             guard offset <= data.count - 4 else { return nil }
@@ -25,10 +24,20 @@ enum Vocabulary {
             vocabulary.insert(data.subdata(in: offset..<(offset + length)))
             offset += length
         }
-        return prompt(text, vocabulary: vocabulary)
+        return vocabulary
     }
 
+    static func entries(_ text: String) -> [String] {
+        text.split(whereSeparator: { $0 == "," || $0.isNewline }).map { Core.collapseWhitespace(String($0)) }.filter { !$0.isEmpty }
+    }
+    static func prompt(_ text: String, model: URL) -> (text: String, tokens: Int)? {
+        guard let vocabulary = modelVocabulary(model) else { return nil }
+        return prompt(entries(text), vocabulary: vocabulary)
+    }
     static func prompt(_ text: String, vocabulary: Set<Data>) -> (text: String, tokens: Int)? {
+        prompt(entries(text), vocabulary: vocabulary)
+    }
+    static func prompt(_ terms: [String], vocabulary: Set<Data>) -> (text: String, tokens: Int)? {
         // C-locale character classes, as used by whisper.cpp (including for UTF-8 terms).
         let pattern = #"'s|'t|'re|'ve|'m|'ll|'d| ?[A-Za-z]+| ?[0-9]+| ?[^ \t\n\r\f\vA-Za-z0-9]+|[ \t\n\r\f\v]+(?![^ \t\n\r\f\v])|[ \t\n\r\f\v]+"#
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
@@ -51,7 +60,7 @@ enum Vocabulary {
             return count
         }
         var result = "", tokens = 0
-        for term in text.split(whereSeparator: { $0 == "," || $0.isNewline }) {
+        for term in terms {
             let term = Core.collapseWhitespace(String(term))
             if term.isEmpty { continue }
             let candidate = result.isEmpty ? term : result + ", " + term

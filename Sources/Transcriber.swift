@@ -116,10 +116,16 @@ enum Transcriber {
             let base = paths.audio.appendingPathComponent(".whisper-\(record.id)-\(UUID().uuidString)")
             let stderrURL = base.appendingPathExtension("stderr")
             let textURL = base.appendingPathExtension("txt")
+            let jsonURL = base.appendingPathExtension("json")
+            let smart = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"] != nil || UserDefaults.standard.bool(forKey: "smarterVocabulary")
+            let stages = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map(VocabularyStages.internalFlags) ?? VocabularyStages()
+            let settings = (try? SubjectSettings.load(folder: paths.lectureFolder(record.lecture))) ?? SubjectSettings(subject: "off")
+            let userTerms = Vocabulary.entries((try? String(contentsOf: paths.lectureFolder(record.lecture).appendingPathComponent("vocab.txt"), encoding: .utf8)) ?? "")
             let louderURL = base.appendingPathExtension("wav")
             defer {
                 try? FileManager.default.removeItem(at: stderrURL)
                 try? FileManager.default.removeItem(at: textURL)
+                try? FileManager.default.removeItem(at: jsonURL)
                 try? FileManager.default.removeItem(at: louderURL)
             }
             let input = (try? AudioFiles.boosted(wav, to: louderURL)) ?? wav
@@ -132,6 +138,7 @@ enum Transcriber {
             process.qualityOfService = .utility
             process.executableURL = executable
             process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture)
+            if smart { process.arguments! += ["-ojf"] }
             process.standardOutput = FileHandle.nullDevice
             let stderrPipe = Pipe()
             defer {
@@ -156,7 +163,13 @@ enum Transcriber {
                 let detail = String(decoding: try tail.readToEnd() ?? Data(), as: UTF8.self)
                 throw LectureError.message("whisper-cli exited \(process.terminationStatus): \(String(detail.trimmingCharacters(in: .whitespacesAndNewlines).suffix(300)))")
             }
-            let text = try String(contentsOf: textURL, encoding: .utf8)
+            var text = try String(contentsOf: textURL, encoding: .utf8)
+            if smart {
+                do { text = try VocabularyRepair.run(json: jsonURL, original: text, wav: input, base: base, paths: paths,
+                                                     lecture: record.lecture, settings: settings, userTerms: userTerms, stages: stages, job: job) }
+                catch is CancellationError { throw CancellationError() }
+                catch { /* Optional refinement failure keeps the successful first pass. */ }
+            }
             let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text)
             try job.checkCancellation()
             let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)

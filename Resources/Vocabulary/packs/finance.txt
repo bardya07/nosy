@@ -1,0 +1,226 @@
+acid-test ratio
+after-tax cost of debt
+agency problem
+agency theory
+AICPA
+amortization
+annuity
+annuity due
+arithmetic average return
+audit committee
+Basel III
+bill of lading
+Black–Scholes formula
+bond laddering
+call option
+capital asset pricing model
+capital budgeting
+capital employed
+capital gain yield
+CAPM
+cash conversion cycle
+cash ratio
+certificate of deposit
+ceteris paribus
+commercial paper
+common-size
+comparable company analysis
+compensating balances
+compounding period
+comps
+comptroller
+constant perpetuity
+contra-asset
+conversion price
+conversion ratio
+core inflation index
+coupon rate
+credit risk
+CVA
+DCF
+DDM
+debenture
+debt-to-assets ratio
+debt-to-equity ratio
+deep discount bonds
+derivative
+discount bond
+discount window
+discounted cash flow
+discounted payback period
+dividend discount model
+DJIA
+Dow Jones Industrial Average
+DuPont method
+EAR
+earnings per share
+EBIT
+EBITDA
+EDGAR
+effective annual rate
+effective interest rate
+enterprise value
+EPS
+equity multiples
+ETFs
+EV
+exchange-traded funds
+factoring
+FASB
+FCF
+federal funds rate
+FICC
+financial distress
+financial intermediary
+financial leverage
+FINRA
+firm-specific risk
+Fisher effect
+fixed-income securities
+floating-rate bonds
+floor planning
+flotation costs
+forward contract
+FRED
+free cash flow
+future value
+futures contract
+FV
+GAAP
+GASB
+general obligation bonds
+geometric average return
+geometric mean
+GO
+Gordon growth model
+gross working capital
+growing perpetuity
+hedging
+holding period percentage return
+IFAC
+IFRS
+individual retirement accounts
+initial public offering
+interest rate risk
+interest tax shield
+internal rate of return
+intrinsic value
+investment grade
+IRAs
+IRR
+Jensen's alpha
+junk bonds
+LCR
+letter of credit
+levered equity
+LIBOR
+Liquidity Coverage Ratio
+management discussion and analysis
+market capitalization
+market risk premium
+marketable securities
+marking to market
+MD&A
+method of least squares
+MIRR
+mixed stream
+MM Proposition I
+MMMFs
+modified internal rate of return
+money market mutual funds
+mortgage bond
+municipal bonds
+munis
+mutually exclusive projects
+NASDAQ
+natural hedge
+NBER
+NCDs
+negotiable certificates of deposit
+net debt
+net present value
+Net Stable Funding Ratio
+net working capital
+nominal interest rate
+NOPAT
+NPV
+NSFR
+NYSE
+operating cycle
+option writer
+ordinary annuity
+OTC
+over-the-counter market
+P/B
+P/CF
+P/E
+P/E TTM
+P/S
+perpetuity
+PI
+precautionary motive
+precedent transaction analysis
+precedents
+preferred stock
+premium bond
+present value
+price-to-book ratio
+price-to-cash-flow ratio
+price-to-earnings ratio
+price-to-sales ratio
+prime rate
+pro forma
+profitability index
+put option
+PV
+quick ratio
+real options
+realized return
+replacement chain approach
+repo
+required rate of return
+revenue bonds
+revolvers
+revolving lines of credit
+Risk Management Association
+risk premium
+risk-free rate
+RMA
+S&P 500
+scenario analysis
+seasoned equity offering
+Secured Overnight Financing Rate
+SEO
+Sharpe ratio
+shelf registration
+SIPC
+SOFR
+SPACs
+speculative motive
+spot exchange rate
+spot rate
+strike price
+structured settlements
+systematic risk
+T-bills
+T-notes
+TIE
+time value of money
+times interest earned ratio
+trade credit
+trade-off theory
+transaction exposure
+transactional motive
+translation exposure
+translation risk
+Treasury bills
+Treasury notes
+tri-party repo
+TVM
+unlevered equity
+WACC
+weighted average cost of capital
+yield curve
+yield to maturity
+YTM
+zero-coupon bonds

@@ -279,11 +279,18 @@ struct LibraryView: View {
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
                 } else {
-                    ScrollView {
-                        TranscriptText(markdown: item.text)
-                            .padding(.horizontal, 28).padding(.vertical, 22)
-                            .frame(maxWidth: 640, alignment: .leading)
-                            .frame(maxWidth: .infinity)
+                    FixWordView(markdown: item.text) { range, replacement in
+                        let folder = item.url.deletingLastPathComponent()
+                        do {
+                            let vocab = folder.appendingPathComponent("vocab.txt")
+                            let existing = (try? String(contentsOf: vocab, encoding: .utf8)) ?? ""
+                            let terms = Vocabulary.entries(existing)
+                            if !terms.contains(replacement) {
+                                try Data((replacement + "\n" + existing).utf8).write(to: vocab, options: .atomic)
+                            }
+                            let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
+                            _ = library.save(corrected, to: item.url, paths: model.paths)
+                        } catch { NSAlert(error: error).runModal() }
                     }
                 }
                 if let audio = audioURL(for: item) {

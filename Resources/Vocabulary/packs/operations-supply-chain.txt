@@ -1,0 +1,263 @@
+3P
+8D
+A3 report
+acceptance number
+acceptance quality limit
+acceptance sampling
+acceptance sampling plan
+activity network diagram
+Advanced Product Quality Planning
+affinity diagram
+analysis of means
+andon board
+ANOM
+ANSI ACS X12
+AOQ
+AOQL
+appraisal cost
+APQP
+AQL
+ARL
+arrow diagram
+ASN
+assignable cause
+ATI
+attribute data
+autonomation
+average outgoing quality
+average outgoing quality limit
+average run lengths
+average sample number
+average total inspection
+baka-yoke
+balanced plant
+balanced scorecard
+balancing the line
+Baldrige award
+batch and queue
+BB
+Big Q, little q
+Black Belt
+c-chart
+CAD
+CAE
+capability maturity model
+capacity constraint resources
+CAR
+cause and effect diagram
+CE
+cellular manufacturing
+chain sampling plan
+changeover time
+CLCA
+closed-loop corrective action
+CMM
+common causes
+computer aided design
+computer aided engineering
+computer-aided manufacturing
+concurrent engineering
+conformity assessment
+constraints management
+consumer's risk
+continuous flow production
+continuous quality improvement
+continuous sampling plan
+control chart
+control limits
+control plan
+coordinate measuring machine
+COPQ
+COQ
+corrective action recommendation
+cost of poor quality
+cost of quality
+Cp
+Cpk index
+CQI
+CSM
+cumulative sum control chart
+customer-supplier model
+CUSUM
+cycle time
+d-chart
+demerit chart
+Deming cycle
+Design for Six Sigma
+design of experiments
+DFSS
+DMADV
+DMAIC
+Dodge-Romig sampling plans
+DoE
+EDI
+eight disciplines model
+eight wastes
+eighty-twenty
+electronic data interchange
+enterprise resource planning
+ERP
+flexible manufacturing system
+GLIS
+global logistics information system
+global supply chain management
+GSCM
+heijunka
+hoshin kanri
+integer programming
+ISO 14000
+ISO 14001
+ISO 19011
+ISO 26000
+ISO 9000
+ISO 9001
+jidoka
+JIT
+Juran trilogy
+just-in-time manufacturing
+Kaizen
+Kanban
+Kano model
+key process characteristic
+key product characteristic
+kitting
+LCL
+lean enterprise
+lean manufacturing
+level loading
+linear programming
+load-load
+lot tolerance percentage defective
+lower control limit
+LTPD
+manufacturing resource planning
+mass customization
+Master Black Belt
+material requirements planning
+MBB
+mean time between failures
+measurement uncertainty
+metrology
+MRP
+MRP II
+MTBF
+muda
+multivariate control chart
+Nagara system
+NCR
+nominal group technique
+nonconforming record
+nonconformity
+nondestructive testing
+nonvalue added
+OC curve
+OEE
+OEM
+one-piece flow
+one-touch exchange of dies
+operating characteristic curve
+original equipment manufacturer
+out-of-control process
+overall equipment effectiveness
+p-chart
+Pareto chart
+parts per million
+PDCA cycle
+PDPC
+plan-do-check-act cycle
+point kaizen
+Poisson distribution
+poka-yoke
+PPAP
+PPM
+prevention cost
+probability of rejection
+problem concentration diagram
+process capability
+process capability index
+process decision program chart
+process flow diagram
+process kaizen
+production part approval process
+production smoothing
+proportion chart
+pull system
+Q9000 series
+QA/QC
+QFD
+QMS
+quality assurance
+quality circle
+quality control
+quality function deployment
+quality loss function
+quality management system
+queue time
+quick changeover
+quincunx
+R-chart
+range chart
+red bead experiment
+rejection number
+RFID
+root cause analysis
+run chart
+S-chart
+S/N ratio
+sample standard deviation chart
+SCM
+SDWT
+Seiban
+self-directed work team
+seven tools of quality
+seven wastes
+Shainin System
+Shewhart cycle
+signal to noise ratio
+single-minute exchange of dies
+single-piece flow
+SIPOC diagram
+Six Sigma quality
+spaghetti diagram
+SPC
+special causes
+SQC
+SSCM
+standard in-process stock
+standard work
+statistical process control
+statistical quality control
+structural variation
+suboptimization
+supply chain management
+sustainable supply chain management
+system kaizen
+Taguchi Methods
+takt time
+theory of constraints
+throughput
+TOC
+total productive maintenance
+total quality control
+total quality management
+Toyota production system
+TPM
+TPS
+TQC
+TQM
+trend control chart
+TRIZ
+u-chart
+UCL
+upper control limit
+value analysis
+value engineering
+value stream loops
+value stream mapping
+variable data
+vital few, useful many
+voice of the customer
+waiting line models
+work in process
+x-bar chart
+zero defects
