@@ -130,7 +130,7 @@ args = (root/'arguments.txt').read_text().splitlines()
 assert args[args.index('--prompt')+1] == 'glycolysis, NADH phosphofructokinase, pyruvate ATP'
 assert args[args.index('-l')+1] == 'en' and int(args[args.index('-t')+1]) >= 4
 assert '--carry-initial-prompt' in args
-assert '-oj' in args, 'Marker sessions must request segment timestamp JSON'
+assert '-ojf' in args, 'Auto subject vocabulary must request timestamp and confidence JSON'
 assert 1 < int(args[args.index('-mc')+1]) <= 161
 if (pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])/'models/ggml-silero-v5.1.2.bin').exists():
     assert '--vad' in args and '-vm' in args
@@ -189,7 +189,7 @@ mode = 'AAC compression' if os.environ['NOSY_TEST_AAC'] == '1' else 'WAV preserv
 print('PIPELINE PASS: real Whisper, import 44.1 kHz stereo M4A, resampling, ' + mode + ', Retry from M4A, vocabulary, failure safety, unique markdown')
 PY
 if [[ -f "$NOSY_CPU_MARKER" ]]; then printf 'PIPELINE NOTE: Metal allocation failed in the restricted runner; real Whisper ran on CPU via the test CLI override.\n'; fi
-# Exercise the opt-in refinement path with real timestamp/confidence JSON.
+# Exercise refinement stage selection with real timestamp/confidence JSON.
 NOSY_VOCAB_STAGES=router,substitute NOSY_VOCABULARY_DIR="$PWD/Resources/Vocabulary" "$APP" --headless-transcribe "$ID"
 python3 - "$ID" <<'PY'
 import json, os, pathlib, sys

@@ -4,7 +4,7 @@ import SwiftUI
 @main
 @MainActor
 enum UITests {
-    static func main() throws {
+    static func main() async throws {
         _ = NSApplication.shared
         Snapshot.isRunning = true
         let root = URL(fileURLWithPath: "/private/tmp", isDirectory: true).appendingPathComponent("Nosy-ui-tests-\(UUID().uuidString)")
@@ -57,6 +57,47 @@ enum UITests {
         check(model.vocabularySubject == "Biology", "Ready resolves the configured subject")
         try SubjectSettings(subject: "off").save(folder: folder)
         check(model.vocabularySubject == "None", "Subject off is None")
+        // Rapid edits coalesce; dismissal flushes the latest value to the captured
+        // course even if the Ready window has since selected another course.
+        var writes: [(String, SubjectSettings?)] = []
+        let draft = VocabularyDraft(lecture: "MBB322", text: "") { text, settings in
+            writes.append((text, settings))
+        }
+        draft.text = "ATP"
+        draft.text = "ATP, NADH\n"
+        check(writes.isEmpty, "typing is debounced")
+        try await Task.sleep(for: .milliseconds(500))
+        check(writes.count == 1 && writes[0].0 == "ATP, NADH\n", "debounce saves the exact latest text once")
+        draft.text += "acetyl-CoA"
+        draft.subjects = SubjectSettings(subject: "chemistry")
+        draft.flush()
+        check(writes.count == 2 && writes.last?.0 == draft.text && writes.last?.1?.subject == "chemistry", "close flushes pending text and subject together")
+        try await Task.sleep(for: .milliseconds(450))
+        check(writes.count == 2 && !draft.hasChanges, "flushed debounce cannot write again")
+        var failWrite = true
+        let retained = VocabularyDraft(lecture: "MBB322", text: "") { _, _ in
+            if failWrite { throw LectureError.message("Test write failure") }
+        }
+        retained.text = "Keep this text"
+        retained.flush()
+        check(retained.hasChanges && retained.saveError != nil && retained.text == "Keep this text", "failed writes retain the dirty draft for reopening")
+        failWrite = false
+        retained.flush()
+        check(!retained.hasChanges && retained.saveError == nil, "retained drafts can retry")
+        var repairedSettings: SubjectSettings?
+        let repair = VocabularyDraft(lecture: "MBB322", text: "", subjects: SubjectSettings(subject: "off"), settingsError: "Invalid settings") { _, settings in
+            repairedSettings = settings
+        }
+        repair.selectSubject("off")
+        repair.flush()
+        check(repairedSettings?.subject == "off" && repair.settingsError == nil, "selecting None repairs settings even when the safe fallback was already off")
+        let captured = VocabularyDraft(lecture: "MBB322", folder: folder, didSave: {})
+        model.selectedLecture = "CHEM281"
+        captured.text = "  ATP, NADH\n"
+        captured.flush()
+        check(try String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8) == captured.text, "close writes exact text into the original course")
+        check(!FileManager.default.fileExists(atPath: paths.lectureFolder("CHEM281").appendingPathComponent("vocab.txt").path), "switching courses cannot redirect a pending save")
+        model.selectedLecture = "MBB322"
         model.configurePreview()
         check(model.inputName == "MacBook Pro Microphone", "Idle mic has no routing or dB suffix")
         check(!AudioInputs.isUserVisible(.init(id: "proxy", name: "CADefaultDeviceAggregate-45310-0")), "Hide the private CoreAudio proxy")

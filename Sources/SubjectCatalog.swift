@@ -4,7 +4,9 @@ struct SubjectSettings: Codable, Equatable, Sendable {
     var schemaVersion = 1
     // "auto", "off", or a stable subject ID. An explicit choice always wins.
     var subject = "auto"
+    // Read legacy secondary choices without discarding an existing course setting.
     var additionalSubject = ""
+    var isEnabled: Bool { subject != "off" }
 
     static func load(folder: URL) throws -> Self {
         let url = folder.appendingPathComponent("vocabulary.json")
@@ -13,7 +15,7 @@ struct SubjectSettings: Codable, Equatable, Sendable {
         guard settings.schemaVersion == 1,
               ["auto", "off"].contains(settings.subject) || SubjectCatalog.subjects.contains(where: { $0.id == settings.subject }),
               settings.additionalSubject.isEmpty || SubjectCatalog.subjects.contains(where: { $0.id == settings.additionalSubject }) else {
-            throw LectureError.message("Couldn't read this course's vocabulary settings. Choose a subject and save to repair them.")
+            throw LectureError.message("Couldn't read this course's vocabulary settings. Choose a subject to repair them.")
         }
         return settings
     }

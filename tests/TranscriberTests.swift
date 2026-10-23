@@ -43,7 +43,7 @@ private final class TerminationProbe: Process, @unchecked Sendable {
 enum TranscriberTests {
     static func main() async throws {
         // Keep test preferences process-local and independent of the user's Settings.
-        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
         let manager = FileManager.default
         let root = manager.temporaryDirectory.appendingPathComponent("nosy-transcriber-unit-\(UUID().uuidString)")
         defer { try? manager.removeItem(at: root) }
@@ -83,6 +83,7 @@ enum TranscriberTests {
 
         let folder = paths.lectureFolder("Biology")
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
+        try SubjectSettings(subject: "off").save(folder: folder)
         let vocab = folder.appendingPathComponent("vocab.txt")
         let base = root.appendingPathComponent("arguments")
         let wav = root.appendingPathComponent("input.wav")
@@ -188,7 +189,7 @@ enum TranscriberTests {
         let uncompressed = try await Transcriber.transcribe(record: record("keep-wav"), paths: paths)
         check(uncompressed.status == .done && manager.fileExists(atPath: paths.audioFile("keep-wav", "wav").path), "compression preference keeps WAV")
         check(!manager.fileExists(atPath: paths.audioFile("keep-wav", "m4a").path), "compression preference does not create M4A")
-        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
         var invalidAudio = try record("bad-compression")
         try manager.removeItem(at: paths.audioFile(invalidAudio.id, "pcm"))
         try Data("invalid WAV".utf8).write(to: paths.audioFile(invalidAudio.id, "wav"))
@@ -200,28 +201,35 @@ enum TranscriberTests {
         try installCLI(#"""
         base=''
         json=0
+        full=0
         while [[ $# -gt 0 ]]; do
             case "$1" in
                 -of) base="$2"; shift 2 ;;
-                -oj|-ojf) json=1; shift ;;
+                -ojf) json=1; full=1; shift ;;
+                -oj) json=1; shift ;;
                 *) shift ;;
             esac
         done
         [[ "$json" == 1 ]] || exit 91
+        [[ "$full" == "${NOSY_EXPECT_FULL_JSON:-0}" ]] || exit 92
         printf 'Cells use energy.\nATP supplies it.\n' > "$base.txt"
         printf '%s' '{"transcription":[{"text":"Cells use energy.","offsets":{"from":0,"to":4000},"tokens":[]},{"text":"ATP supplies it.","offsets":{"from":8000,"to":10000},"tokens":[]}]}' > "$base.json"
         """#)
         var markerRecord = try record("with-markers")
         markerRecord.markers = [SessionMarker(t: 7, label: "Exam hint"), SessionMarker(t: 10)]
         try markerRecord.save(in: paths)
-        for smart in [false, true] {
-            UserDefaults.standard.setVolatileDomain(["compressAudio": false, "smarterVocabulary": smart], forName: UserDefaults.argumentDomain)
+        for subject in ["off", "auto"] {
+            try SubjectSettings(subject: subject).save(folder: folder)
+            setenv("NOSY_EXPECT_FULL_JSON", subject == "off" ? "0" : "1", 1)
+            UserDefaults.standard.setVolatileDomain(["compressAudio": false, "smarterVocabulary": subject == "off"], forName: UserDefaults.argumentDomain)
             let marked = try await Transcriber.transcribe(record: SessionRecord.read(paths.audioFile(markerRecord.id, "json")), paths: paths)
             let text = try String(contentsOfFile: marked.transcriptPath!, encoding: .utf8)
             check(text.contains("## Transcript\n\nCells use energy.\n\n> [0:07] Exam hint\n\nATP supplies it.\n\n> [0:10] Marker\n"), "markers use Whisper times with and without vocabulary refinement")
             check(marked.markers == markerRecord.markers && marked.status == .done, "successful transcription and Retry preserve sidecar markers")
             check(try temporaryOutputs().isEmpty, "marker run cleans timestamp JSON")
         }
+        unsetenv("NOSY_EXPECT_FULL_JSON")
+        try SubjectSettings(subject: "off").save(folder: folder)
         // Missing timestamp output must preserve markers for Retry rather than dropping them.
         try installCLI(#"while [[ $# -gt 0 ]]; do if [[ "$1" == -of ]]; then printf 'Speech.\n' > "$2.txt"; fi; shift; done"#)
         do {
@@ -232,7 +240,7 @@ enum TranscriberTests {
         check(markerFailure.status == .failed && markerFailure.markers == markerRecord.markers, "timestamp failure preserves markers in sidecar")
         check(manager.fileExists(atPath: paths.audioFile(markerRecord.id, "wav").path), "timestamp failure preserves audio for Retry")
         check(try temporaryOutputs().isEmpty, "timestamp failure cleans temporary files")
-        UserDefaults.standard.setVolatileDomain(["compressAudio": true, "smarterVocabulary": false], forName: UserDefaults.argumentDomain)
+        UserDefaults.standard.setVolatileDomain(["compressAudio": true], forName: UserDefaults.argumentDomain)
 
         // Output exceeds the pipe capacity, ensuring the reader drains stderr while
         // Whisper is running and preserves the existing error tail on failure.

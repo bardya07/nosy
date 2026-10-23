@@ -192,10 +192,15 @@ enum Snapshot {
                 guard save(PreviewWindow { OnboardingView(model: model(.idle), setup: setup) }
                     .padding(36).background(PreviewBackdrop()), "setup-\(step).\(mode)") else { return 1 }
             }
-            guard save(VocabularyEditor(model: model(.idle), lecture: "MBB322", text: .constant(vocabulary),
-                subjects: .constant(SubjectSettings()), settingsError: nil, close: {})
-                .padding(36).background(PreviewBackdrop()), "vocabulary.\(mode)"),
-                save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
+            for expanded in [false, true] {
+                let draft = VocabularyDraft(lecture: "MBB322", text: "", write: { _, _ in })
+                guard save(VocabularyEditor(draft: draft, close: {}, expanded: expanded)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.panelBorder))
+                    .padding(36).background(PreviewBackdrop()),
+                    "vocabulary-\(expanded ? "expanded" : "collapsed").\(mode)") else { return 1 }
+            }
+            guard save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
                 .padding(36).background(PreviewBackdrop()), "library-minimum.\(mode)") else { return 1 }
             for phase in [AppPhase.idle, .recording, .done] {
                 guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,

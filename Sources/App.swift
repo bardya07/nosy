@@ -351,22 +351,26 @@ struct FieldLabel: View {
     }
 }
 
-// Per-lecture vocabulary: names, acronyms and terms Nosy should expect (saved as vocab.txt).
+// Drafts outlive a dismissed popover, including a failed write, so reopening never
+// replaces unsaved text with the older file on disk.
 private struct VocabularyButton: View {
     @ObservedObject var model: AppModel
     @State private var open = false
-    @State private var text = ""
-    @State private var lecture = ""
-    @State private var subjects = SubjectSettings()
-    @State private var settingsError: String?
+    @State private var draft: VocabularyDraft?
+    @State private var drafts: [URL: VocabularyDraft] = [:]
     var body: some View {
         Button {
-            lecture = model.lectureName
-            text = model.vocabulary(for: lecture)
-            do {
-                if let url = model.vocabularyURL(for: lecture) { subjects = try SubjectSettings.load(folder: url.deletingLastPathComponent()) }
-                settingsError = nil
-            } catch { subjects = SubjectSettings(subject: "off"); settingsError = error.localizedDescription }
+            let lecture = model.lectureName
+            guard let url = model.vocabularyURL(for: lecture) else { return }
+            if let retained = drafts[url], retained.hasChanges {
+                draft = retained
+            } else {
+                let loaded = VocabularyDraft(lecture: lecture, folder: url.deletingLastPathComponent()) {
+                    model.refreshLectures()
+                }
+                drafts[url] = loaded
+                draft = loaded
+            }
             open = true
         } label: {
             HStack {
@@ -381,75 +385,10 @@ private struct VocabularyButton: View {
         .buttonStyle(InsetButtonStyle())
         .disabled(model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
         .popover(isPresented: $open, arrowEdge: .bottom) {
-            VocabularyEditor(model: model, lecture: lecture, text: $text, subjects: $subjects,
-                             settingsError: settingsError) { open = false }
-        }
-    }
-}
-
-struct VocabularyEditor: View {
-    @ObservedObject var model: AppModel
-    let lecture: String
-    @Binding var text: String
-    @Binding var subjects: SubjectSettings
-    let settingsError: String?
-    var close: () -> Void
-    @AppStorage("smarterVocabulary") private var smarterVocabulary = false
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("\(lecture) vocabulary").font(Theme.display(15, .bold)).foregroundStyle(Theme.ink)
-            Picker("Subject", selection: $subjects.subject) {
-                Text("Auto").tag("auto")
-                Text("Custom vocabulary only").tag("off")
-                ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
-            }
-            if subjects.subject != "off" {
-                Picker("Also include", selection: $subjects.additionalSubject) {
-                    Text("None").tag("")
-                    ForEach(SubjectCatalog.subjects.filter { $0.id != subjects.subject }) { Text($0.name).tag($0.id) }
-                }
-            }
-            if let settingsError { Text(settingsError).font(Theme.text(11)).foregroundStyle(Theme.coral) }
-            if subjects.subject == "auto" {
-                let names = SubjectCatalog.subjects.filter { subjects.resolved(course: lecture).contains($0.id) }.map(\.name)
-                Text(names.isEmpty ? "Choose a subject if your course name gives no clues." : names.joined(separator: " + ") + " · guessed from course name")
-                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
-            }
-            if subjects.resolved(course: lecture).contains("arts-social-sciences") {
-                Text("Built-in vocabulary coming later; your terms still work.").font(Theme.text(11)).foregroundStyle(Theme.muted)
-            }
-            Text(smarterVocabulary
-                 ? "Subject vocabulary is on."
-                 : "Subject vocabulary is off. Enable Smarter vocabulary in Settings.")
-                .font(Theme.text(11)).foregroundStyle(Theme.muted)
-            if !Set(subjects.resolved(course: lecture)).isDisjoint(with: ["engineering", "health-medicine", "psychology"]) {
-                Text("Includes related STEM vocabulary; add specialist course terms below.").font(Theme.text(11)).foregroundStyle(Theme.muted)
-            }
-            Text("Names, acronyms and terms, separated by commas or new lines. Put your most useful terms first.")
-                .font(Theme.text(11.5)).foregroundStyle(Theme.muted).fixedSize(horizontal: false, vertical: true)
-            TextEditor(text: $text)
-                .accessibilityLabel("Custom vocabulary for \(lecture)")
-                .font(Theme.text(13))
-                .scrollContentBackground(.hidden)
-                .padding(8)
-                .frame(height: 120)
-                .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
-            HStack {
-                Spacer()
-                Button("Cancel") { close() }.buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") { if model.saveVocabulary(text, for: lecture, settings: subjects) { close() } }
-                    .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
-                    .keyboardShortcut("s", modifiers: .command)
+            if let draft {
+                VocabularyEditor(draft: draft) { open = false }
             }
         }
-        .font(Theme.text(13))
-        .foregroundStyle(Theme.ink)
-        .padding(16)
-        .frame(width: 340)
-        .background(WindowBackdrop())
-        .tint(Theme.accentText)
     }
 }
 
