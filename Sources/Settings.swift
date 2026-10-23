@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject var model: AppModel
     @AppStorage("remindAfterHours") private var remindAfterHours = 3
     @AppStorage("compressAudio") private var compressAudio = true
+    @AppStorage("smarterVocabulary") private var smarterVocabulary = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -26,6 +27,8 @@ struct SettingsView: View {
                         Button("Show in Finder") { model.revealTranscriptsFolder() }
                             .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     }
+                    Toggle("Smarter vocabulary (beta)", isOn: $smarterVocabulary)
+                    note("Checks uncertain spellings against your course vocabulary. Can make mistakes.")
                     note("Each lecture gets its own folder. Add a vocab.txt to a lecture's folder to teach Nosy its terms.")
                 }
             }

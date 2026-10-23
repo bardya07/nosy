@@ -9,7 +9,7 @@ An on-device lecture recorder and transcriber for Mac.
 
 - Record, pause, and resume lectures; queue transcription while recording another.
 - Search, edit, export, and play back recordings in the transcripts window.
-- Add custom vocabulary for each course.
+- Choose course subjects, add custom vocabulary, and correct selected words in transcripts.
 - Automatically boost quiet audio for transcription.
 - Transcription, volume boost, and audio compression run at background utility priority.
 - Transcription waits or pauses when the Mac is hot or on battery below 20%, then resumes automatically. Recording continues independently.
@@ -32,7 +32,11 @@ Download the DMG from [Releases](https://github.com/bardya07/nosy/releases), ope
 
 Open Nosy and download the Whisper large-v3-turbo model (about 1.6 GB) in the setup window. Allow microphone access to record. Choose a lecture and session, then start recording or drop an audio file onto the window.
 
-Use **Vocabulary** to add course terms, or put a `vocab.txt` in the course's transcript folder. Put the most useful terms first: Nosy fits complete terms into a 160-token prompt, reused across decoder windows without carrying decoded text. whisper.cpp omits this prompt during high-temperature fallback and the final short tail; see the [lecture validation](tests/vocabulary.md). Choose the transcript location and audio retention in Settings.
+Use **Vocabulary** to add course terms, or put a `vocab.txt` in the course's transcript folder. Put the most useful terms first: Nosy fits complete terms into a 160-token prompt, reused across decoder windows without carrying decoded text. whisper.cpp omits this prompt during high-temperature fallback and the final short tail; see the [lecture validation](tests/vocabulary.md). Subject choices are remembered in `vocabulary.json` beside that course's `vocab.txt`; Auto guesses from bounded course prefixes and subject names. Ten umbrellas and 49 plain word-list packs are bundled; Arts & Social Sciences is currently empty, and some other subjects have partial coverage.
+
+Enable **Smarter vocabulary (beta)** in Settings to refine eligible packs from the first pass and correct a few uncertain, close spellings. It defaults off. It uses cached phonetic/spelling retrieval and conservative substitutions, abstaining on short/ambiguous acronyms and letter/number changes. It preserves the baseline and accepted edit ledger locally under app support's `routing/`. No second audio pass or extra model is used. The two-lecture development evaluation fixed one additional spelling and none of the predeclared target errors; see [the ablation summary](tests/vocabulary-max.md).
+
+In the Transcripts window, select text and choose **Fix this word…** from its context menu. Saving changes that selection and prepends the corrected spelling to the course's `vocab.txt` for future transcriptions. Choose the transcript location and audio retention in Settings.
 
 ## Build from source
 
@@ -76,12 +80,6 @@ Unit tests use temporary fixtures and a mock transcription CLI, including checks
 
 See [SPEC.md](SPEC.md) for the historical development specification.
 
-## Roadmap
-
-Bigger STEM vocabulary support (packs in Resources/Vocabulary).
-
-The [vocabulary packs](Resources/Vocabulary/SOURCES.md) are development data and are not yet used by the app.
-
 ## License
 
-Nosy is [MIT licensed](LICENSE). Fonts and other third-party materials retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [vocabulary sources](Resources/Vocabulary/SOURCES.md).
+Nosy is [MIT licensed](LICENSE). Fonts and other third-party materials retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

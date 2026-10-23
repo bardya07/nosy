@@ -1,0 +1,1188 @@
+A2C
+A3C
+Abel means
+Abel summability
+Abel-Plana formula
+abelian functions
+AdaDelta
+AdaGrad
+Adam
+AdamW
+Airy functions
+Airy transform
+Airy's equation
+al-Salam-Chihara polynomials
+algebraic Lamé functions
+algebraic topology
+alpha
+AlphaGo
+ampere
+analytic continuation
+analytic function
+ANCOVA
+AND" Event
+Anger function
+anger-Weber functions
+angstrom
+annulus
+ANOVA
+antialiasing
+antiderivative
+aphelion
+arithmetic Fourier transform
+Arnoldi iteration
+Askey polynomials
+askey-Gasper inequality
+askey-Wilson class orthogonal polynomials
+askey-Wilson polynomials
+associated Anger-Weber function
+associated Hermite polynomials
+associated Laguerre functions
+associated Laguerre polynomials
+associated Legendre equation
+associated Legendre functions
+associated orthogonal polynomials
+asymptotic and order symbols
+asymptotic approximations and expansions
+asymptotic approximations of integrals
+asymptotic scale or sequence
+asymptotically semi-stable solution
+asymptotically stable solution
+asymptotically unstable solution
+atomic spectroscopy
+atto
+AUC
+autoencoder
+Avogadro constant
+backpropagation
+backpropagation through structure
+backpropagation through time
+backward recursion
+Bailey's bilateral summations
+bannai-Ito polynomials
+Barnes' beta integral
+Barnes' G-function
+Barnes' integral
+Bartky's transformation
+Bartlett test
+basic hypergeometric functions
+Basset's integral
+Bateman-type sums
+Bayes' theorem
+Bayesian analysis
+Bayesian computation
+Bayesian network models
+Bayesian networks
+Bayesian neural network
+Bayesian nonparametric models
+Bayesian optimization
+Bayesian programming
+becquerel
+Bell numbers
+Bellman equation
+Benjamini-Hochberg procedure
+Bernoulli monosplines
+Bernoulli numbers
+Bernoulli polynomials
+Bernoulli Trial
+Bernoulli's lemniscate
+bernstein-Szegő polynomials
+BERT
+Bessel eigenfunction expansion
+Bessel function
+Bessel polynomials
+Bessel transform
+Bessel's equation
+Bessel's integral
+beta
+BFGS
+BiCGSTAB
+biconfluent Heun equation
+big q-Jacobi polynomials
+bigram
+bilateral basic hypergeometric function
+bilateral hypergeometric function
+bilateral q-hypergeometric function
+Binet's formula
+BLEU
+BLEURT
+Bochner's theorem
+Bohr radius
+Bohr-Mollerup theorem
+Boltzmann constant
+Boltzmann machine
+Bonferroni correction
+BoolQ
+Borel summability
+Borel transform theory
+Bose-Einstein condensate
+Bose-Einstein integrals
+Bose-Einstein phase transition
+Boussinesq equation
+Bresenham's algorithm
+Breusch-Pagan test
+Bulirsch's elliptic integrals
+Bäcklund transformations
+candela
+cardinal function
+cardinal monosplines
+cardinal spline functions
+cardioid
+Carmichael numbers
+CAS
+case-based reasoning
+Casimir forces
+Casimir operator
+Casimir-Polder effect
+Catalan numbers
+Catalan's constant
+catenary
+Cauchy determinant
+Cauchy principal values
+Cauchy's integral formula
+Cauchy's theorem
+Cauchy-Riemann equations
+Cauchy-Schwarz inequality
+Cayley-Hamilton theorem
+CB
+CDF
+centi
+centimeter
+Cesàro means
+Cesàro summability
+character N-Gram F-score
+Chebyshev polynomials
+Chebyshev-series expansions
+chi
+Cholesky decomposition
+Christoffel coefficients (or numbers)
+Christoffel-Darboux formula
+chu-Vandermonde identity
+Clairaut's theorem
+classical orthogonal polynomials
+Clausen's integral
+Clebsch-Gordan coefficients
+Clenshaw's algorithm
+clenshaw-Curtis quadrature formula
+cloud TPU
+CNN
+cobb-Douglas function
+cobb-Douglas production function
+Cohen d
+Cohen kappa
+Cohen's d
+combinatorial algorithms
+combinatorial design
+combinatorial optimization
+combinatoric problems
+combinatorics
+combinatorics on words
+confluent Heun equation
+confluent hypergeometric functions
+continuous dual Hahn polynomials
+continuous Hahn polynomials
+continuous q-Hermite polynomials
+convex function
+convex optimization
+convex set
+convolution
+convolutional neural network
+COPA
+corecursive orthogonal polynomials
+Cornu's spiral
+cosecant function
+cosine function
+cosine integrals
+cosine transform
+cosines
+cotangent function
+Coulomb
+Coulomb excitation of nuclei
+Coulomb field
+Coulomb functions
+Coulomb phase shift
+Coulomb potential barriers
+Coulomb potentials
+Coulomb Problem in 3D
+Coulomb radial functions
+Coulomb spheroidal functions
+Coulomb wave equation
+Coulomb wave functions
+Coulomb-Pollaczek polynomials
+coulombic
+Cox proportional hazards
+Cramér V
+Cramér-Rao bound
+Cronbach alpha
+cross-entropy
+cryptography
+CTC
+cubature
+curtate cycloid
+cycloid
+Dalton
+Darboux's method
+DataFrame
+Dawson's integral
+DCT
+De Branges-Wilson beta integral
+De Moivre's theorem
+Debye functions
+deca
+deci
+decibel
+Dedekind modular function
+Dedekind sums
+Dedekind's eta function
+Dedekind's modular function
+degree Celsius
+delta
+DFT
+dilogarithms
+Dirac delta
+Dirac delta distribution
+Dirac delta function
+Dirac equation
+Dirichlet characters
+Dirichlet distribution
+Dirichlet L-functions
+Dirichlet problem
+Dirichlet product (or convolution)
+Dirichlet series
+Dirichlet's divisor problem
+Dirichlet's theorem
+discrete Fourier transform
+Dixon's sum
+double Riemann sum
+doubly-confluent Heun equation
+Dougall's bilateral sum
+Dougall's expansion
+DPO
+DQN
+dropout
+DST
+dual Hahn polynomials
+Duffing's equation
+Durbin-Watson statistic
+DVR
+DVR weight functions
+Dyson's integral
+eigenbasis
+eigendecomposition
+eigenfunction
+eigenfunction expansion
+eigenspace
+eigenvalue
+eigenvector
+Einstein functions
+Einstein summation convention
+electronvolt
+elliptic modular function
+ELU
+EMD
+enumerative topology
+EOP's (exceptional orthogonal polynomials)
+epsilon
+epsilon-delta
+equation of Ince
+ERM
+ernest Rutherford
+eta
+eukaryote
+Euler numbers
+Euler polynomials
+Euler product
+Euler splines
+Euler sums
+Euler transform
+Euler's beta integral
+Euler's constant
+Euler's formula
+Euler's homogeneity relation
+Euler's integral
+Euler's method
+Euler's pentagonal number theorem
+Euler's sums
+Euler's totient
+Euler's transformation
+Euler-Fermat theorem
+Euler-Maclaurin formula
+Euler-Poisson differential equations
+Euler-Poisson-Darboux equation
+Euler-Tricomi equation
+eulerian numbers
+exa
+F1
+F1 score
+Fabry's transformation
+farad
+Faraday constant
+fast Fourier transform
+Favard's theorem
+Fay's trisecant identity
+faà Di Bruno's formula
+FDR
+Fejér kernel
+femto
+femtoliter
+femtometer
+femtomolar
+femtomole
+femtosecond
+Fermat numbers
+Fermat's last theorem
+Fermat's theorem
+Fermi-Dirac integrals
+Ferrers board
+Ferrers function
+Ferrers graph
+Feynman diagram
+Feynman path integrals
+FFN
+FFT
+Fibonacci number
+finite Fourier series
+Fisher information
+Fleiss kappa
+Floquet solutions
+Floquet's theorem
+FN
+folium of Descartes
+Fourier eigenfunction expansion
+Fourier integral
+Fourier series
+Fourier transform
+Fourier's law of heat transfer
+Fourier-Bessel expansion
+Fourier-series expansions
+FP
+FPR
+Frobenius norm
+Frobenius' identity
+frustum
+Fréchet derivative
+Fubini theorem
+Fubini's theorem
+Gabriel's Horn
+gamma
+GAN
+GAT
+Gaunt coefficient
+Gaunt's integral
+Gauss law
+Gauss quadrature
+Gauss series
+Gauss sums
+Gauss theorem
+Gauss's law for magnetism
+Gauss-Christoffel quadrature
+Gauss-Seidel method
+Gaussian
+Gaussian elimination
+Gaussian hypergeometric function
+Gaussian noise
+Gaussian polynomials
+Gaussian probability functions
+Gaussian processes
+Gaussian unitary ensemble
+GBT
+GCN
+Gegenbauer function
+Gegenbauer polynomials
+Gegenbauer's addition theorem
+GELU
+general orthogonal polynomials
+generalized Airy functions
+generalized hypergeometric differential equation
+generalized hypergeometric functions
+generalized hypergeometric series
+generative pretrained transformer
+geometric topology
+Gibbs phenomenon
+Gibbs sampling
+giga
+gigahertz
+gigapascal
+Givens rotation
+Glaisher's constant
+Glaisher's notation
+GMRES
+GNN
+GPT
+Graf's addition theorem
+Gram-Schmidt procedure
+Gram-Schmidt process
+gray
+Green theorem
+Green's theorem
+GRU
+Gâteaux derivative
+Haar measure
+Hadamard product
+Hadamard's inequality for determinants
+Hahn class orthogonal polynomials
+Hahn polynomials
+Hamiltonian systems
+Hankel determinant
+Hankel functions
+Hankel transform
+Hankel's expansions
+Hankel's integrals
+Hankel's inversion theorem
+Hankel's loop integral
+HCI
+hecto
+Hedges g
+Heine's formula
+Heine's integral
+Helmholtz equation
+henry
+Hermite differential operator
+Hermite EOP's
+Hermite polynomial
+Hermite-Darboux method
+Hermitian conjugate
+Hermitian matrices
+Hermitian matrix
+hertz
+Hessian
+Heun equation
+Heun functions
+Heun polynomials
+Heun's equation
+Heun's operator
+hidden Markov model
+Hilbert space
+Hilbert transform
+Hill climbing
+Hill's equation
+hille-Hardy formula
+HITL
+HMC
+HMM
+Holm-Bonferroni method
+holomorphic function
+homeostasis
+Hooke's law
+Horner's scheme for polynomials
+Householder transformation
+Hurwitz system
+Hurwitz zeta function
+hyperasymptotic expansions
+hyperbola
+hyperbolic cosecant function
+hyperbolic cosine function
+hyperbolic cotangent function
+hyperbolic functions
+hyperbolic secant function
+hyperbolic sine function
+hyperbolic tangent function
+hyperbolic trees
+hyperbolic trigonometric functions
+hyperbolic umbilic bifurcation set
+hyperbolic umbilic canonical integral
+hyperbolic umbilic catastrophe
+hyperbolic unit
+hypergeometric differential equation
+hypergeometric equation
+hypergeometric function
+hypergeometric probability
+hypergeometric R-function
+hyperparameter
+hyperparameter optimization
+hypocycloid
+hypothesis-based science
+Ince polynomials
+Ince's equation
+Ince's theorem
+incomplete Airy functions
+incomplete Riemann zeta function
+inhomogeneous Airy functions
+integrand
+interior Dirichlet problem
+inverse hyperbolic functions
+inverse Jacobian elliptic functions
+inverse Laplace transforms
+iota
+IRB
+Itô integral
+Itô lemma
+Jacobi fraction
+Jacobi function
+Jacobi matrix
+Jacobi method
+Jacobi polynomials
+Jacobi symbol
+Jacobi transform
+Jacobi's amplitude function
+Jacobi's epsilon function
+Jacobi's identities
+Jacobi's imaginary transformation
+Jacobi's nome
+Jacobi's theta functions
+Jacobi's triple product
+Jacobi's zeta function
+Jacobi-Abel addition theorem
+Jacobi-Anger expansions
+Jacobi-type polynomials
+Jacobian
+Jacobian elliptic functions
+Jarque-Bera test
+JAX
+Jensen's inequality for integrals
+Jonquière's function
+Jordan curve theorem
+Jordan's function
+Jordan's inequality
+joule
+kadomtsev-Petviashvili equation
+Kaplan-Meier estimator
+kappa
+Kapteyn's inequality
+katal
+kelvin
+Kelvin functions
+Kelvin's ship-wave pattern
+Kendall tau
+Kepler
+Kepler's laws of planetary motion
+kilo
+kilodalton
+kilogram
+kilohertz
+kilojoule
+kilometer
+kilopascal
+kilovolt
+KL divergence
+KL-ONE
+Klein's complete invariant
+Klein-Gordon equation
+Koch's snowflake
+Kolmogorov-Smirnov test
+kontorovich-Lebedev transform
+Korteweg-De Vries equation
+Kovacic's algorithm
+KP equation
+Krattenthaler's formula for determinants
+Kronecker delta
+Kronecker product
+Kruskal-Wallis test
+Krylov subspace
+KSVMs
+Kummer congruences
+Kummer functions
+Kummer's equation
+Kummer's transformations
+L'Hôpital's rule
+L'Hôpital's rule for derivatives
+L-BFGS
+L0 regularization
+L1 loss
+L1 regularization
+L2 loss
+L2 regularization
+Lagrange interpolation
+Lagrange inversion theorem
+Lagrange multiplier
+laguere EOP's
+Laguerre functions
+Laguerre polynomials
+lambda
+Lambert series
+Lambert W-function
+Lamé functions
+Lamé polynomials
+Lamé wave equation
+Lamé's equation
+Lamé-Wangerin functions
+Lanczos algorithm
+Lanczos vectors
+LAPACK
+Laplace equation
+Laplace operator
+Laplace transform
+Laplace's equation
+Laplacian
+latent Dirichlet allocation
+Laurent polynomial
+Laurent series
+Lauricella's function
+Leaky ReLU
+lebesgue constants
+lebesgue-Stieltjes measure
+Legendre functions
+Legendre polynomials
+Legendre symbol
+Legendre's elliptic integrals
+Legendre's equation
+Legendre's relation
+Leibniz
+Leibniz's formula for derivatives
+Lerch's transcendent
+Levene test
+Levi-Civita symbol
+levi-Civita symbol for vectors
+Levin's transformations
+Liouville normal form
+Liouville's function
+Liouville's theorem for entire functions
+Liouville-Green (or WKBJ) approximation
+LIT
+little q-Jacobi polynomials
+LLM
+LLM evaluations (evals)
+locally analytic
+logits
+LSTM
+LU decomposition
+Lucas numbers
+lumen
+lux
+Maclaurin polynomials
+Maclaurin series
+MAE
+MANCOVA
+Mandelbrot set
+Mangoldt's function
+Mann-Whitney U
+MANOVA
+MAP
+Markov chain
+Markov decision process
+Markov decision processes
+Markov networks
+Markov processes
+Markov property
+Markov's theorem
+Markov-chain Monte Carlo methods
+Mathieu functions
+Mathieu's equation
+MATLAB
+maximum entropy modeling
+MBPP
+McMahon's asymptotic expansions
+MCMC
+MDP
+mega
+megahertz
+megapascal
+Mehler functions
+mehler-Dirichlet formula
+mehler-Fock transformation
+mehler-Sonine integrals
+Meijer G-function
+Meixner polynomials
+meixner-Pollaczek polynomials
+Mellin transform
+mellin-Barnes integrals
+meromorphic function
+meter
+method of Lagrange multipliers
+method of stationary phase
+Metropolis-Hastings algorithm
+micro
+microampere
+microgram
+microliter
+micrometer
+micromolar
+micromole
+microsecond
+microvolt
+Miller's algorithm
+milli
+milliampere
+milligram
+millijoule
+milliliter
+millimeter
+millimolar
+millimole
+millisecond
+millivolt
+MIMO
+MIMO Systems
+mini-batch stochastic gradient descent
+MINRES
+Mittag-Leffler function
+Mittag-Leffler's expansion
+ML
+MLE
+MMIT
+MNIST
+modified Bessel functions
+modified Bessel's equation
+modified Korteweg-De Vries equation
+modified Mathieu functions
+modified Mathieu's equation
+modified spherical Bessel functions
+modified Struve functions
+modified Struve's equation
+modular equations
+modular functions
+modular theorems
+modulo
+modus ponens
+MOE
+molality
+molarity
+mole
+molecular spectroscopy
+monosplines
+Moore-Penrose pseudoinverse
+Mordell's theorem
+Motzkin numbers
+MSE
+MT
+mu
+multilayer perceptron
+multiple orthogonal polynomials
+multivariate hypergeometric function
+Möbius function
+Möbius inversion formulas
+Möbius transformation
+n choose k
+N-Gram
+nabla
+naive Bayes classifier
+nano
+nanoampere
+nanogram
+nanoliter
+nanometer
+nanomolar
+nanomole
+nanosecond
+NAS
+Nesterov momentum
+Neumann's addition theorem
+Neumann's expansion
+Neumann's integral
+Neumann's polynomial
+Neumann-type expansions
+neurobiology
+nevai-Blumenthal class
+Neville's theta functions
+newton
+Newton's interpolation formula
+Newton's law of cooling
+Newton's method
+Newton's rule (or method)
+Newton's second law of motion
+Neyman-Pearson lemma
+Nicholson's integral
+nicholson-type integral
+NLP
+NLU
+node (TensorFlow graph)
+non-classical Freud-type OP's
+nonconvex optimization
+NORA
+nouvelle AI
+Novikov's conjecture
+nu
+NumPy
+NUTS
+Nyquist frequency
+Nyquist-Shannon theorem
+Nörlund polynomials
+Occam's razor
+ODE
+Ohm
+Olver's algorithm
+Olver's associated Legendre function
+Olver's confluent hypergeometric function
+Olver's hypergeometric function
+omega
+omicron
+one-hot encoding
+OP's
+ORA
+ordinal scale
+orr-Sommerfeld equation
+orthogonal
+orthogonal matrix
+orthogonal matrix polynomials
+orthogonal polynomials
+orthogonal vectors
+orthogonality
+orthonormal basis
+orthonormality
+out-of-bag evaluation (OOB evaluation)
+overbar
+overfitting
+Padé approximations
+Painlevé equations
+Painlevé property
+Painlevé transcendents
+parallelepiped
+Parseval's equality
+Parseval's Formula
+Parseval-type formulas
+partially-observable Markov decision processes
+pascal
+Pascal's principle
+PCA
+PCFs
+PDE
+Pearson
+Pearson chi-square
+peer-reviewed manuscripts
+perceptron
+perceptron algorithm
+perihelion
+Periodic Bernoulli functions
+Periodic Euler functions
+peta
+Pfaff-Saalschütz formula
+pH
+phase principle
+phi
+pi
+Picard's theorem
+Picard-Fuchs equations
+pico
+picoampere
+picogram
+picoliter
+picometer
+picomolar
+picomole
+picosecond
+pion-nucleon scattering
+pionic atoms
+pKa
+pKb
+Planck constant
+Planck's radiation function
+PLM
+Pochhammer double-loop contour
+Pochhammer's integral
+Pochhammer's symbol
+point-set topology
+Poisson bracket
+Poisson identity
+Poisson integral
+Poisson kernel
+Poisson probability distribution
+Poisson regression
+Poisson's equation
+Poisson's integral
+Poisson's summation formula
+Pollaczek polynomials
+polylogarithms
+POMDP
+post-processing
+post-trained model
+PPO
+PR curve
+primitive Dirichlet characters
+Pringsheim's theorem for continued fractions
+prolate cycloid
+Prym's functions
+PS
+psi
+PyTorch
+QLoRA
+QR decomposition
+quadrature
+quark-gluon plasma
+quecto
+quetta
+Raabe's theorem
+Racah polynomials
+radial Mathieu functions
+radian
+Radon transform
+RAG
+Ramanujan
+Ramanujan's beta integral
+Ramanujan's cubic transformation
+Ramanujan's partition identity
+Ramanujan's sum
+Ramanujan's tau function
+rank (ordinality)
+rasterization
+RC circuit
+recursive self-improvement
+reduced Planck's constant
+relativistic Coulomb equations
+ReLU
+Remez's second algorithm
+renewal theory
+reparameterization
+resistive MHD instability theory
+restricted Boltzmann machine
+review Articles
+rho
+Riccati-Bessel functions
+Richter scale
+Riemann hypothesis
+Riemann identity
+Riemann matrix
+Riemann sum
+Riemann surface
+Riemann theta functions
+Riemann zeta function
+Riemann's differential equation
+Riemann's P-symbol
+Riemann-Hilbert problems
+Riemann-Lebesgue lemma
+Riemann-Siegel formula
+Ritt's theorem
+RK4
+RL
+RLC series circuit
+RLHF
+RMSE
+RMSProp
+RNN
+ROC
+Rogers polynomials
+rogers-Ramanujan identities
+rogers-Szegő polynomials
+Rolle's theorem
+romanovski-Bessel polynomials
+ronna
+ronto
+Rouché's theorem
+ROUGE
+ROUGE-L
+ROUGE-N
+RTE
+Runge-Kutta methods
+Rutherford scattering
+Rydberg constant
+SAC
+SARSA
+scaled Riemann theta functions
+Schläfli's integrals
+schläfli-Sommerfeld integrals
+schläfli-type integrals
+Schottky group
+Schottky problem
+Schröder numbers
+Schrödinger equation
+Schrödinger operator
+Schrödinger-Coulomb problem
+Schur parameters
+Schwarz reflection principle
+Schwarz's lemma
+Schwarzian derivative
+SciPy
+SDE
+secant
+secant function
+secant method
+second
+Selberg integrals
+Selberg-type integrals
+SELU
+semi-classical orthogonal polynomials
+separable Gauss sum
+sepCNN
+SGD
+Shanks' transformation
+Shapiro-Wilk test
+siemens
+Sievert
+sigma
+sigmoid function
+SiLU
+Simpson's rule
+sine function
+sine integrals
+sine transform
+sine-Gordon equation
+sines
+skip-Gram
+Sobolev orthogonal polynomials
+softmax
+soliton theory
+solitons
+SOR
+sparse dictionary learning
+Spearman correlation
+spherical Bessel functions
+spherical Bessel transform
+spline functions
+spline models
+splines
+SQuAD
+SRM
+SSE
+Steed's algorithm
+steradian
+Stieltjes
+Stieltjes fraction
+Stieltjes measure
+Stieltjes polynomials
+Stieltjes transform
+Stieltjes-Perron inversion
+Stieltjes-Wigert polynomials
+Stirling cycle numbers
+Stirling's formula
+Stirling's series
+stochastic differential equations
+stochastic games
+stochastic gradient descent
+stochastic optimization
+stochastic processes
+stochastic semantic analysis
+stoichiometry
+Stokes line
+Stokes multipliers
+Stokes phenomenon
+Stokes sets
+Stokes theorem
+Struve functions
+Struve's equation
+Student t-distribution
+Student's t-distribution
+Sturm-Liouville eigenvalue problems
+Sturm-Liouville form
+subscript
+subword token
+superscript
+SVD
+SVM
+Swish
+Szegő class
+Szegő recurrence relations
+Szegő's theorem
+Szegő-Askey polynomials
+Szegő-Szász inequality
+T5
+T5X
+tau
+Taylor polynomials
+Taylor series
+Taylor's theorem
+Taylor's theorem with remainder
+tensor network theory
+tensor Processing Unit
+tensor product
+TensorBoard
+TensorFlow
+TensorFlow Serving
+TensorStore
+tera
+terahertz
+tesla
+texturing
+theorem of Ince
+theorem of Pappus for volume
+theta
+tilde
+TN
+tokenizer
+Tonelli theorem
+topology
+toroidal coordinates
+toroidal functions
+torus
+TP
+TPR
+TPU
+transformer
+transpose
+triconfluent Heun equation
+trigram
+TRPO
+TTL
+type II error
+UCR
+underfitting
+unitary matrix
+upsilon
+VAE
+Van Vleck polynomials
+Van Vleck's theorem for continued fractions
+variational autoencoder
+Verblunsky coefficients
+Verblunsky's theorem
+Voigt functions
+volt
+von Staudt-Clausen theorem
+Voronoi's congruence
+VRML
+Wald test
+Waring's problem
+Watson
+Watson integrals
+Watson's expansions
+Watson's identities
+Watson's lemma
+Watson's sum
+watt
+weber
+Weber function
+Weber parabolic cylinder functions
+Weber transform
+Weber's function
+Weber-Schafheitlin discontinuous integrals
+Weibull distribution
+Weierstrass elliptic functions
+Weierstrass M-test
+Weierstrass product
+Weierstrass sigma function
+Weierstrass zeta function
+Welch t-test
+Weniger's transformation
+WER
+Whipple's formula
+Whipple's sum
+Whipple's theorem
+Whipple's transformation
+Whittaker functions
+Whittaker's equation
+whittaker-Hill equation
+Wilcoxon test
+wilf-Zeilberger algorithm
+Wilkinson's polynomial
+Wilson class orthogonal polynomials
+Wilson polynomials
+Wishart distribution
+WKB or WKBJ approximation
+WMT
+Wronskian
+WSC
+Wynn's cross rule
+Wynn's epsilon algorithm
+X3D
+XGBoost
+xi
+XL-Sum (xlsum)
+XLA
+yocto
+yotta
+zepto
+zeros of analytic functions
+zeta
+zetta
+ångström
+α
+β
+γ
+δ
+ε
+ζ
+η
+θ
+ι
+κ
+λ
+μ
+ν
+ξ
+ο
+π
+ρ
+σ
+τ
+υ
+φ
+χ
+ψ
+ω

@@ -1,0 +1,4224 @@
+'A' value
+(2,4-dinitrophenyl)hydrazine
+(3-methyl-2-oxobutanoate dehydrogenase (2-methylpropanoyl-transferring))-phosphatase
+(9S)-3α,9-epoxy-10,11-dihydrocinchonan-6'-ol
+(acetonitrile)[(2-biphenyl)Di-tert-butylphosphine]gold(I) hexafluoroantimonate
+(dimethylaminomethyleneaminomethylene)dimethylammonium chloride
+(E)-((1,3-diethoxybuta-1,3-dien-1-yl)Oxy)trimethylsilane |
+(E)-1-methoxy-3-trimethylsilyloxy-1,3-butadiene
+(R)-6-hydroxynicotine oxidase
+(triphenylphosphine)copper hydride hexamer
+1,1,1-triacetoxy-1,1-dihydro-1,2-benziodoxol-3(1H)-one
+1,2-addition
+1,3-diaxial interactions
+1,4-addition
+1-methoxy-N-triethylammoniosulfonyl-methanimidate
+1-methyl-4-phenyl-1,2,3,6-tetrahydropyridine
+13C NMR
+13C-HMQC-NOESY
+13C-NOESY-HSQC
+15N-NOESY-HSQC
+15N-TOCSY-HSQC
+18-electron rule
+180° pulse
+19F NMR
+1D property descriptor
+1D structure
+1H NMR
+2,2-dimethyl-1,3-dioxane-4,6-dione
+2,3-bis(sulfanyl)propan-1-ol
+2,4-bis(4-methoxyphenyl)-1,3,2,4-dithiadiphosphetane 2,4-disulfide
+2-(triphenylphosphoranylidene)ethenone
+2-[N,N-Bis(trifluoromethylsulfonyl)amino]-5-chloropyridine
+2-amino-3-(3-hydroxy-5-methyl-1,2-oxazol-4-yl)propanoic acid receptor
+2-chloro-4-carboxymethylenebut-2-en-1,4-olide isomerase
+2-DE
+2-methyl-6-nitrobenzoic anhydride
+2-oxocarboxylic acid metabolism
+2-succinyl-5-enolpyruvyl-6-hydroxy-3-cyclohexene-1-carboxylic-acid synthase
+2D gel electrophoresis
+2D property
+2D quantitative structure-activity relationships
+2D structure
+3,3-dimethyl-1-(trifluoromethyl)-1,2-benziodoxole
+31P NMR
+3D property
+3D searching
+3D structure
+3D structure generation
+4,5-dichloro-1,2,3-dithiazolium chloride
+4-aminobutyrate-pyruvate transaminase
+4-hydroxy-tetrahydrodipicolinate reductase
+4-hydroxyphenylpyruvate dioxygenase
+4D quantitative structure-activity relationships
+5-hydroxytryptamine
+5α-reductase
+5α-reductase deficiency
+6-phosphogluconate dehydrogenase
+9-BBN
+90° pulse
+[Hydroxy(tosyloxy)iodo]benzene
+a-ion
+AAS
+abeo-
+Abidi alkyne synthesis
+ABL oncogene
+ABO blood group system
+ABP
+absolute lethal dose
+absorbed dose
+Ac
+acarbose and validamycin biosynthesis
+accommodation coefficient
+acetaldehyde dehydrogenase
+acetals, R2C(OR')2
+Acetoacetic ester condensation
+Acetoacetic ester synthesis
+acetolactate synthase
+acetonides
+acetyl
+acetyl-CoA
+acetyl-CoA carboxylase
+acetylation
+acetylcholine
+acetylcholinesterase
+acetylcysteine
+acetylene
+acetylide anion
+acetylides
+Achmatowicz reaction
+aci-nitro compounds
+acid anhydride
+acid chlorides
+acid deposition
+acid dissociation constant
+acid hydrolase
+acid ionization
+acid rain
+acid-base extraction
+acid-base indicators
+acid-ionization constant, Ka
+acidic fibroblast growth factor
+aconitase
+acrylamide
+actin
+actin filaments
+actin-binding proteins
+actinic flux
+actinide series
+actinides
+actinoid series
+actomyosin cortex
+acyl (a-sil) group
+acyl carbenes
+acyl-CoA
+acyl-CoA dehydrogenase
+Acyloin condensation
+Adams decarboxylation
+Adams' catalyst
+additional gases
+adenine
+adenosine
+adenosine deaminase
+adenosine diphosphate
+adenosine monophosphate
+adenosine triphosphate
+adenosylmethionine hydrolase
+adenovirus
+adenylate cyclase
+adiabatic lapse rate
+adiabatic pulse
+adipocytokine signaling pathway
+Adkins catalyst
+Adkins-Peterson reaction
+ADP
+adrenergic signaling in cardiomyocytes
+adsorption chromatography
+adsorption hysteresis
+adsorption isotherm
+adsorptive stripping voltammetry
+AES
+affinity chromatography
+AFLP
+AFM
+agarose
+agarose gel electrophoresis
+aglycon
+AIBN
+air-lift bioreactor
+Akabori amino acid reaction
+Ala
+alanine
+alanine aminopeptidase
+alanine aminotransferase
+alanine transaminase
+albedo
+AlCl3-assisted
+alcohol Dehydrogenase
+aldaric acid
+aldazines
+aldehyde
+aldehyde dehydrogenase
+Alder Ene reaction
+Alder-Stein rules
+aldimines
+alditol
+Aldol addition
+Aldol condensation
+Aldol reaction
+aldolase
+aldosterone synthesis and secretion
+aldosterone-regulated sodium reabsorption
+Alexa Fluor 488
+Alexa Fluor 647
+Algar-Flynn-Oyamada reaction
+aliased effects
+alkaline phosphatase
+alkene
+alkenylglycerophosphocholine hydrolase
+alkenylglycerophosphoethanolamine hydrolase
+alkoxide ion, RO-
+alkoxyamines
+alkyl
+alkyl cation
+alkyl group
+alkyl halides
+alkyl radicals
+alkylamines
+alkylation
+alkylenes
+alkylidene groups
+alkylideneaminoxyl radicals
+alkylideneaminyl radicals
+alkylidenes
+alkylidynes
+Alkylimino-De-Oxo-bisubstitution
+alkyne
+alkyne trimerisation
+alkyne zipper reaction
+all-glass heated inlet system
+all-solid-state ion-selective electrode
+Allan-Robinson reaction
+allele
+alloantigen
+Alloc
+allograft
+allometric
+allometric growth
+allometric scaling
+allometry
+allosteric antagonist
+allosteric enzymes
+allosteric inhibition
+allosteric regulation
+allosteric site
+allostery
+allotrope
+allotropy
+Allylic
+Allylic groups
+Allylic intermediates
+Allylic rearrangement
+Allylic substitution reaction
+allysine
+alpha
+alpha particles (α particles)
+alpha-amino acid
+alpha-fetoprotein
+alpha-globulin
+alpha-helix
+alpha-ketoglutarate dehydrogenase
+alpha-Linolenic acid metabolism
+alpha-macroglobulin
+alpha-MSH
+alpha-synuclein
+AluI
+alveolar macrophage
+alveolar period
+alveolitis
+alveolus
+Alzheimer disease
+AM 0 sunlight
+AM 1 sunlight
+Amadori rearrangement
+ambient mass spectrometry
+ameloblast
+amenorrhea
+ames/Salmonella test
+amide
+amide oximes
+amine
+amine alkylation
+amine imides
+amine oxides
+amine ylides
+amines
+amino
+amino acid sequence homology
+amino sugars
+amino-acid racemase
+amino-acid residue
+aminobenzoate degradation
+aminobutyric acid
+aminolevulinic acid
+aminolevulinic acid synthase
+aminolysis
+aminopropanol Oxidoreductase
+aminotransferase
+aminoxides
+aminoxyl radicals
+ammonium ylides
+amniocentesis
+amniochorionic membrane
+amnion
+amniote
+amniotic cavity
+amniotic fluid
+amniotic sac
+Amontons's law
+amount-of-substance concentration
+amount-of-substance fraction
+AMP
+ampere
+amperometric detection method
+amperometry
+ampicillin
+amygdala
+amylase
+anabolic steroids
+analogue-based drug discovery
+analytic study
+analytical Chemistry
+analytical function
+analytical instrument
+analytical unit
+anamniote
+anaphase
+anaphase A
+anaphase B
+anaphase lag
+anaphase-promoting complex
+anaphylactic shock
+anaphylactoid
+anaphylatoxin
+anaphylaxis
+anastomosis
+anchoring villus
+androblastoma
+androgen
+androgen receptor
+androgenic
+Andrussov oxidation
+Angeli-Rimini reaction
+angiotensin
+angiotensin II
+angstrom
+anhydro bases
+annexin II
+annulenylidenes
+anthocyanidins
+anthocyanin biosynthesis
+anthocyanins
+anthranilic acid
+anti stereochemistry
+anti-thixotropy
+antibonding MO
+antigen
+antigen processing and presentation
+antimony-xenon lamp
+antiprismo-
+APC
+apoenzyme
+apolipoprotein
+Appel reaction
+Appel's salt
+APS
+aquaporin
+arabinogalactan biosynthesis - Mycobacterium
+arachidonic acid metabolism
+Arbusow reaction
+Arbuzov reaction
+Archaea
+area-related parameters
+arene epoxides
+arenes
+Arens-Van Dorp synthesis
+Arg
+arginase
+arginine
+arginine and proline metabolism
+arginine biosynthesis
+argininosuccinate lyase
+argininosuccinate synthetase
+argininosuccinic acid
+argon ion laser
+Arndt-Eistert synthesis
+aromatase
+aromatic amine
+aromatic-L-amino-acid decarboxylase
+arp2/3
+arrester
+Arrhenius
+Arrhenius acid
+Arrhenius base
+Arrhenius equation
+arsanylidenes
+arsenate reductase (glutaredoxin)
+arsine oxides
+arsines
+aryl
+aryl cations
+aryl groups
+arylamines
+arylene groups
+ascorbate and aldarate metabolism
+Asn
+Asp
+asparagine
+aspartate
+aspartate aminotransferase
+aspartate transaminase
+aspartate transcarbamoylase
+aspartic acid
+Aston-Greenburg rearrangement
+astral microtubules
+ATAC-seq
+atom-atom polarizability
+atom-bond polarizability
+atom-molecule complex mechanism
+atomic absorption spectroscopy
+atomic nucleus
+atomic radius
+ATP
+ATP synthase
+ATPase
+ATR-FTIR
+atrazine degradation
+atrial natriuretic factor
+atropisomers
+atto
+attractive potential-energy surface
+attractive-mixed-repulsive classification
+Aufbau principle
+autotroph
+Auwers synthesis
+avidin
+Avogadro constant
+Avogadro number
+Avogadro's law
+Avogadro's number
+axon
+axon guidance
+axon regeneration
+Aza-Cope rearrangement
+azaleucine
+azatyrosine
+azeotrope
+azobisisobutyronitrile
+B3LYP
+Bacteria
+bacterial conjugation
+bacterial outer membrane protein
+bacterial protein
+bacteriorhodopsin
+Baeyer's reagent
+Baeyer-Drewsen indigo synthesis
+Baeyer-Drewson indigo synthesis
+Baeyer-Villiger oxidation
+Baeyer-Villiger rearrangement
+Bakeland process
+Baker-Venkataraman rearrangement
+Baker-Venkataraman transformation
+Baldwin's rules
+Bally-Scholl synthesis
+Balmer
+Balz-Schiemann reaction
+Bamberger rearrangement
+Bamberger triazine synthesis
+Bamford-Stevens reaction
+BamHI
+band-to-band recombination
+Barbier reaction
+Barbier-Wieland degradation
+Bardhan-Sengupta phenanthrene synthesis
+Barfoed's test
+Bargellini reaction
+Bartlett
+Bartoli indole synthesis
+Bartoli reaction
+Barton decarboxylation
+Barton deoxygenation
+Barton reaction
+Barton vinyl iodine procedure
+Barton-Kellogg reaction
+Barton-McCombie reaction
+Barton-Zard Synthesis
+base anhydride
+base ionization
+base pairing
+base peak
+base sequence
+base-ionization constant
+baseline
+basic fibroblast growth factor
+Baudisch reaction
+Bayer test
+Baylis-Hillman reaction
+BBr3
+BCC
+Bcl-2
+bcr-abl fusion protein
+Bechamp reaction
+Bechamp reduction
+Beckmann fragmentation
+Beckmann rearrangement
+becquerel
+Beer-Lambert law
+Bellus-Claisen rearrangement
+Belousov-Zhabotinsky reaction
+Benary reaction
+Benedict's reagent
+Benkeser reaction
+benthic
+benzene ring
+Benzidine rearrangement
+Benzilic acid rearrangement
+benzoate degradation
+Benzoin condensation
+benzoxazinoid biosynthesis
+benzoylarginine
+benzyl
+benzylic
+benzylidene-bis(tricyclohexylphosphine)dichlororuthenium
+benzyne
+Bergman cyclization
+Bergmann azlactone peptide synthesis
+Bergmann degradation
+Bergmann-Zervas carbobenzoxy method
+Bernthsen acridine synthesis
+beryllium disease
+best-in-class
+Bestmann ylide
+Bestmann's reagent
+BET
+beta
+beta-2 microglobulin
+beta-Alanine metabolism
+beta-amino acid
+beta-barrel
+beta-carotene isomerase
+beta-galactosidase
+beta-hydroxybutyrate
+beta-lactamase
+beta-oxidation
+beta-sheet
+beta-sheet breaker
+beta-thromboglobulin
+Betti reaction
+Beyer method for quinolines
+BglII
+BH3
+BHA
+BHT
+biased sample
+bicarbonate anion
+Bicine
+bidentate ligands
+Biginelli pyrimidine synthesis
+Biginelli reaction
+bilaminar embryo
+bile salts
+bile secretion
+bilirubin
+biliverdin reductase
+binary acid
+binding isotherm
+Bingel reaction
+bioaccumulation
+bioaccumulation factor
+bioaccumulation potential
+biomagnification
+biomagnification factor
+biomonitoring type 1
+biomonitoring type 2
+biomonitoring type 3
+biomonitoring type 4
+biopolymer
+bioremediation
+biosynthesis of amino acids
+biosynthesis of nucleotide sugars
+biosynthesis of phenylpropanoids
+biota-sediment accumulation factor
+biotic ligand
+biotic ligand model
+biotin
+biotin metabolism
+biphasic dose-effect model
+Birch reduction
+bis[α,α-bis(trifluoromethyl)benzyloxy]diphenylsulfur
+bisacrylamide
+bisamino acid
+Bischler-Möhlau indole synthesis
+Bischler-Napieralski reaction
+Biuret test
+Blaise ketone synthesis
+Blaise reaction
+Blanc chloromethylation
+Blanc reaction
+BLAST
+blast
+blastema
+blasticidin
+blastocoel
+blastocyst
+blastomere
+blastula
+blastulation
+blaze-angle
+Bloch equations
+Bloch-Siegert shift
+block copolymer
+block copolymer lithography
+block homopolymer
+block polymer
+blood-brain barrier
+blood-cerebrospinal fluid barrier
+blood-placenta barrier
+blood-retinal barrier
+blood-testis barrier
+Bloom syndrome
+Blum-Ittah aziridine synthesis
+BMI
+BMR
+Bn
+Boc
+Bodroux reaction
+Bodroux-Chichibabin aldehyde synthesis
+body-centered cubic solid
+body-centered cubic unit cell
+Bogert-Cook synthesis
+Bohlmann-Rahtz pyridine synthesis
+Bohn-Schmidt reaction
+Bohr
+Bohr model
+Bohr's model
+Boltzmann
+Boltzmann constant
+Boltzmann distribution
+Boltzmann principle
+bomb-digestion
+bond-dissociation energy
+bonded phase
+bonding MO
+Boord olefin synthesis
+Born-Haber cycle
+Born-Oppenheimer approximation
+Borodin reaction
+boron-doped diamond electrode
+Borsche-Drechsel cyclization
+Bosch reaction
+Bosch-Meiser urea process
+bottom anti-reflective coating
+bottom-up lithography
+bottom-up proteomics
+Bouveault aldehyde synthesis
+Bouveault-Blanc reduction
+Boyer reaction
+Boyland-Sims oxidation
+Boyle's law
+Brady's reagent
+Bragg
+Bragg equation
+Bragg's law
+branched polymer
+branched-chain alkanes
+Brassard's diene
+brassinosteroid biosynthesis
+BRCA1
+Bredereck's reagent
+Bredt's rule
+bridging ligand
+bromonium ion
+Brook rearrangement
+Brown hydroboration
+Brownian motion
+brunauer-Emmett-Teller surface area
+brush polymer
+Brønsted acid
+Brønsted base
+Brønsted-Lowry acid
+Brønsted-Lowry acid-base reaction
+Brønsted-Lowry base
+BSA
+BsaI
+BsmBI
+BSSE
+Bucherer carbazole synthesis
+Bucherer reaction
+Bucherer-Bergs reaction
+Buchner ring enlargement
+Buchwald-Hartwig amination
+bulk polymerisation
+Bunnett reaction
+Bunnett-Olsen equations
+Burgess reagent
+butanoate metabolism
+butyl
+butylated hydroxytoluene
+butyrate kinase
+Büchner flask
+Büchner-Curtius-Schlotterbeck reaction
+c-di-GMP
+C-terminal amino acid
+C-terminus
+C4 photosynthesis
+C5-branched dibasic acid metabolism
+CA
+cadherin
+Cadiot-Chodkiewicz coupling
+Cadogan-Sundberg indole synthesis
+caffeine dehydrogenase
+Cahn-Ingold-Prelog rules
+calbindin
+calcium-binding protein
+calibration component
+calibration function
+calibration gas mixture
+calibration mixture
+calixarenes
+calmodulin-binding protein
+calorimetry
+CAM photosynthesis
+CAM plants
+cAMP
+Camps quinoline synthesis
+candela
+Cannizzaro reaction
+capillary action
+capsid
+carbaboranes
+carbamoyl phosphate synthetase
+carbamoyl-phosphate synthetase
+carbene analogues
+carbene radical anions
+carbene radical cations
+carbene, R2C
+carbenes
+carbenicillin
+carbinolamine
+carbodiimides
+Carbohydrate acetalisation
+Carbohydrate digestion and absorption
+carbon dioxide laser
+carbon disulfide
+carbon-fixation reactions
+carbonic anhydrase
+carbonitriles
+carbonyl
+carbonyl compounds
+carbonyl condensation reactions
+carbonyl imides
+carbonyl oxides
+carbonyl reduction
+carbonyl ylides
+carbonylation
+carbonyldiimidazole
+carboxamides
+carboxamidines
+carboxyl
+carboxylation
+carboxylic acid
+Carbylamine reaction
+carbynes
+cardiac muscle contraction
+carnitine palmitoyltransferase
+Carnot
+Caro's acid
+carotenes
+carotenoid biosynthesis
+carotenoids
+Carroll reaction
+CAS registry number
+Cas12a
+Cas13
+Cas9
+casein
+CASSCF
+Castro-Stephens coupling
+catalase
+Catalytic antibody
+Catalytic coefficient
+Catalytic cycle
+Catalytic domain
+Catalytic reforming
+Catalytic site
+catalán solvent parameters
+catechol oxidase
+catechol-O-methyl transferase
+catecholamines
+Catellani reaction
+catena-
+cation-π interaction
+CBS reduction
+Cbz
+CCK
+CCP
+CCSD
+CCSD(T)
+CD spectroscopy
+CDC28 protein kinase
+cDNA
+CDP
+CE
+cell nucleus
+cell schematics
+cell-cell signaling
+CellTrace Violet
+centi
+centimeter
+cephalosporins
+CFP
+CFSE
+cGMP
+chain-growth polymers
+chalcogen bond
+chalcogens
+Chan-Lam coupling
+chaperone
+chaperone protein
+Chapman rearrangement
+CHAPS
+charge recombination
+charge-transfer absorption
+charge-transfer complex
+charge-transfer state
+charge-transfer transition
+charge-transfer transition to solvent
+Charles's law
+chelate
+chelate effect
+chelating agent
+chelating ligands
+chelation
+Cheletropic reaction
+chelotropic reaction
+chemical laser
+chemically-modified electrode
+chemically-sensitive field effect transistor
+chemiluminescence
+chemiluminescence analyser
+chemiluminescent methods of detection
+chemiosmosis
+chemiosmotic coupling
+chemiosmotic hypothesis
+chemiosmotic potential
+Chemistry basic topics
+chemokine signaling pathway
+chemostat
+chemotroph
+chi
+Chichibabin pyridine synthesis
+Chichibabin reaction
+ChIP
+ChIP-seq
+Chiral
+Chiral additive
+Chiral environment
+Chiral feature
+Chiral mobile phase
+Chiral pool synthesis
+Chiral recognition
+Chiral selector
+Chiral stationary phase
+chitinase
+chlor-alkali process
+chloramines
+chloramphenicol
+chloridotris(triphenylphosphine) rhodium (I)
+chloroalanine
+chloroalkane and chloroalkene degradation
+chlorocarbons
+chlorocyclohexane and chlorobenzene degradation
+chloroform
+chloroplast membrane
+cholecystokinin
+cholesterine
+cholesterol metabolism
+cholesterol-5,6-oxide hydrolase
+choline acetyltransferase
+cholinergic synapse
+cholinesterase
+chorionic gonadotropin
+chromatin immunoprecipitation
+chromatogram
+chromatograph
+chromatographic bed
+chromatographic detector
+chromatography
+chromic acid
+chromophore
+chronoamperometry
+chronocoulometric constant
+chronocoulometry
+Chugaev elimination
+chylomicron
+chymotrypsin
+chymotrypsinogen
+Ciamician-Dennstedt rearrangement
+ciclosporin
+cilium
+cine-substitution
+CIP priority
+circadian rhythm - fly
+circadian rhythm - plant
+cis,cis-1,3,5-trimethylcyclohexane-1,3,5-tricarboxylic acid
+cis-fused
+cis-trans isomers
+cis/trans photoisomerisation
+citrate cycle (TCA cycle)
+citrate synthase
+citric acid cycle
+citrulline
+Claisen condensation
+Claisen condensation reaction
+Claisen rearrangement
+Claisen-Schmidt condensation
+clathrin (coated vesicle)
+Clausius
+Clausius-Clapeyron equation
+clavulanic acid biosynthesis
+Clemmensen reduction
+closo-
+CMP
+CMP-sialic acid
+CO
+CoA
+cobalamin transport and metabolism
+cobamides
+coenzyme
+coenzyme A
+cold fibre solid-phase microextraction
+cold neutrons
+collagen
+collecting duct acid secretion
+Collins reagent
+collisional broadening
+colony-stimulating factor
+column chromatography
+Combes quinoline synthesis
+comins' reagent
+common-ion effect
+comparative glycoproteomics
+comparative proteoglycomics
+complementary DNA
+Compton rule
+computational Chemistry
+concanavalin A
+condensation nuclei
+condensin
+confocal laser scanning microscopy
+conformational isomers
+Conia reaction
+conjugate acid
+conjugate acid-base pair
+conjugate base
+conjunctive Name
+Conrad-Limpach synthesis
+constitutional isomer
+constitutional isomerism
+Contact hole
+continuous emulsion polymerisation
+continuous phase
+continuous wave laser
+continuous-phase concentration
+controlled anionic polymerization
+controlled cationic polymerization
+controlled ionic polymerization
+controlled polymerization
+controlled radical polymerization
+Cook-Heilbron thiazole synthesis
+Coomassie Brilliant Blue
+coordination isomers
+coordination polymerization
+coordination ring-opening polymerization
+coordination-addition polymerization
+coordination-insertion polymerization
+coordinative chain-transfer polymerization
+Cope elimination
+Cope rearrangement
+COPI
+COPII
+copolymer
+copolymer isomorphism
+copolymer micelle
+copolymerisation composition equation
+copolymerization
+copper vapour laser
+core-crosslinked micelle
+core-shell particle
+core-shell structure
+Corey lactone
+Corey reagent
+Corey-Bakshi-Shibata catalyst
+Corey-Bakshi-Shibata reduction
+Corey-Chaykovsky reagent
+Corey-Fuchs reaction
+Corey-Gilman-Ganem oxidation
+Corey-Itsuno reduction
+Corey-Kim oxidation
+Corey-Nicolaou macrolactonization
+Corey-Posner, Whitesides-House reaction
+Corey-Seebach reaction
+Corey-Winter olefin synthesis
+Corey-Winter reaction
+Cornforth reagent
+Cornforth rearrangement
+coronamic acid
+cortical cytoskeleton
+cortisol synthesis and secretion
+COSY
+Coulomb
+Coulomb radius
+Coulomb repulsion
+coulombic
+coulometric detection method
+coumarone-indene polymer
+counter-current flow
+covalent radius
+COX-1
+COX-2
+cox-Yates equation
+Crabbé reaction
+Craig method
+Creighton process
+Crick
+Criegee reaction
+Criegee rearrangement
+CRISPR
+CRISPR-Cas9
+cross-conjugation
+cross-flow filtration
+cross-over concentration
+cross-propagation
+cross-termination
+crown ethers
+crRNA
+Crum Brown-Gibson rule
+cryo-EM
+cryofixation
+cryogenic
+cryogenic sampling
+cryptobiology
+crystal polymorph
+crystalline polymer
+crystalline polymer-inclusion complex
+crystalline-polymer molecular complex
+crystallisable polymer
+crystallography
+CT
+CTP
+cubic mesophase
+cumulative mass-distribution function
+cumulative number-distribution function
+curtin-Hammett principle
+Curtius degradation
+Curtius reaction
+Curtius rearrangement
+curve-crossing model
+CUT&RUN
+CUT&Tag
+cut-off filter
+cut-on filter
+CV
+CW
+cyanoamino acid metabolism
+Cyanohydrin reaction
+cyanohydrins
+cyclic acid anhydrides
+cyclic peptide
+cyclin A
+cyclin B
+cyclin E
+cyclin-CDK complex
+cyclo-
+cycloalkyl groups
+cycloleucine
+cyclooxygenase
+cyclopolymerization
+cyclosiloxanes
+cyclosporin
+cyclosporine
+cypridina-luciferin 2-monooxygenase
+Cys
+cystathionine beta-lyase
+cystathionine gamma-lyase
+cysteine
+cysteine and methionine metabolism
+cystine
+cytidine
+cytochrome a Group
+cytochrome b Group
+cytochrome c Group
+cytochrome c oxidase
+cytochrome c peroxidase
+cytochrome d Group
+cytochrome P-450 Enzyme system
+cytochrome P450 oxidase
+cytochromes
+cytochromes f
+cytoplasmic streaming
+cytoplasmic, membrane-bounded vesicle
+cytosine
+cytoskeletal protein
+cytoskeletal protein binding
+cytoskeleton-dependent intracellular transport
+cytosolic DNA-sensing pathway
+cytotoxic T cell
+D-amino acid metabolism
+d-block
+d-block elements
+D-xylulose reductase
+dactinomycin
+dADP
+Dakin reaction
+Dakin-West reaction
+Dalton
+Dalton's atomic theory
+Dalton's law of partial pressures
+dAMP
+Danheiser annulation
+Danheiser benzannulation
+Danishefsky's diene
+DAPI
+Darapsky degradation
+Darzens condensation
+Darzens halogenation
+Darzens tetralin synthesis
+Darzens-Claisen reaction
+dATP
+Davis oxidation
+Davis' reagent
+Davis-Beirut reaction
+DBN
+DBU
+dCas9
+DCC
+dCDP
+DCM
+dCMP
+dCTP
+ddATP
+ddCTP
+ddGTP
+ddPCR
+DDQ
+ddTTP
+De Broglie
+De Kimpe aziridine synthesis
+dead polymer chain
+dead-end polymerisation
+deamination
+deca
+decarboxylation
+decarboxylation reaction
+deci
+decibel
+defect-free pattern
+degenerate-transfer radical polymerisation
+degenerative chain-transfer radical polymerization
+degenerative-transfer polymerization
+degradable polymer
+degradation of flavonoids
+degree Celsius
+degree of polymerization
+degree-of-polymerisation dispersity
+dehydrogenase
+deiodinase
+delta
+delta G (ΔG)
+delta H (ΔH)
+delta S (ΔS)
+delta scale
+Delépine reaction
+Demjanov rearrangement
+Demjanow desamination
+dendrimer molecule
+dendrite
+dendritic cell
+denitrification
+deoxy sugar
+deoxyadenosine
+deoxycholate
+deoxycytidine
+deoxyguanosine
+deoxyribonuclease
+deoxyribonucleic acid
+deoxyribose
+deoxythymidine
+dephosphorylation
+DEPT
+DEPT-NMR
+dermatan sulfate
+desmosome
+Dess-Martin oxidation
+Dess-Martin periodinane
+desthiobiotin
+deubiquitinating Enzymes
+deuteriation
+deuterium
+deuterium isotope effect
+deuteron
+DFT
+dGDP
+dGMP
+dGTP
+di-tert-butyl dicarbonate
+Di-π-methane rearrangement
+diacetyl Reductase
+diamagnetic
+diaminopimelic acid
+diastereomer
+diastereotopic
+diatomic
+diatomic molecule
+Diazoalkane 1,3-dipolar cycloaddition
+DIBAL-H
+DIBAL-H selective reduction
+diborane
+DIC
+dichloro(o-isopropoxyphenylmethylene)(tricyclohexylphosphine)ruthenium(II)
+dichloromethane dehalogenase
+dicyclohexylcarbodiimide
+Dieckmann condensation
+Dieckmann cyclization
+Dieckmann reaction
+Diels-Alder cycloaddition reaction
+Diels-Alder reaction
+Diels-Reese reaction
+Dienol-benzene rearrangement
+Dienone-phenol rearrangement
+diethyl 1,4-dihydro-2,6-dimethyl-3,5-pyridinedicarboxylate
+diethyl azodicarboxylate
+diethyl Ether
+diglutathione
+dihomomethionine
+dihydrobenzophenanthridine oxidase
+dihydrofolate reductase
+dihydroxyphenylalanine
+diisobutylaluminium hydride
+diisobutylaluminum hydride
+diisopropyl azodicarboxylate
+dimethyl (1-diazo-2-oxopropyl)phosphonate
+dimethyl (diazomethyl)phosphonate
+dimethyl Ether
+dimethyl sulfoxide
+dimethylboron bromide
+dimethylformamide
+dimethylmethylideneammonium iodide
+dimethylsulfide
+dimethylsulfoxonium methylide
+Dimroth rearrangement
+DIPEA
+Dipolar bond
+dipole-dipole attraction
+diprotic base
+direct-injection enthalpimetry
+disaccharide
+dispersed phase
+dispersive liquid-liquid microextraction
+dispersive spectrometer
+displacement chromatography
+distribution constant calibration
+distribution isotherm
+disulfide bond
+disulfide bond cleavage
+disulfide bridge
+disulfides
+disulfides (R-S-S-R')
+diterpenes
+diterpenoid biosynthesis
+DLS
+DM-interference
+DMAP
+DME
+DMEM
+DMF
+DMP
+DMPU
+DMSO
+DMSO reductase
+DNA
+DNA gyrase
+DNA ligase
+DNA methyltransferase
+DNA polymerase
+DNA probe
+DNA Repair Enzymes
+DNA Restriction-Modification Enzymes
+DNA, Catalytic
+DnaB helicase
+DNase I
+Doebner modification
+Doebner reaction
+Doebner-Miller reaction
+Doering-LaFlamme carbon chain extension
+donor phase
+DOPA
+dopaminergic synapse
+Doppler broadening
+dorso-ventral axis formation
+dose
+dose equivalent
+DOSY
+double-beam spectrometer
+double-focusing mass spectrograph
+double-focusing mass spectrometer
+Dowd-Beckwith ring expansion reaction
+DpnI
+DPV
+Drosophila
+DSC
+DTA
+dTDP
+dTMP
+DTT
+dTTP
+Duff reaction
+Dutt-Wormall reaction
+dynamic Fields mass spectrometer
+dynamic-load thermomechanical analysis
+dynein
+Dyotropic reaction
+Dötz reaction
+E1
+E1 reaction
+E1cB elimination reaction
+E1cB reaction
+E2
+E2 reaction
+Eadie-Hofstee plot
+Echavarren's gold complex
+ECM
+EcoRI
+EcoRV
+ecotoxicity
+ectotherm
+EDC
+Eder reaction
+Edman degradation
+EDTA
+EDX
+EDXRF
+effective nuclear charge, Zeff
+EGFP
+Eglinton reaction
+EGTA
+Ehrlich-Sachs reaction
+eicosanoids
+eIF-2
+eIF-2 kinase
+Einhorn variant
+Einhorn-Brunner reaction
+Einstein
+EIS
+elastase
+elastomer
+Elbs persulfate oxidation
+Elbs reaction
+electrically conducting polymer
+electrically conducting polymer composite
+electro-dialysis
+electro-optic effect
+Electrochemical cell
+Electrochemical detector
+Electrochemical fluorination
+Electrochemical method of detection
+Electrochemical potential
+electrochromic polymer
+electroclinic polymer
+Electrocyclic reaction
+electroinjection
+electroluminescent polymer
+electromagnetic field responsive polymer
+electron neutrino
+electron paramagnetic resonance
+electron-dot structures
+electron-pair geometry
+electronvolt
+electrophile
+electrophilic addition reaction
+electrophilic amination
+electrophilic halogenation
+electrophoresis
+electrophoretic velocity
+electrothermal atomic absorption spectroscopy
+ELISA
+ELISPOT
+elution chromatography
+Emde degradation
+Emmert reaction
+EMSA
+EN
+enamines
+enantiomer
+enantiomorph
+enantioselective chromatography
+enantiotopic
+end-group
+end-point error
+Enders SAMP/RAMP hydrazone-alkylation reaction
+endocytic pathway
+endodermis
+endomembrane system
+endonuclease
+endoplasmic reticulum
+endosome
+endosymbiont theory
+endothelin-1
+endotherm
+endothermic
+endothermic reaction
+energy-consuming phase
+energy-yielding phase
+enolase
+enoyl CoA isomerase
+enoyl-CoA hydratase
+enterokinase
+enthalpimetric analysis
+enthalpogram
+enthalpy
+enthalpy (H)
+enthalpy change (ΔH)
+enthalpy of activation
+enthalpy of fusion
+enthalpy of immersion
+enthalpy of polymerisation
+enthalpy of wetting
+enthalpy relaxation
+entropy (S)
+entropy change (ΔS)
+entropy of activation
+entropy of polymerisation
+entropy unit
+environmental Chemistry
+environmental stress cracking
+environmentally degradable polymer
+environmentally friendly
+Enyne metathesis
+enzyme Precursors
+epidermal growth factor
+epigenetic
+epinephrine
+epithelioma
+epithelium
+epitope
+epitope mapping
+epitope retrieval
+epitope spreading
+epoxide hydrolase
+epoxy polymer
+epsilon
+epsilon-delta
+epstein-Barr virus
+equine gonadotropin
+equivalent hydrodynamic radius
+ER exit site
+ER insertion sequence
+ER lumen
+ER retention signal
+Erlenmeyer flask
+Erlenmeyer synthesis
+erythro structures
+erythroblastosis fetalis
+erythrocyte
+erythropoiesis
+erythropoietin
+eschar
+Eschenmoser fragmentation
+Eschenmoser sulfide contraction
+Eschenmoser's salt
+Eschweiler-Clarke reaction
+ESI
+ESI-MS
+esin and Markov coefficient
+essential amino acid
+ester
+ester pyrolysis
+estimated environmental concentration
+estimated exposure dose
+estradiol
+estrogen-mimetic
+estrous cycle
+estrus
+estrus syndrome
+Et3N
+eta
+ETC
+Ether
+Ether cleavage
+Ether lipid metabolism
+ethers
+ethidium bromide
+ethionine
+ethylbenzene degradation
+euglobulin
+eukaryote
+Euler-Lotka equation
+euploid
+eutrophic
+eutrophication
+Evans Aldol
+Evans-Saksena reduction
+Evans-Tishchenko reaction
+even-electron ion
+EX
+exa
+exciton absorption
+Exhaustive methylation
+exopolysaccharide biosynthesis
+exportin
+f-block
+f-block elements
+face-centered cubic solid
+face-centered cubic unit cell
+FACS
+factor IX
+factor VII
+factor VIII
+factor XI
+factor XII
+factor XIII
+FAD
+FADH
+FADH2
+farad
+Faraday constant
+Faraday's laws of electrolysis
+farnesol 2-isomerase
+fatty acid biosynthesis
+fatty acid degradation
+fatty acid elongation
+fatty acid metabolism
+fatty acid oxidation
+fatty acid synthase
+Favorskii reaction
+Favorskii rearrangement
+Favorskii-Babayan synthesis
+FBS
+FCC
+feed-back inhibition
+Fehling test
+Fehling's reagent
+Feist-Benary synthesis
+femto
+femtoliter
+femtometer
+femtomolar
+femtomole
+femtosecond
+Fenton reaction
+Fenton's reagent
+Ferrario-Ackermann reaction
+Ferrier carbocyclization
+Ferrier rearrangement
+fibroblast growth factor
+fibronectin
+Fick's law of diffusion
+Fick's laws of diffusion
+FID
+Fiesselmann thiophene synthesis
+Finkelstein reaction
+firefly luciferase
+first-order reaction
+Fischer esterification reaction
+Fischer glycosidation
+Fischer indole synthesis
+Fischer osazone reaction
+Fischer oxazole synthesis
+Fischer peptide synthesis
+Fischer projections
+Fischer Tropsch synthesis
+Fischer-Hepp rearrangement
+Fischer-Speier esterification
+FISH
+FITC
+FLAG tag
+flavin adenine dinucleotide
+flavin prenyltransferase
+flavone and flavonol biosynthesis
+flavonoid biosynthesis
+Fleming-Tamao oxidation
+flippase
+Flood reaction
+flow cytometer
+flow injection enthalpimetry
+flow-programmed chromatography
+flow-through extraction
+flow-through solid-phase spectrometry
+fluorenylmethyloxycarbonyl
+fluorescence-activated cell sorting
+fluorobenzoate degradation
+fluorophore
+fluorous extraction
+FMN
+Fmoc
+foamed polyurethane sorbent
+folate biosynthesis
+folate transport and metabolism
+Folin-Ciocalteu reagent
+formamidine disulfides
+Formox process
+Forster reaction
+Forster-Decker method
+fort's base
+Fourier transform spectrometer
+Fourier-transform infrared spectroscopy
+Fourier-transform mass spectrometry
+Fourier-transform Raman spectroscopy
+Fourier-transform spectroscopy
+Fowler process
+FPLC
+fractional-factorial design
+frame-shift mutation
+Franchimont reaction
+Franck-Condon factor
+Franck-Condon principle
+Frankland synthesis
+Frankland-Duppa reaction
+FRAP
+free electron laser
+free energy change (ΔG)
+free-running laser
+freeze-drying
+frequency, ν
+frequency-domain fluorometry
+Fresnel reflection
+FRET
+Freund reaction
+Friedel-Crafts acylation
+Friedel-Crafts alkylation
+Friedel-Crafts reaction
+Friedländer synthesis
+Fries rearrangement
+Fritsch-Buttenberg-Wiechell rearrangement
+frontal chromatography
+fructose and mannose metabolism
+fructose bisphosphatase
+fructose-1,6-bisphosphatase
+fructose-bisphosphate aldolase
+frustrated Lewis acid-base pair
+Fráter-Seebach alkylation
+Frémy's salt
+FT-NMR
+FTIR
+fugacity
+fugacity coefficient
+Fujimoto-Belleau reaction
+Fujiwara-Moritani reaction
+Fukuyama coupling
+Fukuyama indole synthesis
+Fukuyama reduction
+fumarase
+Fungi
+furanose
+furylfuramide isomerase
+Fétizon oxidation
+Fétizon's reagent
+förster cycle
+förster excitation transfer
+förster-resonance-energy transfer
+g-actin
+G1/S checkpoint
+G2/M checkpoint
+G3P
+G418
+GABA
+GABAergic synapse
+Gabriel amine synthesis
+Gabriel ethylenimine method
+Gabriel isoquinoline synthesis
+Gabriel synthesis
+Gabriel-Colman rearrangement
+gag-onc fusion protein
+gain-of-function experiment
+gain-of-function mutation
+galactose metabolism
+galanin
+Gallagher-Hollander degradation
+gamma
+gamma glutamyl transpeptidase
+gamma-aminobutyric acid
+gamma-tubulin
+GAP
+GAPDH
+Garner's aldehyde
+gas chromatography
+gaseous diffusion separator
+Gassman indole synthesis
+Gastaldi synthesis
+gastric acid secretion
+gastrin
+gastrula
+Gattermann aldehyde synthesis
+Gattermann Koch reaction
+Gattermann reaction
+Gattermann-Skita synthesis
+Gauss
+Gaussian band shape
+Gaussian-type orbital
+Gay-Lussac's law
+GC
+GC-FID
+GC-MS
+GDP
+GDP-fucose
+GDP-mannose
+GEF
+gel electrophoresis
+Geminal halide hydrolysis
+geminate recombination
+general acid-base catalysis
+generalized transition-state theory
+geometric isomers
+germylidenes
+Gewald reaction
+GFP
+Gibbs
+Gibbs adsorption
+Gibbs energy
+Gibbs energy diagram
+Gibbs energy of activation
+Gibbs energy of repulsion
+Gibbs film elasticity
+Gibbs free energy (G)
+Gibbs free-energy change (ΔG)
+Gibbs phthalic anhydride process
+Gibbs surface
+giga
+gigahertz
+gigapascal
+Gilman reagent
+Glaser coupling
+Glauber's salt
+glial fibrillary acidic protein
+Gln
+globin
+globular-chain crystal
+globule-to-coil transition
+glomerulus
+Glu
+glucagon signaling pathway
+glucocorticoid
+glucokinase
+gluconeogenesis
+glucose oxidase
+glucose-6-phosphatase
+glucose-6-phosphate
+glucose-6-phosphate dehydrogenase
+glucosinolate biosynthesis
+glue-sniffing
+GLUT (glucose transporter) proteins
+GLUT proteins
+glutamate
+glutamate dehydrogenase
+glutamate synthase
+glutamate-induced excitotoxicity
+glutamatergic synapse
+glutamic acid
+glutamic acid decarboxylase
+glutamine
+glutamine synthetase
+glutaraldehyde
+glutathione
+glutathione metabolism
+glutathione peroxidase
+glutathione reductase
+glutathione S-transferase
+gluten
+Gly
+glyceraldehyde-3-phosphate dehydrogenase
+glycerides
+glycerol Dehydrogenase
+glycerol-3-phoshitiendopene Dehydrogenase
+glycerolipid metabolism
+glycerophospholipid
+glycerophospholipid metabolism
+Glycidic ester condensation
+glycine
+glyco-amino-acid
+glycoconjugate
+glycogen
+glycogen branching enzyme
+glycogen phosphorylase
+glycogen synthase
+Glycol
+Glycol cleavage
+glycolipid
+glycolysis
+glycopeptides
+glycosamines
+glycosaminoglycan
+glycosaminoglycan degradation
+glycoses
+glycoside
+glycosidic bond
+glycosyl group
+glycosyl-amino-acid
+glycosylamines
+glycosylation
+glycosylphosphatidylinositol-anchor biosynthesis
+glycosyltransferase
+glyoxylate and dicarboxylate metabolism
+GMP
+GnRH secretion
+GnRH signaling pathway
+gold's reagent
+Golgi staining
+Gomberg radical reaction
+Gomberg-Bachmann reaction
+Gomberg-Bachmann-Hey reaction
+gonadotropic
+gonadotropin
+gonadotropin-releasing hormone
+Gould-Jacobs reaction
+GPI
+gradual potential-energy surface
+Graebe-Ullmann synthesis
+graft copolymer
+graft copolymerization
+graft homopolymer
+graft macromolecule
+graft polymer
+Graham's law of effusion
+Gram
+Gram stain
+Gram-atom
+grana
+granulocyte colony-stimulating factor
+granulocyte-macrophage colony-stimulating factor
+gray
+Green body
+Green fluorescent protein
+Green polymer
+Griesbaum coozonolysis
+Grignard degradation
+Grignard reaction
+Grignard reagent
+Grob fragmentation
+ground-state electron configuration
+group-transfer polymerization
+Grubbs' catalyst
+Grundmann aldehyde synthesis
+Gryszkiewicz-Trochimowski and McCombie method
+GSH
+GSSG
+GST tag
+GTO
+GTP
+GTP cap
+GTP cyclohydrolase I
+GTP-binding protein
+GTPase
+GTPase-activating protein
+guanidinium chloride
+guanidinium thiocyanate
+guanine
+guanine-exchange factor
+guanosine
+guanylate cyclase
+Guareschi-Thorpe condensation
+gubernaculum
+Guerbet reaction
+guides to environmental quality
+guillain-Barré syndrome
+Guindon's reagent
+gut-associated lymphoid tissue
+Gutknecht pyrazine synthesis
+H-2
+H-2 complex
+HA
+HA tag
+Haber process
+hadron
+HaeIII
+Hajos-Parrish ketone
+Hajos-Parrish-Eder-Sauer-Wiechert reaction
+halato-telechelic polymer
+half-cells
+half-life
+half-reaction
+hall-Héroult cell
+Haller-Bauer reaction
+haloacetate dehalogenase
+halobacteria
+Haloform reaction
+Halogen addition reaction
+Halohydrin
+Halohydrin dehalogenase
+Halohydrin formation reaction
+Hamiltonian operator
+Hammick reaction
+Hammond postulate
+Hammond principle
+Hanes-Woolf plot
+hansch-Fujita π-constant
+Hantzsch dihydropyridine synthesis
+Hantzsch pyridine synthesis
+Hantzsch pyrrole synthesis
+Hantzsch's ester
+Hantzsch-Collidin synthesis
+haploid
+haplotype
+hapten
+haptenic
+hapticity
+hard acid
+hard-segment phase domain
+Hardy-Weinberg equilibrium
+Harries ozonolysis
+Hartree
+Hartree-Fock
+hashimoto thyroiditis
+Hatakeyama's catalyst
+HATU
+Haworth methylation
+Haworth synthesis
+Hayashi rearrangement
+HBSS
+HBTU
+HCP
+HDR
+head-tail isomerism
+heat-flow differential scanning calorimetry
+Heck reaction
+hecto
+Hegedus indole synthesis
+Heisenberg uncertainty principle
+HeLa cell
+Helferich method
+helicase
+helium dead-space
+Hell-Volhard-Zelinsky halogenation
+Helmholtz energy
+hematopoietic cell lineage
+Hemetsberger indole synthesis
+Hemetsberger-Knittel synthesis
+hemidesmosomes
+hemoglobin
+hemolysis
+Henderson
+Henderson-Hasselbalch equation
+Henkel process
+Henkel reaction
+henry
+Henry reaction
+Henry's law
+Henry's law constant
+Henry's law solubility constant
+Henry's law volatility constant
+heparin
+HEPES
+hepoxilin-epoxide hydrolase
+hermann-Beller catalyst
+Hertz
+hertz
+Herz compounds
+Herz reaction
+Herzig-Meyer alkimide group determination
+Hess's law
+hetarenes
+hetaryl groups
+heteroalkenes
+heteroarenes
+heteroaryl groups
+heterocyclic amines
+heterotroph
+heterotrophic
+heterozygote
+Heumann indigo synthesis
+hexamethylphosphoramide
+hexokinase
+HFIP
+Hi-C
+high-spin complexes
+highest occupied molecular orbital
+Hilbert transform
+HILIC
+Hill coefficient
+Hill equation
+Hill reaction
+HindIII
+Hinsberg indole synthesis
+Hinsberg oxindole synthesis
+Hinsberg reaction
+Hinsberg separation
+Hinsberg sulfone synthesis
+Hirao coupling
+His
+His tag
+histidine
+histidine metabolism
+histone
+histone methyltransferase
+histone-modifying enzymes
+Hiyama coupling
+HMBC
+HMG-CoA reductase
+HMG-CoA synthase
+HMPA
+HN(CA)CO
+HN(CO)CA
+HNCA
+HNCO
+hnRNA
+HOAt
+HOBt
+Hoch-Campbell ethylenimine synthesis
+Hock rearrangement
+Hoechst 33342
+Hoesch reaction
+Hofmann bromamide reaction
+Hofmann degradation
+Hofmann elimination
+Hofmann elimination reaction
+Hofmann Isonitrile synthesis
+Hofmann product
+Hofmann rearrangement
+Hofmann's rule
+Hofmann-Löffler reaction
+Hofmann-Löffler-Freytag reaction
+Hofmann-Martius rearrangement
+Hofmann-Sand reaction
+hold-back carrier
+hold-up time
+hold-up volume
+hollow-cathode discharge source
+hollow-cathode lamp
+hollow-fibre liquid-phase microextraction
+HOMO
+Homo rearrangement of steroids
+homoalanine
+homoarginine
+homocitrulline
+homocysteine
+homogeneous line-broadening
+homolanthionine
+homology
+homomethionine
+homonuclear decoupling
+homonuclear diatomic molecules
+homopolymers
+homoselenocysteine
+homoserine
+homoserine Dehydrogenase
+homotopic
+homozygote
+homunculus
+Hooker reaction
+Horner-Wadsworth-Emmons reaction
+horseradish peroxidase
+Hosomi-Sakurai reaction
+host-vector system
+Houben-Fischer synthesis
+HpaII
+HPLC
+hsp70
+hsp90
+HSQC
+HTP
+Hudlicky fluorination
+Huisgen cycloaddition
+Hund's rule
+Hunsdiecker reaction
+Hunsdiecker-Borodin reaction
+Hurd-Mori 1,2,3-thiadiazole synthesis
+Huygens
+hyaluronic acid
+hyaluronidase
+hybrid mass spectrometer
+hydrazine
+hydrazoic acid
+hydrodynamic chromatography
+hydrodynamic injection
+hydrodynamic voltammetry
+hydrofluoric acid
+hydrogen-deuterium exchange
+hydrogen/deuterium exchange
+hydrolases
+hydrophilic-interaction liquid chromatography
+hydrophobic-interaction chromatography
+hydroxy
+hydroxyl
+hydroxylation
+hydroxylysine
+hydroxymethylglutaryl CoA (HMG CoA)
+hydroxyproline
+hydroxytryptophan
+hygromycin
+hyper-Raman spectroscopy
+hyperlayer focusing field-flow fractionation
+hypertonic
+hyphenated mass spectrometry technique
+hypo-phase
+hypotonic
+hypoxanthine
+hypoxanthine-guanine phosphoribosyltransferase
+hysteresis
+héroult
+Hückel
+Hückel rule
+Hünig's base
+IBX
+ICP-MS
+ICP-OES
+ideal chromatography
+ideal, non-linear chromatography
+IL-17 signaling pathway
+Ile
+ilkovič equation
+IMF
+imidazole
+imide
+imines
+immediate-early protein
+immission dose
+immunolabeling
+immunoprecipitation
+IMP
+importin
+in situ micro-X-ray diffraction
+in-vivo neutron activation analysis
+Indium mediated allylation
+indole diterpene alkaloid biosynthesis
+inert gases
+infrared spectroscopy
+Ing-Manske procedure
+inhibitory gi G-protein
+inorganic Chemistry
+inosine
+inositol phosphate metabolism
+inositol triphosphate
+intercellular adhesion molecule-1
+interpolar microtubules
+iodothyronine
+iodothyronine deiodinase
+iodotyrosine deiodinase
+ion trap mass spectrometer
+ion-dipole attraction
+ion-free layer
+ion-pair formation
+ionization isomers
+iota
+IP3
+Ipso substitution
+IPTG
+IR
+Ireland-Claisen rearrangement
+iron-sulfur protein
+IRTRAN™
+Irvine-Purdie methylation
+Isay reaction
+Ishikawa reagent
+Ising model
+Isler modification
+isobaric mass-change determination
+isochorismatase
+isocitrate dehydrogenase
+isodityrosine
+isoelectric
+isoelectric focusing
+isoelectric point
+isoelectric point (pI)
+isoelectronic
+isoelectronicity
+isoflavonoid biosynthesis
+isoleucine
+isomer shift
+isomerase
+isomeric state
+isomeric transition
+isomerization
+isomorphous
+isopenicillin N synthase
+isopropyl alcohol
+isosteric enthalpy of adsorption
+isothermal chromatography
+isothermal technique
+isothermal titration calorimeter
+isotonic
+isotope dilution mass spectrometry
+isotope ratio mass spectrometry
+isovaline
+ITC
+Ivanov reaction
+Ivanov reagent
+Jacobsen epoxidation
+Jacobsen rearrangement
+Jahn-Teller effect
+Janovsky reaction
+Japp-Klingemann reaction
+Japp-Maitland condensation
+Jocic reaction
+Johnson-Claisen rearrangement
+Johnson-Corey-Chaykovsky reaction
+Jones oxidation
+Jordan-Ullmann-Goldberg synthesis
+joule
+Joule (J)
+Julia olefination
+Julia-Lythgoe olefination
+juxtacrine
+Kabachnik-Fields reaction
+Kagan's reagent
+Kamlet reaction
+kanamycin
+kappa
+karyopherin
+karyoplasm
+katal
+KDEL
+Keck asymmetric allylation
+kekulé structures
+kelvin
+Kemp's triacid
+keratin
+ketazines
+ketenimines
+Ketimine Mannich reaction
+ketimines
+keto acid
+keto carbenes
+ketone
+ketone bodies
+ketone halogenation
+Kharasch-Sosnovsky reaction
+KHMDS
+Kiliani-Fischer synthesis
+kilo
+kilodalton
+kilogram
+kilohertz
+kilojoule
+kilometer
+kilopascal
+kilovolt
+Kindler reaction
+kinesin
+kinetochore microtubule
+Kishner cyclopropane synthesis
+KMnO4
+knock-out mouse
+Knoevenagel condensation
+Knoevenagel-Fries modification
+Knorr pyrazole synthesis
+Knorr pyrrole synthesis
+Knorr quinoline synthesis
+Koch-Haaf reaction
+Kochi reaction
+Koenigs-Knorr reaction
+Kolbe electrolysis
+Kolbe nitrile synthesis
+Kolbe-Schmitt reaction
+Kornblum oxidation
+Kornblum-DeLaMare rearrangement
+Koser's reagent
+Kostanecki acylation
+Kowalski ester homologation
+KpnI
+Krapcho decarboxylation
+Krebs cycle
+Krische allylation
+Kröhnke aldehyde synthesis
+Kröhnke oxidation
+Kröhnke pyridine synthesis
+Kucherov reaction
+Kuhn-Winterstein reaction
+Kulinkovich reaction
+Kumada coupling
+kynureninase
+L-DOPA
+L-Gulonolactone oxidase
+L-xylulose reductase
+laccase
+lactase
+lactate dehydrogenase
+lactic acid autotroph
+LAD
+lag phase
+lambda
+lamin (nuclear)
+lamin-associated domain
+laminin
+langmuir-Hinshelwood mechanism
+langmuir-Rideal mechanism
+lanthanide series
+lanthanides
+lanthanoid series
+lanthionine
+lariat ethers
+Larock indole synthesis
+laser ionization
+lattice energy (ΔHlattice)
+Lawesson reagent
+Lawesson's reagent
+LB broth
+LC-MS
+LC-MS/MS
+LCAO
+LDA
+le Chatelier's principle
+le Châtelier's principle
+lead acid battery
+least-squares technique
+Lebedev process
+Lehmstedt-Tanasescu reaction
+Leimgruber-Batcho indole synthesis
+Letts nitrile synthesis
+Leu
+leuchs' anhydrides
+leucine
+leucine-2-alanine enkephalin
+Leuckart amide synthesis
+Leuckart reaction
+Leuckart thiophenol reaction
+Leuckart-Wallach reaction
+leuco bases
+leucoanthocyanidin reductase
+leukocyte transendothelial migration
+leukotriene C4 synthase
+leukotriene-A4 hydrolase
+leukotrienes
+Levinstein process
+Lewis
+Lewis acid
+Lewis acid-base adduct
+Lewis acid-base Chemistry
+Lewis base
+Lewis structure
+Lewis symbol
+Ley-Griffith oxidation
+LFSE
+LH
+LiAlH4
+Lieben iodoform reaction
+Liebeskind-Srogl coupling
+Liebig melamine synthesis
+lifetime broadening
+ligand
+ligand (signaling)
+ligand exchange chromatography
+ligand field stabilization energy
+light-atom anomaly
+light-emitting diode
+lignin
+LiHMDS
+limiting Catalytic current
+limonene-1,2-epoxide hydrolase
+Lindlar catalyst
+line-bond structures
+line-broadening
+line-of-centres model
+line-shape analysis
+line-space patterning
+linear chromatography
+linear copolymer
+linear distribution isotherm
+linear free-energy relation
+linear polymer
+linear-scan voltammetry
+linearity of calibration
+lineweaver-Burk diagram
+Lineweaver-Burk plot
+linkage isomers
+linoleate isomerase
+linoleic acid metabolism
+lipase
+lipoamide
+lipoamino acid
+lipoarabinomannan (Lam) biosynthesis
+Lipofectamine
+lipogenesis
+lipoic acid metabolism
+lipolysis
+lipooligosaccharide
+lipopolysaccharide biosynthesis
+lipopolysaccharides
+lipopolysaccharidomics
+lipoprotein
+lipoprotein lipase
+lipoxygenase
+lippert-Mataga equation
+liquid chromatography
+liquid chromatography-mass spectrometry
+liquid excimer laser
+liquid ion laser
+liquid laser
+liquid-coated stationary phase
+liquid-crystal dendrimer
+liquid-crystal polymer
+liquid-crystal state
+liquid-crystalline phase
+liquid-crystalline polymer
+liquid-gel chromatography
+liquid-liquid distribution
+liquid-liquid extraction
+liquid-metal ion gun
+liquid-phase film thickness
+liquid-phase loading
+liquid-phase microextraction
+list of compounds
+lithium diisopropylamide
+living anionic polymerization
+living cationic polymerization
+living condensative chain polymerization
+living coordination polymerization
+living copolymerization
+living ionic polymerization
+living polymer
+lncRNA
+lock-in amplifier
+logit
+Lombardo methylenation
+London
+London dispersion force
+London forces
+lone-pair electrons
+long-term depression
+long-term potentiation
+loss-of-function experiment
+loss-of-function mutation
+Lossen rearrangement
+low-energy collision-induced dissociation
+low-energy ion scattering spectrometry
+low-pass filter
+low-pressure mercury lamp
+low-specificity sorbents
+low-spin complexes
+low-spin state
+LS coupling
+Lucas' reagent
+Luche reduction
+luciferase
+lumen
+luminescence
+luminescence quenching
+luminescence spectrometer
+luminescent protein
+LUMO
+lux
+lyases
+Lys
+lysine
+lysine biosynthesis
+lysine degradation
+lysosomal pathway
+lysozyme
+Löffler-Freytag reaction
+M (mitosis) phase
+macrophage colony-stimulating factor
+MACS
+Madelung synthesis
+Maillard reaction
+Main-group elements
+Malaprade reaction
+malate dehydrogenase
+MALDI
+MALDI-TOF
+maleate isomerase
+maleylacetoacetate isomerase
+maleylpyruvate isomerase
+Malonic ester synthesis
+malonyl-CoA
+maltase
+mancude-ring systems
+mandelate racemase
+Mander's reagent
+Mannich reaction
+mannose type O-glycan biosynthesis
+mannose-6-phosphate
+MAP kinase cascade
+marcus-Hush relationship
+Markovnikov's rule
+Markownikoff rule
+Markownikow rule
+Markó-Lam deoxygenation
+Marschalk reaction
+Martin's sulfurane
+Martinet dioxindole synthesis
+maslinic acid
+mass spectrometer
+mass spectrometric detector
+mass spectrometry
+mass-law effect
+mass-volume percent
+matrix metalloproteinase
+maturation-promoting factor
+Maxwell
+mayr-Patz equation
+MBP tag
+McFadyen-Stevens reaction
+mCherry
+mCPBA
+mechanism-based inhibition
+medium-pressure mercury lamp
+Meerwein arylation
+Meerwein's reagent
+Meerwein-Ponndorf-Verley reduction
+mega
+megahertz
+megapascal
+Meisenheimer adduct
+Meisenheimer rearrangement
+Meissenheimer complex
+melanogenesis
+Meldrum's acid
+MEM
+membrane glycoprotein
+membrane topology
+menaquinone
+Mendelian inheritance
+Menshutkin reaction
+Merckwald asymmetric synthesis
+mercury-xenon lamp
+MERFISH
+merry-go-round reactor
+MES
+meso-compound
+messenger RNA
+Met
+meta-chloroperoxybenzoic acid
+metal-carbene complexes
+metal-carbyne complexes
+metal-ion-catalyzed σ-bond rearrangement
+Metallo-Ene reaction
+metallocenes
+metalloendopeptidase
+metaphase checkpoint
+metazoa
+meter
+methanogens
+methionine
+methyl
+methyl (S)-(+)-3-hydroxy-2-methylpropionate Methyl (R)-(+)-3-hydroxy-2-methylpropionate
+methyl cyanoformate
+methyl tert-butyl Ether
+methylarginine
+methylation
+methylene blue
+methylene group
+methylenetetrahydrofolate reductase
+methylmalonyl CoA epimerase
+methylotrophic microorganisms
+Meyer
+Meyer reaction
+Meyer synthesis
+Meyer-Hartmann reaction
+Meyer-Schuster rearrangement
+Michael addition
+Michael condensation
+Michael reaction
+Michael system
+Michaelis constant
+Michaelis-Arbuzov reaction
+Michaelis-Menten kinetics
+micro
+microampere
+microfilament protein
+microgram
+microliter
+micrometeorology
+micrometer
+micromolar
+micromole
+microsecond
+microsomal epoxide hydrolase
+microtubule organizing center
+microtubule-associated protein
+microvolt
+Midland Alpine borane reduction
+Mignonac reaction
+Milas hydroxylation
+milli
+milliampere
+milligram
+millijoule
+Millikan
+milliliter
+millimeter
+millimolar
+millimole
+millisecond
+millivolt
+Millon's reagent
+mineralocorticoid
+minimum-energy reaction path
+Minisci reaction
+miRNA
+Mislow-Evans rearrangement
+mitochondria
+mitochondrial membrane
+mitochondrial processing peptidase
+mitotic nuclear division
+Mitsunobu reaction
+Miyaura borylation
+MLCT
+mNeonGreen
+MO
+mobile phase
+mode-locked laser
+modified Wittig-Claisen tandem reaction
+Mohr amplification process
+molality
+molarity
+mole
+molecular beam mass spectrometry
+molecular chaperone
+molecular laser
+molecular orbital (Ψ2)
+molecular phylogeny
+molecular Rydberg state
+molecular spectroscopy
+molecularly imprinted polymer sorbent
+Molisch's test
+MOM
+momentum separator
+mono-energetic radiation
+monoamine
+monoamine oxidase
+monoglyceride molecules
+monolayer-associated protein
+monosaccharide
+monosaccharide transport protein
+monoterpenes
+monoterpenoid biosynthesis
+monoterpenoids
+Monte Carlo method
+MOPS
+more O'Ferrall-Jencks diagram
+Mosher's acid
+Mozingo reduction
+MP2
+MPP
+MRI
+mRNA
+Ms
+MS/MS data based identification
+MS/MS spectrum
+MsCl
+MSH
+MspI
+MT
+MTOC
+mu
+mucin type O-glycan biosynthesis
+mucopolysaccharides
+Mukaiyama Aldol addition
+Mukaiyama hydration
+Mukaiyama reaction
+Muller's ratchet
+multi-centre bond
+multi-centre reaction
+multi-channel pulse height analyser
+multi-dimensional chromatography
+multi-way data
+multiconfiguration SCF method
+multiplicative Name
+Myc tag
+mycolic acid biosynthesis
+myelin basic protein
+myeloperoxidase
+Myers' asymmetric alkylation
+myosin
+Möbius aromaticity
+Mössbauer effect
+Mössbauer spectrometry
+Mössbauer spectroscopy
+n + 1 rule
+N -formylmethionine
+n → π* state
+n → π* transition
+n → σ* transition
+N,N-Diisopropylethylamine
+N-acetylcysteine
+N-bromosuccinimide
+n-Butyllithium
+N-formylmethionine leucyl-phenylalanine
+N-Glycan biosynthesis
+N-linked glycosylation
+N-methylaspartate
+N-terminal amino acid
+N-terminal START transfer sequence
+N-terminus
+n-σ* delocalization
+NAA
+NaBH4
+nabla
+NAD
+NAD+
+NADH
+NADH dehydrogenase
+NADP
+NADP+
+NADPH
+NaHMDS
+NaKATPase
+Nametkin rearrangement
+nano
+nanoampere
+nanogram
+nanoliter
+nanometer
+nanomolar
+nanomole
+nanosecond
+naphthalene degradation
+naphthylalanine
+Narasaka-Prasad reduction
+native gel electrophoresis
+Nazarov cyclization reaction
+NBS
+NcoI
+NCS
+NdeI
+Neber rearrangement
+negative hyper-conjugation
+negative-ion yield
+Negishi coupling
+Negishi zipper reaction
+Nenitzescu indole synthesis
+Nenitzescu Reductive acylation
+neodymium laser
+neoflavones
+nephelometry
+Nernst equation
+NES
+neurobiology
+neurofilament protein
+neurokinin A
+neurokinin K
+neuronal
+neuronal cell adhesion molecule
+neuropeptide
+neuropeptide Y
+neuroscience
+neurotensin
+neurotransmitter
+neurotrophin signaling pathway
+neutralization-reionization mass spectrometry
+neutron activation analysis
+neutron density
+neutron depth profiling
+neutron diffraction analysis
+neutron energy
+neutron multiplication
+neutron scattering analysis
+neutron temperature
+neutrophil extracellular trap formation
+Newman projection
+Newman-Kwart rearrangement
+newton
+NF-kappa B
+NHEJ
+Ni-NTA
+Nicholas reaction
+nickel-cadmium
+nicotinamide adenine dinucleotide
+nicotinate and nicotinamide metabolism
+nicotinate dehydrogenase
+nicotinate dehydrogenase (cytochrome)
+nido-
+Niementowski quinazoline synthesis
+Niementowski quinoline synthesis
+nier-Johnson geometry
+Nierenstein reaction
+NIH shift
+nikolsky-Eisenman equation
+Ninhydrin test
+nitramines
+nitrate reductase
+nitrenes
+nitric oxide
+nitric oxide dioxygenase
+nitric oxide synthase
+nitrilase
+nitrile imides
+nitrile oxides
+nitrile sulfides
+nitrile ylides
+nitriles
+nitrilium betaines
+nitrilium ions
+nitrimines
+nitrite reductase
+Nitroaldol reaction
+nitrocellulose
+nitrogen laser
+nitrogenase
+nitrogenase (flavodoxin)
+nitroglycerine
+Nitrone-olefin 3+2 cycloaddition
+nitrosamides
+nitrosamines
+nitrosimines
+NLS
+NMO
+NMR
+NMR exchange spectroscopy
+NO
+no-load indication
+nobel Prize in Chemistry
+NOD-like receptor signaling pathway
+NOESY
+non-aqueous capillary electrophoresis
+non-certified property value
+non-crossing rule
+non-crystalline electrodes
+non-crystalline membrane
+non-destructive activation analysis
+non-dispersive infrared spectroscopies
+non-ideal chromatography
+non-ideal, linear chromatography
+non-ideal, non-linear chromatography
+non-isotopic labelling
+non-Kekulé molecules
+non-Kekulé structure
+non-linear chromatography
+non-linear distribution isotherm
+non-linear optical effect
+non-linear optical techniques
+non-linearity error
+non-metal
+non-porous membrane
+non-radiative decay
+non-radiative quenching
+non-vertical energy transfer
+nonessential amino acid
+nonribosomal peptide structures
+Normant reagents
+norrish Type II photoreaction
+norrish-Yang reaction
+norvaline
+NotI
+Noyori asymmetric hydrogenation
+Nozaki-Hiyama-Kishi reaction
+NP-40
+nu
+nuclear
+nuclear bodies
+nuclear export signal
+nuclear lamina
+nuclear lamins
+nuclear localization sequence
+nuclear localization signal
+nuclear magnetic resonance
+nuclear magnetic resonance spectroscopy
+nuclear protein
+nuclease
+nucleation sites
+nucleic acid regulatory sequence
+nucleic acid repetitive sequence
+nucleic acid sequence homology
+nucleofuge
+nucleon
+nucleophile
+nucleophilic acyl substitution
+nucleophilic acyl substitution reaction
+nucleophilic addition reaction
+nucleophilic aromatic photosubstitution
+nucleophilic aromatic substitution
+nucleophilic catalysis
+nucleophilic substitution
+nucleophilic substitution reactions
+nucleophilicity
+nucleoproteins
+nucleotide bases
+nucleotide metabolism
+number of pseudo-generations
+nutritional calorie
+O-Antigen repeat unit biosynthesis
+O-linked glycosylation
+OAc
+octahedro-
+octreotide
+Ohira-Bestmann reaction
+Ohira-Bestmann reagent
+Ohm
+Olah reagent
+olefin metathesis polymerization
+olfaction
+olfactory transduction
+oligopeptide
+omega
+omega-3 fatty acid
+omicron
+OMs
+oncogenic retroviridae protein
+operon
+oplophorus-luciferin 2-monooxygenase
+Oppenauer oxidation
+opsin
+optical isomerism
+optical isomers
+ORF
+organic base
+organic Chemistry
+Orgel diagram
+ornithine
+ornithine decarboxylase
+ornithine transcarbamoylase
+ornithine transcarbamylase
+ortho amides
+ortho esters
+ortho- and peri-fused
+ortho-fused
+osmium tetroxide
+osmotic pressure (Π)
+OsO4
+osotriazoles
+osteocalcin
+osteoclast differentiation
+Ostromisslenskii reaction
+Ostromyslenskii reaction
+Ostwald process
+OTf
+OTs
+ovarian steroidogenesis
+overbar
+Overman rearrangement
+oxidation-reduction (redox) reactions
+oxidation-reduction reaction
+oxidative decarboxylation
+oxidative phosphorylation
+oxidoreductases
+oxime O-ethers
+Oxo carboxylic acids
+oxoacid
+oxoglutarate dehydrogenase
+oxonium ylides
+Oxy-Cope rearrangement
+oxymercuration-demercuration
+oxytocin signaling pathway
+p-block
+P42 MAP kinase
+Paal-Knorr pyrrole synthesis
+Paal-Knorr synthesis
+PAGE
+PALM
+PAM
+pancreatic lipase
+pancreatic polypeptide
+pancreatic secretion
+Paneth technique
+pantothenate and CoA biosynthesis
+papain
+PAPS
+paraformaldehyde
+paramagnetism
+pascal
+Passerini reaction
+Paternò-Büchi reaction
+Pauli exclusion principle
+Pauson-Khand reaction
+Payne rearrangement
+PBE
+PBr3
+PBS
+PCC
+PCM
+PCR
+PDC
+PE
+peak width at base
+Pearlman's catalyst
+Pechmann condensation
+Pechmann pyrazole synthesis
+Pellizzari reaction
+Pelouze synthesis
+penicillin and cephalosporin biosynthesis
+penicillin-Binding Proteins
+pentose and glucuronate interconversions
+pentose phosphate pathway
+PEP carboxykinase
+pepsin
+pepsinogen
+peptide bond
+peptide De novo sequencing
+peptide elongation factor
+peptide elongation factor tu
+peptide fragment
+peptide fragment ion
+peptide fragmentation technique
+peptide initiation factor
+peptide mass fingerprinting
+peptide nucleic acid
+peptide precursor ion
+peptide sequence tag
+peptide synthesis
+peptide termination factor
+peptidoglycan
+peptidoglycan biosynthesis
+peptidomics
+per-
+peracid
+perchloric acid
+perfusion stationary phase
+perinuclear space
+Periodic acid oxidation
+Periodic law
+Periodic voltage
+Perkin alicyclic synthesis
+Perkin reaction
+Perkin rearrangement
+Perkow reaction
+Permanent modifier
+permeation chromatography
+peroxides
+peroxy
+peroxy acids
+peroxymonosulfuric acid
+perturbed angular correlation spectrometry
+peta
+Petasis reaction
+Petasis reagent
+Peterson olefination
+Peterson reaction
+Petrenko-Kritschenko piperidone synthesis
+Pfau-Plattner azulene synthesis
+Pfitzinger reaction
+Pfitzner-Moffatt oxidation
+PFK-1
+PFK-2
+Pfu polymerase
+pH
+pH glass electrode
+pH scale
+pH-sensitive electrode
+pH-zone-refining counter-current chromatography
+pH0.5 or pH1/2
+phage display
+phagosome
+phase correction
+phase cycling
+phase inversion
+phase-contrast microscopy
+Phe
+phenazine biosynthesis
+phenol-chloroform
+phenoxide ion, ArO-
+phenyl
+phenyl group
+phenylalanine
+phenylalanine ammonia-lyase
+phenylalanine hydroxylase
+phenylalanine metabolism
+phenylpropanoid biosynthesis
+phi
+phosphatase
+phosphine oxides
+phosphoanhydride bonds
+phosphodiester
+phosphofructokinase
+phosphoglucomutase
+phosphoglucose isomerase
+phosphoglycerate kinase
+phosphoglycerate mutase
+phospholipase
+phospholipase C
+phospholipid
+phosphomimetics
+phosphonate and phosphinate metabolism
+Phosphonium coupling
+phosphopeptide
+phosphoprotein
+phosphorane
+phosphoribulokinase
+phosphoric acid
+phosphorus pentachloride
+phosphorus tribromide
+phosphorus trichloride
+phosphoryl chloride
+phosphorylation
+phosphoserine
+phosphothreonine
+phosphotyrosine
+photoisomerase
+photolysis
+photophosphorylation
+photosynthesis - antenna proteins
+photothermal spectroscopy
+phototransduction - fly
+phragmoplast
+phylogeny
+physical Chemistry
+pi
+pi bond
+pi bond (π bond)
+pi bonding molecular orbital
+PI-3-kinase
+Piancatelli rearrangement
+pico
+picoampere
+picogram
+picoliter
+picometer
+picomolar
+picomole
+picosecond
+Pictet-Gams isoquinoline synthesis
+Pictet-Hubert reaction
+Pictet-Spengler reaction
+Pictet-Spengler tetrahydroisoquinoline synthesis
+pile-up
+Piloty-Robinson pyrrole synthesis
+PIN semiconductor detector
+Pinacol coupling reaction
+Pinacol rearrangement
+Pinner amidine synthesis
+Pinner reaction
+Pinner triazine synthesis
+Pinnick oxidation
+pIon
+PIP2
+PIPES
+Piria reaction
+piRNA
+PKA
+pKa
+pKb
+plackett-Burman design
+planar chromatography
+Planck constant
+plant-pathogen interaction
+plasma gases
+plasma lipoproteins
+plasmid
+plasmin
+plasminogen
+plasmon
+plastid
+plastoglobules
+platelet glycoprotein GPIb-IX complex
+platelet membrane glycoprotein
+platelet-derived growth factor
+PLC
+pleiotropic gene
+ploidy
+PLP
+PMSF
+pnictogen
+POCl3
+pOH
+Polonovski reaction
+poly-L-lysine
+polyarylenes
+polyarylenethynylenes
+polyarylenevinylenes
+polybase
+polybenzimidazoles
+polybenzothiazole
+polybenzoxazole
+polybismaleimide
+polycarbodiimide
+polycarborane
+polycarbosilane
+polycrystalline polymer
+polycyanurate
+polydentate ligand
+polydiacetylenes
+polyester
+polyether
+polyethylenimine
+polyglutarimide
+polyimidazole
+polyimides
+polyisocyanide
+polyisocyanurate
+polyketone
+polymer alloy
+polymer bead
+polymer blend
+polymer catalyst
+polymer clathrate
+polymer co-crystal
+polymer co-crystallisation
+polymer colloid
+polymer compatibilizer
+polymer complexation
+polymer composite
+polymer content
+polymer crystal
+polymer crystallite
+polymer cyclization
+polymer degradation
+polymer dispersion
+polymer drug
+polymer emulsion
+polymer fibre
+polymer fibril
+polymer functionalization
+polymer gel
+polymer gel particle
+polymer glass
+polymer mass fraction
+polymer melt
+polymer membrane
+polymerase chain reaction
+polymerization
+polymetaloxane
+polymorphic polymer crystal
+polymorphs
+polynucleotide
+polyoxadiazoles
+polyoxyalkylene
+polyoxyarylene
+polyoxymethylene
+polyoxyphenylene
+polyparabanic acid
+polyphenylenemethylene
+polyphenylenes
+polyphenylenethynylenes
+polyphenylenevinylenes
+polyphosphate
+polyphosphazene
+polysaccharide
+polysilanes
+polysiloxane
+polysulfonamide
+polysulfone
+polytetrazines
+polythiadiazoles
+polythiazoles
+polythioester
+polythioether
+polythiophenes
+polytriazine
+polyurea
+polyurethane
+polyvinyl ester
+polyvinyl Ether
+Pomeranz-Fritsch reaction
+Ponceau S
+Ponzio reaction
+porin
+porphyrin
+porphyrin metabolism
+potassium nitrosodisulfonate
+potentiometric detection method
+PPAR signaling pathway
+PQQ Cofactor
+Prato reaction
+precursor peak
+Prelog strain
+Prevost reaction
+Prileschajew reaction
+Prilezhaev reaction
+primary bile acid biosynthesis
+primary endosymbiosis
+primary nutritional groups
+primase
+Prins reaction
+Prinzbach synthesis
+prion
+Pro
+pro-R
+pro-S
+progesterone-mediated oocyte maturation
+prolactin signaling pathway
+proline
+prolycopene isomerase
+prolyl isomerase
+prolyl oligopeptidase
+prolylalanine
+propanediol-Phosphate Dehydrogenase
+propanoate metabolism
+prophage
+propidium iodide
+propyl
+prostaglandin
+proteases
+Protecting group
+Protein A
+protein disulfide isomerase
+Protein G
+protein kinase A
+protein P16
+protein P34cdc2
+protein precursor
+protein-tyrosine kinase
+protein-tyrosine-phosphatase
+proteinase K
+proteolysis
+prothrombin
+proton-motive force
+protoporphyrinogen oxidase
+protozoan proteins
+proximal tubule bicarbonate reclamation
+PRPP
+Pschorr reaction
+pseudouridine
+psi
+PstI
+Pummerer rearrangement
+Purdie methylation
+purine
+purine metabolism
+puromycin
+PVDF
+Pyl
+pyranose
+pyridinium chlorochromate
+pyridoxal Phosphate
+pyrimidine
+pyrimidine metabolism
+pyrolysis
+pyrrolysine
+pyruvate
+pyruvate carboxylase
+pyruvate dehydrogenase
+pyruvate kinase
+pyruvate metabolism
+pyruvate oxidation
+qPCR
+quantum Chemistry
+quark
+quecto
+Quelet reaction
+quetta
+R2NH
+R2SO
+R2SO2
+Racah parameter
+radian
+radionuclide
+Raecke process
+Raman spectroscopy
+Ramberg-Bäcklund reaction
+Raney nickel
+Raoult's law
+Rap-Stoermer condensation
+rapid-scan Fourier-transform infrared spectroscopy
+rare-earth element
+Raschig phenol process
+rate of nucleation
+rate-determining step
+rate-limiting step
+Rauhut-Currier reaction
+Rayleigh limit
+Rayleigh scattering
+re-extraction
+reaction chromatography
+real-time polymerase chain reaction
+recombinant fusion protein
+recombinant protein
+recombinases
+recombination
+RecQ helicase
+Red-Al
+Reductive amination
+Reed reaction
+Reformatskii reaction
+Reformatsky reaction
+Reilly-Hickinbottom rearrangement
+Reimer-Tiemann reaction
+Reissert compound
+Reissert indole synthesis
+Reissert reaction
+renilla-luciferin 2-monooxygenase
+renin secretion
+renin-angiotensin system
+Reppe synthesis
+rER
+retinal isomerase
+retinoblastoma protein
+retinol isomerase
+retinol metabolism
+retinol-binding protein
+retrograde endocannabinoid signaling
+Retropinacol rearrangement
+retroviridae protein
+retrovirus
+reverse transcriptase
+reverse transcriptase PCR
+reversible-addition-fragmentation chain-transfer polymerization
+reversible-addition-fragmentation radical polymerization
+reversible-deactivation anionic polymerization
+reversible-deactivation cationic polymerization
+reversible-deactivation coordination polymerization
+reversible-deactivation ionic polymerization
+reversible-deactivation polymerization
+reversible-deactivation radical polymerization
+RFLP
+rho
+rhodopsin
+Ribo-seq
+riboflavin metabolism
+ribonuclease
+ribonuclease A
+ribonucleic acid
+ribonucleoside-triphosphate reductase
+ribonucleotide reductase
+ribose
+ribosomal protein S6 kinase
+ribosomal RNA
+ribozyme
+ribulose-1,5-bisphosphate carboxylase/oxygenase
+ribulose-bisphosphate carboxylase
+Rieche formylation
+Riemschneider thiocarbamate synthesis
+RIG-I-like receptor signaling pathway
+right-handed helix
+Riley oxidations
+ring-current
+ring-flip
+ring-opening copolymerization
+ring-opening metathesis polymerization
+ring-opening nucleophilic chain polymerization
+ring-opening polymerization
+Ritter reaction
+RMgX
+RNA
+RNA polymerase
+RNA, Catalytic
+RNA-directed DNA polymerase
+RNA-seq
+RNase A
+RNase H
+RNH2
+Robinson annulation
+Robinson annulation reaction
+Robinson Schopf reaction
+Robinson-Gabriel synthesis
+roche ester
+rod-coil copolymer
+ROESY
+ronna
+ronto
+Rosenmund reaction
+Rosenmund reduction
+Rosenmund-von Braun synthesis
+Roskamp reaction
+Rothemund reaction
+rough ER
+round-bottom flask
+RP-HPLC
+RPMI 1640
+rRNA
+RT-PCR
+RT-qPCR
+RuBisCO
+Rubottom oxidation
+Ruff-Fenton degradation
+RuO4
+Rupe rearrangement
+Russell-Saunders coupling
+Rutherford
+Ruzicka large-ring synthesis
+Rydberg
+S (synthesis) phase
+S-adenosyl-L-homocysteine hydrolase
+S-adenosylmethionine
+s-block
+s-cis conformation
+s-p mixing
+SacI
+Saegusa-Ito oxidation
+SAH
+Sakaguchi's Reagent
+Sakurai reaction
+SalI
+Salol reaction
+SAM
+Sandheimer
+Sandmeyer diphenylurea isatin synthesis
+Sandmeyer isonitrosoacetanilide isatin synthesis
+Sandmeyer reaction
+Sanger dideoxy method
+Sanger reagent
+Sanger sequencing
+sarcoplasmic reticulum
+sarcosine oxidase
+Sarett oxidation
+saturated fatty acid
+Sau3AI
+SCF
+Schiemann reaction
+Schiff base
+Schiff reaction
+Schiff test
+Schlenk equilibrium
+Schlenk flask
+Schlenk line
+Schlenk technique
+Schlosser modification
+Schlosser variant
+Schlosser's base
+Schmidlin ketene synthesis
+Schmidt degradation
+Schmidt reaction
+Scholl reaction
+Schorigin Shorygin reaction
+Schotten-Baumann reaction
+Schrödinger equation
+Schwartz reagent
+scramblase
+SDS
+SDS-PAGE
+SDS-polyacrylamide gel electrophoresis
+SEC
+Sec
+second
+second-order reaction
+secondary bile acid biosynthesis
+secondary endosymbiosis
+secretin
+selectin
+selenoamino acid
+selenocysteine
+selenocystine
+selenodiglutathione
+selenomethionine
+self-assembly
+Seliwanoff's test
+SEM
+Semidine rearrangement
+Semmler-Wolff reaction
+SeO2
+separase
+sequence homology
+Ser
+sER
+serine
+serine protease
+serine racemase
+serine/threonine kinases
+serotonergic synapse
+serotonin
+sesquiterpenoid and triterpenoid biosynthesis
+Seyferth-Gilbert homologation
+Seyferth-Gilbert reagent
+SFC
+sgRNA
+SH3 domain
+Shapiro reaction
+Sharpless asymmetric dihydroxylation
+Sharpless epoxidation
+Sharpless oxyamination
+SHE
+Shenck Ene reaction
+Shiina esterification
+Shiina macrolactonization
+Shiina's reagent
+Shorygin reaction
+shRNA
+SI
+siemens
+Sievert
+sigma
+sigma bonds
+sigma bonds (σ bonds)
+Sigmatropic reaction
+Sigmatropic rearrangement
+signal peptidase
+signal peptide
+Simmons-Smith reaction
+Simonini reaction
+Simonis chromone cyclization
+Simons process
+single-displacement (replacement) reactions
+siRNA
+Skraup chinolin synthesis
+Skraup reaction
+Slater-type orbital
+SmaI
+smFISH
+Smiles rearrangement
+smooth ER
+SN1
+SN1 reaction
+SN2
+SN2 reaction
+SNAr
+SNARE
+SNi
+snoRNA
+SNP
+snRNA
+SOC medium
+SOCl2
+sodium amide
+sodium bis(trimethylsilyl)amide
+sodium nitrite
+sodium-hydrogen antiporter
+solid-phase extraction
+solvolysis
+somatomedin
+somatostatin
+somatotropin
+somatropin
+Sommelet reaction
+SOMO
+Sonn-Müller method
+Sonogashira coupling
+sp2 hybrid orbitals
+sp3 hybrid orbitals
+sp3d hybrid orbitals
+sp3d2 hybrid orbitals
+spatial isomer
+specific rotation, [α]D
+spectator-stripping reaction
+spectrochemical buffer
+spectrochemical carrier
+spectrochemical series
+spectrochemistry
+spectroelectrochemistry
+spectrogram
+spectrograph
+spectrometer
+spectrometer response function
+spectrometer transmission function
+spectrometry
+spectroscope
+spectroscopy
+specular X-ray reflectrometry
+sphingolipid Activator Proteins
+sphingolipid metabolism
+sphingolipids
+spin-lattice relaxation
+spin-lattice relaxation time
+spin-orbit coupling
+spin-orbit coupling constant
+spin-spin coupling constant
+spin-spin relaxation
+spin-spin relaxation time
+spin-spin splitting
+split-flow thin-cell fractionation
+SPP
+SPR
+src-family kinase
+SRP
+SSRI
+Staedel-Rugheimer pyrazine synthesis
+Stahl oxidation
+standard enthalpy of combustion
+standard entropies (S°)
+standard entropy change (ΔS°)
+standard entropy of activation
+starch and sucrose metabolism
+state-to-state kinetics
+static Fields mass spectrometer
+stationary phase
+Staudinger reaction
+Staudinger synthesis
+staurosporine biosynthesis
+STED
+Steglich esterification
+step-growth polymers
+Stephen aldehyde synthesis
+steradian
+stereochemistry
+stereogenic center
+stereoisomer
+stereospecific
+Stern layer
+steroid
+steroid 17alpha-monooxygenase
+steroid 21-monooxygenase
+steroid biosynthesis
+steroid degradation
+steroid hormone biosynthesis
+Stetter reaction
+Stevens rearrangement
+Stieglitz rearrangement
+Stille coupling
+stimulatory gs G-protein
+STM
+STO
+Stobbe condensation
+stochastic sampling
+stochastic theories
+stockholm convention
+stoichiometric
+stoichiometric factors
+stoichiometric mean molal
+stoichiometric number
+stoichiometric sputtering
+stoichiometry
+Stokes
+Stokes law
+Stokes number
+Stokes type radiation
+Stokes-Raman scattering
+Stollé synthesis
+STOP transfer sequence
+stop-flow conditions
+stopped-flow cell
+Stork acylation
+Stork enamine alkylation
+Stork enamine reaction
+STORM
+STP
+STR
+straight-chain alkanes
+Strecker amino acid synthesis
+Strecker degradation
+Strecker sulfite alkylation
+Strecker synthesis
+streptavidin
+streptomycin
+stripping phase
+stripping voltammetry
+stromal processing peptidase
+strong-field ligands
+structural isomer
+Stryker's reagent
+subscript
+substoichiometric extraction
+substoichiometric isotope dilution analysis
+substrate-level phosphorylation
+succinate dehydrogenase
+succinyl-CoA
+succinyl-CoA synthetase
+sucrase
+sulfhydryl
+sulfite oxidase
+sulfone
+sulfonium ions
+sulfoquinovose metabolism
+sulfoxide
+sum frequency generation spectroscopy
+sum-frequency spectroscopy
+supercritical fluid chromatography
+supercritical fluid chromatography-mass spectrometry
+superoxide
+superoxide dismutase
+superscript
+support-coated open-tubular column
+supramolecular Chemistry
+surface excess entropy
+surface excess Gibbs energy
+surface excess Helmholtz energy
+surface excess isotherm
+surface of a phase
+surface plasmon resonance
+surface recombination
+surface-active site
+surfactant
+suspension
+Suzuki coupling
+Suzuki-Miyaura coupling
+Swain equation
+Swain-Lupton equation
+Swain-Scott equation
+Swarts reaction
+Swern oxidation
+SWV
+SYBR Green
+sydnone imines
+symbiosis
+symmetry-allowed
+symmetry-disallowed
+syn stereochemistry
+synapse
+synaptic vesicle cycle
+synchrotron X-ray spectroscopy
+systematic Name
+szilard-Chalmers effect
+Sørensen formol titration
+t-SNARE
+T-stacking
+t1
+t1 noise
+t2
+t2g orbitals
+T4 DNA ligase
+T7 RNA polymerase
+tactic block polymer
+tactic polymer
+TADs
+Tafel rearrangement
+Takai olefination
+take-it-or-leave-it data
+take-off angle
+Tamao oxidation
+Tammann's 2/3rd rule
+Tanabe-Sugano diagram
+tandem mass spectrometer
+TAPS
+Taq polymerase
+target-SNARE
+TATA box
+tau
+taurine and hypotaurine metabolism
+tautomerism
+tautomerization
+tautomers
+Taylor cone
+TBAF
+TBDMS
+TBDMSCl
+TBDPS
+TBDPSCl
+TBS
+TBSCl
+TCA
+TCA cycle
+TCEP
+Tebbe olefination
+Tebbe reagent
+teichoic acid biosynthesis
+tele-substitution
+telechelic polymer
+telomerase
+TEM
+TEMED
+temperature-programmed chromatography
+temperature-programmed desorption
+temperature-programmed oxidation
+temperature-programmed reduction
+temperature-sensitive mutation
+template polymerization
+TEMPO
+ter Meer reaction
+tera
+terahertz
+terpene
+terpenoid backbone biosynthesis
+terpenoids
+tert-Butoxy bis(dimethylamino)methane
+tert-butoxycarbonyl
+tert-Butyl hydroperoxide
+tert-butyldimethylsilyl chloride
+tertiary
+TES
+tesla
+tether (protein)
+tetrabutylammonium fluoride
+tetracycline
+tetracycline biosynthesis
+tetrahedro-
+tetrahydrobiopterin
+tetrahydrocannabinolic acid synthase
+tetrahydrofolate
+tetrakis(triphenylphosphine)palladium(0)
+tetramethylammonium hydroxide
+tetramethylsilane
+tetraterpenoids
+Tf
+Tf2O
+TFA
+TFAA
+TGA
+TGN
+Th17 cell differentiation
+theoretical scattered-ion intensity
+therapeutic polymer
+thermal field-flow fractionation
+thermal injection
+thermal neutrons
+thermo- technique
+thermoanalytical
+thermogravimetric analyser
+thermogravimetric analysis
+thermoluminescence
+thermoluminescence analysis
+thermoplastic elastomer
+thermosetting polymer
+thermospectrometry
+thermotropic mesophase
+theta
+THF
+thiamin
+thiaminase
+thiamine metabolism
+thiamine oxidase
+thiamine Pyrophosphate
+Thiele reaction
+thio
+thioacetals
+thioaldehyde S-oxides
+thioaldehydes
+thioanhydrides
+thiocarboxylic acids
+thioctic Acid
+thiocyanates
+thioesters
+thioethers
+thiohemiacetals
+thioketone S-oxides
+thioketones
+Thiol
+Thiol-yne reaction
+thiolase
+thiolate ion
+thiolates
+thionyl chloride
+thiophenol
+thioproline
+thioredoxin
+thioredoxin reductase
+Thomson
+Thorpe reaction
+THP
+Thr
+threonine
+thrombin
+thrombogenicity
+thrombomodulin
+through-bond electron transfer
+through-conjugation
+through-space electron transfer
+thylakoid
+thylakoid membrane
+thymidine
+thymine
+thyroid peroxidase
+thyroxine 5-deiodinase
+TICT emission
+TICT state
+Tiemann rearrangement
+Tiffeneau ring enlargement reaction
+Tiffeneau-Demjanov rearrangement
+tilde
+time-correlated single photon counting
+time-dependent density functional theory
+time-dependent stoichiometry
+time-independent stoichiometry
+time-of-flight mass spectrometer
+time-resolved microwave conductivity
+time-resolved spectroscopy
+time-temperature superposition principle
+TIPS
+TIPSCl
+TIRF
+Tischtschenko reaction
+Tishchenko reaction
+Tishchenko-Claisen reaction
+titrant
+TLC
+TMS
+TMSCl
+TMSOTf
+TOCSY
+Togni's reagent
+toll-like receptor signaling pathway
+Tollens' reagent
+top-down patterning
+top-surface imaging
+topochemical polymerisation
+topoisomerase
+topologically associated domains
+torquoselectivity
+torsional stereoisomers
+TosMIC
+TPP
+tracrRNA
+trans Golgi network
+trans-activator
+trans-cis isomerism
+trans-Di(μ-acetato)bis[o-(Di-o-tolylphosphino)benzyl]dipalladium(II)
+trans-epoxysuccinate hydrolase
+transactinides
+transaldolase
+transamination
+transcytosis
+transesterification
+transfer RNA
+transferases
+transglutaminase
+transient phase
+transient spectroscopy
+transient-stimulated emission pumping
+transit peptide
+transketolase
+translational spectroscopy
+transmembrane ATPase
+transposon
+transverse relaxation optimized spectroscopy
+Trapp mixture
+Traube purine synthesis
+triacylglycerols
+triangulo-
+triazenes
+triboluminescence
+tricarboxylic acid cycle
+Tricine
+triglyceride
+trimethylenemethanes
+trimethyllysine
+trimethyloxonium tetrafluoroborate
+trimethylsilyl chloride
+triose
+triose phosphate isomerase
+triose-phosphate isomerase
+triphenylphosphine
+triple quadrupole mass spectrometer
+triplet-triplet absorption
+triplet-triplet annihilation
+triplet-triplet energy transfer
+triplet-triplet transitions
+triprismo-
+triprotic acid
+Tris
+Tris-HCl
+TRITC
+triterpenoids
+Triton X-100
+TRIzol
+tRNA
+tropomyosin
+troponin
+Trp
+Truce-Smiles rearrangement
+trypsin
+trypsinogen
+tryptophan
+tryptophan metabolism
+tryptophan synthase
+Tröger's base
+Ts
+Tscherniac-Einhorn reaction
+Tschitschibabin reaction
+Tschugajeff reaction
+TsCl
+Tsuji-Trost reaction
+Tsuji-Wilkinson decarbonylation reaction
+tubulin
+tucker tri-linear analysis
+tunable laser
+Tween 20
+Tween 80
+twist-boat conformation
+Twitchell process
+two-dimensional chromatography
+two-dimensional correlation spectroscopy
+two-dimensional correlation spectrum
+two-dimensional gel electrophoresis
+two-phase aqueous partition
+two-site immunoradiometric assay
+type-J coil planet centrifuge
+Tyr
+Tyrer sulfonation process
+tyrosinase
+tyrosine
+tyrosine 3-monooxygenase
+tyrosine metabolism
+ubiquinone
+ubiquitin
+ubiquitin carboxy-terminal hydrolase L1
+ubiquitin-like protein binding
+UDP
+UDP-galactose
+UDP-glucose
+UDP-glucose 4-epimerase
+UDP-glucose pyrophosphorylase
+UHPLC
+Ullmann reaction
+ultraviolet spectroscopy
+UMP
+UN number
+Upjohn dihydroxylation
+upsilon
+uracil
+urate oxidase
+urease
+Urech Cyanohydrin method
+Urech hydantoin synthesis
+uric acid
+uridine
+uridine monophosphate synthetase
+uronic acid
+UTP
+UTR
+UV
+UV-Vis
+UV/VIS spectroscopy
+Val
+valence isomer
+valence tautomerization
+valine
+Van 't Hoff factor
+Van der Waals radius
+Van Leusen reaction
+Van Slyke determination
+Van't Hoff factor (i)
+Varrentrapp reaction
+vasoactive intestinal peptide
+vasopressin
+vasopressin-regulated water reabsorption
+VB
+vesicle-mediated transport
+vestibular system
+vibrational redistribution
+Vilsmeier reaction
+Vilsmeier-Haack reaction
+vimentin
+vinyl carbenes
+vinylidenes
+viologens
+virology
+vitamin B6 metabolism
+vitamin D-dependent calcium-binding protein
+vitamin K epoxide reductase
+vitamin-K-epoxide reductase (warfarin-insensitive)
+vitamin-K-epoxide reductase (warfarin-sensitive)
+VNTR
+Voight amination
+Volhard-Erdmann cyclization
+volt
+von Braun amide degradation
+von Braun reaction
+von Richter cinnoline synthesis
+von Richter reaction
+VUV
+Wacker-Tsuji oxidation
+Wagner-Jauregg reaction
+Wagner-Meerwein rearrangement
+Walden inversion
+Wallach rearrangement
+Wanklyn reaction
+watasenia-luciferin 2-monooxygenase
+Watson
+watt
+wave-particle duality
+wavelength, λ
+weak-field ligands
+weber
+Weerman degradation
+Weinreb ketone synthesis
+Weitz-Scheffer epoxidation
+Wenker ring closure
+Wenker synthesis
+Wessely-Moser rearrangement
+Western blot
+Westphalen-Lettré rearrangement
+wet Chemistry
+Wharton reaction
+Whiting reaction
+Wichterle reaction
+Widman-Stoermer synthesis
+Wilkinson catalyst
+Willgerodt rearrangement
+Willgerodt-Kindler reaction
+Williamson Ether synthesis
+wind rose
+Winstein reaction
+Wittig reaction
+Wittig-Horner reaction
+Wohl degradation
+Wohl-Aue reaction
+Wohl-Ziegler reaction
+Wohler synthesis
+Wolff rearrangement
+Wolff-Kishner reaction
+Wolff-Kishner reduction
+Wolffenstein-Böters reaction
+Woodward cis-hydroxylation
+Woodward-Hoffmann rule
+work-up
+Wulff-Dötz reaction
+Wurtz coupling
+Wurtz reaction
+Wurtz-Fittig reaction
+X-gal
+X-ray
+X-ray crystallography
+X-ray diffraction
+X-ray photoelectron spectroscopy
+xanthine
+xanthine dehydrogenase
+xanthine oxidase
+xanthophylls
+XbaI
+XhoI
+xi
+XMP
+XPS
+XRD
+XRF
+Yamada-Okamoto purine synthesis
+Yamaguchi esterification
+YFP
+ylide
+ynamines
+yocto
+yotta
+Yukawa-Tsuno equation
+Z-value
+Zaitsev's rule
+Zeeman effect
+Zeisel determination
+zepto
+Zerevitinov determination
+Zerewitinoff determination
+zero-point energy
+zero-zero absorption or emission
+zeta
+zeta-carotene isomerase
+zetta
+Ziegler condensation
+Ziegler method
+Ziegler-Natta catalysts
+zig-zag projection
+Zimmermann reaction
+Zincke disulfide cleavage
+Zincke nitration
+Zincke reaction
+Zincke-Suhl reaction
+Zinin reduction
+zucker-Hammett hypothesis
+zwitterion
+ångström
+Étard reaction
+α
+α anomer
+α helix
+α-amino acids
+α-cleavage
+α-helix
+α-ketoglutarate dehydrogenase
+α-particle
+β
+β anomer
+β-alanine
+β-amino acid
+β-elimination
+β-galactosidase
+β-glucuronidase
+β-mercaptoethanol
+β-oxidation pathway
+β-pleated sheet
+γ
+γ-aminobutyric acid
+γ-aminobutyric acid receptor
+γ-interferon
+γ:δ T cell
+γ:δ T-cell receptor
+δ
+Δoct
+ε
+ζ
+η
+θ
+ι
+κ
+λ
+μ
+ν
+ξ
+ο
+π
+π → σ* transition
+π* antibonding molecular orbital
+ρ
+σ
+σ → σ* transition
+σ, π
+σ-constant
+σs molecular orbital
+τ
+υ
+φ
+χ
+χ-parameter
+ψ
+ω

@@ -16,6 +16,7 @@ fi
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
+cp -R Resources/Vocabulary "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png "$APP/Contents/Resources/"
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"

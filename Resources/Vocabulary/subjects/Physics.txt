@@ -1,0 +1,843 @@
+A-type main-sequence star
+Abbe number
+absorption spectroscopy
+AC voltage
+accommodation
+action-at-a-distance force
+active galactic nucleus
+Addison-Wesley
+addition of Angular Momentum
+adiabatic approximation
+adiabatic compressions
+adiabatic cooling
+adiabatic expansion
+adiabatic heating
+adiabatic process
+Aharonov-Bohm effect
+albedo
+alfvén surface
+ALICE detector
+alpha
+alpha decay
+ampere
+Ampère
+Ampère law
+Ampère's law
+Ampère-Maxwell law
+Anderson localization
+angstrom
+angular momentum operator
+annihilation
+annihilation operator
+anti-gravity
+anti-symmetric function
+anti-symmetrization
+antineutrino
+antineutron
+antinode
+antiquark
+aphelion
+apoapsis
+apogee
+Archimedes
+Archimedes' principle
+argument of periapsis
+asteroid belt
+asymptotic freedom
+atomic nucleus
+atto
+Avogadro
+Avogadro constant
+Avogadro number
+Avogadro's law
+Avogadro's number
+axion
+azimuth
+azimuthal quantum number
+B-type Main-sequence star
+Babinet's principle
+Balmer
+Balmer formula
+Balmer series
+BAO
+baryon
+baryon acoustic oscillation
+baryon number
+base current
+base quantities
+base unit
+BBN
+BCC
+BCS theory
+BE
+becquerel
+Bell's inequality
+BEN
+Berezinskii-Kosterlitz-Thouless transition
+Bernoulli
+Bernoulli equation
+Bernoulli's equation
+Bernoulli's principle
+Berry phase
+Bessel function
+beta
+beta decay
+Bethe
+big bang nucleosynthesis
+binding energy per nucleon
+Biot
+Biot-Savart law
+blazar
+Bloch sphere
+Bloch theorem
+blu-Ray player
+body-centered cubic
+Bogoliubov transformation
+Bohr
+Bohr magneton
+Bohr model
+Bohr radius of hydrogen
+Boltzmann
+Boltzmann constant
+Born interpretation
+Born's rule
+Born-Oppenheimer approximation
+Bose-Einstein condensate
+Bose-Einstein condensation
+Bose-Einstein distribution
+Bose-Hubbard model
+boson
+bottom quark
+Boyle's law
+bra-ket notation
+Bragg
+Bragg planes
+Bragg's law
+Breit-Wigner distribution
+bremsstrahlung
+Brewster's angle
+Brewster's law
+Brillouin zone
+Brown dwarf
+Brownian motion
+calorimetry
+candela
+carbon-14 dating
+Carnot
+Carnot cycle
+Carnot engine
+Carnot's principle
+Cartesian coordinate system
+CCD
+Celsius (°C)
+Celsius scale
+centi
+centimeter
+central-force problem
+Chandrasekhar limit
+change of base rule
+charge-coupled device
+Charles
+Charles's law
+charm quark
+chart of the nuclides
+chi
+chromosphere
+chromospheric activity index
+cis-Neptunian object
+Cite book
+CKM matrix
+classical (Galilean) velocity addition
+Clausius
+CMB
+CMBR
+CNO
+compact stellar nucleus
+Compton
+Compton effect
+Compton scattering
+Compton shift
+Compton wavelength
+concave lens
+concave mirror
+conjunction
+constant-volume gas thermometer
+Contact forces
+convex lens
+convex mirror
+Cooper
+Cooper pair
+Copernicus
+Coriolis acceleration and force
+Coriolis force
+corkscrew right-hand rule
+coudé spectrograph
+Coulomb
+Coulomb force
+Coulomb gauge
+Coulomb law
+Coulomb's law
+coulombic
+CP violation
+CPT theorem
+cryogenics
+cubic centimeter (cm3)
+cubic meter (m3)
+Curie
+Curie temperature
+cut-off frequency
+cut-off wavelength
+cyclotron
+Dalton
+Dalton's law
+Dalton's law of partial pressures
+darcy-Weisbach equation
+daughter nucleus
+daughter nuclide
+davisson-Germer experiment
+DC motor
+De Broglie
+De Broglie wave
+Debye model
+Debye temperature
+deca
+deci
+decibel
+deep-sky object
+defining equation (physical Chemistry)
+degree Celsius
+delta
+deuterium
+deuteron
+diamagnetic materials
+diamagnetism
+Dirac
+Dirac cone
+Dirac notation
+Disclaimers
+Doppler effect
+Doppler shift
+double-slit interference experiment
+down antiquarks
+down quark
+Drell-Yan process
+early-type star
+ecliptic
+Eddington luminosity
+Ehrenfest theorem
+eigenstates
+Einstein
+Einstein model
+Einstein solid
+electro-optic effect
+Electrochemical cell
+electron neutrino
+electron paramagnetic resonance
+electron volts (eV)
+electronvolt
+elevator
+endothermic
+energy-time uncertainty principle
+enthalpy
+ephemeris
+epsilon
+epsilon-delta
+eta
+Euler
+Euler-Lagrange equation
+exa
+F-type Main-sequence star
+face-centered cubic
+factor-label method
+farad
+Faraday
+Faraday constant
+Faraday law
+Faraday's law
+FCC
+femto
+femtoliter
+femtometer
+femtomolar
+femtomole
+femtosecond
+Fermat's principle
+Fermi
+Fermi energy
+Fermi factor
+Fermi liquid
+Fermi surface
+Fermi temperature
+Fermi-Dirac distribution
+fermion
+ferromagnetic material
+ferromagnetism
+Feynman
+Feynman diagram
+Feynman rule
+FLRW metric
+Fraunhofer
+Fraunhofer lines
+free-body diagram
+Friedmann equations
+Friedmann-Lemaître-Robertson-Walker metric
+G-type Main-sequence star
+galactic nucleus
+galactocentric distance
+Galilean moons
+Galilean relativity
+Galilean transformation
+Galileo
+gamma
+gamma emission (γ emission)
+gamma rays (γ)
+gamma-ray astronomy
+gamma-ray burst
+Gamow
+Gauss law
+Gaussian surface
+Gay-Lussac's law
+Gell-Mann
+geometric albedo
+giga
+gigahertz
+gigapascal
+Gilbert
+Ginzburg-Landau theory
+Graham's law of diffusion
+graviton
+gray
+gyroscope
+H II region
+hadron
+hadronization
+Hahn
+half-life
+half-wave antenna
+Halley's comet
+Hamilton's principle
+Hamilton-Jacobi equation
+Hamiltonian
+Hamiltonian mechanics
+hecto
+Heisenberg
+Heisenberg model
+Heisenberg uncertainty principle
+Heisenberg's uncertainty principle
+heliosphere
+Helmholtz free energy
+Help
+henry
+Henry (H)
+Hermite polynomial
+Hermitian operator
+hertz
+Hertzsprung-Russell diagram
+Higgs boson
+high dose
+Hilbert space
+Hill sphere
+Hofstadter butterfly
+Holstein-Primakoff transformation
+Hooke's law
+Hubbard model
+Hubble constant
+Hubble law
+Hubble parameter
+Hubble space Telescope
+Hubble telescope
+Hubble's constant
+Hubble's law
+Huygens
+Huygens's principle
+Huygens-Fresnel principle
+hybrid-chromosphere star
+hydrogen-like ions
+hyperopia
+hysteresis
+I-beams
+impedance
+impulse-momentum theorem
+induced electric-dipole moment
+inertial force
+inertial frame of reference
+inertial reference frame
+iota
+isaac Newton
+isentropic
+Ising model
+isothermal expansion
+isothermal process
+IUPAC
+jansky
+Jeans instability
+Jeans mass
+joule
+K-type Main-sequence star
+kappa
+katal
+Keck telescope
+kelvin
+Kelvin (K)
+Kelvin scale
+Kelvin-Helmholtz mechanism
+Kepler
+Kepler orbit
+Kepler's first law
+Kepler's second law
+Kepler's third law
+kilo
+kilodalton
+kilogram
+kilohertz
+kilojoule
+kilometer
+kilopascal
+kilovolt
+king radius
+Kirchhoff
+Kirchhoff's circuit laws
+Kirchhoff's equations
+Kirchhoff's rules
+Klein-Gordon equation
+Kosterlitz-Thouless transition
+Kramers-Kronig relations
+Lagrange point
+Lagrangian
+Lagrangian mechanics
+Lagrangian point
+lambda
+Lambda-CDM
+laminar flow
+Landau damping
+Landau level
+Landé g-factor
+Laplace-Runge-Lenz vector
+large Hadron Collider
+Larmor precession
+late-type star
+LC circuit
+LCDs
+lead acid battery
+Legendre transformation
+lennard-Jones 6-12 potential
+lens maker's equation
+Lenz's law
+lepton
+lepton number
+LHC
+libration
+light-year
+Liouville theorem
+Liouville's theorem
+liquid crystal displays
+Liénard-Wiechert potential
+lobster-eye optics
+loop-the-loop
+Lorentz factor
+Lorentz force
+Lorentz force equation
+Lorentz transformation
+low dose
+lumen
+lunar phase
+lux
+M-theory
+M-type Main-sequence star
+Mach number
+Mach's principle
+Maclaurin series
+Madelung constant
+Majorana fermion
+Malus's law
+Mars Climate Orbiter
+mass spectrometer
+mass spectrometry
+mass-energy equivalence equation
+mathematical model
+mathematical physics
+Maxwell
+Maxwell equations
+Maxwell's equations
+Maxwell-Boltzmann distribution
+mean-motion resonance
+mega
+megahertz
+megapascal
+Meissner effect
+meter
+Michelson
+Michelson-Morley experiment
+micro
+microampere
+microgram
+microliter
+micrometeorite
+micrometeoroid
+micrometer
+micromolar
+micromole
+microsecond
+microvolt
+milli
+milliampere
+milligram
+millijoule
+milliliter
+milliliter (mL)
+millimeter
+millimolar
+millimole
+millisecond
+millivolt
+minor-planet moon
+MMR
+moderate dose
+molality
+molarity
+mole
+momentum operator
+Morgan-Keenan stellar classification system
+Moseley plot
+Moseley's law
+Mott insulator
+mu
+multi-loop circuit
+multi-messenger astronomy
+muon
+muon neutrino
+myopia
+n-type semiconductor
+nabla
+nano
+nanoampere
+nanogram
+nanoliter
+nanometer
+nanomolar
+nanomole
+nanosecond
+Navier-Stokes equation
+near-Earth object
+neutrino
+neutrinoless double beta decay
+neutron number
+newton
+Newton's first law
+Newton's law of universal gravitation
+Newton's laws of motion
+Newton's rings
+Newton's second law
+Newton's second law for rotation
+Newton's third law
+Newtonian design
+Newtonian fluid
+Newtonian mechanics
+no-cloning theorem
+Noether theorem
+Noether's theorem
+non-conservative forces
+non-Euclidean geometry
+non-inclined orbit
+non-quasi-static processes
+non-renewable
+noninertial frame of reference
+nu
+nuclear binding energy
+nuclear Chemistry
+nuclear force
+nuclear fusion
+nuclear fusion reactor
+nuclear moderator
+nuclear physics
+nuclear reaction
+nuclear reactor
+nuclear star cluster
+nuclear transmutation
+nucleon
+nucleosynthesis
+nuclide
+nutation
+O-C diagram
+O-type Main-sequence star
+Ohm
+Ohm's law
+omega
+omicron
+orthogonal vectors
+overbar
+p-n junction
+p-type semiconductor
+parallel-axis theorem
+parallel-plate capacitor
+parallelogram rule
+paramagnetic material
+parent nucleus
+parent nuclide
+parsec
+pascal
+Pascal's law
+Pascal's principle
+Pauli exclusion principle
+Pauli matrices
+Pauli spinor
+Pauli's exclusion principle
+periapsis
+perigee
+perihelion
+Periodic driving force
+Periodic motion
+Permanent dipole
+permeability of free space
+permittivity of free space
+permittivity of vacuum
+PET
+peta
+pH
+phase (matter)
+phase equilibrium
+phase shift
+phases of matter
+phi
+philae
+phosphorescence
+physical Chemistry
+pi
+pico
+picoampere
+picogram
+picoliter
+picometer
+picomolar
+picomole
+picosecond
+piezoelectricity
+pion
+pKa
+pKb
+Planck
+Planck constant
+Planck distribution
+Planck units
+Planck's constant
+Planck's law
+planetary-mass object
+PMNS matrix
+Poiseuille
+Poiseuille law
+Poiseuille's law
+Poiseuille's law for resistance
+Poisson bracket
+polymer physics
+positron
+positron emission
+positron emission tomography
+postulates of Bohr's model
+Poynting vector
+Prandtl tube
+proton-proton chain
+pseudo-synchronous rotation
+psi
+pulsar
+pV diagram
+QCD
+QED
+quadrature
+quantum chromodynamics
+quark
+quasi-static process
+quecto
+quetta
+Rabi oscillation
+radial probability density function
+radial velocity
+radian
+radiation absorbed dose (rad)
+radiation dose unit
+radioactive label
+radionuclide
+radius of a nucleus
+radius of curvature
+Rayleigh criterion
+Rayleigh-Jeans law
+RBE
+RC circuit
+recombination
+red-giant branch
+reduced Planck's constant
+relativistic momentum
+resonant-tunneling diode
+Reynolds number
+rho
+right-hand rule
+RLC circuit
+RLC series circuit
+ronna
+ronto
+root-mean-square (rms) speed
+Rutherford
+Rutherford gold foil experiment
+Rydberg constant for hydrogen
+Rydberg formula
+réseau
+s-channel
+Savart
+Schmidt decomposition
+Schrödinger
+Schrödinger's cat
+Schrödinger's equation
+Schrödinger's time-dependent equation
+Schrödinger's time-independent equation
+Schwarzschild
+Schwarzschild metric
+Schwarzschild radius
+second
+Seebeck effect
+SEM
+semi-diameter
+semi-major axis
+September equinox
+SHM
+SI units
+siemens
+Sievert
+sigma
+single-photon-emission CT
+Snell
+Snell's law
+solar radius
+solenoid
+solid-state physics
+sonoluminescence
+space-time
+spacecraft
+Special relativity
+SPECT
+spectroscopic binary
+spectroscopic dispersion
+spectroscopic notation
+spectroscopy
+spin-flip transitions
+spin-orbit coupling
+square-integrable
+SQUID
+stable nuclide
+Stefan's law
+Stefan-Boltzmann constant
+Stefan-Boltzmann law of radiation
+steradian
+Stern-Gerlach experiment
+Stirling engine
+STM
+stoichiometry
+Stokes drag
+STP
+strange quark
+stress-strain curve
+stress-strain diagram
+strong nuclear force
+subscript
+superscript
+synchrotron
+synchrotron radiation
+syzygy
+t-channel
+tail-to-head geometric construction
+tau
+tau lepton
+tau neutrino
+telluric star
+TEM
+tensor product
+tera
+terahertz
+tesla
+theta
+thin-film interference
+Thomson
+tilde
+time-dependent perturbation theory
+time-independent perturbation theory
+time-Independent Schrödinger equation
+time-modulation factor
+TISE
+Tisserand's parameter
+TMS
+Tolman-Oppenheimer-Volkoff limit
+top quark
+TOV limit
+trans-Neptunian object
+transformer
+tritium
+tully-Fisher relation
+two-body pursuit problem
+two-slit interference
+type II superconductor
+u-channel
+UBV photometric system
+up antiquark
+up quark
+upsilon
+virial theorem
+viscoelasticity
+volt
+von Neumann entropy
+W and Z boson
+W boson
+Wannier function
+watt
+wave-particle duality
+weak nuclear force
+weak-line star
+weber
+Wentzel-Kramers-Brillouin approximation
+Weyl semimetal
+Wheeler
+Wien's displacement law
+Wigner-Eckart theorem
+Wilkinson Microwave Anisotropy Probe
+Wilson
+Wilson-Bappu effect
+WKB approximation
+WMAP
+work-energy theorem
+X-ray
+X-ray diffraction
+X-ray source
+xi
+yocto
+yotta
+Young's modulus
+Z boson
+Zeeman effect
+zepto
+zero-age Main sequence
+zeta
+zetta
+ångström
+α
+β
+β-ray
+γ
+γ-rays
+δ
+ε
+ζ
+η
+θ
+ι
+κ
+λ
+μ
+ν
+ξ
+ο
+π
+ρ
+σ
+τ
+υ
+φ
+χ
+ψ
+ω

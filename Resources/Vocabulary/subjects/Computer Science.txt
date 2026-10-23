@@ -1,0 +1,1570 @@
+(a,b)-tree
+2-3 tree
+2-3-4 tree
+2-choice hashing
+2-left hashing
+2-SAT
+2PC
+2PL
+3-SAT
+3PC
+A2C
+A3C
+ABI
+ABR
+AC
+AC0
+AC02
+AC1
+ACK
+Ackermann's function
+ACM
+ActionScript
+ActiveX
+AdaDelta
+AdaGrad
+Adam
+AdamW
+adaptive Huffman coding
+adaptive k-d tree
+ADT
+AES
+AF
+AH
+Aho-Corasick
+AI
+AIMD
+Ajax
+Akra-Bazzi theorem
+ALF
+algebraic topology
+algorithm BSTW
+algorithm FGK
+alpha
+AlphaGo
+alternating Turing machine
+ALU
+AM
+ampere
+angstrom
+ANSI
+ANSI C
+antialiasing
+antichain
+anycast
+AOT
+AP
+AP-1
+AP-2
+AP-3
+API
+API languages
+Apostolico-Crochemore
+Apostolico-Giancarlo algorithm
+AppleScript
+application-specific VLSI designs
+applicative functor
+AQM
+arborescence
+Argon2
+Arnoldi iteration
+ARP
+ARPA
+ARPANET
+ARQ
+AS
+ASCII
+ASIC
+ASLR
+ASM
+ASN
+AST
+asymptotically tight bound
+AT
+ATM
+atto
+AUC
+autoencoder
+AVL tree
+Avogadro constant
+AVP
+B+-tree
+B-tree
+backpropagation
+backpropagation through structure
+backpropagation through time
+balanced quicksort
+BANG file
+barbara Liskov
+BARRNET
+base station
+BASIC
+Bayesian analysis
+Bayesian computation
+Bayesian network models
+Bayesian networks
+Bayesian neural network
+Bayesian nonparametric models
+Bayesian optimization
+Bayesian programming
+BB(α) tree
+BBP algorithm
+BBR
+BBU
+bcrypt
+BD-tree
+BDD
+becquerel
+Bellman equation
+Bellman-Ford
+Bellman-Ford algorithm
+Benford's law
+BER
+BERT
+best case
+best-case cost
+beta
+BFGS
+BFT
+BGP
+BGP-4
+BiCGSTAB
+BIDIR-PIM
+bidirectional PIM
+big-O notation
+bigram
+binary GCD
+bipartite graph
+bipartite matching
+BISYNC
+bitonic sort
+Blaise Pascal
+BLEU
+BLEURT
+blind trie
+block ciphers
+Bloom filter
+Bluetooth
+BMP file format
+BNF
+BNG
+bogosort
+Boltzmann constant
+Boltzmann machine
+BoolQ
+boot ID
+BOOTP
+Boruvka's algorithm
+Boyer-Moore
+Boyer-Moore-Horspool
+BPP
+Bradford's law
+Bresenham's algorithm
+broadband Base Units
+BSD
+BSP-tree
+bucket trie
+burrows-Wheeler transform
+business process Execution Language
+BV-tree
+BWT
+Byzantine fault tolerance
+byzantine generals
+Büchi automaton
+C#
+C++
+CA
+CAM
+candela
+CAP theorem
+CARP
+case-based reasoning
+CB
+CBC
+CBC-MAC
+CBRS
+CCMP
+CCR
+CCS
+CD
+CD-ROMs
+CDF
+CDMA systems
+CDN
+CE
+centi
+centimeter
+CFG
+CFL
+ChaCha20
+character N-Gram F-score
+Charles Babbage
+Charles Tandy
+chi
+Cholesky decomposition
+Chomsky hierarchy
+chosen-ciphertext attack
+Church-Turing thesis
+CI/CD
+CIDR
+cipher
+cipher block chaining
+ciphertext
+CISC
+CL
+Clang
+claude Elwood Shannon
+CLI
+client nonce
+CLOSING
+cloud TPU
+CMOS
+CNAME
+CNF
+CNN
+co-NP
+collective recursion
+combinatorial algorithms
+combinatorial optimization
+combinatoric problems
+combinatorics
+combinatorics on words
+commentz-Walter
+compact DAWG
+compact trie
+complete VM Systems
+concave function
+conflict serializability
+CONNECT
+consistent hashing
+continuation-passing style
+convex function
+convex optimization
+convex set
+convolution
+convolutional neural network
+Cook reduction
+Cook's theorem
+Cook-Levin theorem
+Cooley-Tukey
+COPA
+copy-on-write
+CORBA
+CORD
+CORDIC
+coroutines
+Coulomb
+coulombic
+COW
+CPI
+CPS
+CPU
+CPU Scheduling
+CQI
+CRC
+CRC-32
+CRC-8
+CRCW
+CREW
+CRL
+CRLF
+cross-entropy
+cryptanalyst
+cryptographic checksum
+cryptographic primitives
+cryptographic protocols
+cryptography
+CS
+CS-PDU
+CSMA
+CSP
+CSPF
+CSRC
+CSRF
+CSV
+CTC
+CTL
+CTR
+CTS
+cuckoo hashing
+cupif-Giannini tree traversal
+CUPS
+Curry-Howard correspondence
+CWND
+CWR
+CYK
+DAG
+DAG shortest paths
+Dalton
+Damas-Milner
+DASH
+data Center TCP
+DataFrame
+datagram
+Datalog
+dataset API (tf.data)
+DAWG
+DB2
+DBMS
+DC
+DC coefficient
+DCE
+DCE-RPC
+DCFL
+DCOM
+DCT
+DCTCP
+DDCMP
+DDR
+de Bruijn index
+deadlock
+DEC
+deca
+deci
+decibel
+DECNET
+degree Celsius
+DELETE
+delta
+demultiplexed
+demultiplexing key
+dense Wavelength Division Multiplexing
+DEP
+depoissonization
+DES
+Deutsch-Jozsa algorithm
+DFA
+DFS
+DFS forest
+DFT
+DFTA
+DHCP
+DHCPDISCOVER
+DHT
+differential Manchester
+Diffie-Hellman
+Dijkstra
+Dijkstra's algorithm
+Dinic
+DLE
+DMA
+DMZ
+DNA
+DNS
+DOS
+double hashing
+Douglas R. Hofstadter
+DPCM
+DPDA
+DPO
+DQN
+DR
+DRAM
+DRBG
+dropout
+DS
+DSCP
+DSL
+DSM
+DSS
+DST
+DT
+dual-pivot quicksort
+duplicate ACK
+DVDs
+DVMRP
+DWDM
+dynamic hashing
+dynamic Huffman coding
+EAP
+EAP-TLS
+EBCDIC
+EBNF
+ECB
+ECC
+ECDH
+ECDSA
+ECE
+ECMP
+ECN
+ECT
+Ed25519
+EDA
+Edmonds-Karp
+EECS-2012-5
+EEPROM
+EF
+efficient XML Interchange
+EGP
+elastic-bucket trie
+electronvolt
+Elixir
+elliptic curve cryptography
+Elliptic Curve Diffie-Hellman
+ELU
+EMD
+end system multicast
+EOS
+EPC
+epsilon
+epsilon-delta
+ERCW
+EREW
+Erlang
+ERM
+ernst & Young
+ESP
+ESTABLISHED
+eta
+ETH
+Ethernet
+ETX
+Euclid's algorithm
+Euclidean algorithm
+Euclidean distance
+Euclidean Steiner tree
+Euclidean traveling salesman problem
+Euler cycle
+Euler's formula
+eulerian graph
+eulerian path
+exa
+EXI
+expandable hashing
+EXPSPACE
+EXPTIME
+EXPUNGE
+extended Euclid's algorithm
+extended k-d tree
+extended LAN
+extendible hashing
+external quicksort
+external radix sort
+F1
+F1 score
+farad
+Faraday constant
+fast Fourier transform
+fault-tolerant network topologies
+FCC
+FCFS
+FDDI
+FDM
+FEC
+femto
+femtoliter
+femtometer
+femtomolar
+femtomole
+femtosecond
+ferguson-Forcade algorithm
+FETCH
+FFFF
+FFN
+FFS
+FFT
+Fibonacci heap
+Fibonacci number
+Fibonacci tree
+fibonaccian search
+FIFO
+FIFO queuing
+FIFO with tail drop
+FIN
+finite Fourier transform
+Fisher-Yates shuffle
+fixed Diffie-Hellman
+flash-based SSDs
+Floyd-Warshall
+Floyd-Warshall algorithm
+FLP impossibility
+FM
+FN
+ford-Bellman
+Ford-Fulkerson
+ford-Fulkerson method
+Fortran
+FP
+FPR
+FPU
+FQ
+FreeBSD
+frequency-division multiplexing
+FSCK and Journaling
+FTP
+functor
+futex
+GADT
+Gale-Shapley
+galil-Giancarlo
+galil-Seiferas
+gamma
+GAN
+GAT
+Gauss-Seidel method
+Gaussian processes
+GBD-tree
+GBT
+GCC
+GCD
+GCN
+GELU
+generalized MPLS
+generating random combinatorial structures
+generative pretrained transformer
+geometric topology
+get-NEXT
+GFC
+GHC
+Gibbs sampling
+GIF
+giga
+gigahertz
+gigapascal
+Givens rotation
+GMPLS
+GMRES
+GNF
+GNN
+GOAWAY
+GOP
+gordon Bell
+GPS
+GPT
+Graham scan
+graph isomorphism
+gratuitous ARP
+gray
+Grover's algorithm
+GRU
+GSM
+Gödel numbering
+Hamiltonian cycle
+Hamiltonian path
+hash function
+hash heap
+hash table delete
+hash tree
+hash(ObjectName) → ObjectID
+hash(x) → n
+hashbelt
+hash→ NodeID
+Haskell
+hausdorff distance
+hB-tree
+HCI
+HDD
+HDLC
+HDTV
+HEADERS
+heapify
+heapsort
+HEC
+hecto
+HELO
+henry
+herbert A. Simon
+HERD
+hertz
+HHP
+hidden Markov model
+Hill climbing
+Hindley-Milner
+Hindley-Milner type inference
+Hindley-Milner type system
+HITL
+HLEN
+HLP
+HLS
+HMAC
+HMM
+Hopcroft-Karp
+Horner's rule
+Householder transformation
+HP-UX
+HSS
+HTML
+HTTP
+HTTP adaptive streaming
+Huffman
+huffman codes
+huffman coding
+huge sparse array
+hyperbolic trees
+HyperLogLog
+hyperparameter
+hyperparameter optimization
+IANA
+IBLT
+ICANN
+ICMP
+ID
+IDE
+idempotence
+IDL
+IEEE
+IETF
+IGMP
+IGP
+III-V compounds
+IKE
+ILP
+IMAP
+Immerman-Szelepcsényi theorem
+incremental hashing
+IND-CCA
+IND-CPA
+InfiniBand
+inodes
+INT
+integer polyhedron
+interior BGP
+introsort
+inverse Ackermann function
+inverse suffix array
+invertible Bloom lookup table
+INVITE
+iota
+IP
+IP Multimedia Subsystem
+IP tunnel
+IP4
+IPAddr
+IPC
+IPsec
+IPTV
+IPv4
+IPv6
+IS-IS
+ISA
+ISAKMP
+ISO
+isomorphic
+ISP
+IT
+ITU-T
+ivar Jacobson
+IXP
+J. H. Wilkinson
+Jacobi method
+jaro-Winkler
+Java
+JAVA ME
+JavaScript
+JAX
+JIT
+Johnson's algorithm
+Johnson-Trotter
+joule
+JPEG
+JSON
+JSort
+JSP
+Julia
+JVM
+k-ary Huffman coding
+k-d tree
+k-d-B-tree
+kappa
+Karatsuba
+Karp reduction
+Karp-Rabin
+katal
+kazimierz Kuratowski
+KB
+KDC
+kelvin
+kilo
+kilodalton
+kilogram
+kilohertz
+kilojoule
+kilometer
+kilopascal
+kilovolt
+KISS
+KL divergence
+KL-ONE
+Kleene star
+KMP
+KmpSkip search
+Knuth-Morris-Pratt
+Knuth-Morris-Pratt algorithm
+Kolmogorov complexity
+Kosaraju
+Kraft's inequality
+Kruskal
+Kruskal's algorithm
+Krylov subspace
+KSVMs
+kth order Fibonacci numbers
+KV diagram
+k²-tree
+L
+L-BFGS
+L0 regularization
+L1 loss
+L1 regularization
+L2 loss
+L2 Network
+L2 regularization
+L2 switches
+L3 Network
+label Edge Router
+LAF
+lambda
+lambda calculus
+Lamport clock
+LAN
+Lanczos algorithm
+LAPACK
+LAR
+latent Dirichlet allocation
+layers API (tf.layers)
+LBA
+LCFS hashing
+LCM
+LCP
+LCS
+LDAP
+LDS
+Leaky ReLU
+Lempel-Ziv
+lempel-Ziv-Welch
+LER
+Levenshtein distance
+LFR
+LFS
+LIFO
+linear hash
+linear hashing
+linear quadtree
+linearizability
+Linux
+LISTEN
+LIT
+little-o notation
+livelock
+LLM
+LLM evaluations (evals)
+LLP
+LLVM
+locality-sensitive hashing
+logical / virtual topologies
+LOGIN
+logits
+LOGOUT
+Lotka's law
+LS
+LSA
+LSP
+LSR
+LSR1
+LSTM
+LTE
+LU decomposition
+lumen
+lux
+LZ
+LZW
+LZW compression
+MAC
+macintosh OS
+MAE
+management information base
+manchester encoding
+Markov chain
+Markov decision process
+Markov decision processes
+Markov networks
+Markov processes
+Markov property
+Markov-chain Monte Carlo methods
+Martin Fowler
+mathematical foundations of cryptography
+MATLAB
+max Planck Institutes
+maximum bipartite matching
+maximum entropy modeling
+MAXLIST
+MAXNAME
+MAXROUTES
+MB
+MBB
+MBPP
+MD5
+MDP
+mega
+megahertz
+megapascal
+memoization
+memory API
+MEP
+MESI
+meter
+metrics API (tf.metrics)
+MIB
+MIB-II
+micro
+microampere
+microgram
+microliter
+micrometer
+micromolar
+micromole
+microsecond
+microvolt
+Miller-Rabin
+milli
+milliampere
+milligram
+millijoule
+milliliter
+millimeter
+millimolar
+millimole
+millisecond
+millivolt
+MIMD
+MIME
+MIMO
+MIMO Systems
+mini-batch stochastic gradient descent
+minimal perfect hashing
+Minkowski distance
+MINRES
+MISD
+ML
+MLD
+MME
+MMIT
+MMU
+MNIST
+MOBILE
+mobile IP
+modus ponens
+MOE
+MOESI
+molality
+molarity
+mole
+monad
+Moore machine
+morris-Pratt algorithm
+MP3
+MPEG
+MPEG-1
+MPEG-2
+MPEG-4
+MPLS
+MS-DOS
+MSDP
+MSE
+MSL
+MSP
+MSS
+MST
+MT
+MTA
+MTU
+mu
+multi suffix tree
+multi-CPU Scheduling
+multicast
+multicast address
+multicast distribution trees
+multikey Quicksort
+multilayer perceptron
+multiplex
+multiplexing
+multiprefix
+Munkres' assignment algorithm
+mutex
+MVCC
+MX
+Myhill-Nerode theorem
+MySQL
+N-Gram
+nabla
+naive Bayes classifier
+NAK
+nand
+nano
+nanoampere
+nanogram
+nanoliter
+nanometer
+nanomolar
+nanomole
+nanosecond
+NAS
+NAT
+NC
+NC many-one reducibility
+NDR
+Nesterov momentum
+NETCONF
+NetWare
+network topology types
+neural Turing machine
+newton
+NEXPTIME
+NFA
+NFE
+NFL
+NFS
+NFTA
+NIC
+NIST
+NL
+NLP
+NLU
+NO
+node (TensorFlow graph)
+nonce
+nonconvex optimization
+nondeterministic Turing machine
+nor
+NORA
+nouvelle AI
+NP
+NP-complete
+NP-complete language
+NP-completeness
+NP-hard
+NP-hardness
+NP/poly
+NPU
+NRZ
+NRZI
+NS
+NSFNET
+NSFNET backbone
+nu
+NUMA
+NumPy
+NX bit
+Nyquist frequency
+Nyquist-Shannon theorem
+NYSIIS
+OAM protocols
+OASIS
+OBDD
+OC
+OC-192
+OC-3
+OC-48
+OCaml
+Occam's razor
+OCP
+octree
+ODE
+OFDM
+OFDM system
+OFDMA
+Ohm
+OLT
+omega
+omicron
+on top of HTTP
+ONC
+one-hot encoding
+ONU
+OpenMP
+optimal hashing
+optimal polyphase merge
+optimal polyphase merge sort
+ORA
+oracle Database
+oracle Turing machine
+order-preserving hash
+order-preserving Huffman coding
+order-preserving minimal perfect hashing
+orthogonal drawing
+orthogonal Frequency-Division Multiple Access
+orthogonal lists
+orthogonally convex rectilinear polygon
+OS
+OSF
+OSI
+OSPF
+out-of-bag evaluation (OOB evaluation)
+overbar
+overfitting
+OWL
+P-complete
+P/poly
+PAM
+PAN
+parallel prefix computation
+parsers
+partial recursive function
+partially-observable Markov decision processes
+pascal
+PATRICIA
+patricia tree
+Paxos
+PBFT
+PBKDF2
+PC
+PCA
+PCIe
+PCP
+PDA
+PDE
+PDF
+PDU
+Pearson's hash
+perceptron
+perceptron algorithm
+perfect hashing
+permutation sort
+peta
+Petri nets
+PGP
+PGW
+pH
+phase change memory
+PHB
+phi
+physical topologies
+pi
+pico
+picoampere
+picogram
+picoliter
+picometer
+picomolar
+picomole
+piconet
+picosecond
+PIM
+PIM-DM
+PIM-SM
+PIM-SSM
+PING
+pKa
+pKb
+PKI
+planarization
+Planck constant
+plasmonics
+PLM
+PLOP-hashing
+point-set topology
+poissonization
+Poly1305
+polyhedron
+polylogarithmic
+polymorphism
+polyphase merge
+polyphase merge sort
+polytope
+POMDP
+PON
+PONG
+POP
+poset
+Post
+Post correspondence problem
+Post machine
+Post's correspondence problem
+post-processing
+post-trained model
+PowerPC
+PP
+PPO
+PPP
+PR curve
+PRACK
+PRAM
+PRB
+predistributed keys
+prefix
+prefix code
+prefix sums
+prefix traversal
+primitive recursive
+PRNG
+probabilistic Turing machine
+process API
+program lifecycle phase
+Prolog
+protocol Independent Multicast
+PS
+psi
+PSK
+PSPACE
+PSTN
+PTAS
+pth order Fibonacci numbers
+PVC
+Python
+PyTorch
+QAM
+QBF
+QID
+QLoRA
+QR decomposition
+quad trie
+quadrature
+quadrature Amplitude Modulation
+quadtree
+quadtree complexity theorem
+quecto
+QUESTION
+quetta
+QUIC
+quicksort
+quorum
+R
+R+-tree
+R. Milner
+Rabin-Karp
+Racket
+radian
+radix
+radix sort
+radix tree
+Raft
+RAG
+RAID
+RAN
+rank (ordinality)
+rasterization
+RBST
+RCPT
+RCU
+RDF
+RE
+RECEIVER
+reconfigurable optical Add/Drop Multiplexers
+recursion
+recursion termination
+recursion tree
+recursive
+recursive data structure
+recursive doubling
+recursive functions
+recursive language
+recursive self-improvement
+recursively enumerable language
+recursively solvable
+RED
+red-black tree
+rehashing
+reliable datagram protocol
+ReLU
+renewal theory
+REpresentational state transfer
+RESET
+reset TTL
+REST
+RESTful web services
+restricted Boltzmann machine
+RESV
+RETRANSMIT
+RGB
+rho
+Rice theorem
+Rice's method
+RIO
+RIP
+RISC
+RISC processors
+RK4
+RL
+RLE
+RLHF
+RMI
+RMSE
+RMSProp
+RNG
+RNN
+ROADM
+ROBDD
+robin Hood hashing
+ROC
+ROM
+RON
+ronna
+ronto
+ROP
+ROUGE
+ROUGE-L
+ROUGE-N
+RP
+RP1
+RP2
+RPB
+RPC
+RPCBIND
+RPF
+RRP
+RSA
+RSVP
+RTCP
+RTE
+RTP
+RTS
+RTS-CTS
+RTT
+Rust
+RWS
+SA
+SAC
+SACK
+SAM
+SAP
+SARSA
+SAT
+Savitch theorem
+SBB tree
+Scala
+SCCP
+Scheme
+schorr-Waite graph marking algorithm
+SciPy
+scrypt
+SCTP
+SD-WAN
+SDE
+SDLC
+SDN
+SDP
+SDRAM
+secant search
+second
+SELinux
+SELU
+semaphore
+SENDER
+sepCNN
+seqlock
+serializability
+SFI
+SFP
+SGD
+SHA
+SHA-1
+SHA-2
+SHA-256
+SHA-3
+Shannon-Fano coding
+Shor's algorithm
+siemens
+Sievert
+SIGCOMM
+sigma
+sigmoid function
+SiLU
+SIMD
+Simon's algorithm
+simple uniform hashing
+SIP
+SIP URI
+SISD
+skip list
+skip-Gram
+Smalltalk
+Smith algorithm
+Smith-Waterman algorithm
+SMP
+SMT
+SMTP
+SNMP
+SNR
+SOAP
+SOAP module
+softmax
+software-Defined WAN
+SONET
+SOR
+source-Specific Multicast
+SPARC
+SPARQL
+sparse dictionary learning
+sparse graph
+sparse mode
+SPF
+SPI
+spinlock
+splay tree
+spline models
+SPMD
+SQL
+SQL injection
+SQL Server
+SQuAD
+SR
+SRAM
+SRM
+SSA
+SSD
+SSH
+SSH-AUTH
+SSH-CONN
+SSH-TRANS
+SSL
+SSM
+SSRC
+SST
+SSTable
+standard TCP
+static Huffman coding
+statistical multiplexing
+STDM
+steinhaus-Johnson-Trotter
+steradian
+Stirling's approximation
+Stirling's formula
+stochastic approximation
+stochastic differential equations
+stochastic games
+stochastic gradient descent
+stochastic optimization
+stochastic processes
+stochastic semantic analysis
+stoichiometry
+Strassen
+strict two-phase locking
+strongly NP-hard
+STS
+STS-1
+STS-3
+STS-768
+STS-N
+STX
+subadditive ergodic theorem
+subgraph isomorphism
+subnet mask
+subnet number
+subnets
+subnetting
+subscript
+subword token
+SUCCESS
+suffix
+suffix array
+suffix automaton
+suffix tree
+supernetting
+superscript
+SVC
+SVD
+SVM
+Swish
+switched Ethernet
+SWP
+SWS
+symmetric binary B-tree
+SYN
+T5
+T5X
+tabulation hashing
+tail recursion
+Tarjan
+tau
+TC0
+TCAM
+TCB
+TCP
+TDM
+TE
+tensor network theory
+tensor Processing Unit
+TensorBoard
+TensorFlow
+TensorFlow Serving
+TensorStore
+tera
+terahertz
+tesla
+texturing
+TGS
+theta
+thomas J. Watson
+thread API
+three-phase commit
+three-way radix quicksort
+tilde
+TLB
+TLB shootdown
+TLD
+TLS
+TN
+TOC
+tokenizer
+top-down radix sort
+top-k retrieval in databases
+topological order
+topological sort
+topology
+topology tree
+TP
+TPR
+TPU
+TQBF
+TRACE
+transformer
+transpose sequential search
+treap
+TREC
+trie
+trigram
+tripartition
+triple DES
+trotter-Johnson
+TRPO
+trusted Computing Base
+TSP
+TST
+TTCP
+TTI
+TTL
+turbo-BM
+Turing machine
+Turing reduction
+Turing test
+Turing transducer
+twisted tabulation hashing
+two-phase commit
+two-phase locking
+two-Phase Locking Concurrency Control
+TXT
+UB-tree
+UCR
+UDDI
+UDP
+UE
+UKP
+UMA
+UML
+UMTS
+underfitting
+UNI
+unicast
+uniform hashing
+union-find
+universal B-tree
+universal hashing
+universal Turing machine
+UNSPEC
+upsilon
+URG
+URI
+URL
+USB
+user Datagram Protocol
+UTF8
+UWB
+VAE
+variational autoencoder
+VAX
+VC
+VCI
+vector clock
+VHDL
+vice versa
+VID
+view serializability
+virtual hashing
+virtual LAN
+Viterbi algorithm
+Vitter's algorithm
+VLAN
+VLAN Tag
+VLIW
+VLSI packaging
+VM
+VMware
+VNI
+volt
+VPI
+VPN
+VRFY
+VRML
+VRP
+VXLAN
+WAL
+WAN
+Watson
+watt
+WCET
+WDM
+weber
+weighted RED
+WEP
+WER
+WFQ
+WMT
+worst case
+worst-case execution time
+worst-case minimum access
+WPA2
+WPA3
+WRED
+WS
+WS-I
+WS-I Basic Security Profile
+WS-Security
+WSC
+WSDL
+X3D
+XDR
+XGBoost
+XGS-PON
+XHTML
+xi
+XID
+XILINX
+XL-Sum (xlsum)
+XLA
+XML
+XML namespaces
+XML Schema
+XML Schema Document
+xor
+XPath
+XQuery
+XSD
+XSS
+YANG
+yocto
+yotta
+Yule distribution
+YUV
+Zeller's congruence
+zepto
+zeta
+zetta
+zhu-Takaoka
+ZigBee
+Zipf's law
+ZPP
+ångström
+α
+β
+γ
+δ
+ε
+ζ
+η
+θ
+ι
+κ
+λ
+μ
+ν
+ξ
+ο
+π
+ρ
+ρ-approximation algorithm
+σ
+τ
+υ
+φ
+χ
+ψ
+ω

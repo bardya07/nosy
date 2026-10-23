@@ -1,0 +1,218 @@
+16PF
+angel investor
+articles of formation
+articles of incorporation
+articles of partnership
+barriers to entry
+baselining
+benefit corporation
+BMC
+bootstrapping
+born global
+born globals
+breakeven point
+build-measure-learn loop
+bundling
+burn rate
+business model canvas
+business process patent
+business-level strategy
+buyer power
+capital expense
+career entrepreneur
+CAS
+CATWOE
+close corporation
+closely held corporation
+clusters
+collaborative economy
+commingle
+competitive analysis grid
+competitive matrix
+complex adaptive systems
+conjoint analysis
+contribution margin
+cooperative venture
+corporate entrepreneurship
+corporate narrative
+corporate social responsibility
+COSO
+cost-leadership strategy
+Cournot model
+creative destruction
+crowdfunding
+crowdsourcing
+customer empathy map
+customer value proposition
+DBA
+defensive strategies
+deontology
+design patent
+DICEE
+differentiation strategy
+diffusion chasm
+diffusion of innovations
+disruptive technology
+divergent thinking
+due diligence
+economic nexus
+EGCs
+elevator pitch
+emerging growth companies
+enterprise risk management
+entity selection
+environmental entrepreneurship
+environmental scanning
+equity financing
+equity share
+escalation of commitment
+explicit knowledge
+external locus of control
+fail-safe points
+FDI
+feasibility analysis
+fishbone diagram
+FOMO
+foreign direct investment
+founders' agreement
+franchisee
+franchisor
+friends and family financing
+GEM
+general partner
+general partnership
+generic business-level strategies
+gig economy
+Global Entrepreneurship Monitor
+global strategy
+guerrilla marketing
+hackathon
+HCD
+hindsight bias
+hubris
+human-centered design
+iceberg principle
+ideation
+incremental innovation
+incubation
+initial public offering
+innovation accounting
+innovation flowchart
+internal locus of control
+intrapreneurial
+intrapreneurs
+IPO
+iterative development
+jobs-to-be-done theory
+joint venture
+JVs
+KAI
+Kirton Adaption-Innovation Inventory
+knowledge economy
+lateral thinking
+lean methodology
+lean model canvas
+lean pitch
+lean plan
+lean problem-solving process
+lean startup
+lifestyle venture
+limited liability company
+limited liability limited partnership
+limited liability partnership
+limited partner
+limited partnership
+limited personal liability
+line of credit
+LLC
+LLLP
+LLP
+LOC
+M&A
+majority stake
+member-managed LLCs
+mergers and acquisitions
+minimum viable product
+MVP
+NAICS
+Nash equilibrium
+NDA
+noncompete agreement
+nondisclosure agreement
+normative ethical theories
+open innovation
+open-ended NDA
+operational reserve
+opportunity-identifying perspective
+pain point
+partnership agreement
+pass-through entities
+penetration pricing
+perceived value pricing
+PESTEL
+piercing the corporate veil
+pioneering innovation
+pitch deck
+planning fallacy
+plant patent
+Porter's Five Forces
+premium pricing
+private label
+private-public partnerships
+privately held corporation
+pro forma
+problem-solution narrative
+profit-and-loss statement
+radical innovations
+RDT
+resource dependence theory
+resource-based view
+royalty payment
+run rate
+SAM
+SBA
+SBDCs
+SCORE
+seed-stage
+serial entrepreneur
+service mark
+serviceable available market
+shareholder primacy
+sharing economy
+skimming
+Small Business Development Centers
+social business model canvas
+social capital
+social enterprises
+social entrepreneur
+soft launch
+sole proprietorship
+SPIN
+status quo bias
+strategic drift
+strategic groups
+strategic inertia
+strategic positioning
+super angels
+switching costs
+SWOT
+tacit knowledge
+TAM
+TCO
+total available market
+total costs of ownership
+trade secret
+unique selling proposition
+USPTO
+utility patent
+value chain
+value proposition canvas
+venture capitalist
+vertical integration
+vertical thinking
+vicarious liability
+viral marketing
+virtue ethics
+VRIO
+wireframing
+work-for-hire agreement

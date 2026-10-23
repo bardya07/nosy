@@ -1,0 +1,1972 @@
+1-methyl-4-phenyl-1,2,3,6-tetrahydropyridine
+1D property descriptor
+1D structure
+2,3-bis(sulfanyl)propan-1-ol
+2-amino-3-(3-hydroxy-5-methyl-1,2-oxazol-4-yl)propanoic acid receptor
+2D property
+2D quantitative structure-activity relationships
+2D structure
+3D property
+3D searching
+3D structure
+3D structure generation
+4D quantitative structure-activity relationships
+5-hydroxytryptamine
+5α-reductase
+5α-reductase deficiency
+Abbe number
+ABL oncogene
+ABO blood group system
+ABR
+absolute lethal dose
+absorbed dose
+absorption spectroscopy
+AC
+AC voltage
+AC02
+accommodation
+accommodation coefficient
+acetyl
+acetylcholine
+acid anhydride
+acid deposition
+acid dissociation constant
+acid ionization
+acid rain
+acid-base extraction
+acid-base indicators
+acid-ionization constant, Ka
+ACK
+ACM
+actinic flux
+action-at-a-distance force
+adiabatic compressions
+adiabatic cooling
+adiabatic expansion
+adiabatic heating
+adiabatic lapse rate
+adiabatic process
+adsorption hysteresis
+AF
+AI
+AIMD
+air-lift bioreactor
+Airy's equation
+albedo
+aldehyde
+ALF
+algebraic topology
+alkene
+alkyl
+alkyne
+allele
+alloantigen
+allograft
+allometric
+allometric growth
+allometric scaling
+allometry
+allosteric antagonist
+allosteric enzymes
+allosteric site
+allostery
+allotrope
+alpha
+alpha-fetoprotein
+alpha-helix
+alpha-synuclein
+ALU
+alveolar macrophage
+alveolar period
+alveolitis
+alveolus
+Alzheimer disease
+AM
+ameloblast
+amenorrhea
+ames/Salmonella test
+amide
+amino-acid residue
+amniocentesis
+amniochorionic membrane
+amnion
+amniote
+amniotic cavity
+amniotic sac
+Amontons's law
+amount-of-substance concentration
+amount-of-substance fraction
+ampere
+amperometric detection method
+Ampère
+Ampère law
+Ampère's law
+Ampère-Maxwell law
+amygdala
+analogue-based drug discovery
+analytic study
+analytical Chemistry
+analytical function
+analytical instrument
+analytical unit
+anamniote
+anaphase
+anaphase lag
+anaphylactic shock
+anaphylactoid
+anaphylatoxin
+anaphylaxis
+anastomosis
+anchoring villus
+Anderson localization
+androblastoma
+androgen
+androgen receptor
+androgenic
+angstrom
+annihilation
+anti-gravity
+anti-thixotropy
+antialiasing
+antiderivative
+antigen
+antineutron
+antinode
+anycast
+AP
+AP-1
+AP-2
+AP-3
+aphelion
+application-specific VLSI designs
+AQM
+Archimedes
+Archimedes' principle
+Arnoldi iteration
+ARP
+ARPA
+ARPANET
+ARQ
+arrester
+Arrhenius
+Arrhenius acid
+Arrhenius base
+Arrhenius equation
+aryl
+AS
+ASCII
+ASIC
+ASM
+ASN
+asymptotically semi-stable solution
+asymptotically stable solution
+asymptotically unstable solution
+AT
+ATM
+atom-molecule complex mechanism
+atomic radius
+atto
+attractive potential-energy surface
+attractive-mixed-repulsive classification
+Aufbau principle
+Avogadro
+Avogadro constant
+Avogadro number
+Avogadro's law
+Avogadro's number
+AVP
+axion
+azeotrope
+B3LYP
+Babinet's principle
+Balmer
+band-to-band recombination
+BARRNET
+base anhydride
+base current
+base ionization
+base pairing
+base quantities
+base station
+base unit
+base-ionization constant
+baseline
+BBR
+BBU
+BCC
+BCS theory
+becquerel
+Beer-Lambert law
+benthic
+BER
+Berezinskii-Kosterlitz-Thouless transition
+Bernoulli
+Bernoulli equation
+Bernoulli's equation
+Bernoulli's principle
+beryllium disease
+Bessel function
+best-in-class
+beta
+beta-barrel
+beta-sheet
+beta-sheet breaker
+BFGS
+BFT
+BGP
+BGP-4
+biased sample
+BiCGSTAB
+BIDIR-PIM
+bidirectional PIM
+bilaminar embryo
+bilirubin
+binary GCD
+binding isotherm
+bioaccumulation
+bioaccumulation factor
+bioaccumulation potential
+biomagnification
+biomagnification factor
+biomonitoring type 1
+biomonitoring type 2
+biomonitoring type 3
+biomonitoring type 4
+biopolymer
+bioremediation
+Biot
+Biot-Savart law
+biota-sediment accumulation factor
+biotic ligand
+biotic ligand model
+biphasic dose-effect model
+BISYNC
+blast
+blastema
+blastocoel
+blastocyst
+blastomere
+blastula
+blastulation
+Bloch theorem
+block copolymer
+block copolymer lithography
+block homopolymer
+block polymer
+blood-brain barrier
+blood-cerebrospinal fluid barrier
+blood-placenta barrier
+blood-retinal barrier
+blood-testis barrier
+Bloom syndrome
+Bluetooth
+BNG
+body-centered cubic
+body-centered cubic solid
+body-centered cubic unit cell
+Bogoliubov transformation
+Bohr
+Bohr model
+Bohr's model
+Boltzmann
+Boltzmann constant
+bond-dissociation energy
+boot ID
+BOOTP
+Born-Oppenheimer approximation
+Bose-Einstein condensate
+Bose-Einstein distribution
+Bose-Hubbard model
+bottom anti-reflective coating
+bottom-up lithography
+Boyle's law
+bra-ket notation
+Bragg
+Bragg equation
+Bragg planes
+Bragg's law
+branched polymer
+bremsstrahlung
+Bresenham's algorithm
+Brewster's angle
+Brewster's law
+Brillouin zone
+broadband Base Units
+Brownian motion
+brush polymer
+Brønsted-Lowry acid
+Brønsted-Lowry acid-base reaction
+Brønsted-Lowry base
+BSD
+BSSE
+bulk polymerisation
+butyl
+Byzantine fault tolerance
+Büchner flask
+CA
+calibration component
+calibration function
+calibration gas mixture
+calibration mixture
+calorimetry
+CAM
+candela
+CAP theorem
+capillary action
+carbonyl
+carboxyl
+carboxylic acid
+cardioid
+Carnot
+Carnot cycle
+Carnot engine
+Carnot's principle
+CARP
+Cartesian coordinate system
+CAS
+CASSCF
+catenary
+Cauchy-Schwarz inequality
+Cayley-Hamilton theorem
+CBC-MAC
+CBRS
+CCD
+CCP
+CCR
+CCSD
+CCSD(T)
+CD
+CDMA systems
+CDN
+CE
+cell schematics
+Celsius (°C)
+Celsius scale
+centi
+centimeter
+central-force problem
+change of base rule
+charge-coupled device
+Charles
+Charles's law
+chelating agent
+chemiluminescence analyser
+chemiluminescent methods of detection
+chemostat
+chi
+Cholesky decomposition
+CIDR
+CISC
+CL
+Clairaut's theorem
+classical (Galilean) velocity addition
+Clausius
+Clausius-Clapeyron equation
+CLI
+CLOSING
+CMOS
+CNAME
+cobb-Douglas function
+cobb-Douglas production function
+combinatorial algorithms
+combinatorial optimization
+combinatoric problems
+combinatorics
+combinatorics on words
+complementary DNA
+complete VM Systems
+Compton rule
+Compton scattering
+concave lens
+concave mirror
+condensation nuclei
+conjugate acid
+conjugate base
+CONNECT
+consistent hashing
+constant-volume gas thermometer
+constitutional isomer
+Contact forces
+Contact hole
+continuous emulsion polymerisation
+continuous phase
+continuous-phase concentration
+controlled anionic polymerization
+controlled cationic polymerization
+controlled ionic polymerization
+controlled polymerization
+controlled radical polymerization
+convex lens
+convex mirror
+convex optimization
+Cooper
+Cooper pair
+coordination polymerization
+coordination ring-opening polymerization
+coordination-addition polymerization
+coordination-insertion polymerization
+coordinative chain-transfer polymerization
+Copernicus
+copolymer
+copolymer isomorphism
+copolymer micelle
+copolymerisation composition equation
+copolymerization
+copy-on-write
+CORD
+core-crosslinked micelle
+core-shell particle
+core-shell structure
+Coriolis acceleration and force
+Coriolis force
+corkscrew right-hand rule
+Coulomb
+Coulomb force
+Coulomb gauge
+Coulomb law
+Coulomb radius
+Coulomb's law
+coulombic
+coulometric detection method
+coumarone-indene polymer
+counter-current flow
+covalent radius
+COW
+CPI
+CPU
+CPU Scheduling
+CQI
+CRC-32
+CRC-8
+Crick
+CRLF
+cross-flow filtration
+cross-over concentration
+cross-propagation
+cross-termination
+cryogenic
+cryogenic sampling
+cryogenics
+crystal polymorph
+crystalline polymer
+crystalline polymer-inclusion complex
+crystalline-polymer molecular complex
+crystallisable polymer
+crystallography
+CS
+CS-PDU
+CSMA
+CSPF
+CSRC
+CTS
+cubic centimeter (cm3)
+cubic mesophase
+cubic meter (m3)
+cumulative mass-distribution function
+cumulative number-distribution function
+CUPS
+Curie temperature
+curtate cycloid
+CWND
+CWR
+cycloid
+cyclopolymerization
+cyclotron
+cytochromes
+d-block
+Dalton
+Dalton's law
+Dalton's law of partial pressures
+darcy-Weisbach equation
+DASH
+data Center TCP
+datagram
+DC
+DC coefficient
+DC motor
+DCE
+DCE-RPC
+DCOM
+DCT
+DCTCP
+DDCMP
+DDR
+De Broglie
+dead polymer chain
+dead-end polymerisation
+deadlock
+Debye model
+Debye temperature
+DEC
+deca
+deci
+decibel
+DECNET
+defect-free pattern
+degenerate-transfer radical polymerisation
+degenerative chain-transfer radical polymerization
+degenerative-transfer polymerization
+degradable polymer
+degree Celsius
+degree of polymerization
+degree-of-polymerisation dispersity
+DELETE
+delta
+demultiplexed
+demultiplexing key
+dendrimer molecule
+denitrification
+dense Wavelength Division Multiplexing
+deoxyribonucleic acid
+deuteriation
+deuterium
+deuteron
+DFT
+DHCP
+DHCPDISCOVER
+DHT
+diamagnetic materials
+diamagnetism
+diastereomer
+diatomic
+diatomic molecule
+differential Manchester
+Dipolar bond
+dipole-dipole attraction
+diprotic base
+Dirac cone
+direct-injection enthalpimetry
+dispersed phase
+diterpenes
+DLE
+DMA
+DNA
+DNA probe
+DNS
+Doppler effect
+Doppler shift
+DOS
+dose equivalent
+double Riemann sum
+double-focusing mass spectrograph
+double-focusing mass spectrometer
+DPCM
+DR
+DRAM
+DS
+DSCP
+DST
+DT
+duplicate ACK
+DVMRP
+DWDM
+dynamic Fields mass spectrometer
+dynamic-load thermomechanical analysis
+EAP-TLS
+EBCDIC
+ECC
+ECE
+ECMP
+ECN
+ecotoxicity
+ECT
+EDA
+EECS-2012-5
+EEPROM
+EF
+effective nuclear charge, Zeff
+EGP
+eigenbasis
+eigendecomposition
+eigenfunction
+eigenspace
+eigenvector
+Einstein
+Einstein model
+Einstein summation convention
+elastomer
+electrically conducting polymer
+electrically conducting polymer composite
+electro-dialysis
+electro-optic effect
+Electrochemical cell
+Electrochemical detector
+Electrochemical method of detection
+electrochromic polymer
+electroclinic polymer
+electroinjection
+electroluminescent polymer
+electromagnetic field responsive polymer
+electron neutrino
+electron paramagnetic resonance
+electronvolt
+electrophoresis
+elevator
+EN
+enantiomorph
+end system multicast
+end-group
+endothermic
+endothermic reaction
+enthalpimetric analysis
+enthalpogram
+enthalpy
+enthalpy (H)
+enthalpy change (ΔH)
+enthalpy of activation
+enthalpy of fusion
+enthalpy of immersion
+enthalpy of polymerisation
+enthalpy of wetting
+enthalpy relaxation
+entropy (S)
+entropy of activation
+entropy of polymerisation
+entropy unit
+environmental Chemistry
+environmental stress cracking
+environmentally degradable polymer
+environmentally friendly
+EOS
+EPC
+epigenetic
+epithelioma
+epithelium
+epitope
+epitope mapping
+epitope retrieval
+epitope spreading
+epoxide hydrolase
+epoxy polymer
+epsilon
+epsilon-delta
+epstein-Barr virus
+equivalent hydrodynamic radius
+Erlenmeyer flask
+ernest Rutherford
+erythro structures
+erythroblastosis fetalis
+erythrocyte
+erythropoiesis
+erythropoietin
+eschar
+esin and Markov coefficient
+ESTABLISHED
+ester
+estimated environmental concentration
+estimated exposure dose
+estradiol
+estrogen-mimetic
+estrous cycle
+estrus
+estrus syndrome
+eta
+ETH
+Ethernet
+ETX
+euglobulin
+eukaryote
+Euler
+Euler transform
+Euler's constant
+Euler's formula
+Euler's method
+Euler-Lagrange equation
+Euler-Lotka equation
+euploid
+eutrophic
+eutrophication
+even-electron ion
+EX
+exa
+exciton absorption
+EXI
+EXPUNGE
+extended LAN
+f-block
+face-centered cubic
+face-centered cubic solid
+face-centered cubic unit cell
+factor-label method
+farad
+Faraday
+Faraday constant
+Faraday law
+Faraday's law
+Faraday's laws of electrolysis
+fault-tolerant network topologies
+FCC
+FCFS
+FDDI
+FDM
+FEC
+feed-back inhibition
+femto
+femtoliter
+femtometer
+femtomolar
+femtomole
+femtosecond
+Fermat's principle
+Fermat's theorem
+Fermi
+Fermi energy
+Fermi factor
+Fermi liquid
+Fermi surface
+Fermi temperature
+Fermi-Dirac distribution
+ferromagnetic material
+ferromagnetism
+FETCH
+FFFF
+FFS
+FFT
+Fibonacci number
+Fick's laws of diffusion
+FIFO
+FIFO queuing
+FIFO with tail drop
+FIN
+flash-based SSDs
+flow injection enthalpimetry
+FLP impossibility
+FM
+folium of Descartes
+Fourier's law of heat transfer
+FPU
+FQ
+frame-shift mutation
+free energy change (ΔG)
+free-body diagram
+FreeBSD
+freeze-drying
+frequency-division multiplexing
+Frobenius norm
+frustum
+Fréchet derivative
+FSCK and Journaling
+FTP
+Fubini theorem
+Fubini's theorem
+fugacity
+fugacity coefficient
+futex
+Gabriel's Horn
+Galilean relativity
+Galilean transformation
+Galileo
+gamma
+gas chromatography
+gaseous diffusion separator
+Gauss
+Gauss law
+Gauss theorem
+Gauss's law for magnetism
+Gauss-Seidel method
+Gaussian band shape
+Gaussian processes
+Gaussian surface
+Gaussian-type orbital
+Gay-Lussac's law
+geminate recombination
+general acid-base catalysis
+generalized MPLS
+generalized transition-state theory
+geometric topology
+get-NEXT
+GFC
+Gibbs
+Gibbs adsorption
+Gibbs energy
+Gibbs energy diagram
+Gibbs energy of activation
+Gibbs energy of repulsion
+Gibbs film elasticity
+Gibbs free energy (G)
+Gibbs sampling
+Gibbs surface
+GIF
+giga
+gigahertz
+gigapascal
+Gilbert
+Ginzburg-Landau theory
+Givens rotation
+globular-chain crystal
+globule-to-coil transition
+glomerulus
+glucocorticoid
+glue-sniffing
+glutamate
+glutamate-induced excitotoxicity
+glutamic acid decarboxylase
+gluten
+glycerides
+glycerophospholipid
+glyco-amino-acid
+glycoconjugate
+glycolipid
+glycopeptides
+glycosaminoglycan
+GMPLS
+GMRES
+GOAWAY
+Golgi staining
+gonadotropic
+gonadotropin
+gonadotropin-releasing hormone
+GOP
+GPS
+gradual potential-energy surface
+graft copolymer
+graft copolymerization
+graft homopolymer
+graft macromolecule
+graft polymer
+Graham's law of effusion
+Gram
+Gram stain
+Gram-atom
+Gram-Schmidt process
+gratuitous ARP
+graviton
+gray
+Green body
+Green polymer
+Green theorem
+Green's theorem
+group-transfer polymerization
+GSM
+GTO
+gubernaculum
+guides to environmental quality
+guillain-Barré syndrome
+gut-associated lymphoid tissue
+gyroscope
+Gâteaux derivative
+H-2
+H-2 complex
+Hadamard product
+hadron
+halato-telechelic polymer
+half-cells
+half-reaction
+half-wave antenna
+Halley's comet
+Hamilton's principle
+Hamilton-Jacobi equation
+Hamiltonian mechanics
+Hamiltonian operator
+hansch-Fujita π-constant
+haploid
+haplotype
+hapten
+haptenic
+hard acid
+hard-segment phase domain
+Hardy-Weinberg equilibrium
+Hartree
+Hartree-Fock
+hash(ObjectName) → ObjectID
+hash(x) → n
+hashimoto thyroiditis
+hash→ NodeID
+HCI
+HCP
+HDD
+HDLC
+head-tail isomerism
+HEADERS
+heat-flow differential scanning calorimetry
+HEC
+hecto
+Heisenberg model
+Heisenberg uncertainty principle
+helium dead-space
+Helmholtz energy
+Helmholtz free energy
+HELO
+hemolysis
+Henderson
+Henderson-Hasselbalch equation
+henry
+Henry (H)
+Henry's law
+Henry's law constant
+Henry's law solubility constant
+Henry's law volatility constant
+HERD
+Hermitian conjugate
+Hermitian matrix
+Hertz
+hertz
+Hess's law
+Hessian
+heterotrophic
+HHP
+histone
+HLEN
+HLP
+HLS
+Hofstadter butterfly
+Holstein-Primakoff transformation
+HOMO
+homopolymers
+Hooke's law
+host-vector system
+Householder transformation
+HSS
+HTML
+HTTP
+HTTP adaptive streaming
+Hubbard model
+Hubble space Telescope
+Hubble telescope
+huffman codes
+Hund's rule
+Huygens
+Huygens's principle
+Huygens-Fresnel principle
+hydroxy
+hyperbolic functions
+hyperbolic trees
+hyperbolic unit
+hyperopia
+hypertonic
+hypocycloid
+hypotonic
+hysteresis
+Hückel
+Hückel rule
+I-beams
+IANA
+ICANN
+ICMP
+ID
+idempotence
+IDL
+IEEE
+IETF
+IGMP
+IGP
+III-V compounds
+ILP
+IMAP
+immission dose
+impedance
+impulse-momentum theorem
+induced electric-dipole moment
+inertial force
+inertial frame of reference
+inertial reference frame
+InfiniBand
+inorganic Chemistry
+INT
+integrand
+interior BGP
+inverse hyperbolic functions
+INVITE
+ion trap mass spectrometer
+ion-dipole attraction
+ion-free layer
+ion-pair formation
+iota
+IP
+IP Multimedia Subsystem
+IP tunnel
+IP4
+IPAddr
+IPC
+IPv4
+IPv6
+IS-IS
+ISA
+isaac Newton
+isentropic
+Ising model
+ISO
+isoelectric
+isoelectric point
+isoelectronic
+isoelectronicity
+isomer shift
+isomerization
+isomorphous
+isosteric enthalpy of adsorption
+isothermal expansion
+isothermal process
+isothermal technique
+isotonic
+ISP
+IT
+ITU-T
+Itô integral
+Itô lemma
+IUPAC
+IXP
+Jacobi method
+Jacobian
+jansky
+joule
+Joule (J)
+JPEG
+JSON
+kappa
+katal
+KB
+Keck telescope
+kelvin
+Kelvin (K)
+Kelvin scale
+Kepler
+Kepler's first law
+Kepler's laws of planetary motion
+Kepler's second law
+Kepler's third law
+keto acid
+ketone
+kilo
+kilodalton
+kilogram
+kilohertz
+kilojoule
+kilometer
+kilopascal
+kilovolt
+Kirchhoff
+Kirchhoff's circuit laws
+Kirchhoff's equations
+Kirchhoff's rules
+KISS
+Koch's snowflake
+Kosterlitz-Thouless transition
+Kramers-Kronig relations
+Kronecker delta
+Kronecker product
+Krylov subspace
+L'Hôpital's rule
+L-BFGS
+L2 Network
+L2 switches
+L3 Network
+label Edge Router
+LAF
+Lagrange multiplier
+Lagrangian
+Lagrangian mechanics
+lambda
+laminar flow
+Lamport clock
+LAN
+Lanczos algorithm
+Landau damping
+Landau level
+langmuir-Hinshelwood mechanism
+langmuir-Rideal mechanism
+LAPACK
+Laplace operator
+Laplace transform
+Laplace's equation
+Laplace-Runge-Lenz vector
+LAR
+laser ionization
+LC circuit
+LCDs
+LCP
+LDAP
+le Châtelier's principle
+lead acid battery
+least-squares technique
+Legendre transformation
+Leibniz
+lennard-Jones 6-12 potential
+lens maker's equation
+Lenz's law
+LER
+Levi-Civita symbol
+Lewis
+Lewis acid
+Lewis acid-base adduct
+Lewis acid-base Chemistry
+Lewis base
+Lewis structure
+LFR
+LFS
+LIFO
+ligand
+light-atom anomaly
+line-of-centres model
+line-space patterning
+linear copolymer
+linear polymer
+linearizability
+Liouville theorem
+Liouville's theorem
+liquid crystal displays
+liquid-crystal dendrimer
+liquid-crystal polymer
+liquid-crystal state
+liquid-crystalline phase
+liquid-crystalline polymer
+LISTEN
+livelock
+living anionic polymerization
+living cationic polymerization
+living condensative chain polymerization
+living coordination polymerization
+living copolymerization
+living ionic polymerization
+living polymer
+Liénard-Wiechert potential
+LLP
+logical / virtual topologies
+LOGIN
+LOGOUT
+London
+London dispersion force
+loop-the-loop
+Lorentz factor
+Lorentz force
+Lorentz force equation
+Lorentz transformation
+LS
+LSA
+LSP
+LSR
+LSR1
+LTE
+LU decomposition
+lumen
+lux
+LZ
+M-theory
+MAC
+Mach number
+Mach's principle
+Maclaurin polynomials
+Maclaurin series
+Madelung constant
+Majorana fermion
+Malus's law
+management information base
+manchester encoding
+Mandelbrot set
+Mars Climate Orbiter
+mass spectrometer
+mass spectrometric detector
+mass spectrometry
+mass-volume percent
+mathematical model
+mathematical physics
+MATLAB
+maximum entropy modeling
+MAXLIST
+MAXNAME
+MAXROUTES
+Maxwell
+Maxwell equations
+Maxwell's equations
+Maxwell-Boltzmann distribution
+MB
+mega
+megahertz
+megapascal
+Meissner effect
+MEP
+MESI
+messenger RNA
+meter
+methanogens
+method of Lagrange multipliers
+methyl
+methylene blue
+methylotrophic microorganisms
+MIB
+MIB-II
+Michelson
+Michelson-Morley experiment
+micro
+microampere
+microgram
+microliter
+micrometeorology
+micrometer
+micromolar
+micromole
+microsecond
+microvolt
+milli
+milliampere
+milligram
+millijoule
+milliliter
+milliliter (mL)
+millimeter
+millimolar
+millimole
+millisecond
+millivolt
+MIMD
+MIME
+MINRES
+MISD
+mitochondria
+MLD
+MME
+MMU
+MOBILE
+mobile IP
+mobile phase
+modulo
+MOESI
+molality
+molarity
+mole
+monoterpenes
+Moore-Penrose pseudoinverse
+Mott insulator
+MP2
+MP3
+MPEG
+MPEG-1
+MPEG-2
+MPEG-4
+MPLS
+MS-DOS
+MSDP
+MSL
+MSP
+MSS
+MTA
+MTU
+mu
+multi-CPU Scheduling
+multi-loop circuit
+multicast
+multicast address
+multicast distribution trees
+multiplex
+multiplexing
+muon
+mutex
+MX
+myopia
+n choose k
+n-type semiconductor
+nabla
+NAK
+nano
+nanoampere
+nanogram
+nanoliter
+nanometer
+nanomolar
+nanomole
+nanosecond
+NAT
+Navier-Stokes equation
+NDR
+nephelometry
+Nernst equation
+NETCONF
+NetWare
+network topology types
+newton
+Newton's first law
+Newton's law of cooling
+Newton's law of universal gravitation
+Newton's laws of motion
+Newton's method
+Newton's rings
+Newton's second law
+Newton's second law for rotation
+Newton's second law of motion
+Newton's third law
+Newtonian design
+Newtonian fluid
+Newtonian mechanics
+NFE
+NFL
+NFS
+NIC
+nickel-cadmium
+NL
+NO
+Noether theorem
+Noether's theorem
+non-conservative forces
+non-Euclidean geometry
+non-metal
+non-quasi-static processes
+non-renewable
+nonconvex optimization
+noninertial frame of reference
+NPU
+NRZ
+NRZI
+NS
+NSFNET
+NSFNET backbone
+nu
+nuclear
+nuclear magnetic resonance spectroscopy
+nucleon
+nucleotide bases
+NUMA
+NumPy
+nutritional calorie
+Nyquist frequency
+Nyquist-Shannon theorem
+OAM protocols
+OASIS
+OC
+OC-192
+OC-3
+OC-48
+OCP
+ODE
+OFDM
+OFDMA
+Ohm
+Ohm's law
+olefin metathesis polymerization
+OLT
+omega
+omicron
+on top of HTTP
+ONC
+ONU
+operon
+organic base
+organic Chemistry
+orthogonal
+orthogonal Frequency-Division Multiple Access
+orthogonal matrix
+orthogonal vectors
+orthogonality
+orthonormal basis
+orthonormality
+OS
+OSF
+OSI
+osmotic pressure (Π)
+OSPF
+overbar
+oxidation-reduction (redox) reactions
+oxoacid
+p-block
+p-n junction
+p-type semiconductor
+PAN
+parallel prefix computation
+parallel-axis theorem
+parallel-plate capacitor
+parallelepiped
+parallelogram rule
+paramagnetic material
+parsec
+pascal
+Pascal's law
+Pascal's principle
+PATRICIA
+Pauli exclusion principle
+Paxos
+PBE
+PBFT
+PC
+PCIe
+PDE
+PDU
+per-
+peracid
+perceptron algorithm
+perihelion
+Periodic driving force
+Periodic motion
+Permanent dipole
+permeability of free space
+permittivity of free space
+permittivity of vacuum
+peroxy
+peta
+PGW
+pH
+phase (matter)
+phase equilibrium
+phase shift
+phases of matter
+PHB
+phi
+philae
+phosphine oxides
+phosphorescence
+photolysis
+photophosphorylation
+physical Chemistry
+physical topologies
+pi
+pico
+picoampere
+picogram
+picoliter
+picometer
+picomolar
+picomole
+piconet
+picosecond
+piezoelectricity
+PIM
+PIM-DM
+PIM-SM
+PIM-SSM
+PING
+pion
+PKA
+pKa
+pKb
+Planck constant
+plasmid
+plasmonics
+pleiotropic gene
+ploidy
+pnictogen
+pOH
+point-set topology
+Poiseuille
+Poiseuille law
+Poiseuille's law
+Poiseuille's law for resistance
+Poisson bracket
+polyarylenes
+polyarylenethynylenes
+polyarylenevinylenes
+polybase
+polybenzimidazoles
+polybenzothiazole
+polybenzoxazole
+polybismaleimide
+polycarbodiimide
+polycarborane
+polycarbosilane
+polycrystalline polymer
+polycyanurate
+polydiacetylenes
+polyester
+polyether
+polyglutarimide
+polyimidazole
+polyimides
+polyisocyanide
+polyisocyanurate
+polyketone
+polymer alloy
+polymer bead
+polymer blend
+polymer catalyst
+polymer clathrate
+polymer co-crystal
+polymer co-crystallisation
+polymer colloid
+polymer compatibilizer
+polymer complexation
+polymer composite
+polymer content
+polymer crystal
+polymer crystallite
+polymer cyclization
+polymer degradation
+polymer dispersion
+polymer drug
+polymer emulsion
+polymer fibre
+polymer fibril
+polymer functionalization
+polymer gel
+polymer gel particle
+polymer glass
+polymer mass fraction
+polymer melt
+polymer membrane
+polymer physics
+polymerization
+polymetaloxane
+polymorphic polymer crystal
+polyoxadiazoles
+polyoxyalkylene
+polyoxyarylene
+polyoxymethylene
+polyoxyphenylene
+polyparabanic acid
+polyphenylenemethylene
+polyphenylenes
+polyphenylenethynylenes
+polyphenylenevinylenes
+polyphosphate
+polyphosphazene
+polysilanes
+polysiloxane
+polysulfonamide
+polysulfone
+polytetrazines
+polythiadiazoles
+polythiazoles
+polythioester
+polythioether
+polythiophenes
+polytriazine
+polyurea
+polyurethane
+polyvinyl ester
+polyvinyl Ether
+PON
+PONG
+POP
+Post
+potentiometric detection method
+PowerPC
+Poynting vector
+PPP
+PRACK
+Prandtl tube
+PRB
+prolate cycloid
+prophage
+propyl
+proteases
+protocol Independent Multicast
+psi
+PSTN
+pV diagram
+PVC
+pyrolysis
+QAM
+QID
+QR decomposition
+quadrature
+quadrature Amplitude Modulation
+quark
+quasi-static process
+quecto
+QUESTION
+quetta
+QUIC
+quorum
+radian
+radionuclide
+radius of curvature
+Raft
+Ramanujan
+RAN
+Raoult's law
+rare-earth element
+rasterization
+rate-limiting step
+Rayleigh criterion
+Rayleigh scattering
+RC circuit
+RCPT
+RCU
+RE
+RECEIVER
+reconfigurable optical Add/Drop Multiplexers
+RED
+relativistic momentum
+reliable datagram protocol
+renewal theory
+reparameterization
+REpresentational state transfer
+RESET
+reset TTL
+REST
+RESV
+RETRANSMIT
+reversible-addition-fragmentation chain-transfer polymerization
+reversible-addition-fragmentation radical polymerization
+reversible-deactivation anionic polymerization
+reversible-deactivation cationic polymerization
+reversible-deactivation coordination polymerization
+reversible-deactivation ionic polymerization
+reversible-deactivation polymerization
+reversible-deactivation radical polymerization
+Reynolds number
+RGB
+rho
+Richter scale
+Riemann sum
+right-hand rule
+right-handed helix
+ring-opening copolymerization
+ring-opening metathesis polymerization
+ring-opening nucleophilic chain polymerization
+ring-opening polymerization
+RIO
+RIP
+RISC
+RISC processors
+RK4
+RLC circuit
+RLC series circuit
+RLE
+RMI
+ROADM
+rod-coil copolymer
+Rolle's theorem
+ROM
+RON
+ronna
+ronto
+root-mean-square (rms) speed
+round-bottom flask
+RP1
+RP2
+RPB
+RPC
+RPCBIND
+RPF
+RRP
+RSVP
+RTCP
+RTP
+RTS
+RTS-CTS
+RTT
+Rutherford
+RWS
+Rydberg
+s-block
+SACK
+SAP
+Savart
+SCCP
+SCF
+Schrödinger equation
+Schwarzschild
+Schwarzschild radius
+SciPy
+SCTP
+SD-WAN
+SDE
+SDLC
+SDN
+SDP
+SDRAM
+secant
+secant method
+second
+Seebeck effect
+semaphore
+SENDER
+seqlock
+SFI
+SFP
+SHE
+SHM
+SI units
+siemens
+Sievert
+SIGCOMM
+sigma
+SIMD
+Simpson's rule
+single-displacement (replacement) reactions
+SIP
+SIP URI
+SISD
+Slater-type orbital
+SMP
+SMT
+SMTP
+Snell
+Snell's law
+SNMP
+SNR
+SOAP
+SOAP module
+software-Defined WAN
+solenoid
+solid-phase extraction
+solid-state physics
+SOMO
+SONET
+sonoluminescence
+SOR
+source-Specific Multicast
+space-time
+spacecraft
+SPARC
+sparse mode
+spatial isomer
+Special relativity
+spectator-stripping reaction
+spectrochemistry
+spectrometry
+spectroscopic dispersion
+spectroscopy
+SPF
+spin-orbit coupling constant
+spin-spin coupling constant
+spinlock
+spline models
+SQUID
+SR
+SRAM
+SSD
+SSH
+SSH-AUTH
+SSH-CONN
+SSH-TRANS
+SSL
+SSM
+SSRC
+stable nuclide
+standard enthalpy of combustion
+standard entropies (S°)
+standard entropy change (ΔS°)
+standard entropy of activation
+standard TCP
+state-to-state kinetics
+static Fields mass spectrometer
+stationary phase
+statistical multiplexing
+STDM
+Stefan-Boltzmann law of radiation
+steradian
+stereogenic center
+stereoisomer
+Stern layer
+Stirling engine
+STO
+stochastic differential equations
+stochastic games
+stochastic processes
+stochastic sampling
+stochastic theories
+stockholm convention
+stoichiometric
+stoichiometric factors
+stoichiometric mean molal
+stoichiometric number
+stoichiometry
+Stokes
+Stokes drag
+Stokes law
+Stokes number
+Stokes theorem
+STP
+stress-strain curve
+stress-strain diagram
+structural isomer
+STS
+STS-1
+STS-3
+STS-768
+STS-N
+STX
+subnet mask
+subnet number
+subnets
+subnetting
+subscript
+SUCCESS
+supernetting
+superscript
+surface excess entropy
+surface excess Gibbs energy
+surface excess Helmholtz energy
+surface excess isotherm
+surface of a phase
+surfactant
+SVC
+SVD
+switched Ethernet
+SWP
+SWS
+SYN
+T-stacking
+tactic block polymer
+tactic polymer
+tail-to-head geometric construction
+Tammann's 2/3rd rule
+tandem mass spectrometer
+tau
+Taylor polynomials
+Taylor series
+Taylor's theorem with remainder
+TCAM
+TCP
+TDM
+TE
+telechelic polymer
+temperature-programmed desorption
+temperature-programmed oxidation
+temperature-programmed reduction
+template polymerization
+tensor product
+tera
+terahertz
+terpene
+tesla
+texturing
+theorem of Pappus for volume
+therapeutic polymer
+thermal injection
+thermo- technique
+thermoanalytical
+thermogravimetric analyser
+thermogravimetric analysis
+thermoluminescence analysis
+thermoplastic elastomer
+thermosetting polymer
+thermospectrometry
+thermotropic mesophase
+theta
+thin-film interference
+Thiol
+Thomson
+three-phase commit
+thrombogenicity
+tilde
+time-dependent stoichiometry
+time-independent stoichiometry
+time-of-flight mass spectrometer
+time-temperature superposition principle
+titrant
+TLB
+TLB shootdown
+TLD
+TLS
+TMS
+TOC
+Tonelli theorem
+top-down patterning
+top-surface imaging
+topochemical polymerisation
+topology
+TRACE
+transactinides
+transfer RNA
+transformer
+transient phase
+translational spectroscopy
+transpose
+transposon
+triprotic acid
+TTCP
+TTI
+two-body pursuit problem
+two-phase commit
+TXT
+type II superconductor
+UDDI
+UDP
+UE
+UMA
+UN number
+UNI
+unicast
+unitary matrix
+UNSPEC
+upsilon
+URG
+URI
+URL
+USB
+user Datagram Protocol
+UTF8
+Van 't Hoff factor
+Van't Hoff factor (i)
+VAX
+VC
+VCI
+vector clock
+vice versa
+VID
+virtual LAN
+viscoelasticity
+VLAN
+VLAN Tag
+VLIW
+VLSI packaging
+VM
+VNI
+volt
+VPI
+VPN
+VRFY
+VRML
+VXLAN
+WAN
+Wannier function
+Watson
+watt
+wave-particle duality
+WDM
+weber
+weighted RED
+wet Chemistry
+Weyl semimetal
+WFQ
+Wheeler
+wind rose
+work-energy theorem
+work-up
+WPA2
+WRED
+WS
+WS-I
+WS-Security
+WSDL
+X-ray
+X-ray crystallography
+X-ray diffraction
+X-ray photoelectron spectroscopy
+X3D
+XDR
+XGS-PON
+XHTML
+xi
+XID
+XSD
+YANG
+yocto
+yotta
+Young's modulus
+YUV
+zepto
+zeta
+zetta
+Ziegler-Natta catalysts
+ångström
+α
+α-cleavage
+α-particle
+β
+γ
+γ-aminobutyric acid
+γ-aminobutyric acid receptor
+γ-interferon
+γ:δ T cell
+γ:δ T-cell receptor
+δ
+ε
+ζ
+η
+θ
+ι
+κ
+λ
+μ
+ν
+ξ
+ο
+π
+ρ
+σ
+τ
+υ
+φ
+χ
+χ-parameter
+ψ
+ω
