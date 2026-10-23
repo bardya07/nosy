@@ -103,13 +103,14 @@ enum Transcriber {
     private static func run(record: SessionRecord, paths: AppPaths, job: TranscriptionJob,
                             progress: @escaping @Sendable (Double) -> Void) async throws -> SessionRecord {
         var record = record
-        // Freeze course choices and user terms before audio preparation or inference.
+        // Freeze folder subject choices and user terms before audio preparation or inference.
         let folder = paths.lectureFolder(record.lecture)
         let vocabularyText = (try? String(contentsOf: folder.appendingPathComponent("vocab.txt"), encoding: .utf8)) ?? ""
-        let settings = (try? SubjectSettings.load(folder: folder)) ?? SubjectSettings(subject: "off")
+        let settings = (try? SubjectSettings.load(folder: folder)) ?? SubjectSettings(subject: "general")
+        let resolvedSubjects = settings.resolved(course: record.lecture)
         let userTerms = Vocabulary.entries(vocabularyText)
         record.vocabularyTerms = Array(Set(userTerms)).sorted()
-        let smart = settings.isEnabled
+        let smart = settings.isEnabled && resolvedSubjects.contains { $0 != "general" }
         let flags = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map { Set($0.split(separator: ",").map(String.init)) }
         do {
             try job.checkCancellation()
@@ -172,7 +173,7 @@ enum Transcriber {
             if smart {
                 do {
                     let refined = try VocabularyRefinement.refine(original: text, data: Data(contentsOf: jsonURL), catalog: .bundled,
-                                                                 subjects: settings.resolved(course: record.lecture), userTerms: userTerms,
+                                                                 subjects: resolvedSubjects, userTerms: userTerms,
                                                                  router: flags?.contains("router") ?? true, substitute: flags?.contains("substitute") ?? true, job: job)
                     try job.checkCancellation()
                     try VocabularyRefinement.save(refined, baseline: text, id: record.id, paths: paths)

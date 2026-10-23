@@ -193,11 +193,11 @@ struct OnboardingView: View {
     @ViewBuilder private var content: some View {
         switch setup.step {
         case .welcome:
-            page(title: "Meet Nosy", body: "Nosy listens to your lectures and writes them up — entirely on your Mac. Nothing is uploaded, ever.") {
+            page(title: "Meet Nosy", body: "Nosy transcribes lectures and meetings — entirely on your Mac. Nothing is uploaded, ever.") {
                 NosyMark(size: 72)
             }
         case .microphone:
-            page(title: "Your microphone", body: "Nosy needs the mic to hear your lectures. macOS will ask once.") {
+            page(title: "Your microphone", body: "Nosy needs the mic to hear your lectures and meetings. macOS will ask once.") {
                 status(setup.micStatus == .authorized ? "Microphone allowed" : (setup.micStatus == .notDetermined ? "Not asked yet" : "Microphone is off for Nosy"),
                        ok: setup.micStatus == .authorized)
                 if setup.micStatus == .notDetermined {
@@ -209,7 +209,7 @@ struct OnboardingView: View {
                 }
             }
         case .folder:
-            page(title: "Where transcripts go", body: "Each lecture gets its own folder of Markdown files. You can change this any time in Settings.") {
+            page(title: "Where transcripts go", body: "Each folder groups its Markdown transcripts. You can change the transcript location any time in Settings.") {
                 HStack(spacing: 10) {
                     Image(systemName: "folder.fill").foregroundStyle(Theme.accentText)
                     Text(abbreviated(model.paths.transcripts)).lineLimit(1).truncationMode(.middle)

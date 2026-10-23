@@ -171,7 +171,7 @@ final class AppModel: ObservableObject {
         self.sleptAt = nil
         guard recording else { return }
         let minutes = max(1, Int((Date().timeIntervalSince(sleptAt) / 60).rounded()))
-        sleepNotice = "Recording paused while your Mac was asleep (\(minutes) min). Keep the lid open during lectures."
+        sleepNotice = "Recording paused while your Mac was asleep (\(minutes) min). Keep the lid open while recording."
         notify("Nosy missed \(minutes) min while your Mac was asleep")
     }
 
@@ -202,7 +202,7 @@ final class AppModel: ObservableObject {
         }
         if needed, activity == nil {
             activityOptions = options
-            activity = ProcessInfo.processInfo.beginActivity(options: options, reason: "Recording and transcribing a lecture")
+            activity = ProcessInfo.processInfo.beginActivity(options: options, reason: "Recording and transcribing audio")
         } else if !needed, let activity {
             ProcessInfo.processInfo.endActivity(activity)
             self.activity = nil
@@ -255,7 +255,7 @@ final class AppModel: ObservableObject {
                     notify("Low disk space — less than 2 GB available")
                     let alert = NSAlert()
                     alert.messageText = "Low disk space"
-                    alert.informativeText = "Less than 2 GB is available for lecture audio. Continue recording?"
+                    alert.informativeText = "Less than 2 GB is available for audio. Continue recording?"
                     alert.addButton(withTitle: "Continue"); alert.addButton(withTitle: "Cancel")
                     guard alert.runModal() == .alertFirstButtonReturn else { transitioning = false; updateActivity(); return }
                 }
@@ -590,9 +590,9 @@ final class AppModel: ObservableObject {
     }
     var vocabularySubject: String {
         guard let folder = vocabularyURL(for: lectureName)?.deletingLastPathComponent(),
-              let settings = try? SubjectSettings.load(folder: folder) else { return "None" }
-        let primary = settings.subject == "auto" ? SubjectCatalog.guess(lectureName).first : settings.subject
-        return SubjectCatalog.subjects.first { $0.id == primary }?.name ?? "None"
+              let settings = try? SubjectSettings.load(folder: folder) else { return "General" }
+        let primary = settings.canonicalSubject == "auto" ? SubjectCatalog.guess(lectureName).first ?? "general" : settings.canonicalSubject
+        return SubjectCatalog.name(for: primary)
     }
     @discardableResult func saveVocabulary(_ text: String, for lecture: String, settings: SubjectSettings? = nil) -> Bool {
         guard let url = vocabularyURL(for: lecture) else { return false }

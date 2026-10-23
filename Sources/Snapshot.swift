@@ -151,7 +151,7 @@ enum Snapshot {
             power.configurePreview(active: power.current, pauseReason: "battery low")
             let warnings = model(.recording)
             warnings.errorMessage = "The chosen microphone disconnected. Nosy is using the system microphone."
-            warnings.sleepNotice = "Nosy missed 12 min while your Mac was asleep. Keep the lid open during lectures."
+            warnings.sleepNotice = "Nosy missed 12 min while your Mac was asleep. Keep the lid open while recording."
             warnings.stalled = true
             warnings.setupMessage = "Speech engine missing"
             warnings.recovery = [earlier]
@@ -173,13 +173,13 @@ enum Snapshot {
             let recovery = model(.idle)
             recovery.transitioning = true
             recovery.recovery = [earlier]
-            let newCourse = model(.idle)
-            newCourse.selectedLecture = "__new__"
+            let newFolder = model(.idle)
+            newFolder.selectedLecture = "__new__"
             let noSubject = model(.idle)
             noSubject.selectedLecture = "Seminar"
             for (name, fixture) in [("no-speech", empty), ("queued", queued), ("power-paused", power),
                                     ("warnings", warnings), ("long-recording", long), ("saved-minimal", minimal),
-                                    ("removed", removed), ("new-course", newCourse), ("no-subject", noSubject),
+                                    ("removed", removed), ("new-folder", newFolder), ("no-subject", noSubject),
                                     ("long-saved", longSaved), ("recovery", recovery)] {
                 guard save(PreviewWindow { MainView(model: fixture) }.padding(36).background(PreviewBackdrop()), "\(name).\(mode)") else { return 1 }
             }

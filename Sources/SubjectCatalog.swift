@@ -2,31 +2,52 @@ import Foundation
 
 struct SubjectSettings: Codable, Equatable, Sendable {
     var schemaVersion = 1
-    // "auto", "off", or a stable subject ID. An explicit choice always wins.
+    // "auto", "general", or a stable subject ID. An explicit choice always wins.
     var subject = "auto"
-    // Read legacy secondary choices without discarding an existing course setting.
+    // Read legacy secondary choices without discarding an existing folder setting.
     var additionalSubject = ""
-    var isEnabled: Bool { subject != "off" }
+    var canonicalSubject: String { Self.canonicalID(subject) }
+    var isEnabled: Bool { canonicalSubject != "general" }
 
     static func load(folder: URL) throws -> Self {
         let url = folder.appendingPathComponent("vocabulary.json")
         guard FileManager.default.fileExists(atPath: url.path) else { return Self() }
-        let settings = try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
+        let stored = try JSONDecoder().decode(Self.self, from: Data(contentsOf: url))
+        let settings = stored.migrated()
         guard settings.schemaVersion == 1,
-              ["auto", "off"].contains(settings.subject) || SubjectCatalog.subjects.contains(where: { $0.id == settings.subject }),
+              ["auto", "general"].contains(settings.subject) || SubjectCatalog.subjects.contains(where: { $0.id == settings.subject }),
               settings.additionalSubject.isEmpty || SubjectCatalog.subjects.contains(where: { $0.id == settings.additionalSubject }) else {
-            throw LectureError.message("Couldn't read this course's vocabulary settings. Choose a subject to repair them.")
+            throw LectureError.message("Couldn't read this folder's vocabulary settings. Choose a subject to repair them.")
         }
+        if settings != stored { try? settings.save(folder: folder) }
         return settings
     }
     func save(folder: URL) throws {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        try JSONEncoder().encode(self).write(to: folder.appendingPathComponent("vocabulary.json"), options: .atomic)
+        try JSONEncoder().encode(migrated()).write(to: folder.appendingPathComponent("vocabulary.json"), options: .atomic)
     }
     func resolved(course: String) -> [String] {
-        if subject == "off" { return [] }
-        let primary = subject == "auto" ? SubjectCatalog.guess(course) : [subject]
-        return Array(Set(primary + (additionalSubject.isEmpty ? [] : [additionalSubject]))).sorted()
+        let settings = migrated()
+        if settings.canonicalSubject == "general" { return [] }
+        let primary = settings.canonicalSubject == "auto" ? SubjectCatalog.guess(course) : [settings.canonicalSubject]
+        return Array(Set(primary + (settings.additionalSubject.isEmpty ? [] : [settings.additionalSubject]))).sorted()
+    }
+
+    private func migrated() -> Self {
+        var copy = self
+        copy.subject = Self.canonicalID(subject)
+        let secondary = additionalSubject.isEmpty ? "" : Self.canonicalID(additionalSubject)
+        copy.additionalSubject = secondary == "general" ? "" : secondary
+        return copy
+    }
+
+    private static func canonicalID(_ id: String) -> String {
+        switch id.lowercased() {
+        case "off", "none", "general": return "general"
+        case "biochemistry", "biochem": return "biology"
+        case "business & economics", "business-economics": return "meetings-work"
+        default: return id
+        }
     }
 }
 
@@ -37,24 +58,33 @@ struct SubjectCatalog: Sendable {
         let aliases: [String]
     }
     static let subjects: [Subject] = [
-        .init(id: "biology", name: "Biology", aliases: ["BIOL", "BISC", "MBB", "BIOLOGY", "BIOCHEMISTRY", "IMMUNOLOGY", "GENETICS"]),
+        .init(id: "biology", name: "Biology", aliases: ["BIOL", "BISC", "MBB", "BIOLOGY", "BIOCHEMISTRY", "BIOCHEM", "IMMUNOLOGY", "GENETICS"]),
         .init(id: "chemistry", name: "Chemistry", aliases: ["CHEM", "CHEMISTRY"]),
         .init(id: "physics", name: "Physics", aliases: ["PHYS", "PHYSICS"]),
         .init(id: "computer-science", name: "Computer Science", aliases: ["CPSC", "CMPT", "CS", "COMPUTING"]),
         .init(id: "math-statistics", name: "Math & Statistics", aliases: ["MATH", "STAT", "STATISTICS", "MATHEMATICS"]),
-        .init(id: "engineering", name: "Engineering", aliases: ["ENGR", "APSC", "ENGINEERING"]),
-        .init(id: "health-medicine", name: "Health & Medicine", aliases: ["MED", "NURS", "HSCI", "MEDICINE", "NURSING"]),
-        .init(id: "business-economics", name: "Business & Economics", aliases: ["ECON", "COMM", "BUS", "BUSINESS", "ECONOMICS"]),
+        .init(id: "health-medicine", name: "Health & Medicine", aliases: ["MED", "NURS", "HSCI", "HEALTH", "HEALTHCARE", "MEDICINE", "NURSING"]),
         .init(id: "psychology", name: "Psychology", aliases: ["PSYC", "PSYCHOLOGY"]),
-        .init(id: "arts-social-sciences", name: "Arts & Social Sciences", aliases: ["HIST", "PHIL", "SOCI", "POLI", "HISTORY", "PHILOSOPHY", "SOCIOLOGY"])
+        .init(id: "meetings-work", name: "Meetings & Work", aliases: ["ECON", "COMM", "BUS", "BUSINESS", "ECONOMICS",
+                                                                         "STANDUP", "SYNC", "MEETING", "MEETINGS", "CLIENT", "INTERVIEW", "TEAM", "REVIEW",
+                                                                         "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY",
+                                                                         "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"])
     ]
-    static func guess(_ course: String) -> [String] {
-        let tokens = course.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }
+    static func name(for id: String) -> String {
+        id == "general" ? "General" : subjects.first { $0.id == id }?.name ?? "General"
+    }
+    static func guess(_ folderName: String) -> [String] {
+        let tokens = folderName.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }
+        let meetingAliases = Set(subjects.first { $0.id == "meetings-work" }?.aliases ?? [])
+        let oneToOne = folderName.range(of: #"(?<![\p{L}\p{N}])1\s*:\s*1(?![\p{L}\p{N}])"#,
+                                        options: .regularExpression) != nil
+        if oneToOne || tokens.contains(where: meetingAliases.contains) { return ["meetings-work"] }
         let phrase = " " + tokens.joined(separator: " ") + " "
-        return subjects.filter { subject in
+        let matches = subjects.filter { subject in
             let name = subject.name.uppercased().components(separatedBy: .letters.inverted).filter { !$0.isEmpty }.joined(separator: " ")
             return subject.aliases.contains { tokens.contains($0) } || phrase.contains(" " + name + " ")
         }.map(\.id)
+        return matches.isEmpty ? ["general"] : matches
     }
     static let bundled = SubjectCatalog(directory: ProcessInfo.processInfo.environment["NOSY_VOCABULARY_DIR"].map { URL(fileURLWithPath: $0) }
         ?? Bundle.main.resourceURL!.appendingPathComponent("Vocabulary"))

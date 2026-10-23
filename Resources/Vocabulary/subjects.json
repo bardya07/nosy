@@ -55,20 +55,6 @@
     "stats",
     "stem-core"
   ],
-  "Engineering": [
-    "condensed-matter",
-    "em",
-    "environmental-chem",
-    "graphics-numerical",
-    "materials-chem",
-    "math-core",
-    "mechanics",
-    "optics-waves",
-    "physical-chem",
-    "systems-networking",
-    "thermo-stat",
-    "stem-core"
-  ],
   "Health & Medicine": [
     "anatomy",
     "biochem-metabolism",
@@ -82,7 +68,7 @@
     "physiology",
     "stem-core"
   ],
-  "Business & Economics": [
+  "Meetings & Work": [
     "accounting",
     "business-law-ethics",
     "econometrics-stats",
@@ -100,6 +86,5 @@
     "physiology",
     "stats",
     "stem-core"
-  ],
-  "Arts & Social Sciences": []
+  ]
 }

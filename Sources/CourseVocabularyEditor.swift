@@ -33,7 +33,7 @@ final class VocabularyDraft: ObservableObject {
         var settings = SubjectSettings()
         var loadError: String?
         do { settings = try SubjectSettings.load(folder: folder) }
-        catch { settings = SubjectSettings(subject: "off"); loadError = error.localizedDescription }
+        catch { settings = SubjectSettings(subject: "general"); loadError = error.localizedDescription }
         self.init(lecture: lecture, text: text, subjects: settings, settingsError: loadError) { text, settings in
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             // Keep the exact draft, including whitespace, until the user edits it.
@@ -44,8 +44,8 @@ final class VocabularyDraft: ObservableObject {
     }
 
     func selectSubject(_ subject: String) {
-        // Selecting None can also repair unreadable settings whose safe fallback
-        // is already off, so an explicit selection always schedules a save.
+        // Selecting General can also repair unreadable settings whose safe fallback
+        // is already General, so an explicit selection always schedules a save.
         settingsError = nil
         subjects = SubjectSettings(subject: subject)
         scheduleSave()
@@ -93,9 +93,9 @@ struct VocabularyEditor: View {
                 Picker("Subject", selection: Binding(get: { draft.subjects.subject }, set: {
                     draft.selectSubject($0)
                 })) {
-                    Text(autoMenuTitle).tag("auto")
+                    Text("Auto").tag("auto")
+                    Text("General").tag("general")
                     ForEach(SubjectCatalog.subjects) { Text($0.name).tag($0.id) }
-                    Text("None").tag("off")
                 }
                 .labelsHidden().pickerStyle(.menu)
                 .frame(maxWidth: 220)
@@ -127,15 +127,14 @@ struct VocabularyEditor: View {
     }
 
     private var guessedSubject: String {
-        SubjectCatalog.subjects.filter { SubjectCatalog.guess(draft.lecture).contains($0.id) }
-            .map(\.name).joined(separator: " + ")
+        SubjectCatalog.guess(draft.lecture).map(SubjectCatalog.name(for:)).joined(separator: " + ")
     }
     private var autoMenuTitle: String {
         guessedSubject.isEmpty ? "Auto" : "\(guessedSubject) (auto)"
     }
     private var subjectTitle: String {
         draft.subjects.subject == "auto" ? autoMenuTitle
-            : SubjectCatalog.subjects.first { $0.id == draft.subjects.subject }?.name ?? "None"
+            : SubjectCatalog.name(for: draft.subjects.canonicalSubject)
     }
     private var editor: some View {
         ZStack(alignment: .topLeading) {

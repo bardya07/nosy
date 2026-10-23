@@ -83,7 +83,7 @@ private final class CorrectionTextView: NSTextView {
         let source = (string as NSString).substring(with: range)
         let alert = NSAlert()
         alert.messageText = "Fix this word"
-        alert.informativeText = "Correct this spelling and remember it in this course's vocabulary."
+        alert.informativeText = "Correct this spelling and remember it in this folder's vocabulary."
         let field = NSTextField(string: source)
         field.frame = NSRect(x: 0, y: 0, width: 300, height: 24)
         alert.accessoryView = field

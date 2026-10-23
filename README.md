@@ -1,6 +1,6 @@
 # Nosy
 
-An on-device lecture recorder and transcriber for Mac.
+On-device recorder and transcriber for lectures and meetings.
 
 ![Design E in light mode: Ready, Recording, and Saved](preview/nosy.light.png)
 ![Design E in dark mode: Ready, Recording, and Saved](preview/nosy.dark.png)
@@ -21,10 +21,10 @@ An on-device lecture recorder and transcriber for Mac.
 
 ## Features
 
-- Record, pause, and resume lectures; queue transcription while recording another.
+- Record, pause, and resume lectures and meetings; queue transcription while recording another.
 - Press ⌘M while recording to add a marker, then edit its label inline. Markers survive a crash and appear at the nearest Whisper segment boundary in the saved transcript (including in Transcripts).
 - Search, edit, export, and play back recordings in the transcripts window.
-- Choose course subjects, add custom vocabulary, and correct selected words in transcripts.
+- Choose a folder subject, add custom vocabulary, and correct selected words in transcripts.
 - Automatically boost quiet audio for transcription.
 - Transcription, volume boost, and audio compression run at background utility priority.
 - Transcription waits or pauses when the Mac is hot or on battery below 20%, then resumes automatically. Recording continues independently.
@@ -45,13 +45,13 @@ Nosy includes whisper.cpp with Metal acceleration. No Homebrew or separate speec
 
 Download the DMG from [Releases](https://github.com/bardya07/nosy/releases), open it, and drag **Nosy** to **Applications**. Release builds are signed with Developer ID and notarized by Apple.
 
-Open Nosy and download the Whisper large-v3-turbo model (about 1.6 GB) in the setup window. Allow microphone access to record. Choose a lecture and session, then start recording or drop an audio file onto the window.
+Open Nosy and download the Whisper large-v3-turbo model (about 1.6 GB) in the setup window. Allow microphone access to record. Choose a folder and session, then start recording or drop an audio file onto the window.
 
-Open **Vocabulary** and expand **Custom terms** to add course terms, or put a `vocab.txt` in the course's transcript folder. Edits save automatically, including when the popover closes. Put the most useful terms first: Nosy fits complete terms into a 160-token prompt, reused across decoder windows without carrying decoded text. whisper.cpp omits this prompt during high-temperature fallback and the final short tail; see the [lecture validation](tests/vocabulary.md). Subject choices are remembered in `vocabulary.json` beside that course's `vocab.txt`; Auto guesses from bounded course prefixes and subject names. Ten umbrellas and 49 plain word-list packs are bundled; Arts & Social Sciences is currently empty, and some other subjects have partial coverage.
+Open **Vocabulary** and expand **Custom terms** to add folder terms, or put a `vocab.txt` in the folder. Edits save automatically, including when the popover closes. Put the most useful terms first: Nosy fits complete terms into a 160-token prompt, reused across decoder windows without carrying decoded text. whisper.cpp omits this prompt during high-temperature fallback and the final short tail; see the [lecture validation](tests/vocabulary.md). Subject choices are remembered in `vocabulary.json` beside that folder's `vocab.txt`. Auto guesses from folder names, course codes, and meeting keywords. Eight subject groups and 49 plain word-list packs are bundled; some subjects have partial coverage.
 
-The course's **Subject** menu controls refinement of eligible packs from the first pass to correct a few uncertain, close spellings. It defaults to **Auto**; choose **None** to turn subject vocabulary off. Existing explicit course choices are preserved; the former global preference is no longer used. It uses cached phonetic/spelling retrieval and conservative substitutions, abstaining on short/ambiguous acronyms and letter/number changes. It preserves the baseline and accepted edit ledger locally under app support's `routing/`. No second audio pass or extra model is used. The two-lecture development evaluation fixed one additional spelling and none of the predeclared target errors; see [the ablation summary](tests/vocabulary-max.md).
+The folder's **Subject** menu controls refinement of eligible packs from the first pass to correct a few uncertain, close spellings. It defaults to **Auto**; choose **General** to turn built-in subject vocabulary off while keeping custom terms. Existing explicit folder choices are preserved; the former global preference is no longer used. It uses cached phonetic/spelling retrieval and conservative substitutions, abstaining on short/ambiguous acronyms and letter/number changes. It preserves the baseline and accepted edit ledger locally under app support's `routing/`. No second audio pass or extra model is used. The two-lecture development evaluation fixed one additional spelling and none of the predeclared target errors; see [the ablation summary](tests/vocabulary-max.md).
 
-In the Transcripts window, select text and choose **Fix this word…** from its context menu. Saving changes that selection and prepends the corrected spelling to the course's `vocab.txt` for future transcriptions. Choose the transcript location and audio retention in Settings.
+In the Transcripts window, select text and choose **Fix this word…** from its context menu. Saving changes that selection and prepends the corrected spelling to the folder's `vocab.txt` for future transcriptions. Choose the transcript location and audio retention in Settings.
 
 ## Build from source
 
@@ -95,7 +95,7 @@ BUILD_DIR="$PWD/build" ./build.sh
 build/Nosy.app/Contents/MacOS/Nosy --headless-snapshot preview/nosy.png
 ```
 
-The headless renderer uses isolated sample transcripts and the sky-to-grass fallback backdrop, without recording, playing audio, downloading models, or loading the user's transcript library. The real window uses native vibrancy. Idle microphone levels show `— dB` because input monitoring currently begins with recording. Saved vocabulary hits count distinct configured terms found in the transcript, rather than decoder corrections. The Vocabulary row shows the resolved subject; saved hit counts reflect captured custom terms. Choose built-in subjects in its popover, or None to disable subject packs. The renderer also exports collapsed and expanded vocabulary popovers in both appearances.
+The headless renderer uses isolated sample transcripts and the sky-to-grass fallback backdrop, without recording, playing audio, downloading models, or loading the user's transcript library. The real window uses native vibrancy. Idle microphone levels show `— dB` because input monitoring currently begins with recording. Saved vocabulary hits count distinct configured terms found in the transcript, rather than decoder corrections. The Vocabulary row shows the resolved subject; saved hit counts reflect captured custom terms. Choose built-in subjects in its popover, or General to disable subject packs. The renderer also exports collapsed and expanded vocabulary popovers in both appearances.
 
 ## Tests
 
