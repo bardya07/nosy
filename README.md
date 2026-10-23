@@ -2,8 +2,22 @@
 
 An on-device lecture recorder and transcriber for Mac.
 
-![Nosy in light mode: ready, recording, transcribing, saved, and retry states](preview/nosy.light.png)
-![The transcripts window with a sample transcript](preview/nosy.library.light.png)
+![Design E in light mode: Ready, Recording, and Saved](preview/nosy.light.png)
+![Design E in dark mode: Ready, Recording, and Saved](preview/nosy.dark.png)
+![Transcripts in light mode with a sample lecture](preview/nosy.library.light.png)
+
+<details>
+<summary>Settings, onboarding, and additional states</summary>
+
+![Settings in light mode](preview/nosy.settings.light.png)
+![Settings in dark mode](preview/nosy.settings.dark.png)
+![Transcripts in dark mode](preview/nosy.library.dark.png)
+![Onboarding in light mode](preview/nosy.onboarding.light.png)
+![Onboarding in dark mode](preview/nosy.onboarding.dark.png)
+![Paused, queued transcription, and retry in light mode](preview/nosy.activity.light.png)
+![Paused, queued transcription, and retry in dark mode](preview/nosy.activity.dark.png)
+
+</details>
 
 ## Features
 
@@ -50,6 +64,19 @@ To build and install in `/Applications` (quits and replaces an existing Nosy ins
 ```sh
 ./build.sh install
 ```
+
+## Design previews
+
+Design E uses native macOS vibrancy, Inter and JetBrains Mono (bundled under OFL 1.1), navy text, green primary actions, and a blue Stop action. Dark mode uses the same hues over deep navy surfaces. Utility buttons, recovery banners, transcription queues, and the Dock controls remain available. Markers are deferred to a later change.
+
+Regenerate the light/dark sheets and individual Ready, Recording, Saved, Transcripts, Settings, and onboarding PNGs in `preview/`:
+
+```sh
+BUILD_DIR="$PWD/build" ./build.sh
+build/Nosy.app/Contents/MacOS/Nosy --headless-snapshot preview/nosy.png
+```
+
+The headless renderer uses isolated sample transcripts and the sky-to-grass fallback backdrop, without recording, playing audio, downloading models, or loading the user's transcript library. The real window uses native vibrancy. Idle microphone levels show `— dB` because input monitoring currently begins with recording. Saved vocabulary hits count distinct configured terms found in the transcript, rather than decoder corrections. The Vocabulary count currently reflects custom terms; `CourseVocabularySummary` in `App.swift` is the UI adapter for the concurrent subject-pack integration.
 
 ## Tests
 

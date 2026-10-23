@@ -4,9 +4,10 @@ Reviewed against the linked upstream repositories and model cards on 2026-10-22.
 
 ## Bundled fonts
 
-- **Bricolage Grotesque** — Copyright 2022 The Bricolage Grotesque Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/ateliertriay/bricolage), [upstream license](https://github.com/google/fonts/blob/main/ofl/bricolagegrotesque/OFL.txt), [included full license](Resources/Fonts/OFL-BricolageGrotesque.txt).
-- **Hanken Grotesk** — Copyright 2021 The Hanken Grotesk Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/marcologous/hanken-grotesk), [upstream license](https://github.com/google/fonts/blob/main/ofl/hankengrotesk/OFL.txt), [included full license](Resources/Fonts/OFL-HankenGrotesk.txt).
+- **Inter** — Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/rsms/inter), [included full license](Resources/Fonts/OFL-Inter.txt).
+- **JetBrains Mono** — Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/JetBrains/JetBrainsMono), [included full license](Resources/Fonts/OFL-JetBrainsMono.txt).
 
+The unmodified variable font files were sourced from Google Fonts (`ofl/inter` and `ofl/jetbrainsmono`). They are registered only within Nosy's process, with SF Pro / SF Mono fallbacks.
 The font files and their complete license notices are included in `Resources/Fonts/` and copied into the app bundle by `build.sh`. Font redistribution remains subject to OFL 1.1.
 
 ## User-installed transcription engine

@@ -1,52 +1,104 @@
 import SwiftUI
 import AppKit
+import CoreText
 
-// Hamstr's palette, type and motion, shared by every Nosy window.
+// Design E: native glass, navy type, green primary actions and a blue Stop.
 enum Theme {
-    static let background = dynamic(light: 0xFFFDF8, dark: 0x16110B)
-    static let surface = dynamic(light: 0xF7F0E1, dark: 0x221B13)
-    static let raised = dynamic(light: 0xFFFFFF, dark: 0x2B2319)
-    static let line = dynamic(light: 0xEADFC9, dark: 0x3A3024)
-    static let ink = dynamic(light: 0x211B14, dark: 0xF7F0E1)
-    static let muted = dynamic(light: 0x6D5F4B, dark: 0x9B8D75)
-    static let faint = dynamic(light: 0x9B8D75, dark: 0x6D5F4B)
-    // Nosy's accent is the hamster's orange; Hamstr coral marks recording and problems.
-    static let accent = dynamic(light: 0xE5843A, dark: 0xEE9A52)
-    static let coral = dynamic(light: 0xF0617A, dark: 0xF2738A)
-    static let amber = dynamic(light: 0xE9A23A, dark: 0xEDB056)
-    static let green = dynamic(light: 0x4FA97F, dark: 0x5FB98E)
-    // Dark text on the orange accent: white on orange fails contrast (~2.7:1).
-    static let onAccent = Color(nsColor: NSColor(srgbRed: 0x21 / 255, green: 0x1B / 255, blue: 0x14 / 255, alpha: 1))
-    // Orange for text and icons on cream, darkened in light mode to stay readable.
-    static let accentText = dynamic(light: 0xA9561A, dark: 0xF0A563)
+    // Process-local font registration also works for the headless renderer.
+    @MainActor static func registerFonts() {
+        guard let root = Bundle.main.resourceURL?.appendingPathComponent("Fonts"),
+              let files = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) else { return }
+        for file in files where file.pathExtension == "ttf" {
+            CTFontManagerRegisterFontsForURL(file as CFURL, .process, nil)
+        }
+    }
 
-    static func dynamic(light: UInt32, dark: UInt32) -> Color {
+    static let background = dynamic(light: 0xFFFFFF, dark: 0x0B1C2B, lightAlpha: 0.60, darkAlpha: 0.88)
+    static let surface = dynamic(light: 0xFFFFFF, dark: 0x173449, lightAlpha: 0.60, darkAlpha: 0.78)
+    static let raised = dynamic(light: 0xFFFFFF, dark: 0x24475E, lightAlpha: 0.75, darkAlpha: 0.90)
+    static let line = dynamic(light: 0x0B4466, dark: 0x9FD5F1, lightAlpha: 0.10, darkAlpha: 0.13)
+    static let panelBorder = dynamic(light: 0xFFFFFF, dark: 0xABDDF3, lightAlpha: 0.90, darkAlpha: 0.16)
+    static let ink = dynamic(light: 0x0E2A3B, dark: 0xE5F5FC)
+    static let muted = dynamic(light: 0x3B6E8C, dark: 0x9DC3D9)
+    static let faint = dynamic(light: 0x557C92, dark: 0x80A5BB)
+    static let navy = dynamic(light: 0x0B4466, dark: 0xB4E5FF)
+    static let accent = Color(hex: 0x5BD46A)
+    static let stop = Color(hex: 0x0B6FB0)
+    static let coral = dynamic(light: 0xE8392E, dark: 0xFF786E)
+    static let recordingText = dynamic(light: 0xB3140B, dark: 0xFF9D94)
+    static let amber = dynamic(light: 0xA26A12, dark: 0xE8B963)
+    static let green = Color(hex: 0x34B84A)
+    static let savedText = dynamic(light: 0x1E7A1A, dark: 0x85E28D)
+    static let onAccent = Color(hex: 0x062A0C)
+    static let accentText = dynamic(light: 0x0B5A8A, dark: 0x89D5FF)
+    static let waveform = Color(hex: 0x0E4A70)
+    static let wavePlayed = Color(hex: 0x7FE3FF)
+    static let waveIdle = Color(hex: 0x2E6F96)
+
+    static func dynamic(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in
-            appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? rgb(dark) : rgb(light)
+            let darkMode = appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            return rgb(darkMode ? dark : light, alpha: darkMode ? darkAlpha : lightAlpha)
         })
     }
-    private static func rgb(_ hex: UInt32) -> NSColor {
-        NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: 1)
+    fileprivate static func rgb(_ hex: UInt32, alpha: CGFloat = 1) -> NSColor {
+        NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
     }
 
-    // Bundled Hamstr fonts, falling back to the system font if they're missing.
-    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
-        NSFont(name: "Bricolage Grotesque", size: size) != nil
-            ? .custom("Bricolage Grotesque", fixedSize: size).weight(weight)
-            : .system(size: size, weight: weight, design: .rounded)
-    }
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { text(size, weight) }
     static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        NSFont(name: "Hanken Grotesk", size: size) != nil
-            ? .custom("Hanken Grotesk", fixedSize: size).weight(weight)
+        NSFont(name: "Inter-Regular", size: size) != nil
+            ? .custom("Inter-Regular", fixedSize: size).weight(weight)
             : .system(size: size, weight: weight)
     }
-    static let label = text(10.5, .semibold)
+    static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        NSFont(name: "JetBrainsMono-Regular", size: size) != nil
+            ? .custom("JetBrainsMono-Regular", fixedSize: size).weight(weight)
+            : .system(size: size, weight: weight, design: .monospaced)
+    }
+    static let label = mono(11, .medium)
+}
+
+extension Color {
+    init(hex: UInt32) { self.init(nsColor: Theme.rgb(hex)) }
+}
+
+// The real app uses the desktop through native vibrancy. Snapshots supply their own backdrop.
+private final class NosyEffectView: NSVisualEffectView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.isOpaque = false
+        window?.backgroundColor = .clear
+        window?.titlebarAppearsTransparent = true
+    }
+}
+private struct WindowMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NosyEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .active
+        return view
+    }
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+        view.window?.isOpaque = false
+        view.window?.backgroundColor = .clear
+        view.window?.titlebarAppearsTransparent = true
+    }
+}
+struct WindowBackdrop: View {
+    var body: some View {
+        ZStack {
+            if !Snapshot.isRunning { WindowMaterial() }
+            Theme.background
+        }.ignoresSafeArea()
+    }
 }
 
 enum Motion {
     static let press = Animation.easeOut(duration: 0.16)
     static let hover = Animation.easeOut(duration: 0.15)
-    // Hamstr's springy settle, kept subtle.
+    // A subtle spring preserves the existing responsive feel.
     static let state = Animation.spring(duration: 0.38, bounce: 0.16)
     static func state(_ reduce: Bool) -> Animation { reduce ? .easeOut(duration: 0.18) : state }
 }
@@ -58,6 +110,7 @@ struct PillButtonStyle: ButtonStyle {
     var tint: Color = Theme.accent
     var height: CGFloat = 44
     var fullWidth = true
+    var horizontalPadding: CGFloat? = nil
 
     func makeBody(configuration: Configuration) -> some View {
         PillBody(configuration: configuration, style: self)
@@ -72,7 +125,7 @@ struct PillButtonStyle: ButtonStyle {
             configuration.label
                 .font(Theme.text(style.height > 36 ? 15 : 13, .semibold))
                 .foregroundStyle(foreground)
-                .padding(.horizontal, style.height > 36 ? 20 : 14)
+                .padding(.horizontal, style.horizontalPadding ?? (style.height > 36 ? 20 : 14))
                 .frame(maxWidth: style.fullWidth ? .infinity : nil)
                 .frame(height: style.height)
                 .background {
@@ -92,20 +145,20 @@ struct PillButtonStyle: ButtonStyle {
         private var background: Color {
             switch style.kind {
             case .primary: style.tint
-            case .dark: Theme.ink
+            case .dark: Theme.stop
             case .quiet: hovering && enabled ? Theme.surface : Theme.raised
             }
         }
         private var foreground: Color {
             switch style.kind {
             case .primary: Theme.onAccent
-            case .dark: Theme.background
-            case .quiet: Theme.ink
+            case .dark: .white
+            case .quiet: Theme.navy
             }
         }
         private var shadowColor: Color {
             guard enabled, style.kind != .quiet else { return .clear }
-            return (style.kind == .primary ? style.tint : Color.black).opacity(hovering ? 0.28 : 0.16)
+            return (style.kind == .primary ? Color(hex: 0x288C32) : Theme.stop).opacity(hovering ? 0.28 : 0.16)
         }
     }
 }
@@ -117,7 +170,7 @@ private struct Lift: ViewModifier {
     let color: Color
     func body(content: Content) -> some View {
         if active {
-            content.brightness(hovering ? 0.04 : 0).shadow(color: color, radius: hovering ? 10 : 6, y: hovering ? 4 : 2)
+            content.brightness(hovering ? 0.04 : 0).shadow(color: color, radius: hovering ? 12 : 10, y: hovering ? 9 : 8)
         } else {
             content
         }
@@ -150,6 +203,26 @@ struct RoundButtonStyle: ButtonStyle {
     }
 }
 
+// Grouped rows stay flat, with a quiet hover tint and the same tactile press response.
+struct InsetButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { InsetBody(configuration: configuration) }
+    private struct InsetBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .brightness(hovering && enabled ? 0.025 : 0)
+                .opacity(configuration.isPressed && enabled ? 0.8 : 1)
+                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.985 : 1)
+                .contentShape(Rectangle())
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .animation(Motion.press, value: configuration.isPressed)
+        }
+    }
+}
+
 // Inline text action ("Show in Finder"): underline appears on hover.
 struct LinkButtonStyle: ButtonStyle {
     var tint: Color = Theme.accentText
@@ -169,7 +242,7 @@ struct LinkButtonStyle: ButtonStyle {
     }
 }
 
-// Text fields and the lecture menu: border warms on hover, turns accent when focused.
+// Text fields use the same translucent inset surfaces as the grouped main rows.
 struct FieldChrome: ViewModifier {
     var focused = false
     @Environment(\.isEnabled) private var enabled
@@ -226,8 +299,9 @@ struct IconButtonStyle: ButtonStyle {
 
 extension View {
     func fieldChrome(focused: Bool = false) -> some View { modifier(FieldChrome(focused: focused)) }
-    func card(_ fill: Color = Theme.surface, radius: CGFloat = 16) -> some View {
+    func card(_ fill: Color = Theme.surface, radius: CGFloat = 12) -> some View {
         background(fill, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Theme.panelBorder, lineWidth: 1).allowsHitTesting(false))
     }
 }
 

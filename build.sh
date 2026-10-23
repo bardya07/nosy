@@ -6,9 +6,8 @@ source scripts/paths.sh
 APP="$BUILD_DIR/Nosy.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" "$BUILD_DIR/module-cache"
-if [[ ! -f Resources/AppIcon.icns || ! -f Resources/NosyMark.png ]]; then
-    swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
-fi
+# Keep the owner's supplied app icon and header artwork authoritative.
+swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"

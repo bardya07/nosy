@@ -174,8 +174,8 @@ struct OnboardingView: View {
         }
         .frame(width: 520, height: 470)
         .onDisappear { setup.cancelRehearsal() }
-        .background(Theme.background)
-        .tint(Theme.accent)
+        .background(WindowBackdrop())
+        .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: setup.step)
         .animation(Motion.state(reduceMotion), value: setup.rehearsal)
         .animation(Motion.state(reduceMotion), value: setup.downloading)
@@ -185,7 +185,7 @@ struct OnboardingView: View {
         switch setup.step {
         case .welcome:
             page(title: "Meet Nosy", body: "Nosy listens to your lectures and writes them up — entirely on your Mac. Nothing is uploaded, ever.") {
-                NosyMark(size: 96)
+                NosyMark(size: 72)
             }
         case .microphone:
             page(title: "Your microphone", body: "Nosy needs the mic to hear your lectures. macOS will ask once.") {
@@ -193,16 +193,16 @@ struct OnboardingView: View {
                        ok: setup.micStatus == .authorized)
                 if setup.micStatus == .notDetermined {
                     Button("Allow microphone") { Task { await setup.requestMicrophone() } }
-                        .buttonStyle(PillButtonStyle(kind: .primary, height: 36, fullWidth: false))
+                        .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
                 } else if setup.micStatus != .authorized {
                     Button("Open Privacy Settings") { model.openMicrophoneSettings() }
-                        .buttonStyle(PillButtonStyle(kind: .quiet, height: 36, fullWidth: false))
+                        .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
                 }
             }
         case .folder:
             page(title: "Where transcripts go", body: "Each lecture gets its own folder of Markdown files. You can change this any time in Settings.") {
                 HStack(spacing: 10) {
-                    Image(systemName: "folder.fill").foregroundStyle(Theme.accent)
+                    Image(systemName: "folder.fill").foregroundStyle(Theme.accentText)
                     Text(abbreviated(model.paths.transcripts)).lineLimit(1).truncationMode(.middle)
                     Spacer(minLength: 0)
                 }
@@ -217,7 +217,7 @@ struct OnboardingView: View {
                     status(setup.whisperReady(model.paths) ? "whisper.cpp installed" : "whisper.cpp isn't installed", ok: setup.whisperReady(model.paths))
                     if !setup.whisperReady(model.paths) {
                         HStack(spacing: 8) {
-                            Text(Core.whisperInstallCommand).font(.system(size: 12.5, design: .monospaced))
+                            Text(Core.whisperInstallCommand).font(Theme.mono(12.5))
                                 .padding(.horizontal, 10).frame(height: 30)
                                 .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
                                 .textSelection(.enabled)
@@ -275,7 +275,7 @@ struct OnboardingView: View {
             }
         case .recording(let remaining):
             VStack(spacing: 10) {
-                Text("\(remaining)").font(Theme.display(44, .bold)).monospacedDigit().foregroundStyle(Theme.ink)
+                Text("\(remaining)").font(Theme.mono(44)).monospacedDigit().foregroundStyle(Theme.ink)
                     .contentTransition(.numericText(countsDown: true))
                 Text("Listening…").font(Theme.text(12.5, .medium)).foregroundStyle(Theme.muted)
                 Circle().fill(Theme.coral).frame(width: 10, height: 10)
@@ -285,7 +285,7 @@ struct OnboardingView: View {
         case .transcribing(let value):
             VStack(spacing: 8) {
                 Text("Writing it up…").font(Theme.text(13, .semibold)).foregroundStyle(Theme.ink)
-                ProgressTrack(value: value, tint: Theme.amber).frame(width: 280)
+                ProgressTrack(value: value, tint: Theme.stop).frame(width: 280)
             }
         case .done(let text):
             VStack(spacing: 10) {
@@ -307,7 +307,7 @@ struct OnboardingView: View {
         HStack {
             if setup.step != .welcome {
                 Button("Back") { setup.step = OnboardingModel.Step(rawValue: setup.step.rawValue - 1) ?? .welcome }
-                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 36, fullWidth: false))
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
                     .keyboardShortcut(.cancelAction)
                     .disabled(setup.rehearsing)
             }
@@ -324,7 +324,7 @@ struct OnboardingView: View {
                     dismiss()
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: .primary, height: 36, fullWidth: false))
+            .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
             .keyboardShortcut(.defaultAction)
             .disabled(continueDisabled)
         }
@@ -340,7 +340,7 @@ struct OnboardingView: View {
 
     private func page<Extra: View>(title: String, body: String, @ViewBuilder extra: () -> Extra) -> some View {
         VStack(spacing: 16) {
-            Text(title).font(Theme.display(26, .heavy)).foregroundStyle(Theme.ink)
+            Text(title).font(Theme.display(26, .bold)).foregroundStyle(Theme.ink)
             Text(body).font(Theme.text(14)).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true).frame(maxWidth: 380)
             extra()
