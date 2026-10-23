@@ -146,6 +146,11 @@ else
 fi
 afinfo "$TEST_ROOT/import.m4a" > "$TEST_ROOT/import-info.txt"
 grep -qE '44100' "$TEST_ROOT/import-info.txt"
+# Exercise subject-pack routing explicitly; an unmatched folder now defaults to General.
+mkdir -p "$NOSY_TRANSCRIPTS_DIR/Imported Lecture"
+cat > "$NOSY_TRANSCRIPTS_DIR/Imported Lecture/vocabulary.json" <<'JSON'
+{"schemaVersion":1,"subject":"biology","additionalSubject":""}
+JSON
 "$APP" --headless-import "$TEST_ROOT/import.m4a" 'Imported Lecture' 'Imported Session' > "$TEST_ROOT/import.log"
 cat "$TEST_ROOT/import.log"
 ID=$(python3 - "$TEST_ROOT" <<'PY'
