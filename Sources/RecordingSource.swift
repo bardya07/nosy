@@ -20,8 +20,8 @@ enum RecordingSource: String, CaseIterable, Sendable {
     var caption: String {
         switch self {
         case .mic: "Records the sound around you."
-        case .both: "Records sound playing on your Mac, plus your mic."
-        case .macAudio: "Records sound playing on your Mac."
+        case .both: "Records Mac audio and your mic."
+        case .macAudio: "Records Mac audio."
         }
     }
     var usesMic: Bool { self != .macAudio }

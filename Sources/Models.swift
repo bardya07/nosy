@@ -22,7 +22,7 @@ enum SpeechModel {
 
     static func install(from url: URL, paths: AppPaths, minimumBytes: Int64) throws {
         guard validate(url, minimumBytes: minimumBytes) else {
-            throw LectureError.message("This is not a valid whisper.cpp speech model. Choose the ggml large-v3-turbo model file.")
+            throw LectureError.message("This is not a valid speech model. Choose the speech model file.")
         }
         try place(url, at: paths.model, copy: true, minimumBytes: minimumBytes)
     }

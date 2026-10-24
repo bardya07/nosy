@@ -73,8 +73,8 @@ final class OnboardingModel: ObservableObject {
     // For networks that block the download: pick a ggml-large-v3-turbo.bin fetched elsewhere.
     func useDownloadedModel(paths: AppPaths) {
         let panel = NSOpenPanel()
-        panel.title = "Choose ggml-large-v3-turbo.bin"
-        panel.prompt = "Use This Model"
+        panel.title = "Choose speech model file"
+        panel.prompt = "Use This File"
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -188,12 +188,13 @@ struct OnboardingView: View {
         .animation(Motion.state(reduceMotion), value: setup.step)
         .animation(Motion.state(reduceMotion), value: setup.rehearsal)
         .animation(Motion.state(reduceMotion), value: setup.downloading)
+        .tipContainerBounds()
     }
 
     @ViewBuilder private var content: some View {
         switch setup.step {
         case .welcome:
-            page(title: "Meet Nosy", body: "Nosy transcribes lectures and meetings — entirely on your Mac. Nothing is uploaded, ever.") {
+            page(title: "Meet Nosy", body: "Nosy transcribes lectures and meetings entirely on your Mac. Nothing is uploaded, ever.") {
                 NosyMark(size: 72)
             }
         case .microphone:
@@ -227,7 +228,7 @@ struct OnboardingView: View {
         case .engine:
             page(title: "The speech engine", body: "Nosy includes whisper.cpp. Download the 1.6 GB speech model to get started. Everything stays on your Mac.") {
                 VStack(alignment: .leading, spacing: 12) {
-                    status(setup.whisperReady(model.paths) ? "Speech engine ready" : "Speech engine missing — reinstall Nosy", ok: setup.whisperReady(model.paths))
+                    status(setup.whisperReady(model.paths) ? "Speech engine ready" : "Speech engine missing. Reinstall Nosy.", ok: setup.whisperReady(model.paths))
                     if !setup.whisperReady(model.paths) {
                         Button("Check again") { setup.objectWillChange.send(); model.refreshDependencies() }
                             .buttonStyle(LinkButtonStyle())
@@ -263,7 +264,7 @@ struct OnboardingView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         case .tryIt:
-            page(title: "Try it", body: "Say a sentence — something with a tricky word. Nosy records five seconds and writes it up.") {
+            page(title: "Try it", body: "Say a sentence with a tricky word. Nosy records five seconds and writes it up.") {
                 rehearsal
             }
         }
@@ -283,7 +284,7 @@ struct OnboardingView: View {
             }
         case .recording(let remaining):
             VStack(spacing: 10) {
-                Text("\(remaining)").font(Theme.mono(44)).monospacedDigit().foregroundStyle(Theme.ink)
+                Text("\(remaining)").font(Theme.text(44)).monospacedDigit().foregroundStyle(Theme.ink)
                     .contentTransition(.numericText(countsDown: true))
                 Text("Listening…").font(Theme.text(12.5, .medium)).foregroundStyle(Theme.muted)
                 Circle().fill(Theme.coral).frame(width: 10, height: 10)

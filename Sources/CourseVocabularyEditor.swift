@@ -101,7 +101,7 @@ struct VocabularyEditor: View {
                     }
                 } label: {
                     HStack(spacing: 7) {
-                        Text(subjectTitle).font(Theme.mono(12)).lineLimit(1)
+                        Text(subjectTitle).font(Theme.text(12)).lineLimit(1)
                         Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
                     }
                     .foregroundStyle(Theme.ink)

@@ -20,10 +20,6 @@ cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png Resources/GitHubMark.png "$APP/Contents/Resources/"
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"
 cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
-if [[ -d Resources/Fonts ]]; then
-    mkdir -p "$APP/Contents/Resources/Fonts"
-    cp -R Resources/Fonts/. "$APP/Contents/Resources/Fonts/"
-fi
 xattr -cr "$APP"
 # Set NOSY_CODESIGN_IDENTITY to use a local signing identity; default to ad-hoc.
 IDENTITY="${NOSY_CODESIGN_IDENTITY:--}"

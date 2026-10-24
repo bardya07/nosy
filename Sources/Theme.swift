@@ -1,18 +1,8 @@
 import SwiftUI
 import AppKit
-import CoreText
 
 // Design E: native glass, navy type, green primary actions and a blue Stop.
 enum Theme {
-    // Process-local font registration also works for the headless renderer.
-    @MainActor static func registerFonts() {
-        guard let root = Bundle.main.resourceURL?.appendingPathComponent("Fonts"),
-              let files = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) else { return }
-        for file in files where file.pathExtension == "ttf" {
-            CTFontManagerRegisterFontsForURL(file as CFURL, .process, nil)
-        }
-    }
-
     static let background = dynamic(light: 0xFFFFFF, dark: 0x0B1C2B, lightAlpha: 0.60, darkAlpha: 0.88)
     static let surface = dynamic(light: 0xFFFFFF, dark: 0x173449, lightAlpha: 0.60, darkAlpha: 0.78)
     static let raised = dynamic(light: 0xFFFFFF, dark: 0x24475E, lightAlpha: 0.75, darkAlpha: 0.90)
@@ -28,6 +18,8 @@ enum Theme {
     static let recordingText = dynamic(light: 0xB3140B, dark: 0xFF9D94)
     static let amber = dynamic(light: 0x80500A, dark: 0xE8B963)
     static let green = Color(hex: 0x34B84A)
+    static let roomModeTint = dynamic(light: 0xD9F1DC, dark: 0x28563B)
+    static let macModeTint = dynamic(light: 0xD7ECF8, dark: 0x1F5578)
     static let savedText = dynamic(light: 0x1E7A1A, dark: 0x85E28D)
     static let onAccent = Color(hex: 0x062A0C)
     static let accentText = dynamic(light: 0x0B5A8A, dark: 0x89D5FF)
@@ -45,24 +37,9 @@ enum Theme {
         NSColor(srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255, blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
     }
 
-    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { text(size, weight) }
-    static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font { mono(size, weight) }
-    static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        let face: String
-        switch weight {
-        case .ultraLight, .thin: face = "JetBrainsMonoRoman-Thin"
-        case .light: face = "JetBrainsMonoRoman-Light"
-        case .regular: face = "JetBrainsMono-Regular"
-        case .medium, .semibold: face = "JetBrainsMonoRoman-Medium"
-        case .bold, .heavy: face = "JetBrainsMonoRoman-Bold"
-        case .black: face = "JetBrainsMonoRoman-ExtraBold"
-        default: face = "JetBrainsMono-Regular"
-        }
-        return NSFont(name: face, size: size) != nil
-            ? .custom(face, fixedSize: size)
-            : .system(size: size, weight: weight, design: .monospaced)
-    }
-    static let label = mono(11, .medium)
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font { .system(size: size, weight: weight) }
+    static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font { .system(size: size, weight: weight) }
+    static let label = text(11, .medium)
 }
 
 extension Color {
@@ -390,37 +367,107 @@ private struct SoftModifier: ViewModifier {
     }
 }
 
+private struct TipContainerFrameKey: PreferenceKey {
+    static let defaultValue = CGRect.null
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if !next.isNull { value = next }
+    }
+}
+
+private struct TipContainerFrameEnvironmentKey: EnvironmentKey {
+    static let defaultValue = CGRect.null
+}
+
+private struct TipPreviewEnvironmentKey: EnvironmentKey {
+    static let defaultValue: String? = nil
+}
+
+extension EnvironmentValues {
+    fileprivate var tipContainerFrame: CGRect {
+        get { self[TipContainerFrameEnvironmentKey.self] }
+        set { self[TipContainerFrameEnvironmentKey.self] = newValue }
+    }
+    var previewTipText: String? {
+        get { self[TipPreviewEnvironmentKey.self] }
+        set { self[TipPreviewEnvironmentKey.self] = newValue }
+    }
+}
+
+private struct TipContainerFrameModifier: ViewModifier {
+    @State private var frame = CGRect.null
+    func body(content: Content) -> some View {
+        content
+            .background(GeometryReader { proxy in
+                Color.clear.preference(key: TipContainerFrameKey.self, value: proxy.frame(in: .global))
+            })
+            .onPreferenceChange(TipContainerFrameKey.self) { frame = $0 }
+            .environment(\.tipContainerFrame, frame)
+    }
+}
+
 private struct TipModifier: ViewModifier {
     let text: String
     let edge: VerticalEdge
     @State private var hovering = false
     @State private var visible = false
     @State private var hoverTask: Task<Void, Never>?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.tipContainerFrame) private var containerFrame
+    @Environment(\.previewTipText) private var previewTipText
 
     func body(content: Content) -> some View {
         content
             .onHover(perform: setHovering)
             .overlay(alignment: edge == .top ? .top : .bottom) {
-                if visible {
-                    Text(text)
-                        .font(Theme.mono(9, .medium))
-                        .foregroundStyle(Theme.ink)
-                        .lineLimit(1)
-                        .fixedSize()
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(Theme.raised, in: Capsule())
-                        .overlay(Capsule().strokeBorder(Theme.panelBorder, lineWidth: 1))
-                        .shadow(color: Theme.ink.opacity(0.14), radius: 8, y: 3)
-                        .offset(y: edge == .top ? -25 : 25)
-                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
-                        .allowsHitTesting(false)
-                        .zIndex(1000)
+                GeometryReader { proxy in
+                    if (visible || previewTipText == text), !containerFrame.isNull, containerFrame.width > 0, containerFrame.height > 0 {
+                        let anchor = proxy.frame(in: .global)
+                        let width = bubbleWidth
+                        let height: CGFloat = measuredTextWidth + 18 <= width ? 24 : 34
+                        let centerX = clamp(anchor.midX,
+                                            containerFrame.minX + width / 2 + 4,
+                                            containerFrame.maxX - width / 2 - 4)
+                        let proposedY = edge == .top ? anchor.minY - 6 - height / 2 : anchor.maxY + 6 + height / 2
+                        let centerY = clamp(proposedY,
+                                            containerFrame.minY + height / 2 + 4,
+                                            containerFrame.maxY - height / 2 - 4)
+                        Text(text)
+                            .font(Theme.text(10, .medium))
+                            .foregroundStyle(Theme.ink)
+                            .lineLimit(2)
+                            .truncationMode(.tail)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 7).padding(.vertical, 4)
+                            .frame(width: width, height: height)
+                            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.panelBorder, lineWidth: 1))
+                            .shadow(color: Theme.ink.opacity(0.14), radius: 8, y: 3)
+                            .position(x: centerX - anchor.minX, y: centerY - anchor.minY)
+                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
+                            .allowsHitTesting(false)
+                            .zIndex(1000)
+                    }
                 }
             }
             .onDisappear {
                 hoverTask?.cancel()
                 visible = false
             }
+    }
+
+    private var bubbleWidth: CGFloat {
+        let measured = measuredTextWidth + 18
+        return min(max(76, measured), min(212, max(76, containerFrame.width - 16)))
+    }
+
+    private var measuredTextWidth: CGFloat {
+        let font = NSFont.systemFont(ofSize: 10, weight: .medium)
+        return ceil((text as NSString).size(withAttributes: [.font: font]).width)
+    }
+
+    private func clamp(_ value: CGFloat, _ lower: CGFloat, _ upper: CGFloat) -> CGFloat {
+        min(max(value, lower), max(lower, upper))
     }
 
     private func setHovering(_ inside: Bool) {
@@ -442,4 +489,5 @@ extension View {
     func tip(_ text: String, edge: VerticalEdge = .top) -> some View {
         modifier(TipModifier(text: text, edge: edge))
     }
+    func tipContainerBounds() -> some View { modifier(TipContainerFrameModifier()) }
 }

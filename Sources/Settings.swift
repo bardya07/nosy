@@ -20,7 +20,7 @@ struct SettingsView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "folder.fill").foregroundStyle(Theme.accentText)
                         Text(abbreviated(model.paths.transcripts))
-                            .font(Theme.mono(12)).foregroundStyle(Theme.ink)
+                            .font(Theme.text(12)).foregroundStyle(Theme.ink)
                             .lineLimit(1).truncationMode(.middle)
                             .tip("Transcript folder")
                         Spacer(minLength: 0)
@@ -50,8 +50,8 @@ struct SettingsView: View {
                     }
                     settingMenu("Audio quality", value: compressAudio ? "Compact · M4A" : "Full quality · WAV") {
                         Picker("Audio quality", selection: $compressAudio) {
-                            Text("Compact — M4A, about 22 MB per hour").tag(true)
-                            Text("Full quality — WAV, about 115 MB per hour").tag(false)
+                            Text("Compact M4A, about 22 MB per hour").tag(true)
+                            Text("Full quality WAV, about 115 MB per hour").tag(false)
                         }
                     }
                     note(compressAudio ? "About 22 MB per hour." : "About 115 MB per hour.", tip: "Storage estimate")
@@ -79,6 +79,7 @@ struct SettingsView: View {
         .fixedSize(horizontal: false, vertical: true)
         .background(WindowBackdrop())
         .tint(Theme.accentText)
+        .tipContainerBounds()
     }
 
     private var retentionLabel: String {
@@ -95,14 +96,14 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Text(label).font(Theme.text(13)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 0)
-                Text(value).font(Theme.mono(12)).foregroundStyle(Theme.ink)
+                Text(value).font(Theme.text(12)).foregroundStyle(Theme.ink)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
             }
             .padding(.horizontal, 12).frame(height: 38)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
         }
-        .menuStyle(.button).font(Theme.mono(11)).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
+        .menuStyle(.button).font(Theme.text(11)).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
         .tip("Change setting")
         .accessibilityLabel(label).accessibilityValue(value)
     }

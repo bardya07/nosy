@@ -66,7 +66,7 @@ enum Snapshot {
 
         In glycolysis, hexokinase adds the first phosphate to glucose. Phosphofructokinase provides an important point of allosteric regulation. When ATP is abundant, feedback inhibition slows the pathway. When ADP rises, the cell has a reason to make more ATP. These signals let a pathway respond to demand instead of running at the same speed all day.
 
-        > [0:31] Confused — review
+        > [0:31] Confused, review
 
         Pyruvate then supplies acetyl-CoA for the citric acid cycle. Citrate synthase starts that cycle, and a series of redox reactions captures energy in NADH and FADH2. Remember that these molecules carry electrons, rather than storing the final usable energy in the form of ATP.
 
@@ -84,7 +84,7 @@ enum Snapshot {
             try paths.prepareSupport()
             let previewRecord = SessionRecord(id: "preview-audio", lecture: "MBB322", session: "2026-10-23",
                 startedAt: date, endedAt: date.addingTimeInterval(60), status: .done,
-                transcriptPath: transcript.path, markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused — review")],
+                transcriptPath: transcript.path, markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused, review")],
                 vocabularyTerms: Vocabulary.entries(vocabulary))
             try previewRecord.save(in: paths)
             let audio = paths.audioFile(previewRecord.id, "wav")
@@ -101,7 +101,7 @@ enum Snapshot {
             try manager.setAttributes([.creationDate: date.addingTimeInterval(-172_800), .modificationDate: date.addingTimeInterval(-172_800)], ofItemAtPath: earlier.path)
             try manager.createDirectory(at: transcripts.appendingPathComponent("BISC202"), withIntermediateDirectories: true)
         } catch { print(error); return 1 }
-        let longCourse = transcripts.appendingPathComponent("Molecular Biology and Biochemistry — advanced seminar")
+        let longCourse = transcripts.appendingPathComponent("Molecular Biology and Biochemistry, advanced seminar")
         let longURL = longCourse.appendingPathComponent("Review of enzyme regulation and cellular respiration.md")
         do {
             try manager.createDirectory(at: longCourse, withIntermediateDirectories: true)
@@ -126,12 +126,12 @@ enum Snapshot {
                 model.current = SessionRecord(id: "preview", lecture: "MBB322", session: "2026-10-23", startedAt: date,
                     status: phase == .done ? .done : (phase == .failed ? .failed : .recording),
                     transcriptPath: phase == .done ? transcript.path : nil,
-                    markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused — review")],
+                    markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused, review")],
                     vocabularyTerms: Vocabulary.entries(vocabulary))
             }
             model.configurePreview(active: phase == .transcribing ? model.current : nil, source: source)
             if phase == .transcribing { model.transcriptionProgress = 0.62; model.transcriptionElapsed = 151 }
-            if phase == .failed { model.errorMessage = "Transcription hit a snag. Your audio is safe — try Retry." }
+            if phase == .failed { model.errorMessage = "Transcription hit a snag. Your audio is safe. Try again." }
             return model
         }
         let base = URL(fileURLWithPath: out).deletingPathExtension()
@@ -151,7 +151,7 @@ enum Snapshot {
                 ForEach(states.indices, id: \.self) { index in
                     VStack(alignment: .leading, spacing: 12) {
                         Text("0\(index + 1) / \(states[index].title.uppercased())")
-                            .font(Theme.mono(11)).tracking(0.8).foregroundStyle(Theme.navy)
+                            .font(Theme.text(11)).tracking(0.8).foregroundStyle(Theme.navy)
                         PreviewWindow { MainView(model: states[index].model) }
                     }
                 }
@@ -166,6 +166,12 @@ enum Snapshot {
             let readyMac = model(.idle, source: .both)
             guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
                   save(PreviewWindow { MainView(model: readyMac) }.padding(36).background(PreviewBackdrop()), "ready-mac-audio.\(mode)") else { return 1 }
+            for tip in ["Microphone", "Start recording", "Home", "Open GitHub"] {
+                let slug = tip.lowercased().replacingOccurrences(of: " ", with: "-")
+                guard save(PreviewWindow {
+                    MainView(model: model(.idle)).environment(\.previewTipText, tip)
+                }.padding(36).background(PreviewBackdrop()), "tip-\(slug).\(mode)") else { return 1 }
+            }
             for (name, dropdown) in [("save-to", MainView.Dropdown.saveTo),
                                      ("session", MainView.Dropdown.session),
                                      ("vocabulary", MainView.Dropdown.vocabulary)] {
@@ -203,7 +209,7 @@ enum Snapshot {
             warnings.setupMessage = "Speech engine missing"
             warnings.recovery = [earlier]
             let long = model(.recording)
-            long.current?.lecture = "Molecular Biology and Biochemistry — advanced seminar"
+            long.current?.lecture = "Molecular Biology and Biochemistry, advanced seminar"
             long.current?.session = "A very long session name for October 23"
             long.current?.markers = (1...8).map { SessionMarker(t: Double($0 * 60), label: "A long marker label to review before the final exam") }
             let minimal = model(.done)

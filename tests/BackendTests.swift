@@ -28,8 +28,8 @@ enum BackendTests {
         try Data([0]).write(to: paths.model)
         check(Core.setupMessage(paths: missing) == whisperMessage, "whisper-only setup message")
         check(Core.setupMessage(paths: paths) == nil, "ready setup has no message")
-        check(Core.friendlyError("App closed unexpectedly").contains("click Retry"), "crash says click")
-        check(Core.friendlyError("Quit before transcription").contains("click Retry"), "quit says click")
+        check(Core.friendlyError("App closed unexpectedly").contains("Choose Retry"), "crash says choose Retry")
+        check(Core.friendlyError("Quit before transcription").contains("Choose Retry"), "quit says choose Retry")
 
         let rehearsalRoot = root.appendingPathComponent("rehearsal", isDirectory: true)
         let rehearsal = paths.rehearsal(in: rehearsalRoot)

@@ -25,6 +25,7 @@ final class AppModel: ObservableObject {
     static let shared = AppModel()
     @Published private(set) var paths = AppPaths()
     @Published var phase: AppPhase = .idle
+    @Published var homeFromTranscribing = false
     @Published var lectures: [String] = []
     @Published var selectedLecture = "__new__"
     @Published var newLecture = ""
@@ -219,7 +220,7 @@ final class AppModel: ObservableObject {
             let hours = reminderHours
             let due = lastReminder == 0 ? TimeInterval(hours * 3600) : lastReminder + 3600
             if hours > 0, duration >= due {
-                notify("Still recording — \(Core.reminderTime(duration)). Forgot to stop?")
+                notify("Still recording. \(Core.reminderTime(duration)). Forgot to stop?")
                 lastReminder = duration
             }
         }
@@ -249,7 +250,7 @@ final class AppModel: ObservableObject {
                 microphoneDenied = false
                 try paths.prepareSupport()
                 if try Core.availableDiskSpace(at: paths.support) < 2_000_000_000 {
-                    notify("Low disk space — less than 2 GB available")
+                notify("Low disk space. Less than 2 GB available.")
                     let alert = NSAlert()
                     alert.messageText = "Low disk space"
                     alert.informativeText = "Less than 2 GB is available for audio. Continue recording?"
@@ -318,11 +319,11 @@ final class AppModel: ObservableObject {
         case .input(let name):
             activeInputName = name
         case .usingDefaultInput:
-            notify("Your chosen microphone isn't connected — recording with the system default")
+            notify("Your chosen microphone isn't connected. Recording with the system default.")
         case .stalled:
             guard recording, !paused else { return }
             stalled = true
-            notify(recordingSource.usesMacAudio ? "Nosy lost a recording source — check Mac audio and your microphone" : "Nosy isn't receiving any audio — check your microphone")
+            notify(recordingSource.usesMacAudio ? "Nosy lost a recording source. Check Mac audio and your microphone." : "Nosy isn't receiving any audio. Check your microphone.")
         case .flowing:
             stalled = false
         case .macAudioQuiet(let quiet):
@@ -331,7 +332,7 @@ final class AppModel: ObservableObject {
         case .silence:
             guard recording else { return }
             silenceWarning = true
-            notify("Mic hears nothing — check your input")
+            notify("Mic hears nothing. Check your input.")
         case .failed(let message, let bytes):
             if message.contains("Mac audio access was denied") { macAudioDenied = true }
             guard recording || transitioning, !completing else { return }
@@ -504,14 +505,14 @@ final class AppModel: ObservableObject {
             if foreground { current = result; phase = .done }
             let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
             let outcome = markdown.map { Core.wordCount($0) == 0 } == true ? "No speech detected" : "Transcript saved"
-            notify("\(outcome) — \(result.lecture) · \(result.session)", path: result.transcriptPath)
+            notify("\(outcome). \(result.lecture) · \(result.session)", path: result.transcriptPath)
         } else if let error {
             if foreground {
                 current = record
                 phase = .failed
                 showError(error.localizedDescription)
             }
-            notify("Transcription failed — \(record.lecture) · \(record.session)")
+            notify("Transcription failed. \(record.lecture) · \(record.session)")
         }
         pump()
     }
@@ -713,8 +714,8 @@ final class AppModel: ObservableObject {
         recordingSource = source
         systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone")
     }
-    func chooseTranscriptsFolder() {
-        guard !working else { return }
+    @discardableResult func chooseTranscriptsFolder() -> Bool {
+        guard !working else { return false }
         let panel = NSOpenPanel()
         panel.title = "Choose where Nosy saves transcripts"
         panel.prompt = "Use This Folder"
@@ -723,10 +724,11 @@ final class AppModel: ObservableObject {
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
         panel.directoryURL = paths.transcripts
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        guard finishLibraryEditing?() != false else { return }
+        guard panel.runModal() == .OK, let url = panel.url else { return false }
+        guard finishLibraryEditing?() != false else { return false }
         UserDefaults.standard.set(url.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
+        return true
     }
     func setRetention(days: Int) {
         UserDefaults.standard.set(days, forKey: AppPaths.retentionKey)

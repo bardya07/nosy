@@ -2,14 +2,6 @@
 
 Reviewed against the linked upstream repositories and model cards on 2026-10-23. The MIT license for Nosy's own code does not replace third-party licenses.
 
-## Bundled fonts
-
-- **Inter** — Copyright 2020 The Inter Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/rsms/inter), [included full license](Resources/Fonts/OFL-Inter.txt).
-- **JetBrains Mono** — Copyright 2020 The JetBrains Mono Project Authors. SIL Open Font License 1.1. [Upstream project](https://github.com/JetBrains/JetBrainsMono), [included full license](Resources/Fonts/OFL-JetBrainsMono.txt).
-
-The unmodified variable font files were sourced from Google Fonts (`ofl/inter` and `ofl/jetbrainsmono`). They are registered only within Nosy's process, with SF Pro / SF Mono fallbacks.
-The font files and their complete license notices are included in `Resources/Fonts/` and copied into the app bundle by `build.sh`. Font redistribution remains subject to OFL 1.1.
-
 ## Bundled transcription engine
 
 **whisper.cpp v1.9.5**, including its vendored GGML — MIT license, The ggml authors. Nosy bundles an arm64 `whisper-cli` in `Contents/Helpers/`, with static Whisper/GGML libraries and embedded Metal shaders. Built from the pinned source by `scripts/build-whisper.sh`; no Homebrew runtime is required. [Source](https://github.com/ggml-org/whisper.cpp/tree/v1.9.5), [license](https://github.com/ggml-org/whisper.cpp/blob/v1.9.5/LICENSE).

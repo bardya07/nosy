@@ -18,7 +18,7 @@ enum AudioCaptureTests {
         for source in RecordingSource.available { check(RecordingSource.restored(source.rawValue) == source, "Preference roundtrip") }
         check(RecordingSource.mic.usesMic && !RecordingSource.mic.usesMacAudio, "Mic permissions")
         check(RecordingSource.mic.modeTitle == "Room audio" && RecordingSource.mic.caption == "Records the sound around you.", "Room audio copy")
-        check(RecordingSource.both.modeTitle == "Mac audio" && RecordingSource.both.caption == "Records sound playing on your Mac, plus your mic.", "Mac audio copy")
+        check(RecordingSource.both.modeTitle == "Mac audio" && RecordingSource.both.caption == "Records Mac audio and your mic.", "Mac audio copy")
         check(RecordingSource.both.usesMic && RecordingSource.both.usesMacAudio, "Mac audio mode includes the microphone")
         check(!RecordingSource.macAudio.usesMic && RecordingSource.macAudio.usesMacAudio, "Mac capture needs no mic")
         check(RecordingSource.both.inputName(mic: "Pinned mic") == "Pinned mic + Mac audio", "Both source name")

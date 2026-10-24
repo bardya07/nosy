@@ -37,14 +37,13 @@ struct FixWordView: NSViewRepresentable {
         // Retain raw-source offsets; styling keeps the editable source and selection identical.
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 5
-        let body = NSFont(name: "Inter-Regular", size: 15) ?? NSFont.systemFont(ofSize: 15)
+        let body = NSFont.systemFont(ofSize: 15)
         let text = NSMutableAttributedString(string: markdown, attributes: [.font: body, .foregroundColor: NSColor(Theme.ink), .paragraphStyle: paragraph])
         let ns = markdown as NSString
         if let regex = try? NSRegularExpression(pattern: #"(?m)^#{1,2} .+$"#) {
             for match in regex.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
                 let size: CGFloat = ns.substring(with: match.range).hasPrefix("##") ? 13 : 24
-                let font = NSFont(name: "JetBrainsMono-Regular", size: size).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) }
-                    ?? NSFont.monospacedSystemFont(ofSize: size, weight: .bold)
+                let font = NSFont.systemFont(ofSize: size, weight: .semibold)
                 text.addAttribute(.font, value: font, range: match.range)
             }
         }
@@ -55,7 +54,7 @@ struct FixWordView: NSViewRepresentable {
         }
         if let metadata = try? NSRegularExpression(pattern: #"(?m)^- .+$"#) {
             for match in metadata.matches(in: markdown, range: NSRange(location: 0, length: ns.length)) {
-                text.addAttributes([.font: NSFont(name: "JetBrainsMono-Regular", size: 12) ?? NSFont.monospacedSystemFont(ofSize: 12, weight: .regular), .foregroundColor: NSColor(Theme.muted)], range: match.range)
+                text.addAttributes([.font: NSFont.systemFont(ofSize: 12), .foregroundColor: NSColor(Theme.muted)], range: match.range)
             }
         }
         view.textStorage?.setAttributedString(text)

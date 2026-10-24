@@ -206,7 +206,7 @@ enum Core {
         return speech == "_No speech detected._" ? 0 : speech.split(whereSeparator: { $0.isWhitespace }).count
     }
     static let bytesPerSecond: Int64 = 32_000
-    static let missingEngineMessage = "whisper-cli is missing from Nosy. Reinstall Nosy, then Retry — your audio is safe."
+    static let missingEngineMessage = "Nosy's speech engine is missing. Reinstall Nosy, then try again. Your audio is safe."
 
     static func stressReason(thermal: ProcessInfo.ThermalState, onBattery: Bool, percent: Double?) -> String? {
         if thermal == .serious || thermal == .critical { return "Mac is hot" }
@@ -289,38 +289,41 @@ enum Core {
         let text = trimmed.lowercased()
         func contains(_ fragments: [String]) -> Bool { fragments.contains { text.contains($0) } }
         if contains(["enospc", "no space left", "disk full", "disk is full", "not enough space", "not enough free space", "errno 28", "code=28", "nscocoaerrordomain code=640", "nscocoaerrordomain error 640"]) {
-            return "Your disk is full. Free up some space, then Retry — your saved audio is safe."
+            return "Your disk is full. Free up some space, then try again. Your saved audio is safe."
         }
         if text.contains("whisper-cli"), !text.contains("whisper-cli exited"),
            contains(["missing", "not found", "no such file", "does not exist", "doesn’t exist", "doesn't exist"]) {
-            return "Nosy's speech engine is missing. Reinstall Nosy, then Retry — your audio is safe."
+            return missingEngineMessage
         }
         if contains(["model missing", "missing model", "model is missing", "model not found", "failed to open model", "failed to load model"])
             || (text.contains("model") && contains(["no such file", "does not exist", "not been downloaded"])) {
-            return "The speech model hasn't been downloaded yet. Your audio is safe — Retry once it's ready."
+            return "The speech model hasn't been downloaded yet. Your audio is safe. Try again once it's ready."
         }
         if text.contains("whisper"), contains(["exited", "exit code", "exit status"]) {
-            return "Transcription hit a snag. Your audio is safe — try Retry."
+            return "Transcription hit a snag. Your audio is safe. Try again."
         }
         if text.contains("microphone"), !contains(["save", "write", "file"]), contains(["denied", "permission", "not authorized"]) {
             return "Nosy can't access your microphone. Allow access in System Settings, then try again."
         }
         if contains(["microphone changed", "device changed", "device change", "microphone disconnected", "device disconnected"]) {
-            return "Your microphone changed or disconnected. Check your input, then start a new recording — your saved audio is safe."
+            return "Your microphone changed or disconnected. Check your input, then start a new recording. Your saved audio is safe."
         }
         if contains(["could not save", "couldn't save", "failed to save", "error saving", "could not write", "failed to write", "error writing", "could not create recording file", "could not create transcription log file", "could not finalize wav", "file write", "write failed", "couldn’t be saved", "couldn't be saved", "could not be saved", "permission denied", "nscocoaerrordomain code=513"]) {
             return "Nosy couldn't save the file. Check the folder's permissions and available space, then Retry."
         }
         if contains(["microphone", "audio conversion", "audio input", "could not start audio", "avfaudio"]) {
-            return "Nosy couldn't record from your microphone. Check your input and try again — your saved audio is safe."
+            return "Nosy couldn't record from your microphone. Check your input and try again. Your saved audio is safe."
         }
         if text.contains("app closed unexpectedly") {
-            return "Nosy closed before this recording finished. Your audio is safe — click Retry to transcribe it."
+            return "Nosy closed before this recording finished. Your audio is safe. Choose Retry to transcribe it."
         }
         if text.contains("quit before transcription") {
-            return "Nosy quit before transcription finished. Your audio is safe — click Retry."
+            return "Nosy quit before transcription finished. Your audio is safe. Choose Retry."
         }
         return String(trimmed.prefix(160))
+            .replacingOccurrences(of: "—", with: ". ")
+            .replacingOccurrences(of: "–", with: ". ")
+            .replacingOccurrences(of: "-", with: " ")
     }
 
     static func sanitize(_ value: String) throws -> String {

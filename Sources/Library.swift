@@ -233,6 +233,7 @@ struct LibraryView: View {
         .onChange(of: model.active?.id) { reload() }
         .onChange(of: model.libraryFocus) { reload(); applyFocus() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
+        .tipContainerBounds()
     }
     private func reload() { library.reload(paths: model.paths) }
     private func applyFocus() {
@@ -269,7 +270,7 @@ struct LibraryView: View {
                 NosyMark(size: 32)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Transcripts").font(Theme.display(18, .bold)).foregroundStyle(Theme.ink)
-                    Text("\(library.items.count) saved").font(Theme.mono(10)).foregroundStyle(Theme.muted)
+                    Text("\(library.items.count) saved").font(Theme.text(10)).foregroundStyle(Theme.muted)
                 }
                 Spacer(minLength: 0)
             }
@@ -336,8 +337,8 @@ struct LibraryView: View {
                 HStack(spacing: 6) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(record.lecture) · \(record.session)").font(Theme.text(12.5, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused — \($0)" } ?? (model.active?.id == record.id ? "Transcribing…" : "Queued")) : "\(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min · not transcribed")
-                            .font(Theme.text(11)).foregroundStyle(Theme.muted)
+                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused. \($0)" } ?? (model.active?.id == record.id ? "Transcribing…" : "Queued")) : "\(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min · not transcribed")
+                            .font(Theme.text(11)).monospacedDigit().foregroundStyle(Theme.muted)
                     }
                     Spacer(minLength: 0)
                     Button { model.retry(record) } label: { Image(systemName: "text.badge.plus") }
@@ -365,7 +366,7 @@ struct LibraryView: View {
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if editing {
                     TextEditor(text: $library.draft)
-                        .font(.custom("Inter-Regular", size: 15))
+                        .font(Theme.text(15))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
@@ -409,7 +410,7 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.session).font(Theme.display(20, .bold)).foregroundStyle(Theme.ink).lineLimit(1)
                 Text(item.lecture).font(Theme.text(12, .medium)).foregroundStyle(Theme.muted).lineLimit(1)
-                Text(readerMetadata(item)).font(.custom("Inter-Regular", size: 11.5)).foregroundStyle(Theme.muted).lineLimit(1)
+                Text(readerMetadata(item)).font(Theme.text(11.5)).foregroundStyle(Theme.muted).lineLimit(1).monospacedDigit()
             }
             Spacer()
             if editing {
@@ -484,9 +485,9 @@ private struct TranscriptSidebarRow: View {
         HStack(spacing: 4) {
             Button(action: open) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.session).font(Theme.text(12, .semibold)).lineLimit(1)
+                    Text(item.session).font(Theme.text(12, .semibold)).monospacedDigit().lineLimit(1)
                     Text(item.recorded.formatted(date: .abbreviated, time: .shortened))
-                        .font(Theme.mono(9)).foregroundStyle(Theme.muted)
+                        .font(Theme.text(9)).monospacedDigit().foregroundStyle(Theme.muted)
                 }
             }
             .buttonStyle(RowButtonStyle(selected: selected))
@@ -586,7 +587,7 @@ struct RecentView: View {
                                 showingAudio = false
                             } label: {
                                 Text("\(item.session) · \(item.recorded.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(Theme.text(11, .medium)).lineLimit(1).truncationMode(.middle)
+                                    .font(Theme.text(11, .medium)).monospacedDigit().lineLimit(1).truncationMode(.middle)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .buttonStyle(RowButtonStyle(selected: false))
@@ -637,8 +638,8 @@ struct RecentView: View {
                     .accessibilityLabel("Show in Finder")
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.session).font(Theme.text(12, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-                Text(item.lecture).font(Theme.mono(9)).foregroundStyle(Theme.muted).lineLimit(1)
+                Text(item.session).font(Theme.text(12, .semibold)).monospacedDigit().foregroundStyle(Theme.ink).lineLimit(1)
+                Text(item.lecture).font(Theme.text(9)).foregroundStyle(Theme.muted).lineLimit(1)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             Rectangle().fill(Theme.line).frame(height: 1)
@@ -648,7 +649,7 @@ struct RecentView: View {
             } else {
                 ScrollView {
                     Text(item.text)
-                        .font(Theme.mono(10.5)).foregroundStyle(Theme.ink)
+                        .font(Theme.text(10.5)).foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
@@ -681,7 +682,7 @@ private struct RecentToggleStyle: ButtonStyle {
         @State private var hovering = false
         var body: some View {
             configuration.label
-                .font(Theme.mono(9, .medium))
+                .font(Theme.text(9, .medium))
                 .foregroundStyle(selected ? Theme.ink : Theme.muted)
                 .padding(.horizontal, 8).frame(height: 23)
                 .background(selected ? Theme.raised : (hovering && enabled ? Theme.surface : .clear), in: Capsule())
@@ -708,12 +709,12 @@ private struct AudioStrip: View {
             .buttonStyle(RoundButtonStyle(size: 34))
             .tip(player.playing ? "Pause audio" : "Play audio")
             .accessibilityLabel(player.playing ? "Pause audio" : "Play audio")
-            Text(Core.timer(player.time)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
+            Text(Core.timer(player.time)).font(Theme.text(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Slider(value: Binding(get: { player.time }, set: { player.seek($0) }), in: 0...max(1, player.duration))
                 .controlSize(.small)
                 .tip("Seek audio")
                 .accessibilityLabel("Playback position")
-            Text(Core.timer(player.duration)).font(Theme.mono(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
+            Text(Core.timer(player.duration)).font(Theme.text(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Menu {
                 ForEach([0.75, 1.0, 1.25, 1.5, 2.0], id: \.self) { rate in
                     Button(rateLabel(rate)) { player.rate = Float(rate) }
@@ -722,7 +723,7 @@ private struct AudioStrip: View {
             } label: {
                 Text(rateLabel(Double(player.rate))).font(Theme.text(12, .semibold))
             }
-            .menuStyle(.button).font(Theme.mono(10)).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+            .menuStyle(.button).font(Theme.text(10)).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
             .menuIndicator(.hidden).fixedSize()
             .tip("Playback speed", edge: .top)
             .accessibilityLabel("Playback speed")
@@ -782,7 +783,7 @@ private struct ExportMenu: View {
             Image(systemName: "square.and.arrow.up")
         }
         .menuStyle(.button)
-        .font(Theme.mono(11))
+        .font(Theme.text(11))
         .buttonStyle(IconButtonStyle(size: 32))
         .menuIndicator(.hidden)
         .fixedSize()
@@ -792,7 +793,7 @@ private struct ExportMenu: View {
     private func savePanel(_ type: UTType) -> URL? {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [type]
-        panel.nameFieldStringValue = "\(item.lecture) — \(item.session)"
+        panel.nameFieldStringValue = "\(item.lecture) · \(item.session)"
         return panel.runModal() == .OK ? panel.url : nil
     }
     private func saveText() {
@@ -831,8 +832,8 @@ enum TranscriptExport {
     }
     static func attributed(_ markdown: String) -> NSAttributedString {
         let result = NSMutableAttributedString()
-        let body = NSFont(name: "Inter-Regular", size: 11.5) ?? .systemFont(ofSize: 11.5)
-        let title = NSFont(name: "Inter-Regular", size: 20).map { NSFontManager.shared.convert($0, toHaveTrait: .boldFontMask) } ?? .boldSystemFont(ofSize: 20)
+        let body = NSFont.systemFont(ofSize: 11.5)
+        let title = NSFont.systemFont(ofSize: 20, weight: .semibold)
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineSpacing = 3
         paragraph.paragraphSpacing = 9
@@ -841,7 +842,7 @@ enum TranscriptExport {
             switch line.kind {
             case .title: attributes = [.font: title, .foregroundColor: NSColor.black, .paragraphStyle: paragraph]
             case .meta: attributes = [.font: body, .foregroundColor: NSColor.darkGray, .paragraphStyle: paragraph]
-            case .heading: attributes = [.font: NSFont.boldSystemFont(ofSize: 10), .foregroundColor: NSColor.gray, .paragraphStyle: paragraph]
+            case .heading: attributes = [.font: NSFont.systemFont(ofSize: 10, weight: .semibold), .foregroundColor: NSColor.gray, .paragraphStyle: paragraph]
             case .body: attributes = [.font: body, .foregroundColor: NSColor.black, .paragraphStyle: paragraph]
             }
             result.append(NSAttributedString(string: line.text + "\n", attributes: attributes))
@@ -878,7 +879,7 @@ private struct OpenWithMenu: View {
             Image(systemName: "arrow.up.forward.app")
         }
         .menuStyle(.button)
-        .font(Theme.mono(11))
+        .font(Theme.text(11))
         .buttonStyle(IconButtonStyle(size: 32))
         .menuIndicator(.hidden)
         .fixedSize()
@@ -911,16 +912,16 @@ private struct TranscriptText: View {
                 case .title: EmptyView()
                 case .meta(let items):
                     Text(items.map { "• \($0)" }.joined(separator: "\n"))
-                        .font(.custom("Inter-Regular", size: 15))
+                        .font(Theme.text(15))
                         .lineSpacing(5)
                 case .heading(let text):
-                    Text(text).font(.custom("Inter-Regular", size: 16)).bold().foregroundStyle(Theme.ink).padding(.top, 6)
+                    Text(text).font(Theme.text(16, .semibold)).foregroundStyle(Theme.ink).padding(.top, 6)
                         .accessibilityAddTraits(.isHeader)
                 case .marker(let timestamp, let label):
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Image(systemName: "bookmark.fill").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
-                        Text(timestamp).font(.custom("Inter-Regular", size: 12)).foregroundStyle(Theme.accentText)
-                        Text(label).font(.custom("Inter-Regular", size: 15)).foregroundStyle(Theme.ink)
+                        Text(timestamp).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.accentText)
+                        Text(label).font(Theme.text(15)).foregroundStyle(Theme.ink)
                     }
                     .foregroundStyle(Theme.accentText)
                     .padding(.vertical, 2)
