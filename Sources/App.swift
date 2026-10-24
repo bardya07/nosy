@@ -94,9 +94,8 @@ private struct FileCommands: View {
             guard model.phase == .idle || model.homeFromTranscribing else { return }
             model.start()
         }
-        .keyboardShortcut("r", modifiers: .command)
         .tip("Start recording")
-        .disabled((model.phase != .idle && !model.homeFromTranscribing) || !model.canStart)
+        .disabled((model.phase != .idle && !model.homeFromTranscribing) || model.busy || !model.hasLecture)
         Button("Add Marker") { model.addMarker() }
             .keyboardShortcut(model.recording ? KeyboardShortcut("m", modifiers: .command) : nil)
             .tip("Mark this moment")
@@ -122,7 +121,9 @@ struct MainView: View {
     var previewVocabularyExpanded = false
     var previewSaveToExpanded = false
     var previewEnteringNewFolderName = false
+    var previewSessionRequired = false
     var previewTranscribingHome = false
+    var onBrowse: (() -> Void)? = nil
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Field?
@@ -131,6 +132,9 @@ struct MainView: View {
     @State private var openDropdown: Dropdown?
     @State private var saveToExpanded = false
     @State private var enteringNewFolderName = false
+    @State private var sessionNameRequired = false
+    @State private var startShake = 0
+    @State private var suppressOutsideDismiss = false
     @State private var dropdownRegion = CGRect.null
     @State private var vocabularyDraft: VocabularyDraft?
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
@@ -147,7 +151,7 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            titlebar
+            titlebar.zIndex(20)
             if showsTranscribingScreen {
                 StagePanel(model: model, onHome: { model.homeFromTranscribing = true })
                     .padding(16).card().padding(.horizontal, 20).padding(.vertical, 16)
@@ -172,8 +176,13 @@ struct MainView: View {
         // Outside clicks close the open panel. The tap ends on mouse-up, after the
         // clicked control has acted, and both rectangles share one SwiftUI space.
         .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(Self.space)).onEnded { tap in
-            if !dropdownRegion.contains(tap.location) { closeDropdown() }
-        }, including: openDropdown == nil ? .subviews : .all)
+            guard openDropdown != nil || saveToExpanded || enteringNewFolderName else { return }
+            if suppressOutsideDismiss {
+                suppressOutsideDismiss = false
+            } else if !dropdownRegion.contains(tap.location) {
+                closeDropdown()
+            }
+        }, including: openDropdown == nil && !saveToExpanded && !enteringNewFolderName ? .subviews : .all)
         .onExitCommand {
             if openDropdown != nil || saveToExpanded || enteringNewFolderName { closeDropdown() }
         }
@@ -181,6 +190,13 @@ struct MainView: View {
         .fixedSize(horizontal: true, vertical: true)
         .background(WindowBackdrop())
         .background(MainWindowChrome(titlebarInset: $titlebarInset).allowsHitTesting(false))
+        .background {
+            Button("Start recording") { model.start() }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled((model.phase != .idle && !model.homeFromTranscribing) || model.busy || !model.hasLecture)
+                .opacity(0).frame(width: 0, height: 0)
+                .allowsHitTesting(false).accessibilityHidden(true)
+        }
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
         .padding(.top, -titlebarInset)
@@ -194,7 +210,17 @@ struct MainView: View {
             if let previewDropdown { showDropdown(previewDropdown) }
             if previewSaveToExpanded { saveToExpanded = true }
             if previewEnteringNewFolderName { enteringNewFolderName = true }
+            if previewSessionRequired {
+                sessionNameRequired = true
+                showDropdown(.session)
+            }
             if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
+        }
+        .onChange(of: model.startValidationRequest) { _, _ in requestSessionName() }
+        .onChange(of: model.session) { _, session in
+            if !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                sessionNameRequired = false
+            }
         }
         .onChange(of: model.selectedLecture) { _, lecture in
             if lecture == "__new__", enteringNewFolderName { focus = .lecture }
@@ -231,42 +257,37 @@ struct MainView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    // The traffic lights own the leading corner; keep the app mark beside them and utilities at the trailing edge.
+    // Center the brand independently from the native traffic lights and trailing action.
     private var titlebar: some View {
-        HStack(spacing: 8) {
-            Color.clear.frame(width: 56).accessibilityHidden(true)
+        ZStack {
+            HStack(spacing: 8) {
+                Color.clear.frame(width: 56).accessibilityHidden(true)
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    StatusPill(model: model).fixedSize()
+                    Button { NSWorkspace.shared.open(URL(string: "https://github.com/bardya07/nosy")!) } label: {
+                        Image(nsImage: Self.githubMark)
+                            .renderingMode(.template)
+                            .resizable().interpolation(.high).scaledToFit()
+                            .frame(width: 14, height: 14)
+                    }
+                    .buttonStyle(IconButtonStyle(size: 24))
+                    .tip("Open GitHub", edge: .bottom)
+                    .accessibilityLabel("Open Nosy on GitHub")
+                    .interactionTarget("titlebar-github")
+                }
+                .interactionTarget("titlebar-tools")
+            }
             Button(action: goHome) {
                 HStack(spacing: 6) {
-                NosyMark(size: 18)
-                Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
+                    NosyMark(size: 18)
+                    Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
                 }
             }
             .buttonStyle(TitlebarBrandButtonStyle())
             .tip("Home", edge: .bottom)
             .accessibilityLabel("Home")
             .accessibilityElement(children: .combine)
-            Spacer(minLength: 8)
-            HStack(spacing: 0) {
-                Button { openWindow(id: "library") } label: { Image(systemName: "doc.text") }
-                    .buttonStyle(IconButtonStyle(size: 24))
-                    .tip("Open transcripts", edge: .bottom)
-                    .accessibilityLabel("Show transcripts")
-                Button { model.chooseTranscriptsFolder() } label: { Image(systemName: "folder") }
-                    .buttonStyle(IconButtonStyle(size: 24))
-                    .tip("Change folder", edge: .bottom)
-                    .accessibilityLabel("Choose where transcripts are saved, currently \(model.paths.transcripts.lastPathComponent)")
-                    .disabled(model.working)
-                Button { NSWorkspace.shared.open(URL(string: "https://github.com/bardya07/nosy")!) } label: {
-                    Image(nsImage: Self.githubMark)
-                        .renderingMode(.template)
-                        .resizable().interpolation(.high).scaledToFit()
-                        .frame(width: 14, height: 14)
-                }
-                .buttonStyle(IconButtonStyle(size: 24))
-                .tip("Open GitHub", edge: .bottom)
-                .accessibilityLabel("Open Nosy on GitHub")
-            }
-            StatusPill(model: model).fixedSize()
         }
         .padding(.horizontal, 12)
         .frame(height: 44)
@@ -352,7 +373,9 @@ struct MainView: View {
                     saveToMenu
                         .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                 } else {
-                    controlButton(.session, icon: "pencil", value: model.session, truncation: .tail)
+                    controlButton(.session, icon: "pencil", value: sessionControlTitle,
+                                  truncation: .tail, placeholder: sessionIsEmpty)
+                        .frame(minWidth: 128)
                         .transition(controlTransition)
                     controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
                         .transition(controlTransition)
@@ -376,7 +399,7 @@ struct MainView: View {
         })
         .background {
             // Escape closes the panel even when nothing inside it has focus.
-            if openDropdown != nil {
+            if openDropdown != nil || saveToExpanded || enteringNewFolderName {
                 Button("Close") { closeDropdown() }
                     .keyboardShortcut(.cancelAction)
                     .opacity(0).frame(width: 0, height: 0)
@@ -506,28 +529,45 @@ struct MainView: View {
         else { model.phase = .idle }
     }
 
-    private func controlButton(_ control: Dropdown, icon: String, value: String, truncation: Text.TruncationMode) -> some View {
+    private func requestSessionName() {
+        sessionNameRequired = true
+        startShake += 1
+        suppressOutsideDismiss = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { suppressOutsideDismiss = false }
+        if saveToExpanded || enteringNewFolderName { closeSaveToEntry() }
+        showDropdown(.session)
+    }
+
+    private var sessionIsEmpty: Bool {
+        model.session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var sessionControlTitle: String { sessionIsEmpty ? "Session name" : model.session }
+
+    private func controlButton(_ control: Dropdown, icon: String, value: String,
+                               truncation: Text.TruncationMode, placeholder: Bool = false) -> some View {
         Button { toggleDropdown(control) } label: {
             HStack(spacing: 5) {
                 Image(systemName: icon).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.muted)
                     .accessibilityHidden(true)
-                Text(value).font(Theme.text(10.5, .medium)).foregroundStyle(Theme.ink)
-                    .lineLimit(1).truncationMode(truncation).layoutPriority(-1).monospacedDigit()
+                Text(value).font(Theme.text(10.5, .medium)).foregroundStyle(placeholder ? Theme.muted : Theme.ink)
+                    .lineLimit(1).truncationMode(truncation).layoutPriority(placeholder ? 0 : -1).monospacedDigit()
                 Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold)).foregroundStyle(Theme.muted)
                     .accessibilityHidden(true)
             }
             .padding(.horizontal, 8)
             .frame(maxWidth: .infinity).frame(height: 34)
-            .background(Theme.raised, in: Capsule())
+            .background(control == .session && sessionIsEmpty ? Theme.validationFill : Theme.raised, in: Capsule())
             .overlay(RoundedRectangle(cornerRadius: 17, style: .circular)
-                .strokeBorder(openDropdown == control ? Theme.accentText.opacity(0.72) : Theme.line,
-                              lineWidth: openDropdown == control ? 1.2 : 1))
+                .strokeBorder(control == .session && sessionIsEmpty ? Theme.validationBorder :
+                              (openDropdown == control ? Theme.accentText.opacity(0.72) : Theme.line),
+                              lineWidth: control == .session && sessionIsEmpty ? 1.2 : (openDropdown == control ? 1.2 : 1)))
             .contentShape(Capsule())
         }
         .focusEffectDisabled()
         .buttonStyle(CompactControlButtonStyle())
         .disabled(control == .vocabulary && model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .accessibilityLabel("\(control.accessibilityTitle): \(value)")
+        .accessibilityLabel(control == .session && placeholder ? "Session name" : "\(control.accessibilityTitle): \(value)")
         .accessibilityHint("Opens \(control.accessibilityTitle.lowercased()) controls")
         .interactionTarget("dropdown-\(control)")
     }
@@ -535,22 +575,38 @@ struct MainView: View {
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
         switch control {
         case .session:
-            HStack(spacing: 9) {
-                Image(systemName: "calendar").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.muted)
-                    .accessibilityHidden(true)
-                TextField("", text: Binding(get: { model.session }, set: { model.session = $0; model.sessionEdited = true }),
-                          prompt: Text("Session name").foregroundStyle(Theme.faint))
-                    .textFieldStyle(.plain).font(Theme.text(12)).foregroundStyle(Theme.ink)
-                    .monospacedDigit()
-                    .focused($focus, equals: .session)
-                    .padding(.horizontal, 9).frame(height: 34)
-                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(focus == .session ? Theme.accentText : Theme.line,
-                                                                             lineWidth: focus == .session ? 1.4 : 1))
-                    .background(SessionCaretPositioner(focused: focus == .session))
-                    .accessibilityLabel("Session name")
-                    .interactionTarget("session-name")
-                    .onSubmit { closeDropdown() }
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(spacing: 9) {
+                    TextField("", text: $model.session,
+                              prompt: Text("Session name").foregroundStyle(Theme.faint))
+                        .textFieldStyle(.plain).font(Theme.text(12)).foregroundStyle(Theme.ink)
+                        .focused($focus, equals: .session)
+                        .padding(.horizontal, 9).frame(height: 34)
+                        .background(sessionNameRequired ? Theme.validationFill : Theme.raised,
+                                    in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(sessionNameRequired ? Theme.validationBorder :
+                                          (focus == .session ? Theme.accentText : Theme.line),
+                                          lineWidth: sessionNameRequired || focus == .session ? 1.4 : 1))
+                        .background(SessionCaretPositioner(focused: focus == .session))
+                        .accessibilityLabel("Session name")
+                        .interactionTarget("session-name")
+                        .onSubmit { closeDropdown() }
+                    Button { model.session = AppModel.today } label: {
+                        Image(systemName: "calendar").font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(IconButtonStyle(size: 34, filled: true))
+                    .tip("Use today's date")
+                    .accessibilityLabel("Use today's date")
+                    .interactionTarget("session-today")
+                }
+                if sessionNameRequired {
+                    Text("Name this session")
+                        .font(Theme.text(10.5, .medium))
+                        .foregroundStyle(Theme.validationText)
+                        .lineLimit(1)
+                        .interactionTarget("session-required-message")
+                }
             }
             .padding(10).card(Theme.surface, radius: 12)
         case .vocabulary:
@@ -682,7 +738,22 @@ struct MainView: View {
             .tip(showsHomeAction ? "Return home" : (model.recording ? "Stop and transcribe" : "Start recording"))
             .accessibilityLabel(showsHomeAction ? "Home" : primaryTitle)
             .interactionTarget("primary-action")
-            .disabled(model.recording ? model.transitioning : (!showsHomeAction && !model.canStart))
+            .modifier(StartShake(animatableData: reduceMotion ? 0 : CGFloat(startShake)))
+            .animation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.4), value: startShake)
+            .disabled(model.recording ? model.transitioning : (!showsHomeAction && !model.hasLecture))
+            Button {
+                closeDropdown()
+                if let onBrowse { onBrowse() } else { openWindow(id: "library") }
+            } label: {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 15, weight: .medium))
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(BrowseButtonStyle())
+            .tip("All transcripts", edge: .top)
+            .accessibilityLabel("All transcripts")
+            .accessibilityHint("Opens the Transcripts window")
+            .interactionTarget("browse-transcripts")
         }
     }
     private func primaryAction() {
@@ -753,12 +824,11 @@ private struct CaptureModePicker: View {
     @ObservedObject var model: AppModel
     @Namespace private var selectionNamespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var tintedSelection: RecordingSource = .mic
+    @State private var roomPop = false
+    @State private var glimmerProgress = 1.0
     private var selected: RecordingSource? {
-        switch model.recordingSource {
-        case .mic: .mic
-        case .both: .both
-        case .macAudio: nil
-        }
+        model.recordingSource == .mic ? .mic : .both
     }
     var body: some View {
         HStack(spacing: 3) {
@@ -773,18 +843,45 @@ private struct CaptureModePicker: View {
         .disabled(model.micLocked)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Recording mode")
-        .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.35, dampingFraction: 0.65), value: selected)
+        .onAppear { tintedSelection = selected ?? .mic }
+        .onChange(of: selected) { _, target in
+            guard let target else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                guard selected == target else { return }
+                withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.14)) {
+                    tintedSelection = target
+                }
+            }
+        }
     }
     private func modeButton(_ title: String, source: RecordingSource, active: Bool) -> some View {
-        Button { model.selectSource(source) } label: {
+        Button { select(source) } label: {
             ZStack {
                 if active {
-                    Capsule().fill(source == .mic ? Theme.roomModeTint : Theme.macModeTint)
-                        .matchedGeometryEffect(id: "capture-mode-selection", in: selectionNamespace)
-                        .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.35, dampingFraction: 0.65), value: source)
+                    Capsule()
+                        .fill(tintedSelection == .mic ? Theme.roomModeTint : Theme.macModeTint)
+                        .overlay {
+                            if source == .both {
+                                GeometryReader { geometry in
+                                    LinearGradient(colors: [.clear, .white.opacity(0.55), .clear],
+                                                   startPoint: .leading, endPoint: .trailing)
+                                        .frame(width: max(32, geometry.size.width * 0.46))
+                                        .rotationEffect(.degrees(16))
+                                        .offset(x: -geometry.size.width * 0.55 + geometry.size.width * 1.55 * glimmerProgress)
+                                }
+                                .clipShape(Capsule())
+                                .allowsHitTesting(false)
+                            }
+                        }
+                        .if(!reduceMotion) { highlight in
+                            highlight
+                                .matchedGeometryEffect(id: "capture-mode-selection", in: selectionNamespace)
+                                .scaleEffect(source == .mic && roomPop ? 1.06 : 1)
+                        }
+                        .if(reduceMotion) { highlight in highlight.transition(.opacity) }
                 }
                 Text(title).font(Theme.text(11, .medium))
-                    .foregroundStyle(active ? Theme.ink : Theme.muted)
+                    .foregroundStyle(tintedSelection == source ? Theme.ink : Theme.muted)
                     .frame(maxWidth: .infinity).frame(height: 28)
             }
         }
@@ -792,6 +889,39 @@ private struct CaptureModePicker: View {
         .buttonStyle(ModePickerButtonStyle())
         .accessibilityAddTraits(active ? .isSelected : [])
         .interactionTarget("mode-\(source)")
+    }
+
+    private func select(_ source: RecordingSource) {
+        guard selected != source else { return }
+        guard !reduceMotion else {
+            withAnimation(.easeOut(duration: 0.18)) { model.selectSource(source) }
+            return
+        }
+        if source == .mic {
+            withAnimation(.spring(response: 0.34, dampingFraction: 0.56)) {
+                model.selectSource(source)
+                roomPop = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.58)) { roomPop = false }
+            }
+        } else {
+            glimmerProgress = 0
+            withAnimation(.easeInOut(duration: 0.28)) {
+                model.selectSource(source)
+                roomPop = false
+            }
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.42)) { glimmerProgress = 1 }
+            }
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder func `if`<Transformed: View>(_ condition: Bool,
+                                               transform: (Self) -> Transformed) -> some View {
+        if condition { transform(self) } else { self }
     }
 }
 
@@ -811,13 +941,40 @@ private struct TitlebarBrandButtonStyle: ButtonStyle {
     }
 }
 
+private struct StartShake: GeometryEffect {
+    var animatableData: CGFloat
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: sin(animatableData * .pi * 8) * 5, y: 0))
+    }
+}
+
+private struct BrowseButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isFocused) private var focused
+    @State private var hovering = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .foregroundStyle(Theme.accentText)
+            .frame(width: 44, height: 44)
+            .background(hovering && !configuration.isPressed ? Theme.macModeTint : Theme.macModeTint.opacity(0.78), in: Circle())
+            .overlay(Circle().strokeBorder(Theme.accentText.opacity(0.34), lineWidth: 1))
+            .shadow(color: Theme.stop.opacity(hovering ? 0.22 : 0.10), radius: hovering ? 8 : 5, y: hovering ? 4 : 2)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.94 : (hovering && !reduceMotion ? 1.04 : 1))
+            .opacity(configuration.isPressed ? 0.92 : 1)
+            .contentShape(Circle())
+            .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+            .animation(Motion.press, value: configuration.isPressed)
+    }
+}
+
 private struct ModePickerButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.965 : 1)
             .contentShape(Capsule())
-            .animation(.spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
+            .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
     }
 }
 

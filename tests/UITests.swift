@@ -211,9 +211,13 @@ enum UITests {
         check(try SessionRecord.read(paths.audioFile(record.id, "json")).vocabularyTerms == ["ATP"], "Captured vocabulary survives sidecar roundtrip")
         model.phase = .idle
         model.configurePreview()
-        model.session = "2026-10-23"
+        model.session = ""
         model.refreshLectures()
         model.selectedLecture = "MBB322"
+        let validationRequest = model.startValidationRequest
+        model.start()
+        check(model.startValidationRequest == validationRequest + 1 && model.phase == .idle && !model.transitioning,
+              "An empty session is gated before any recording work begins")
         try await MainWindowInteraction.run(model: model)
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
     }

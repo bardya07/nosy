@@ -29,8 +29,8 @@ final class AppModel: ObservableObject {
     @Published var lectures: [String] = []
     @Published var selectedLecture = "__new__"
     @Published var newLecture = ""
-    @Published var session = AppModel.today
-    @Published var sessionEdited = false
+    @Published var session = ""
+    @Published private(set) var startValidationRequest = 0
     @Published var duration: TimeInterval = 0
     @Published var transcriptionElapsed: TimeInterval = 0
     @Published var level = -160.0
@@ -91,8 +91,9 @@ final class AppModel: ObservableObject {
     var busy: Bool { phase == .recording || transitioning }
     var working: Bool { busy || active != nil || !queue.isEmpty }
     var lectureName: String { selectedLecture == "__new__" ? newLecture : selectedLecture }
+    var hasLecture: Bool { !lectureName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     var canStart: Bool {
-        !busy && !lectureName.trimmingCharacters(in: .whitespaces).isEmpty && !session.trimmingCharacters(in: .whitespaces).isEmpty
+        !busy && hasLecture && !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     // The foreground lecture is waiting behind another transcription.
     var waiting: Bool { phase == .transcribing && current != nil && current?.id != active?.id }
@@ -164,7 +165,6 @@ final class AppModel: ObservableObject {
                 guard let self, !self.busy else { return }
                 self.refreshDependencies()
                 self.refreshLectures()
-                if !self.sessionEdited { self.session = Self.today }
             }
         })
     }
@@ -233,7 +233,10 @@ final class AppModel: ObservableObject {
 
     func start() {
         guard !busy else { return }
-        if !sessionEdited { session = Self.today }
+        guard !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            startValidationRequest += 1
+            return
+        }
         guard canStart else { return }
         transitioning = true
         clearError()
@@ -555,7 +558,6 @@ final class AppModel: ObservableObject {
     }
     func importRecording(_ url: URL) {
         guard !busy else { return }
-        if !sessionEdited { session = Self.today }
         clearError()
         let paths = paths
         let lectureInput = selectedLecture == "__new__" ? newLecture : selectedLecture
@@ -615,10 +617,9 @@ final class AppModel: ObservableObject {
 
     // MARK: Session, inputs, folders
 
-    // A finished or failed lecture used the edited name; the next one starts from today's date again.
+    // The next recording always starts with an empty session name.
     private func resetSession() {
-        sessionEdited = false
-        session = Self.today
+        session = ""
     }
     func revealTranscript() {
         refreshSavedTranscript()

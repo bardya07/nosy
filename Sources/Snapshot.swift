@@ -113,7 +113,7 @@ enum Snapshot {
             let model = AppModel()
             model.lectures = ["MBB322", "CHEM281", "BISC202", longCourse.lastPathComponent]
             model.selectedLecture = "MBB322"
-            model.session = "2026-10-23"
+            model.session = phase == .idle ? "" : "2026-10-23"
             model.libraryFocus = transcript
             model.phase = phase
             model.paused = paused
@@ -166,12 +166,22 @@ enum Snapshot {
             let readyMac = model(.idle, source: .both)
             guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
                   save(PreviewWindow { MainView(model: readyMac) }.padding(36).background(PreviewBackdrop()), "ready-mac-audio.\(mode)") else { return 1 }
-            for tip in ["Microphone", "Start recording", "Home", "Open GitHub"] {
+            for tip in ["Microphone", "Start recording", "Home", "Open GitHub", "All transcripts"] {
                 let slug = tip.lowercased().replacingOccurrences(of: " ", with: "-")
                 guard save(PreviewWindow {
                     MainView(model: model(.idle)).environment(\.previewTipText, tip)
                 }.padding(36).background(PreviewBackdrop()), "tip-\(slug).\(mode)") else { return 1 }
             }
+            let sessionTip = "Use today's date"
+            guard save(PreviewWindow {
+                MainView(model: model(.idle), previewDropdown: .session)
+                    .environment(\.previewTipText, sessionTip)
+            }.padding(36).background(PreviewBackdrop()), "tip-use-todays-date.\(mode)") else { return 1 }
+            let settingTip = "Pick a subject or setting to fine tune the vocabulary."
+            guard save(PreviewWindow {
+                MainView(model: model(.idle), previewDropdown: .vocabulary)
+                    .environment(\.previewTipText, settingTip)
+            }.padding(36).background(PreviewBackdrop()), "tip-vocabulary-setting.\(mode)") else { return 1 }
             for expanded in [false, true] {
                 let fixture = model(.idle)
                 guard save(PreviewWindow {
@@ -185,6 +195,9 @@ enum Snapshot {
                 guard save(PreviewWindow { MainView(model: fixture, previewDropdown: dropdown) }
                     .padding(36).background(PreviewBackdrop()), "dropdown-\(name).\(mode)") else { return 1 }
             }
+            guard save(PreviewWindow {
+                MainView(model: model(.idle), previewSessionRequired: true)
+            }.padding(36).background(PreviewBackdrop()), "session-required.\(mode)") else { return 1 }
             guard save(PreviewWindow { MainView(model: model(.idle), previewDropdown: .vocabulary, previewVocabularyExpanded: true) }
                 .padding(36).background(PreviewBackdrop()), "dropdown-vocabulary-expanded.\(mode)") else { return 1 }
             let newFolderPanel = model(.idle)

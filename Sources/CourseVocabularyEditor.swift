@@ -78,6 +78,36 @@ final class VocabularyDraft: ObservableObject, Identifiable {
     }
 }
 
+private struct InfoButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovering = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(hovering ? 0.04 : 0)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.94 : (hovering && !reduceMotion ? 1.06 : 1))
+            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+            .animation(Motion.press, value: configuration.isPressed)
+    }
+}
+
+private struct SubjectPickerButtonStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isFocused) private var focused
+    @State private var hovering = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .brightness(hovering && !configuration.isPressed ? 0.025 : 0)
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(focused ? Theme.accentText :
+                              (hovering ? Theme.accentText.opacity(0.42) : .clear), lineWidth: focused ? 1.6 : 1)
+                .allowsHitTesting(false))
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+            .animation(Motion.press, value: configuration.isPressed)
+    }
+}
+
 struct VocabularyEditor: View {
     @ObservedObject var draft: VocabularyDraft
     var close: () -> Void
@@ -90,31 +120,49 @@ struct VocabularyEditor: View {
                 Text("\(draft.lecture) vocabulary")
                     .font(Theme.display(15, .bold)).fixedSize(horizontal: false, vertical: true)
             }
-            HStack(spacing: 12) {
-                Text("Subject").foregroundStyle(Theme.muted)
+            HStack {
+                Text("Setting").font(Theme.text(10.5, .medium)).foregroundStyle(Theme.muted)
+                    .interactionTarget("vocabulary-setting-caption")
                 Spacer(minLength: 0)
-                Menu {
-                    subjectOption("auto", "Auto")
-                    subjectOption("general", "General")
-                    ForEach(SubjectCatalog.subjects) { subject in
-                        subjectOption(subject.id, subject.name)
-                    }
-                } label: {
-                    HStack(spacing: 7) {
-                        Text(subjectTitle).font(Theme.text(12)).lineLimit(1)
-                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
-                    }
-                    .foregroundStyle(Theme.ink)
-                    .padding(.horizontal, 10).frame(height: 28)
-                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
-                    .contentShape(RoundedRectangle(cornerRadius: 8))
+                Button {} label: {
+                    Text("?").font(Theme.text(10, .semibold))
+                        .foregroundStyle(Theme.muted)
+                        .frame(width: 18, height: 18)
+                        .background(Theme.raised, in: Circle())
+                        .overlay(Circle().strokeBorder(Theme.line, lineWidth: 1))
+                        .contentShape(Circle())
                 }
-                .menuStyle(.button).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
-                .tip("Choose vocabulary subject")
-                .frame(maxWidth: 220)
-                .accessibilityLabel("Subject").accessibilityValue(subjectTitle)
-                .interactionTarget("subject-menu")
+                .buttonStyle(InfoButtonStyle())
+                .tip("Pick a subject or setting to fine tune the vocabulary.")
+                .accessibilityLabel("About vocabulary settings")
+                .interactionTarget("vocabulary-help")
             }
+            Menu {
+                subjectOption("auto", "Auto")
+                subjectOption("general", "General")
+                ForEach(SubjectCatalog.subjects) { subject in
+                    subjectOption(subject.id, subject.name)
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Text(subjectTitle).font(Theme.text(12, .medium)).lineLimit(1)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
+                        .accessibilityHidden(true)
+                }
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 12).frame(maxWidth: .infinity).frame(height: 38)
+                .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Theme.line, lineWidth: 1).allowsHitTesting(false))
+                .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .menuStyle(.button).menuIndicator(.hidden)
+            .buttonStyle(SubjectPickerButtonStyle())
+            .tip("Choose vocabulary subject")
+            .frame(maxWidth: .infinity)
+            .accessibilityLabel("Subject").accessibilityValue(subjectTitle)
+            .interactionTarget("subject-menu")
             VStack(alignment: .leading, spacing: 8) {
                 Button { expanded.toggle() } label: {
                     HStack(spacing: 6) {
