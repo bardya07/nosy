@@ -21,5 +21,8 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
     Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
 "$BUILD_DIR/AudioCaptureTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" Sources/*.swift tests/LibraryTests.swift -o "$BUILD_DIR/LibraryTests"
+"$BUILD_DIR/LibraryTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" Sources/*.swift tests/UITests.swift tests/MainWindowInteraction.swift -o "$BUILD_DIR/UITests"
 "$BUILD_DIR/UITests"

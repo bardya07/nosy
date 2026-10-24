@@ -531,7 +531,7 @@ extension View {
     func tipContainerBounds() -> some View {
         coordinateSpace(name: tipSpace)
             .overlayPreferenceValue(TipAnchorKey.self) { anchors in
-                TipLayer(anchor: anchors.last)
+                TipLayer(anchor: anchors.first)
             }
     }
 }

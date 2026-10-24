@@ -117,7 +117,22 @@ enum MainWindowInteraction {
         expect(hasVisibleTarget("save-to-group"), "Save to rolls into the folder group")
         expect(hasVisibleTarget("save-to-pick") && hasVisibleTarget("save-to-destination"),
                "Pick folder and Choose destination share the group")
-        await waitForTarget("dropdown-session", visible: false, "Session hides while Save to is expanded")
+        await waitForTarget("dropdown-session", visible: false, "The Session pill hides while Save to is expanded")
+        expect(hasVisibleTarget("wheel-session") && hasVisibleTarget("wheel-vocabulary"),
+               "Session and Vocabulary stay as bubbles while the wheel is open")
+        let vocabBubble = target("wheel-vocabulary")
+        expect(vocabBubble.convert(vocabBubble.bounds, to: host).maxX <= host.bounds.width - 20 + 1,
+               "The open wheel row fits inside the window margins")
+        await click("wheel-session")
+        await waitForTarget("save-to-group", visible: false, "The Session bubble rolls the wheel back")
+        await panel(true, "The Session bubble opens the Session panel")
+        await click("dropdown-saveTo")
+        await click("wheel-vocabulary")
+        await waitForTarget("save-to-group", visible: false, "The Vocabulary bubble rolls the wheel back")
+        await panel(true, "The Vocabulary bubble opens the Vocabulary panel")
+        await click("dropdown-saveTo")
+        await waitForTarget("save-to-group", visible: true, "The wheel reopens after a bubble")
+        for _ in 0..<8 { await settle(host, window) }
         await click("save-to-wheel")
         await waitForTarget("save-to-group", visible: false, "The wheel closes on a second click")
         await click("dropdown-saveTo")

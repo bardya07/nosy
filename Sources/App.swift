@@ -379,6 +379,11 @@ struct MainView: View {
                 if saveToExpanded {
                     folderChoices
                         .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
+                    // Session and Vocabulary stay reachable as small bubbles while the wheel is open.
+                    controlBubble(.session, icon: "pencil", tip: "Session")
+                        .transition(controlTransition)
+                    controlBubble(.vocabulary, icon: "book.closed", tip: "Vocabulary")
+                        .transition(controlTransition)
                 } else {
                     controlButton(.session, icon: "pencil", value: sessionControlTitle,
                                   truncation: .tail, placeholder: sessionIsEmpty)
@@ -429,9 +434,11 @@ struct MainView: View {
     private var saveToControl: some View {
         Button(action: toggleSaveToWheel) {
             HStack(spacing: 5) {
-                Image(systemName: "folder")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Theme.muted)
+                // The open wheel is the close control: its folder turns into an x.
+                Image(systemName: saveToExpanded ? "xmark" : "folder")
+                    .font(.system(size: saveToExpanded ? 11 : 10, weight: saveToExpanded ? .semibold : .medium))
+                    .foregroundStyle(saveToExpanded ? Theme.accentText : Theme.muted)
+                    .contentTransition(reduceMotion ? .opacity : .symbolEffect(.replace))
                     .rotationEffect(.degrees(saveToExpanded && !reduceMotion ? -360 : 0))
                     .accessibilityHidden(true)
                 if !saveToExpanded {
@@ -457,8 +464,9 @@ struct MainView: View {
         }
         .focusEffectDisabled()
         .buttonStyle(CompactControlButtonStyle())
-        .accessibilityLabel(saveToExpanded ? "Folder wheel" : "Save to \(folderTitle)")
-        .accessibilityHint(saveToExpanded ? "Close folder choices" : "Open folder choices")
+        .tip(saveToExpanded ? "Close" : "Save to folder")
+        .accessibilityLabel(saveToExpanded ? "Close folder choices" : "Save to \(folderTitle)")
+        .accessibilityHint(saveToExpanded ? "Returns to Session and Vocabulary" : "Open folder choices")
         .interactionTarget("dropdown-saveTo")
         .interactionTarget(saveToExpanded ? "save-to-wheel" : "save-to-button")
     }
@@ -470,7 +478,10 @@ struct MainView: View {
         HStack(spacing: 0) {
             Button(action: toggleFolderList) {
                 HStack(spacing: 6) {
-                    Text("Pick folder").font(Theme.text(10.5, .medium))
+                    ViewThatFits(in: .horizontal) {
+                        Text("Pick folder").font(Theme.text(10.5, .medium)).lineLimit(1).fixedSize()
+                        Text("Folder").font(Theme.text(10.5, .medium)).lineLimit(1).fixedSize()
+                    }
                     Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
                         .rotationEffect(.degrees(folderListOpen && !reduceMotion ? 180 : 0))
                         .accessibilityHidden(true)
@@ -487,7 +498,10 @@ struct MainView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "externaldrive").font(.system(size: 10, weight: .medium))
                         .accessibilityHidden(true)
-                    Text("Choose destination").font(Theme.text(10.5, .semibold)).lineLimit(1).fixedSize()
+                    ViewThatFits(in: .horizontal) {
+                        Text("Choose destination").font(Theme.text(10.5, .semibold)).lineLimit(1).fixedSize()
+                        Text("Destination").font(Theme.text(10.5, .semibold)).lineLimit(1).fixedSize()
+                    }
                 }
                 .foregroundStyle(Theme.warmText)
                 .padding(.horizontal, 10).frame(height: 28)
@@ -579,6 +593,25 @@ struct MainView: View {
         .accessibilityLabel(control == .session && placeholder ? "Session name" : "\(control.accessibilityTitle): \(value)")
         .accessibilityHint("Opens \(control.accessibilityTitle.lowercased()) controls")
         .interactionTarget("dropdown-\(control)")
+    }
+
+    // Icon only, the wheel's size and chrome. A click rolls the wheel back and opens its own panel.
+    private func controlBubble(_ control: Dropdown, icon: String, tip: String) -> some View {
+        let warn = control == .session && sessionIsEmpty
+        return Button { toggleDropdown(control) } label: {
+            Image(systemName: icon).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.muted)
+                .frame(width: 34, height: 34)
+                .background(warn ? Theme.validationFill : Theme.raised, in: Circle())
+                .overlay(Circle().strokeBorder(warn ? Theme.validationBorder : Theme.line, lineWidth: warn ? 1.2 : 1))
+                .contentShape(Circle())
+        }
+        .focusEffectDisabled()
+        .buttonStyle(CompactControlButtonStyle())
+        .disabled(control == .vocabulary && model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
+        .tip(tip)
+        .accessibilityLabel(control.accessibilityTitle)
+        .accessibilityHint("Closes folder choices and opens \(control.accessibilityTitle.lowercased()) controls")
+        .interactionTarget("wheel-\(control)")
     }
 
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
@@ -762,13 +795,14 @@ struct MainView: View {
     }
 
     @ViewBuilder private var controls: some View {
-        HStack(spacing: 10) {
+        // Recording adds Pause, so the row tightens to stay inside the 20pt margins.
+        HStack(spacing: model.recording ? 8 : 10) {
             if model.recording {
                 Button { model.togglePause() } label: {
                     Text(model.paused ? "Resume" : "Pause").lineLimit(1).fixedSize()
                 }
-                .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 12))
-                .frame(width: 96)
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 10))
+                .frame(width: 84)
                 .keyboardShortcut("p", modifiers: .command)
                 .tip(model.paused ? "Resume recording" : "Pause recording", edge: .top)
                 .accessibilityLabel(model.paused ? "Resume recording" : "Pause recording")
@@ -791,7 +825,8 @@ struct MainView: View {
                     }
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48))
+            .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48,
+                                         horizontalPadding: model.recording ? 14 : nil))
             // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
             .keyboardShortcut(model.recording
                 ? KeyboardShortcut(.return, modifiers: .command)

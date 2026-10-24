@@ -298,6 +298,15 @@ enum Snapshot {
             setenv("NOSY_TRANSCRIPTS_DIR", transcripts.path, 1)
             guard save(PreviewWindow { LibraryView(model: emptyLibraryModel) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-empty.\(mode)") else { return 1 }
+            let silentLibrary = model(.idle)
+            silentLibrary.libraryFocus = emptyURL
+            guard save(PreviewWindow { LibraryView(model: model(.idle), previewCollapsed: true) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-collapsed.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: silentLibrary) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-no-speech.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: model(.idle)) }
+                    .environment(\.previewTipText, "Show in Finder")
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-tip.\(mode)") else { return 1 }
             for phase in [AppPhase.idle, .recording, .done] {
                 guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
                     to: base.appendingPathExtension("native-\(phase).\(mode).png"), native: true) else { return 1 }
