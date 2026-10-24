@@ -409,6 +409,27 @@ private struct TipContainerFrameModifier: ViewModifier {
     }
 }
 
+// A scrolling list keeps its tips inside its own bounds. It uses its own key so the
+// window's frame (a parent of the list) is never replaced by the list's smaller frame.
+private struct TipClipFrameKey: PreferenceKey {
+    static let defaultValue = CGRect.null
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let next = nextValue()
+        if !next.isNull { value = next }
+    }
+}
+private struct TipClipBoundsModifier: ViewModifier {
+    @State private var frame = CGRect.null
+    func body(content: Content) -> some View {
+        content
+            .background(GeometryReader { proxy in
+                Color.clear.preference(key: TipClipFrameKey.self, value: proxy.frame(in: .global))
+            })
+            .onPreferenceChange(TipClipFrameKey.self) { frame = $0 }
+            .environment(\.tipContainerFrame, frame)
+    }
+}
+
 private struct TipModifier: ViewModifier {
     let text: String
     let edge: VerticalEdge
@@ -493,4 +514,6 @@ extension View {
         modifier(TipModifier(text: text, edge: edge))
     }
     func tipContainerBounds() -> some View { modifier(TipContainerFrameModifier()) }
+    // Tips beneath this view are placed inside its frame, so a list never draws them past its edge.
+    func tipClipBounds() -> some View { modifier(TipClipBoundsModifier()) }
 }

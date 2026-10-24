@@ -12,6 +12,37 @@ struct TranscriptItem: Identifiable, Hashable {
     var id: URL { url }
 }
 
+// The tree's open folders. A search opens every match without changing the saved choice,
+// and a folder toggled during a search stays that way until the search changes.
+struct TranscriptFolders: Equatable {
+    static let storageKey = "transcriptFoldersOpen"
+    private(set) var open: Set<String>
+    private var closedWhileSearching: Set<String> = []
+
+    init(open: Set<String> = []) { self.open = open }
+
+    func isOpen(_ folder: String, searching: Bool) -> Bool {
+        searching ? !closedWhileSearching.contains(folder) : open.contains(folder)
+    }
+    mutating func toggle(_ folder: String, searching: Bool) {
+        if searching {
+            if !closedWhileSearching.insert(folder).inserted { closedWhileSearching.remove(folder) }
+        } else if !open.insert(folder).inserted {
+            open.remove(folder)
+        }
+    }
+    mutating func reveal(_ folder: String) { open.insert(folder) }
+    mutating func endSearch() { closedWhileSearching = [] }
+}
+
+// Reader rules. The files on disk keep their Markdown; only the display changes.
+enum TranscriptDisplay {
+    // Core writes this exact body for a recording with no speech.
+    static func isNoSpeech(_ paragraph: String) -> Bool {
+        paragraph.trimmingCharacters(in: .whitespacesAndNewlines) == "_No speech detected._"
+    }
+}
+
 // Reads the transcripts folder (one subfolder per lecture, one .md per session) once per
 // reload and keeps the text in memory, so search never touches the disk while typing.
 @MainActor
@@ -19,7 +50,15 @@ final class TranscriptLibrary: ObservableObject {
     @Published private(set) var items: [TranscriptItem] = []
     @Published private(set) var unfinished: [SessionRecord] = []
     @Published private(set) var selection: URL?
-    @Published var query = "" { didSet { keepSelectionVisible() } }
+    @Published var query = "" { didSet { folders.endSearch(); keepSelectionVisible() } }
+    // Open folders in the tree. They are saved to `store` only when the Transcripts window restores them.
+    @Published private(set) var folders = TranscriptFolders() {
+        didSet {
+            guard oldValue.open != folders.open else { return }
+            store?.set(folders.open.sorted(), forKey: TranscriptFolders.storageKey)
+        }
+    }
+    private var store: UserDefaults?
     @Published private(set) var editing = false
     @Published var draft = ""
     private var editingItem: TranscriptItem?
@@ -69,7 +108,7 @@ final class TranscriptLibrary: ObservableObject {
         }
         guard selection != target else { return true }
         guard finishEditing() else { return false }
-        selection = target
+        setSelection(target)
         return true
     }
     func open(_ url: URL, paths: AppPaths) {
@@ -115,15 +154,33 @@ final class TranscriptLibrary: ObservableObject {
         return groups.keys.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
             .map { ($0, groups[$0]!.sorted { $0.recorded > $1.recorded }) }
     }
+    var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
+    func isOpen(_ lecture: String) -> Bool { folders.isOpen(lecture, searching: searching) }
+    // Rows on screen, top to bottom: a closed folder hides its sessions.
+    var visibleRows: [TranscriptItem] { grouped.filter { isOpen($0.lecture) }.flatMap(\.items) }
+    func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
+    // Previews show the tree with every folder closed.
+    func collapseFolders() { folders = TranscriptFolders() }
+    // Restores the saved open folders. Pass nil to keep them for this window only.
+    func restoreFolders(from defaults: UserDefaults?) {
+        store = defaults
+        folders = TranscriptFolders(open: Set(defaults?.stringArray(forKey: TranscriptFolders.storageKey) ?? []))
+    }
+
     // Searching never leaves a hidden transcript open (where Trash would still act on it).
     private func keepSelectionVisible() {
         guard !editing else { return }
-        let visible = ordered
-        if let selection, visible.contains(where: { $0.url == selection }) { return }
-        selection = visible.first?.url
+        if let selection, ordered.contains(where: { $0.url == selection }) { return }
+        setSelection(filtered.first?.url)
+    }
+    // Selecting a transcript opens its folder, so the one in the reader is always in the tree.
+    private func setSelection(_ url: URL?) {
+        selection = url
+        guard !searching, let url, let lecture = items.first(where: { $0.url == url })?.lecture else { return }
+        folders.reveal(lecture)
     }
     func move(_ step: Int) {
-        let list = ordered
+        let list = visibleRows
         guard !list.isEmpty else { return }
         let index = list.firstIndex { $0.url == selection } ?? (step > 0 ? -1 : list.count)
         _ = select(list[min(list.count - 1, max(0, index + step))].url)
@@ -145,7 +202,7 @@ final class TranscriptLibrary: ObservableObject {
         didChange?(url, nil)
         let remaining = list.filter { $0.url != url }
         if selection == url {
-            selection = index.flatMap { remaining.indices.contains($0) ? remaining[$0].url : remaining.last?.url }
+            setSelection(index.flatMap { remaining.indices.contains($0) ? remaining[$0].url : remaining.last?.url })
         }
         reload(paths: paths)
     }
@@ -174,7 +231,7 @@ final class TranscriptLibrary: ObservableObject {
                 try? record.save(in: paths)
             }
             didChange?(item.url, target)
-            selection = target
+            setSelection(target)
             reload(paths: paths)
         } catch {
             NSAlert(error: error).runModal()
@@ -198,15 +255,19 @@ struct LibraryView: View {
     @StateObject private var library = TranscriptLibrary()
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Focus?
     @State private var copied = false
     var previewQuery: String?
+    var previewCollapsed: Bool
     private var editing: Bool { library.editing }
+    private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
-    init(model: AppModel, previewQuery: String? = nil) {
+    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false) {
         self.model = model
         self.previewQuery = previewQuery
+        self.previewCollapsed = previewCollapsed
     }
 
     var body: some View {
@@ -224,8 +285,10 @@ struct LibraryView: View {
             model.openWindow = openWindow
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
             model.finishLibraryEditing = { [weak library] in library?.finishEditing() ?? true }
+            library.restoreFolders(from: Snapshot.isRunning ? nil : .standard)
             reload()
             applyFocus()
+            if previewCollapsed { library.collapseFolders() }
             if let previewQuery { library.query = previewQuery }
         }
         .onChange(of: model.paths.transcripts) { reload() }
@@ -256,13 +319,12 @@ struct LibraryView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 16) {
             Button(action: closeAndShowMain) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.left")
+                HStack(spacing: 7) {
+                    Image(systemName: "house.fill").font(.system(size: 12, weight: .semibold))
                     Text("Nosy")
                 }
-                    .font(Theme.text(12, .semibold))
             }
-            .buttonStyle(LinkButtonStyle(tint: Theme.muted))
+            .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
             .keyboardShortcut("w", modifiers: .command)
             .accessibilityLabel("Close Transcripts and return to Nosy")
 
@@ -286,21 +348,10 @@ struct LibraryView: View {
             .fieldChrome(focused: focus == .search)
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 8) {
                         if library.unfinished.contains(where: { !model.isLive($0.id) }), library.query.isEmpty { unfinishedSection }
                         ForEach(library.grouped, id: \.lecture) { group in
-                            Text(group.lecture.uppercased()).font(Theme.label).kerning(0.8).foregroundStyle(Theme.muted)
-                                .lineLimit(1)
-                                .padding(.horizontal, 10).padding(.top, 10).padding(.bottom, 2)
-                                .accessibilityAddTraits(.isHeader)
-                            ForEach(group.items) { item in
-                                TranscriptSidebarRow(item: item, selected: library.selection == item.url,
-                                    open: { library.select(item.url); focus = .list },
-                                    reveal: { NSWorkspace.shared.activateFileViewerSelecting([item.url]) },
-                                    rename: { library.rename(item, paths: model.paths) },
-                                    trash: { library.trash(item.url, paths: model.paths) })
-                                    .id(item.url)
-                            }
+                            folderGroup(group.lecture, group.items)
                         }
                         if library.grouped.isEmpty {
                             Text(library.query.isEmpty ? "No transcripts yet.\nRecord a session in a folder and it shows up here." : "Nothing matches “\(library.query)”.")
@@ -309,6 +360,8 @@ struct LibraryView: View {
                         }
                     }
                 }
+                // Tips stay inside the list instead of being clipped at the sidebar edge.
+                .tipClipBounds()
                 .scrollIndicators(.never)
                 .focusable()
                 .focused($focus, equals: .list)
@@ -325,6 +378,33 @@ struct LibraryView: View {
         .opacity(editing ? 0.5 : 1)
         .frame(width: 250)
         .background(Theme.surface.opacity(0.45))
+    }
+
+    // A folder row, with its sessions nested beneath it when open.
+    @ViewBuilder private func folderGroup(_ lecture: String, _ items: [TranscriptItem]) -> some View {
+        let open = library.isOpen(lecture)
+        VStack(alignment: .leading, spacing: 2) {
+            TranscriptFolderRow(lecture: lecture, count: items.count, open: open) {
+                withAnimation(fold) { library.toggleFolder(lecture) }
+            }
+            if open {
+                VStack(alignment: .leading, spacing: 1) {
+                    ForEach(items) { item in
+                        TranscriptSidebarRow(item: item, selected: library.selection == item.url,
+                            open: { library.select(item.url); focus = .list },
+                            reveal: { NSWorkspace.shared.activateFileViewerSelecting([item.url]) },
+                            rename: { library.rename(item, paths: model.paths) },
+                            trash: { library.trash(item.url, paths: model.paths) })
+                            .id(item.url)
+                    }
+                }
+                .padding(.leading, 22)
+                .background(alignment: .leading) {
+                    Rectangle().fill(Theme.line).frame(width: 1).padding(.leading, 16)
+                }
+                .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 
     // Recordings without a transcript (failed, quit, or postponed) stay reachable here.
@@ -472,6 +552,91 @@ struct LibraryView: View {
     }
 }
 
+// A folder in the Transcripts tree: the big row. Its chevron turns as it opens.
+private struct TranscriptFolderRow: View {
+    let lecture: String
+    let count: Int
+    let open: Bool
+    let toggle: () -> Void
+
+    var body: some View {
+        Button(action: toggle) {
+            HStack(spacing: 10) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Theme.muted)
+                    .rotationEffect(.degrees(open ? 90 : 0))
+                    .frame(width: 12)
+                Image(systemName: open ? "folder.fill" : "folder")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Theme.navy)
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 18)
+                Text(lecture)
+                    .font(Theme.text(15, .semibold)).foregroundStyle(Theme.ink)
+                    .lineLimit(1)
+                Spacer(minLength: 6)
+                Text("\(count)")
+                    .font(Theme.text(11, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
+                    .padding(.horizontal, 7).padding(.vertical, 2)
+                    .background(Theme.surface, in: Capsule())
+                    .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 11)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(FolderRowStyle())
+        .accessibilityLabel("\(lecture), \(count) \(count == 1 ? "session" : "sessions")")
+        .accessibilityValue(open ? "Expanded" : "Collapsed")
+    }
+}
+
+// Folder rows tint on hover and ease down when pressed.
+private struct FolderRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { FolderRowBody(configuration: configuration) }
+    private struct FolderRowBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .animation(Motion.press, value: configuration.isPressed)
+        }
+    }
+}
+
+// Session rows sit under their folder: small text, a short date, and the accent bar when selected.
+private struct SessionRowStyle: ButtonStyle {
+    let selected: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        SessionRowBody(configuration: configuration, selected: selected)
+    }
+    private struct SessionRowBody: View {
+        let configuration: ButtonStyleConfiguration
+        let selected: Bool
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovering = false
+        var body: some View {
+            configuration.label
+                .background(fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .overlay(alignment: .leading) {
+                    Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 14 : 0)
+                }
+                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+                .contentShape(Rectangle())
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .animation(Motion.press, value: configuration.isPressed)
+                .animation(Motion.state(reduceMotion), value: selected)
+        }
+        private var fill: Color {
+            selected ? Theme.accent.opacity(0.12) : (hovering ? Theme.surface : .clear)
+        }
+    }
+}
+
 private struct TranscriptSidebarRow: View {
     let item: TranscriptItem
     let selected: Bool
@@ -482,29 +647,30 @@ private struct TranscriptSidebarRow: View {
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             Button(action: open) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.session).font(Theme.text(12, .semibold)).monospacedDigit().lineLimit(1)
-                    Text(item.recorded.formatted(date: .abbreviated, time: .shortened))
-                        .font(Theme.text(9)).monospacedDigit().foregroundStyle(Theme.muted)
+                HStack(spacing: 6) {
+                    Text(item.session)
+                        .font(Theme.text(11.5, .semibold)).monospacedDigit().foregroundStyle(Theme.ink).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Text(item.recorded.formatted(.dateTime.month(.abbreviated).day()))
+                        .font(Theme.text(10)).monospacedDigit().foregroundStyle(Theme.muted).lineLimit(1)
                 }
+                .padding(.leading, 8).padding(.trailing, 6).padding(.vertical, 5)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .buttonStyle(RowButtonStyle(selected: selected))
+            .buttonStyle(SessionRowStyle(selected: selected))
             .accessibilityLabel("\(item.lecture), \(item.session)")
             .accessibilityAddTraits(selected ? .isSelected : [])
 
             Button(action: reveal) {
                 Image(systemName: "folder")
-                    .font(.system(size: 12, weight: .medium))
-                    .frame(width: 22, height: 24)
-                    .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 6))
             }
-            .buttonStyle(.plain)
-            .foregroundStyle(selected ? Theme.accentText : Theme.muted)
+            .buttonStyle(IconButtonStyle(size: 24, active: selected))
             .opacity(hovering || selected ? 1 : 0)
             .accessibilityLabel("Show \(item.session) in Finder")
-            .tip("Show in Finder", edge: .bottom)
+            .tip("Show in Finder")
         }
         .frame(maxWidth: .infinity)
         .onHover { hovering = $0 }
@@ -928,6 +1094,10 @@ private struct TranscriptText: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Marker at \(timestamp): \(label)")
+                case .paragraph(let text) where TranscriptDisplay.isNoSpeech(text):
+                    Text("No speech detected.")
+                        .font(Theme.text(15)).italic()
+                        .foregroundStyle(Theme.muted)
                 case .paragraph(let text):
                     // Replace line breaks one-for-one so selection offsets still address the source.
                     FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")) { range, replacement in
