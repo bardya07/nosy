@@ -29,6 +29,15 @@ enum Theme {
     static let waveform = Color(hex: 0x0E4A70)
     static let wavePlayed = Color(hex: 0x7FE3FF)
     static let waveIdle = Color(hex: 0x2E6F96)
+    // Transcripts button gloss (Frutiger Aero): aqua at the top, sky blue at the base.
+    static let aeroTop = Color(hex: 0x6FDDF0)
+    static let aeroMid = Color(hex: 0x13AAC9)
+    static let aeroBase = Color(hex: 0x1E6FCF)
+    static let aeroEdge = Color(hex: 0x0B4C86)
+    static let aeroGlow = Color(hex: 0x00B4F0)
+    // Choose destination: warm amber that reads on the light and dark raised fills.
+    static let warmText = dynamic(light: 0x8A4B00, dark: 0xFFC978)
+    static let warmFill = dynamic(light: 0xFCE8C4, dark: 0x4E3714, lightAlpha: 0.92, darkAlpha: 0.92)
 
     static func dynamic(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in
@@ -370,16 +379,21 @@ private struct SoftModifier: ViewModifier {
     }
 }
 
-private struct TipContainerFrameKey: PreferenceKey {
-    static let defaultValue = CGRect.null
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        let next = nextValue()
-        if !next.isNull { value = next }
-    }
+private let tipSpace = "nosyTips"
+
+// A tip reports where its control sits. One layer at the window root draws the bubble,
+// so no ScrollView or clip around a control can cut the bubble off.
+private struct TipAnchor: Equatable {
+    var text: String
+    var edge: VerticalEdge
+    var frame: CGRect
 }
 
-private struct TipContainerFrameEnvironmentKey: EnvironmentKey {
-    static let defaultValue = CGRect.null
+private struct TipAnchorKey: PreferenceKey {
+    static let defaultValue: [TipAnchor] = []
+    static func reduce(value: inout [TipAnchor], nextValue: () -> [TipAnchor]) {
+        value.append(contentsOf: nextValue())
+    }
 }
 
 private struct TipPreviewEnvironmentKey: EnvironmentKey {
@@ -387,71 +401,78 @@ private struct TipPreviewEnvironmentKey: EnvironmentKey {
 }
 
 extension EnvironmentValues {
-    fileprivate var tipContainerFrame: CGRect {
-        get { self[TipContainerFrameEnvironmentKey.self] }
-        set { self[TipContainerFrameEnvironmentKey.self] = newValue }
-    }
     var previewTipText: String? {
         get { self[TipPreviewEnvironmentKey.self] }
         set { self[TipPreviewEnvironmentKey.self] = newValue }
     }
 }
 
-private struct TipContainerFrameModifier: ViewModifier {
-    @State private var frame = CGRect.null
-    func body(content: Content) -> some View {
-        content
-            .background(GeometryReader { proxy in
-                Color.clear.preference(key: TipContainerFrameKey.self, value: proxy.frame(in: .global))
-            })
-            .onPreferenceChange(TipContainerFrameKey.self) { frame = $0 }
-            .environment(\.tipContainerFrame, frame)
+// Pure geometry, so tests can check every anchor position against the window bounds.
+enum TipPlacement {
+    struct Layout: Equatable {
+        var size: CGSize
+        var center: CGPoint
+    }
+    static let margin: CGFloat = 12
+    static let gap: CGFloat = 6
+    static let minWidth: CGFloat = 76
+    static let maxWidth: CGFloat = 232
+    static let horizontalPadding: CGFloat = 7
+    static let verticalPadding: CGFloat = 4
+    static let maxLines: CGFloat = 2
+    static var font: NSFont { NSFont.systemFont(ofSize: 10, weight: .medium) }
+
+    static var lineHeight: CGFloat { ceil(("Ag" as NSString).size(withAttributes: [.font: font]).height) }
+
+    // The height the text needs when wrapped to the bubble width, before any line limit.
+    static func wrappedHeight(_ text: String, width: CGFloat) -> CGFloat {
+        (text as NSString).boundingRect(
+            with: CGSize(width: width - 2 * horizontalPadding, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font]).height
+    }
+
+    static func layout(text: String, edge: VerticalEdge, anchor: CGRect, container: CGSize) -> Layout {
+        let oneLineWidth = ceil((text as NSString).size(withAttributes: [.font: font]).width)
+        let available = max(minWidth, min(maxWidth, container.width - 2 * margin))
+        let width = min(max(minWidth, oneLineWidth + 2 * horizontalPadding), available)
+        // Never more than two lines: the text view is limited to two as well.
+        let textHeight = min(ceil(wrappedHeight(text, width: width)), maxLines * lineHeight)
+        let height = max(24, textHeight + 2 * verticalPadding + 2)
+        let halfWidth = width / 2
+        let halfHeight = height / 2
+        let centerX = clamp(anchor.midX, margin + halfWidth, container.width - margin - halfWidth)
+        var centerY = edge == .top ? anchor.minY - gap - halfHeight : anchor.maxY + gap + halfHeight
+        // Flip to the other side of the control when the bubble would leave the window.
+        if edge == .top, centerY - halfHeight < margin { centerY = anchor.maxY + gap + halfHeight }
+        if edge == .bottom, centerY + halfHeight > container.height - margin { centerY = anchor.minY - gap - halfHeight }
+        centerY = clamp(centerY, margin + halfHeight, container.height - margin - halfHeight)
+        return Layout(size: CGSize(width: width, height: height), center: CGPoint(x: centerX, y: centerY))
+    }
+
+    private static func clamp(_ value: CGFloat, _ lower: CGFloat, _ upper: CGFloat) -> CGFloat {
+        min(max(value, lower), max(lower, upper))
     }
 }
 
 private struct TipModifier: ViewModifier {
     let text: String
     let edge: VerticalEdge
-    @State private var hovering = false
     @State private var visible = false
     @State private var hoverTask: Task<Void, Never>?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.tipContainerFrame) private var containerFrame
     @Environment(\.previewTipText) private var previewTipText
 
     func body(content: Content) -> some View {
         content
             .onHover(perform: setHovering)
-            .overlay(alignment: edge == .top ? .top : .bottom) {
+            .background {
+                // The frame is only read while the tip shows, so tips outside a layer cost nothing.
                 GeometryReader { proxy in
-                    if (visible || previewTipText == text), !containerFrame.isNull, containerFrame.width > 0, containerFrame.height > 0 {
-                        let anchor = proxy.frame(in: .global)
-                        let width = bubbleWidth
-                        let height: CGFloat = measuredTextWidth + 18 <= width ? 24 : 34
-                        let centerX = clamp(anchor.midX,
-                                            containerFrame.minX + width / 2 + 4,
-                                            containerFrame.maxX - width / 2 - 4)
-                        let proposedY = edge == .top ? anchor.minY - 6 - height / 2 : anchor.maxY + 6 + height / 2
-                        let centerY = clamp(proposedY,
-                                            containerFrame.minY + height / 2 + 4,
-                                            containerFrame.maxY - height / 2 - 4)
-                        Text(text)
-                            .font(Theme.text(10, .medium))
-                            .foregroundStyle(Theme.ink)
-                            .lineLimit(2)
-                            .truncationMode(.tail)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 7).padding(.vertical, 4)
-                            .frame(width: width, height: height)
-                            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.panelBorder, lineWidth: 1))
-                            .shadow(color: Theme.ink.opacity(0.14), radius: 8, y: 3)
-                            .position(x: centerX - anchor.minX, y: centerY - anchor.minY)
-                            .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
-                            .allowsHitTesting(false)
-                            .zIndex(1000)
-                    }
+                    Color.clear.preference(key: TipAnchorKey.self,
+                                           value: visible || previewTipText == text
+                                               ? [TipAnchor(text: text, edge: edge, frame: proxy.frame(in: .named(tipSpace)))]
+                                               : [])
                 }
+                .allowsHitTesting(false)
             }
             .onDisappear {
                 hoverTask?.cancel()
@@ -459,22 +480,7 @@ private struct TipModifier: ViewModifier {
             }
     }
 
-    private var bubbleWidth: CGFloat {
-        let measured = measuredTextWidth + 18
-        return min(max(76, measured), min(212, max(76, containerFrame.width - 16)))
-    }
-
-    private var measuredTextWidth: CGFloat {
-        let font = NSFont.systemFont(ofSize: 10, weight: .medium)
-        return ceil((text as NSString).size(withAttributes: [.font: font]).width)
-    }
-
-    private func clamp(_ value: CGFloat, _ lower: CGFloat, _ upper: CGFloat) -> CGFloat {
-        min(max(value, lower), max(lower, upper))
-    }
-
     private func setHovering(_ inside: Bool) {
-        hovering = inside
         hoverTask?.cancel()
         guard inside else {
             withAnimation(Motion.hover) { visible = false }
@@ -482,9 +488,38 @@ private struct TipModifier: ViewModifier {
         }
         hoverTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(320))
-            guard !Task.isCancelled, hovering else { return }
+            guard !Task.isCancelled else { return }
             withAnimation(Motion.hover) { visible = true }
         }
+    }
+}
+
+// The bubble itself, drawn over the whole window and clipped with it.
+private struct TipLayer: View {
+    let anchor: TipAnchor?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        GeometryReader { container in
+            if let anchor {
+                let layout = TipPlacement.layout(text: anchor.text, edge: anchor.edge,
+                                                 anchor: anchor.frame, container: container.size)
+                Text(anchor.text)
+                    .font(Theme.text(10, .medium))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, TipPlacement.horizontalPadding)
+                    .padding(.vertical, TipPlacement.verticalPadding)
+                    .frame(width: layout.size.width, height: layout.size.height)
+                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.panelBorder, lineWidth: 1))
+                    .shadow(color: Theme.ink.opacity(0.14), radius: 8, y: 3)
+                    .position(layout.center)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.96)))
+            }
+        }
+        .allowsHitTesting(false)
     }
 }
 
@@ -492,5 +527,11 @@ extension View {
     func tip(_ text: String, edge: VerticalEdge = .top) -> some View {
         modifier(TipModifier(text: text, edge: edge))
     }
-    func tipContainerBounds() -> some View { modifier(TipContainerFrameModifier()) }
+    // Attach once per window, inside the window's clip shape, so bubbles never leave the window.
+    func tipContainerBounds() -> some View {
+        coordinateSpace(name: tipSpace)
+            .overlayPreferenceValue(TipAnchorKey.self) { anchors in
+                TipLayer(anchor: anchors.last)
+            }
+    }
 }

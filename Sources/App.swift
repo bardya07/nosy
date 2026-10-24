@@ -120,6 +120,7 @@ struct MainView: View {
     var previewDropdown: Dropdown?
     var previewVocabularyExpanded = false
     var previewSaveToExpanded = false
+    var previewFolderListOpen = false
     var previewEnteringNewFolderName = false
     var previewSessionRequired = false
     var previewTranscribingHome = false
@@ -140,11 +141,12 @@ struct MainView: View {
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
     enum Field { case lecture, session }
     enum Dropdown: Hashable {
-        case session, vocabulary
+        case session, vocabulary, folders
         var accessibilityTitle: String {
             switch self {
             case .session: "Session"
             case .vocabulary: "Vocabulary"
+            case .folders: "Folders"
             }
         }
     }
@@ -197,6 +199,8 @@ struct MainView: View {
                 .opacity(0).frame(width: 0, height: 0)
                 .allowsHitTesting(false).accessibilityHidden(true)
         }
+        // Tips draw inside the window's clip, so every bubble stays within the rounded window.
+        .tipContainerBounds()
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
         .padding(.top, -titlebarInset)
@@ -209,6 +213,10 @@ struct MainView: View {
             if previewTranscribingHome { model.homeFromTranscribing = true }
             if let previewDropdown { showDropdown(previewDropdown) }
             if previewSaveToExpanded { saveToExpanded = true }
+            if previewFolderListOpen {
+                saveToExpanded = true
+                openDropdown = .folders
+            }
             if previewEnteringNewFolderName { enteringNewFolderName = true }
             if previewSessionRequired {
                 sessionNameRequired = true
@@ -232,7 +240,6 @@ struct MainView: View {
             if phase != .transcribing { model.homeFromTranscribing = false }
             if phase == .recording || phase == .done { closeDropdown() }
         }
-        .tipContainerBounds()
     }
 
     private static let space = "nosyMain"
@@ -370,8 +377,8 @@ struct MainView: View {
             HStack(spacing: 7) {
                 saveToControl
                 if saveToExpanded {
-                    saveToMenu
-                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                    folderChoices
+                        .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
                 } else {
                     controlButton(.session, icon: "pencil", value: sessionControlTitle,
                                   truncation: .tail, placeholder: sessionIsEmpty)
@@ -390,6 +397,7 @@ struct MainView: View {
             if let openDropdown {
                 dropdownContent(openDropdown)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                     .interactionTarget("dropdown-panel")
             }
         }
@@ -438,18 +446,14 @@ struct MainView: View {
             .padding(.horizontal, saveToExpanded ? 0 : 8)
             .frame(width: saveToExpanded ? 34 : nil, height: 34)
             .frame(maxWidth: saveToExpanded ? nil : .infinity)
-            .background {
-                if saveToExpanded { Circle().fill(Theme.raised) }
-                else { Capsule().fill(Theme.raised) }
-            }
+            // One rounded shape for pill and wheel: stroked capsules drew stray end caps beside the pill.
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 17, style: .circular))
             .overlay {
-                if saveToExpanded {
-                    Circle().strokeBorder(Theme.accentText.opacity(0.72), lineWidth: 1.2)
-                } else {
-                    Capsule().strokeBorder(Theme.line, lineWidth: 1)
-                }
+                RoundedRectangle(cornerRadius: 17, style: .circular)
+                    .strokeBorder(saveToExpanded ? Theme.accentText.opacity(0.72) : Theme.line,
+                                  lineWidth: saveToExpanded ? 1.2 : 1)
             }
-            .contentShape(Capsule())
+            .contentShape(RoundedRectangle(cornerRadius: 17, style: .circular))
         }
         .focusEffectDisabled()
         .buttonStyle(CompactControlButtonStyle())
@@ -459,43 +463,48 @@ struct MainView: View {
         .interactionTarget(saveToExpanded ? "save-to-wheel" : "save-to-button")
     }
 
-    private var saveToMenu: some View {
-        Menu {
-            ForEach(model.lectures, id: \.self) { lecture in
-                Button {
-                    model.selectedLecture = lecture
-                    dismissSaveToWheel()
-                } label: {
-                    if model.selectedLecture == lecture {
-                        Label(lecture, systemImage: "checkmark")
-                    } else {
-                        Label(lecture, systemImage: "folder")
-                    }
+    private var folderListOpen: Bool { openDropdown == .folders }
+
+    // The space the folder pill frees: one capsule with Pick folder and a warm Choose destination.
+    private var folderChoices: some View {
+        HStack(spacing: 0) {
+            Button(action: toggleFolderList) {
+                HStack(spacing: 6) {
+                    Text("Pick folder").font(Theme.text(10.5, .medium))
+                    Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+                        .rotationEffect(.degrees(folderListOpen && !reduceMotion ? 180 : 0))
+                        .accessibilityHidden(true)
                 }
-                .accessibilityIdentifier("folder-\(lecture)")
+                .foregroundStyle(folderListOpen ? Theme.accentText : Theme.ink)
+                .frame(maxWidth: .infinity).frame(height: 34)
+                .contentShape(Rectangle())
             }
-            if !model.lectures.isEmpty { Divider() }
-            Button("New folder…", systemImage: "folder.badge.plus", action: beginNewFolderName)
-                .accessibilityIdentifier("new-folder")
-            Divider()
-            Button("Choose destination…", systemImage: "externaldrive", action: chooseTranscriptDestination)
-                .disabled(model.working)
-                .accessibilityIdentifier("choose-destination")
-        } label: {
-            HStack(spacing: 6) {
-                Text("Pick folder").font(Theme.text(10.5, .medium))
-                Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+            .buttonStyle(CompactControlButtonStyle())
+            .accessibilityHint(folderListOpen ? "Hide folders" : "Show folders")
+            .interactionTarget("save-to-pick")
+            Rectangle().fill(Theme.line).frame(width: 1, height: 16)
+            Button(action: chooseTranscriptDestination) {
+                HStack(spacing: 5) {
+                    Image(systemName: "externaldrive").font(.system(size: 10, weight: .medium))
+                        .accessibilityHidden(true)
+                    Text("Choose destination").font(Theme.text(10.5, .semibold)).lineLimit(1).fixedSize()
+                }
+                .foregroundStyle(Theme.warmText)
+                .padding(.horizontal, 10).frame(height: 28)
+                .background(Theme.warmFill, in: Capsule())
+                .padding(.horizontal, 3)
+                .contentShape(Rectangle())
             }
-            .foregroundStyle(Theme.ink)
-            .padding(.horizontal, 10).frame(maxWidth: .infinity, alignment: .leading).frame(height: 34)
-            .background(Theme.raised, in: Capsule())
-            .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
-            .contentShape(Capsule())
+            .buttonStyle(CompactControlButtonStyle())
+            .disabled(model.working)
+            .tip("Change where transcripts are saved")
+            .accessibilityLabel("Choose destination")
+            .interactionTarget("save-to-destination")
         }
-        .menuStyle(.button).menuIndicator(.hidden)
-        .buttonStyle(CompactControlButtonStyle())
-        .fixedSize(horizontal: false, vertical: true)
-        .interactionTarget("save-to-picker")
+        .frame(maxWidth: .infinity).frame(height: 34)
+        .background(Theme.raised, in: RoundedRectangle(cornerRadius: 17, style: .circular))
+        .overlay(RoundedRectangle(cornerRadius: 17, style: .circular).strokeBorder(Theme.line, lineWidth: 1))
+        .interactionTarget("save-to-group")
     }
 
     private var newFolderNameEntry: some View {
@@ -534,7 +543,7 @@ struct MainView: View {
         startShake += 1
         suppressOutsideDismiss = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { suppressOutsideDismiss = false }
-        if saveToExpanded || enteringNewFolderName { closeSaveToEntry() }
+        if saveToExpanded || enteringNewFolderName { closeDropdown() }
         showDropdown(.session)
     }
 
@@ -574,6 +583,52 @@ struct MainView: View {
 
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
         switch control {
+        case .folders:
+            VStack(spacing: 2) {
+                if !model.lectures.isEmpty {
+                    ScrollView {
+                        VStack(spacing: 2) {
+                            ForEach(model.lectures, id: \.self) { lecture in
+                                Button { chooseFolder(lecture) } label: {
+                                    HStack(spacing: 8) {
+                                        if model.selectedLecture == lecture {
+                                            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
+                                        } else {
+                                            Color.clear.frame(width: 14, height: 10)
+                                        }
+                                        Text(lecture).font(Theme.text(11)).foregroundStyle(Theme.ink)
+                                            .lineLimit(1).truncationMode(.middle)
+                                        Spacer(minLength: 0)
+                                    }
+                                    .padding(.horizontal, 8).frame(height: 28)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(InsetButtonStyle())
+                                .accessibilityLabel("Save to \(lecture)")
+                                .interactionTarget("folder-\(lecture)")
+                            }
+                        }
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(height: min(CGFloat(model.lectures.count) * 30 - 2, 128))
+                    Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 3)
+                }
+                Button(action: beginNewFolderName) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
+                        Text("New folder…").font(Theme.text(11)).foregroundStyle(Theme.ink)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 8).frame(height: 28)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(InsetButtonStyle())
+                .interactionTarget("new-folder")
+            }
+            .padding(8)
+            .card(Theme.surface, radius: 12)
+            .accessibilityElement(children: .contain)
+            .interactionTarget("save-to-folders")
         case .session:
             VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 9) {
@@ -619,7 +674,7 @@ struct MainView: View {
     }
 
     private func toggleDropdown(_ control: Dropdown) {
-        if saveToExpanded || enteringNewFolderName { closeSaveToEntry() }
+        if saveToExpanded || enteringNewFolderName { closeDropdown() }
         if openDropdown == control { closeDropdown() }
         else { showDropdown(control) }
     }
@@ -630,37 +685,51 @@ struct MainView: View {
         openDropdown = control
         switch control {
         case .session: focus = .session
-        case .vocabulary: focus = nil
+        case .vocabulary, .folders: focus = nil
         }
     }
 
+    // Every dismissal (outside tap, Escape, a choice, the wheel again) closes the folder
+    // wheel with the same motion it opened with. Other panels close without animation.
     private func closeDropdown() {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
-        openDropdown = nil
-        saveToExpanded = false
-        enteringNewFolderName = false
-        focus = nil
-    }
-
-    private func toggleSaveToWheel() {
-        if openDropdown != nil { closeDropdown() }
-        model.refreshLectures()
-        withAnimation(Motion.state(reduceMotion)) {
-            saveToExpanded.toggle()
+        let rollsWheel = saveToExpanded || enteringNewFolderName
+        withAnimation(rollsWheel ? Motion.state(reduceMotion) : nil) {
+            openDropdown = nil
+            saveToExpanded = false
             enteringNewFolderName = false
         }
         focus = nil
     }
 
-    private func dismissSaveToWheel() {
-        withAnimation(Motion.state(reduceMotion)) { saveToExpanded = false }
+    private func toggleSaveToWheel() {
+        let wasOpen = saveToExpanded
+        closeDropdown()
+        guard !wasOpen else { return }
+        model.refreshLectures()
+        withAnimation(Motion.state(reduceMotion)) { saveToExpanded = true }
+    }
+
+    private func toggleFolderList() {
         focus = nil
+        if folderListOpen {
+            withAnimation(Motion.state(reduceMotion)) { openDropdown = nil }
+        } else {
+            model.refreshLectures()
+            withAnimation(Motion.state(reduceMotion)) { openDropdown = .folders }
+        }
+    }
+
+    private func chooseFolder(_ lecture: String) {
+        model.selectedLecture = lecture
+        closeDropdown()
     }
 
     private func beginNewFolderName() {
         model.selectedLecture = "__new__"
         model.newLecture = ""
         withAnimation(Motion.state(reduceMotion)) {
+            openDropdown = nil
             saveToExpanded = false
             enteringNewFolderName = true
         }
@@ -673,16 +742,8 @@ struct MainView: View {
         focus = nil
     }
 
-    private func closeSaveToEntry() {
-        withAnimation(Motion.state(reduceMotion)) {
-            saveToExpanded = false
-            enteringNewFolderName = false
-        }
-        focus = nil
-    }
-
     private func chooseTranscriptDestination() {
-        dismissSaveToWheel()
+        closeDropdown()
         _ = model.chooseTranscriptsFolder()
     }
 
@@ -746,10 +807,8 @@ struct MainView: View {
                 if let onBrowse { onBrowse() } else { openWindow(id: "library") }
             } label: {
                 Image(systemName: "doc.text")
-                    .font(.system(size: 15, weight: .medium))
-                    .frame(width: 44, height: 44)
             }
-            .buttonStyle(BrowseButtonStyle())
+            .buttonStyle(TranscriptsBubbleStyle())
             .tip("All transcripts", edge: .top)
             .accessibilityLabel("All transcripts")
             .accessibilityHint("Opens the Transcripts window")
@@ -948,23 +1007,59 @@ private struct StartShake: GeometryEffect {
     }
 }
 
-private struct BrowseButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.isFocused) private var focused
-    @State private var hovering = false
+// Frutiger Aero gloss: aqua at the top, sky blue at the base, a sheen and an inner glow.
+private struct TranscriptsBubbleStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(Theme.accentText)
-            .frame(width: 44, height: 44)
-            .background(hovering && !configuration.isPressed ? Theme.macModeTint : Theme.macModeTint.opacity(0.78), in: Circle())
-            .overlay(Circle().strokeBorder(Theme.accentText.opacity(0.34), lineWidth: 1))
-            .shadow(color: Theme.stop.opacity(hovering ? 0.22 : 0.10), radius: hovering ? 8 : 5, y: hovering ? 4 : 2)
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.94 : (hovering && !reduceMotion ? 1.04 : 1))
-            .opacity(configuration.isPressed ? 0.92 : 1)
-            .contentShape(Circle())
-            .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-            .animation(Motion.press, value: configuration.isPressed)
+        TranscriptsBubbleBody(configuration: configuration)
+    }
+    private struct TranscriptsBubbleBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isFocused) private var focused
+        @State private var hovering = false
+        var body: some View {
+            let squish = configuration.isPressed && !reduceMotion
+            let lift = hovering && !configuration.isPressed && !reduceMotion
+            configuration.label
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.white)
+                .shadow(color: Color(hex: 0x03365A).opacity(0.55), radius: 1, y: 1)
+                .frame(width: 48, height: 48)
+                .background { TranscriptsBubbleFace(lifted: hovering && !reduceMotion) }
+                .scaleEffect(x: squish ? 1.07 : (lift ? 1.06 : 1), y: squish ? 0.92 : (lift ? 1.06 : 1))
+                .contentShape(Circle())
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+                .onHover { inside in
+                    withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 0.62)) {
+                        hovering = inside
+                    }
+                }
+                .animation(reduceMotion ? .easeOut(duration: 0.12) : .spring(response: 0.26, dampingFraction: 0.5),
+                           value: configuration.isPressed)
+        }
+    }
+}
+
+private struct TranscriptsBubbleFace: View {
+    let lifted: Bool
+    var body: some View {
+        ZStack {
+            Circle().fill(LinearGradient(colors: [Theme.aeroTop, Theme.aeroMid, Theme.aeroBase],
+                                         startPoint: .top, endPoint: .bottom))
+            // Glassy sheen over the upper half.
+            Ellipse()
+                .fill(LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.18)], startPoint: .top, endPoint: .bottom))
+                .frame(width: 36, height: 21)
+                .offset(y: -12.5)
+            // Inner glow: soft light just inside the rim.
+            Circle().strokeBorder(.white.opacity(0.5), lineWidth: 1.6).blur(radius: 1).padding(1.5)
+            // Light bouncing back up from the base.
+            Ellipse().fill(.white.opacity(0.22)).frame(width: 24, height: 7).offset(y: 18)
+            Circle().strokeBorder(Theme.aeroEdge.opacity(0.5), lineWidth: 1)
+        }
+        .frame(width: 48, height: 48)
+        .clipShape(Circle())
+        .shadow(color: Theme.aeroGlow.opacity(lifted ? 0.5 : 0.3), radius: lifted ? 10 : 6, y: lifted ? 5 : 3)
     }
 }
 

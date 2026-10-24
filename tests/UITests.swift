@@ -218,6 +218,29 @@ enum UITests {
         model.start()
         check(model.startValidationRequest == validationRequest + 1 && model.phase == .idle && !model.transitioning,
               "An empty session is gated before any recording work begins")
+        // Tips are placed on the window's own bounds: whole, two lines at most, from every anchor.
+        let frameSize = CGSize(width: 400, height: 300)
+        let tipTexts = ["Start recording", "All transcripts", "Change where transcripts are saved", "Open setup",
+                        "Pick a subject or setting to fine tune the vocabulary.", "Use today's date"]
+        for text in tipTexts {
+            for edge in [VerticalEdge.top, .bottom] {
+                for x in stride(from: CGFloat(0), through: frameSize.width, by: 20) {
+                    for y in stride(from: CGFloat(0), through: frameSize.height, by: 15) {
+                        let anchor = CGRect(x: x - 10, y: y - 8, width: 20, height: 16)
+                        let layout = TipPlacement.layout(text: text, edge: edge, anchor: anchor, container: frameSize)
+                        let box = CGRect(x: layout.center.x - layout.size.width / 2, y: layout.center.y - layout.size.height / 2,
+                                         width: layout.size.width, height: layout.size.height)
+                        let margin = TipPlacement.margin
+                        check(box.minX >= margin - 0.01 && box.maxX <= frameSize.width - margin + 0.01
+                              && box.minY >= margin - 0.01 && box.maxY <= frameSize.height - margin + 0.01,
+                              "Tip \"\(text)\" leaves the window at \(x), \(y) \(edge)")
+                        // Text that needs a third line would be cut off, so it must fit two.
+                        check(ceil(TipPlacement.wrappedHeight(text, width: layout.size.width)) <= 2 * TipPlacement.lineHeight + 1,
+                              "Tip \"\(text)\" needs more than two lines")
+                    }
+                }
+            }
+        }
         try await MainWindowInteraction.run(model: model)
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
     }

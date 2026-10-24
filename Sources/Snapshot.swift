@@ -189,6 +189,20 @@ enum Snapshot {
                 }.padding(36).background(PreviewBackdrop()),
                     expanded ? "dropdown-save-to.\(mode)" : "save-to-wheel-closed.\(mode)") else { return 1 }
             }
+            let folderList = model(.idle)
+            guard save(PreviewWindow {
+                MainView(model: folderList, previewSaveToExpanded: true, previewFolderListOpen: true)
+            }.padding(36).background(PreviewBackdrop()), "dropdown-folder-list.\(mode)") else { return 1 }
+            // Tips inside the scrolling details must still draw whole, not cut off at the scroll edge.
+            let destinationTip = "Change where transcripts are saved"
+            guard save(PreviewWindow {
+                MainView(model: model(.idle), previewSaveToExpanded: true).environment(\.previewTipText, destinationTip)
+            }.padding(36).background(PreviewBackdrop()), "tip-choose-destination.\(mode)") else { return 1 }
+            let setupTip = model(.idle)
+            setupTip.setupMessage = "Speech engine missing"
+            guard save(PreviewWindow {
+                MainView(model: setupTip).environment(\.previewTipText, "Open setup")
+            }.padding(36).background(PreviewBackdrop()), "tip-open-setup.\(mode)") else { return 1 }
             for (name, dropdown) in [("session", MainView.Dropdown.session),
                                      ("vocabulary", MainView.Dropdown.vocabulary)] {
                 let fixture = model(.idle)

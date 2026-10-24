@@ -82,21 +82,6 @@ enum MainWindowInteraction {
             NotificationCenter.default.removeObserver(probe)
             expect(probe.selected, "The native menu selects \(title)")
         }
-        func inspectMenuItem(_ prefix: String, target targetID: String) async {
-            let probe = MenuSelectionProbe(title: prefix)
-            NotificationCenter.default.addObserver(probe, selector: #selector(MenuSelectionProbe.menuBegan),
-                                                   name: NSMenu.didBeginTrackingNotification, object: nil)
-            let timer = Timer(timeInterval: 0.03, repeats: true) { _ in
-                MainActor.assumeIsolated { probe.captureMenuItems() }
-            }
-            RunLoop.main.add(timer, forMode: .eventTracking)
-            RunLoop.main.add(timer, forMode: .default)
-            await click(targetID)
-            timer.invalidate()
-            NotificationCenter.default.removeObserver(probe)
-            expect(probe.itemTitles.contains(where: { $0.hasPrefix(prefix) }), "The folder menu includes \(prefix)")
-        }
-
         let initialValidationRequest = model.startValidationRequest
         expect(model.session.isEmpty, "The Ready session name starts empty")
         let titlebarActions = target("titlebar-tools")
@@ -121,20 +106,38 @@ enum MainWindowInteraction {
         await click("browse-transcripts")
         expect(browseProbe.invoked, "Browse activates the Transcripts action")
         await waitForTarget("dropdown-panel", visible: false, "Browse closes the Session panel")
+        let browse = target("browse-transcripts")
+        expect(abs(browse.bounds.width - 48) < 1 && abs(browse.bounds.height - 48) < 1, "All transcripts is a 48 point circle")
+        let primary = target("primary-action")
+        let primaryFrame = primary.convert(primary.bounds, to: host)
+        let browseFrame = browse.convert(browse.bounds, to: host)
+        expect(primaryFrame.maxX <= browseFrame.minX && browseFrame.maxX <= host.bounds.width - 20 + 1,
+               "Start recording and All transcripts fit the window row")
         await click("dropdown-saveTo")
-        expect(targets(in: host).contains(where: { $0.id == "save-to-wheel" && !$0.visibleRect.isEmpty }), "Save to rolls into the folder wheel")
-        expect(targets(in: host).contains(where: { $0.id == "save-to-picker" && !$0.visibleRect.isEmpty }), "Folder choices appear beside the wheel")
+        expect(hasVisibleTarget("save-to-group"), "Save to rolls into the folder group")
+        expect(hasVisibleTarget("save-to-pick") && hasVisibleTarget("save-to-destination"),
+               "Pick folder and Choose destination share the group")
         await waitForTarget("dropdown-session", visible: false, "Session hides while Save to is expanded")
         await click("save-to-wheel")
-        await waitForTarget("save-to-picker", visible: false, "The wheel closes on a second click")
+        await waitForTarget("save-to-group", visible: false, "The wheel closes on a second click")
         await click("dropdown-saveTo")
-        await inspectMenuItem("Choose destination", target: "save-to-picker")
-        await chooseMenuItem("CHEM281", target: "save-to-picker")
+        await click("save-to-pick")
+        await waitForTarget("save-to-folders", visible: true, "Pick folder opens the folder list below the group")
+        expect(hasVisibleTarget("new-folder") && hasVisibleTarget("folder-CHEM281"), "The folder list shows folders and New folder")
+        await click("save-to-pick")
+        await waitForTarget("save-to-folders", visible: false, "Pick folder again closes the list")
+        expect(hasVisibleTarget("save-to-group"), "Closing the list keeps the wheel open")
+        await click("save-to-pick")
+        await click("folder-CHEM281")
         expect(model.selectedLecture == "CHEM281", "Picking an existing folder updates Save to")
-        await waitForTarget("save-to-wheel", visible: false, "Choosing a folder rolls the wheel back")
+        await waitForTarget("save-to-group", visible: false, "Choosing a folder rolls the wheel back")
         await click("dropdown-saveTo")
-        await chooseMenuItem("New folder…", target: "save-to-picker")
-        expect(model.selectedLecture == "__new__", "New folder starts a folder name entry")
+        await click("save-to-pick")
+        // The list eases in with a spring; wait for it to settle before clicking inside it.
+        await waitForTarget("save-to-folders", visible: true, "Pick folder reopens the list after a rollback")
+        for _ in 0..<8 { await settle(host, window) }
+        await click("new-folder")
+        expect(model.selectedLecture == "__new__", "New folder starts a folder name entry, selected \(model.selectedLecture)")
         await click("folder-name")
         expect(window.firstResponder is NSTextView, "New folder receives text focus")
         (window.firstResponder as? NSTextView)?.insertText("Seminar", replacementRange: NSRange(location: NSNotFound, length: 0))
@@ -178,9 +181,11 @@ enum MainWindowInteraction {
         await panel(false, "An outside control gets its click and dismisses the panel")
         expect(model.recordingSource == (RecordingSource.macAudioAvailable ? .both : .mic), "Outside mode click reaches its action")
         await click("dropdown-saveTo")
-        expect(targets(in: host).contains(where: { $0.id == "save-to-wheel" && !$0.visibleRect.isEmpty }), "Save to wheel reopens")
+        await click("save-to-pick")
+        await waitForTarget("save-to-folders", visible: true, "Save to reopens with its folder list")
         await click("mode-mic")
-        await waitForTarget("save-to-wheel", visible: false, "Clicking outside dismisses the folder wheel")
+        await waitForTarget("save-to-group", visible: false, "Clicking outside dismisses the folder wheel and its list")
+        expect(!hasVisibleTarget("save-to-folders"), "Clicking outside also closes the folder list")
         await click("dropdown-session")
         sendKey("\u{1b}", code: 53, window: window)
         await settle(host, window)
@@ -207,11 +212,14 @@ enum MainWindowInteraction {
         try await Task.sleep(for: .milliseconds(200))
         postMouse(.leftMouseUp, at: point, window: window)
         await settle(host, window)
-        expect(targets(in: host).contains(where: { $0.id == "save-to-wheel" && !$0.visibleRect.isEmpty }), "Press feedback keeps the original edge hit area clickable")
+        expect(hasVisibleTarget("save-to-group"), "Press feedback keeps the original edge hit area clickable")
+        await click("save-to-pick")
+        await waitForTarget("save-to-folders", visible: true, "Pick folder opens its list before Escape")
         sendKey("\u{1b}", code: 53, window: window)
         await settle(host, window)
-        await waitForTarget("save-to-wheel", visible: false, "Escape also dismisses the folder wheel")
-        print("MAIN WINDOW INTERACTION PASS: native hit testing, folder wheel, native folder menu, new folder typing, session typing, subject menu/autosave, disclosure/editor, outside control action, empty-space dismissal, Home navigation, Escape, repeat toggles, edge press and titlebar centering")
+        await waitForTarget("save-to-group", visible: false, "Escape rolls the folder wheel back with its list")
+        expect(!hasVisibleTarget("save-to-folders"), "Escape also closes the folder list")
+        print("MAIN WINDOW INTERACTION PASS: native hit testing, folder wheel with inline folder list, new folder typing, session typing, subject menu/autosave, disclosure/editor, outside control action, empty-space dismissal, Home navigation, Escape, repeat toggles, edge press and titlebar centering")
     }
 
     static func settle(_ host: NSView, _ window: NSWindow) async {
@@ -260,16 +268,10 @@ func fail(_ message: String) -> Never {
 private final class MenuSelectionProbe: NSObject {
     var menu: NSMenu?
     var selected = false
-    var itemTitles: [String] = []
     private let title: String
     private let deadline = Date().addingTimeInterval(3)
     init(title: String = "Chemistry") { self.title = title }
     @objc func menuBegan(_ notification: Notification) { menu = notification.object as? NSMenu }
-    func captureMenuItems() {
-        guard let menu else { return }
-        itemTitles = menu.items.map(\.title)
-        menu.cancelTrackingWithoutAnimation()
-    }
     func selectItem() {
         expect(selected || Date() < deadline, "Native menu selection timed out for \(title)")
         guard !selected, let menu, let index = menu.items.firstIndex(where: { $0.title == title }) else { return }
