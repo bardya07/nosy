@@ -4,7 +4,17 @@ import SwiftUI
 @main
 @MainActor
 enum UITests {
-    static func main() async throws {
+    static func main() {
+        _ = NSApplication.shared
+        NSApp.setActivationPolicy(.regular)
+        Task { @MainActor in
+            do { try await run(); exit(0) }
+            catch { fatalError("UI tests failed: \(error)") }
+        }
+        NSApp.run()
+    }
+
+    static func run() async throws {
         _ = NSApplication.shared
         Snapshot.isRunning = true
         let root = URL(fileURLWithPath: "/private/tmp", isDirectory: true).appendingPathComponent("Nosy-ui-tests-\(UUID().uuidString)")
@@ -55,6 +65,19 @@ enum UITests {
         check(try String(contentsOf: first, encoding: .utf8) == "Keep this in the original folder", "Folder changes save to captured paths")
         model.selectedLecture = "MBB322"
         check(model.vocabularySubject == "Biology", "Ready resolves the configured subject")
+        let unopenedSettings = folder.appendingPathComponent("vocabulary.json")
+        let autoDraft = VocabularyDraft(lecture: "MBB322", folder: folder, didSave: {})
+        autoDraft.flush()
+        check(!FileManager.default.fileExists(atPath: unopenedSettings.path), "opening and closing Auto never persists a guessed subject")
+        autoDraft.text = "ATP"
+        autoDraft.flush()
+        check(try SubjectSettings.load(folder: folder).subject == "auto", "Auto term autosave stores Auto, never Chemistry or a guessed subject")
+        try SubjectSettings(subject: "chemistry").save(folder: folder)
+        let chemistryDraft = VocabularyDraft(lecture: "MBB322", folder: folder, didSave: {})
+        check(chemistryDraft.subjects.subject == "chemistry", "the editor loads explicit Chemistry without running Auto")
+        chemistryDraft.text = "NADH"
+        chemistryDraft.flush()
+        check(try SubjectSettings.load(folder: folder).subject == "chemistry", "term autosave preserves the explicit Chemistry choice")
         try SubjectSettings(subject: "general").save(folder: folder)
         check(model.vocabularySubject == "General", "General disables subject vocabulary")
         // Rapid edits coalesce; dismissal flushes the latest value to the captured
@@ -154,7 +177,7 @@ enum UITests {
             model.transitioning = false
             model.selectSource(.both)
             check(model.inputName == "MacBook Pro Microphone + Mac audio", "Paused source changes and Both label")
-            check(AppModel().recordingSource == .both, "Virtual mode choice is remembered")
+            check(AppModel().recordingSource == .both, "Mac audio mode choice is remembered")
             model.phase = .idle
             model.paused = false
             model.selectSource(.mic)
@@ -185,6 +208,12 @@ enum UITests {
         check(Core.wordCount("An edited transcript without headings") == 5, "Removing a heading must not turn speech into a silent outcome")
         try record.save(in: paths)
         check(try SessionRecord.read(paths.audioFile(record.id, "json")).vocabularyTerms == ["ATP"], "Captured vocabulary survives sidecar roundtrip")
+        model.phase = .idle
+        model.configurePreview()
+        model.session = "2026-10-23"
+        model.refreshLectures()
+        model.selectedLecture = "MBB322"
+        try await MainWindowInteraction.run(model: model)
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
     }
 }

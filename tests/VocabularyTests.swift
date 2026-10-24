@@ -111,6 +111,10 @@ import Foundation
         }
         let oldBiochemistry = try SubjectSettings.load(folder: legacySettings("legacy-biochemistry", subject: "biochemistry"))
         check(oldBiochemistry.subject == "biology", "Biochemistry setting migrates to Biology")
+        let explicitChemistryFolder = try legacySettings("MBB322", subject: "chemistry")
+        let explicitChemistry = try SubjectSettings.load(folder: explicitChemistryFolder)
+        check(explicitChemistry.subject == "chemistry" && explicitChemistry.resolved(course: "MBB322") == ["chemistry"],
+              "migration preserves an explicit Chemistry choice for MBB322; it does not infer provenance")
         let oldBusiness = try SubjectSettings.load(folder: legacySettings("legacy-business", subject: "business-economics", additionalSubject: "biochemistry"))
         check(oldBusiness.subject == "meetings-work" && oldBusiness.additionalSubject == "biology", "Business & Economics and Biochemistry settings migrate to Meetings & Work and Biology")
         let oldNoneFolder = try legacySettings("legacy-none", subject: "off")

@@ -83,7 +83,6 @@ struct VocabularyEditor: View {
     var close: () -> Void
     var inline = false
     @State var expanded = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -114,16 +113,25 @@ struct VocabularyEditor: View {
                 .tip("Choose vocabulary subject")
                 .frame(maxWidth: 220)
                 .accessibilityLabel("Subject").accessibilityValue(subjectTitle)
+                .interactionTarget("subject-menu")
             }
-            DisclosureGroup(isExpanded: $expanded) {
-                editor.padding(.top, 8)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            } label: {
-                Text("Custom terms (\(Vocabulary.entries(draft.text).count))")
-                    .font(Theme.text(13, .medium))
+            VStack(alignment: .leading, spacing: 8) {
+                Button { expanded.toggle() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: expanded ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 9, weight: .semibold)).frame(width: 12)
+                        Text("Custom terms (\(Vocabulary.entries(draft.text).count))")
+                            .font(Theme.text(13, .medium))
+                        Spacer(minLength: 0)
+                    }
+                    .frame(minHeight: 28).contentShape(Rectangle())
+                }
+                .buttonStyle(InsetButtonStyle())
+                .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+                .interactionTarget("custom-terms-disclosure")
+                .tip("Edit custom terms")
+                if expanded { editor.interactionTarget("custom-terms-editor") }
             }
-            .tip("Edit custom terms")
-            .animation(Motion.state(reduceMotion), value: expanded)
             if let error = draft.saveError ?? draft.settingsError {
                 Text(error).font(Theme.text(11)).foregroundStyle(Theme.coral)
                     .fixedSize(horizontal: false, vertical: true)
@@ -174,7 +182,7 @@ struct VocabularyEditor: View {
         .padding(8)
         .frame(height: 112)
         .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(Theme.line).allowsHitTesting(false))
     }
     @ViewBuilder private var textEditor: some View {
         if #available(macOS 15.0, *) {

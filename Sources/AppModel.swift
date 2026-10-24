@@ -679,8 +679,10 @@ final class AppModel: ObservableObject {
     }
     func refreshInputs() {
         let systemDefault = AudioInputs.systemDefault()
-        inputs = AudioInputs.list()
-        systemInput = systemDefault
+        let available = AudioInputs.list()
+        // A hover must not rebuild a menu whose devices have not changed.
+        if inputs != available { inputs = available }
+        if systemInput != systemDefault { systemInput = systemDefault }
     }
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {

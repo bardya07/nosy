@@ -119,6 +119,7 @@ struct MainView: View {
     @ObservedObject var model: AppModel
     var bodyHeightLimit: CGFloat?
     var previewDropdown: Dropdown?
+    var previewVocabularyExpanded = false
     var previewTranscribingHome = false
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -127,7 +128,6 @@ struct MainView: View {
     @State private var titlebarInset: CGFloat = 0
     @State private var homeFromTranscribing = false
     @State private var openDropdown: Dropdown?
-    @State private var dropdownFrame = CGRect.zero
     @State private var vocabularyDraft: VocabularyDraft?
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
     enum Field { case lecture, session }
@@ -144,7 +144,7 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            titlebar.zIndex(3)
+            titlebar
             if showsTranscribingScreen {
                 StagePanel(model: model, onHome: { homeFromTranscribing = true })
                     .padding(16).card().padding(.horizontal, 20).padding(.vertical, 16)
@@ -167,25 +167,20 @@ struct MainView: View {
         .frame(width: 400)
         .fixedSize(horizontal: true, vertical: true)
         .background(WindowBackdrop())
-        .background(MainWindowChrome(titlebarInset: $titlebarInset))
+        .background(MainWindowChrome(titlebarInset: $titlebarInset).allowsHitTesting(false))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
         .padding(.top, -titlebarInset)
-        .coordinateSpace(name: "nosyMainWindow")
-        .background(DropdownDismissMonitor(active: openDropdown != nil, panelFrame: dropdownFrame) { closeDropdown() })
         .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: model.phase)
         .animation(Motion.state(reduceMotion), value: model.paused)
-        .animation(Motion.state(reduceMotion), value: model.selectedLecture == "__new__")
         .animation(Motion.state(reduceMotion), value: model.active?.id)
-        .animation(dropdownAnimation, value: openDropdown)
         .onAppear {
             model.openWindow = openWindow
             if previewTranscribingHome { homeFromTranscribing = true }
             if let previewDropdown { showDropdown(previewDropdown) }
             if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
-        .onPreferenceChange(DropdownFramePreference.self) { dropdownFrame = $0 }
         .onChange(of: model.selectedLecture) { _, lecture in
             if lecture == "__new__" { focus = .lecture }
         }
@@ -206,7 +201,7 @@ struct MainView: View {
     private var details: some View {
         VStack(alignment: .leading, spacing: 14) {
             banners
-            if model.phase != .recording && model.phase != .done { fields.zIndex(2) }
+            if model.phase != .recording && model.phase != .done { fields }
             if model.phase != .idle || homeFromTranscribing {
                 StagePanel(model: model, dropping: dropping,
                            showReady: homeFromTranscribing && model.phase == .transcribing,
@@ -261,22 +256,13 @@ struct MainView: View {
     private var captureMode: some View {
         VStack(spacing: 7) {
             CaptureModePicker(model: model)
-            Text(modeCaption)
+            Text(model.recordingSource.caption)
                 .font(Theme.mono(11))
                 .foregroundStyle(Theme.muted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.92)
+                .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 16).padding(.top, 10)
-    }
-
-    private var modeCaption: String {
-        switch model.recordingSource {
-        case .mic: "Records your microphone — the room around you."
-        case .both: "Records your Mac's audio plus your mic — calls, videos."
-        case .macAudio: "Records your Mac's audio — calls, videos."
-        }
     }
 
     @ViewBuilder private var banners: some View {
@@ -345,18 +331,14 @@ struct MainView: View {
             if let openDropdown {
                 dropdownContent(openDropdown)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(GeometryReader { geometry in
-                        Color.clear.preference(key: DropdownFramePreference.self,
-                                               value: geometry.frame(in: .named("nosyMainWindow")))
-                    })
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .interactionTarget("dropdown-panel")
             }
         }
-        .background {
-            if openDropdown == nil {
-                Color.clear.preference(key: DropdownFramePreference.self, value: .zero)
-            }
-        }
+        // One native boundary includes both the toggles and the panel. It follows
+        // scrolling and titlebar insets without mixing SwiftUI/AppKit coordinates.
+        .background(DropdownDismissMonitor(active: openDropdown != nil) { closeDropdown() }.allowsHitTesting(false))
+        // Resizing/moving a control under a mouse-down can cancel its mouse-up.
+        .transaction { $0.animation = nil }
         .disabled(model.busy)
     }
 
@@ -387,32 +369,41 @@ struct MainView: View {
         .disabled(control == .vocabulary && model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
         .accessibilityLabel("\(control.accessibilityTitle): \(value)")
         .accessibilityHint("Opens \(control.accessibilityTitle.lowercased()) controls")
+        .interactionTarget("dropdown-\(control)")
     }
 
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
         switch control {
         case .saveTo:
             VStack(spacing: 2) {
-                ForEach(model.lectures, id: \.self) { lecture in
-                    Button {
-                        model.selectedLecture = lecture
-                        closeDropdown()
-                    } label: {
-                        HStack(spacing: 8) {
-                            if model.selectedLecture == lecture {
-                                Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
-                            } else {
-                                Color.clear.frame(width: 14, height: 10)
+                if !model.lectures.isEmpty {
+                    ScrollView {
+                        VStack(spacing: 2) {
+                            ForEach(model.lectures, id: \.self) { lecture in
+                                Button {
+                                    model.selectedLecture = lecture
+                                } label: {
+                                    HStack(spacing: 8) {
+                                        if model.selectedLecture == lecture {
+                                            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
+                                        } else {
+                                            Color.clear.frame(width: 14, height: 10)
+                                        }
+                                        Text(lecture).font(Theme.mono(11)).foregroundStyle(Theme.ink)
+                                            .lineLimit(1).truncationMode(.middle)
+                                        Spacer(minLength: 0)
+                                    }
+                                    .padding(.horizontal, 8).frame(height: 28)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(InsetButtonStyle())
+                                .accessibilityLabel("Save to \(lecture)")
+                                .interactionTarget("folder-\(lecture)")
                             }
-                            Text(lecture).font(Theme.mono(11)).foregroundStyle(Theme.ink)
-                                .lineLimit(1).truncationMode(.middle)
-                            Spacer(minLength: 0)
                         }
-                        .padding(.horizontal, 8).frame(height: 28)
-                        .contentShape(Rectangle())
                     }
-                    .buttonStyle(InsetButtonStyle())
-                    .accessibilityLabel("Save to \(lecture)")
+                    .scrollBounceBehavior(.basedOnSize)
+                    .frame(height: min(CGFloat(model.lectures.count) * 30 - 2, 128))
                 }
                 if !model.lectures.isEmpty { Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 3) }
                 Button {
@@ -428,6 +419,7 @@ struct MainView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(InsetButtonStyle())
+                .interactionTarget("new-folder")
                 if model.selectedLecture == "__new__" {
                     TextField("", text: $model.newLecture, prompt: Text("Name your folder").foregroundStyle(Theme.faint))
                         .textFieldStyle(.plain).font(Theme.mono(11)).foregroundStyle(Theme.ink)
@@ -435,15 +427,14 @@ struct MainView: View {
                         .padding(.horizontal, 9).frame(height: 32)
                         .background(Theme.raised, in: RoundedRectangle(cornerRadius: 7))
                         .accessibilityLabel("New folder name")
+                        .interactionTarget("folder-name")
                         .onSubmit {
                             guard !model.newLecture.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                             showDropdown(.session)
                         }
-                        .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
             .padding(8)
-            .frame(maxHeight: 190)
             .card(Theme.surface, radius: 12)
             .accessibilityElement(children: .contain)
         case .session:
@@ -460,19 +451,17 @@ struct MainView: View {
                                                                              lineWidth: focus == .session ? 1.4 : 1))
                     .background(SessionCaretPositioner(focused: focus == .session))
                     .accessibilityLabel("Session name")
+                    .interactionTarget("session-name")
                     .onSubmit { closeDropdown() }
             }
             .padding(10).card(Theme.surface, radius: 12)
         case .vocabulary:
             if let vocabularyDraft {
-                VocabularyEditor(draft: vocabularyDraft, close: { closeDropdown() }, inline: true)
+                VocabularyEditor(draft: vocabularyDraft, close: { closeDropdown() }, inline: true,
+                                 expanded: previewVocabularyExpanded)
                     .card(Theme.surface, radius: 12)
             }
         }
-    }
-
-    private var dropdownAnimation: Animation {
-        reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.35, dampingFraction: 0.75)
     }
 
     private func toggleDropdown(_ control: Dropdown) {
@@ -484,7 +473,7 @@ struct MainView: View {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
         if control == .saveTo { model.refreshLectures() }
         if control == .vocabulary { prepareVocabularyDraft() }
-        withAnimation(dropdownAnimation) { openDropdown = control }
+        openDropdown = control
         switch control {
         case .session: focus = .session
         case .saveTo: focus = model.selectedLecture == "__new__" ? .lecture : nil
@@ -494,7 +483,7 @@ struct MainView: View {
 
     private func closeDropdown() {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
-        withAnimation(dropdownAnimation) { openDropdown = nil }
+        openDropdown = nil
         focus = nil
     }
 
@@ -559,11 +548,6 @@ struct MainView: View {
     }
 }
 
-private struct DropdownFramePreference: PreferenceKey {
-    static let defaultValue = CGRect.zero
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
-}
-
 @MainActor
 private struct SessionCaretPositioner: NSViewRepresentable {
     var focused: Bool
@@ -590,22 +574,25 @@ private struct SessionCaretPositioner: NSViewRepresentable {
 // A local mouse monitor dismisses the inline panel while leaving the click itself
 // available to the control the user chose next.
 @MainActor
-private struct DropdownDismissMonitor: NSViewRepresentable {
+struct DropdownDismissMonitor: NSViewRepresentable {
     var active: Bool
-    var panelFrame: CGRect
     var onOutside: () -> Void
+
+    final class Boundary: NSView {
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
 
     func makeCoordinator() -> Coordinator { Coordinator() }
     func makeNSView(context: Context) -> NSView {
-        let view = NSView(frame: .zero)
+        let view = Boundary(frame: .zero)
         context.coordinator.view = view
-        context.coordinator.update(active: active, panelFrame: panelFrame, onOutside: onOutside)
+        context.coordinator.update(active: active, onOutside: onOutside)
         context.coordinator.install()
         return view
     }
     func updateNSView(_ view: NSView, context: Context) {
         context.coordinator.view = view
-        context.coordinator.update(active: active, panelFrame: panelFrame, onOutside: onOutside)
+        context.coordinator.update(active: active, onOutside: onOutside)
     }
     static func dismantleNSView(_ view: NSView, coordinator: Coordinator) { coordinator.stop() }
 
@@ -614,29 +601,53 @@ private struct DropdownDismissMonitor: NSViewRepresentable {
         weak var view: NSView?
         private var monitor: Any?
         private var active = false
-        private var panelFrame = CGRect.zero
+        private var pendingDismiss: Timer?
         private var onOutside: () -> Void = {}
 
-        func update(active: Bool, panelFrame: CGRect, onOutside: @escaping () -> Void) {
+        func update(active: Bool, onOutside: @escaping () -> Void) {
             self.active = active
-            self.panelFrame = panelFrame
+            if !active { pendingDismiss?.invalidate(); pendingDismiss = nil }
             self.onOutside = onOutside
         }
         func install() {
             guard monitor == nil else { return }
-            monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
                 guard let self, self.active else { return event }
-                guard let view = self.view, let eventWindow = event.window, eventWindow === view.window else {
-                    self.onOutside()
+                // Native menus have their own windows/tracking loops. Choosing a
+                // subject or dismissing that menu must not dismiss its editor.
+                guard let view = self.view, event.window === view.window,
+                      !view.isHiddenOrHasHiddenAncestor, !view.visibleRect.isEmpty else { return event }
+                if event.type == .keyDown {
+                    // Escape must also work when a panel has no focused field.
+                    if event.keyCode == 53 { self.onOutside(); return nil }
                     return event
                 }
-                let point = view.convert(event.locationInWindow, from: nil)
-                let swiftUIPoint = CGPoint(x: point.x, y: view.bounds.height - point.y)
-                if !self.panelFrame.insetBy(dx: -4, dy: -4).contains(swiftUIPoint) { self.onOutside() }
+                self.pendingDismiss?.invalidate()
+                self.pendingDismiss = nil
+                // SwiftUI's unclipped platform host can report a visibleRect
+                // larger than this view. Only its own bounds belong to the panel.
+                if !view.bounds.intersection(view.visibleRect).contains(view.convert(event.locationInWindow, from: nil)) {
+                    // Native controls can consume mouse-up in their tracking loop,
+                    // before local monitors see it. The default-mode timer runs
+                    // after tracking finishes and the physical press is released.
+                    let timer = Timer(timeInterval: 0.016, repeats: true) { [weak self] _ in
+                        MainActor.assumeIsolated { self?.finishOutsideClick() }
+                    }
+                    self.pendingDismiss = timer
+                    RunLoop.main.add(timer, forMode: .default)
+                }
                 return event
             }
         }
+        private func finishOutsideClick() {
+            guard NSEvent.pressedMouseButtons & 3 == 0 else { return }
+            pendingDismiss?.invalidate()
+            pendingDismiss = nil
+            if active { onOutside() }
+        }
         func stop() {
+            pendingDismiss?.invalidate()
+            pendingDismiss = nil
             if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
         }
     }
@@ -674,9 +685,9 @@ private struct CaptureModePicker: View {
     }
     var body: some View {
         HStack(spacing: 3) {
-            modeButton("In-person", source: .mic, active: selected == .mic)
+            modeButton(RecordingSource.mic.modeTitle, source: .mic, active: selected == .mic)
             if RecordingSource.macAudioAvailable {
-                modeButton("Virtual", source: .both, active: selected == .both)
+                modeButton(RecordingSource.both.modeTitle, source: .both, active: selected == .both)
             }
         }
         .padding(3)
@@ -702,6 +713,7 @@ private struct CaptureModePicker: View {
         .focusEffectDisabled()
         .buttonStyle(ModePickerButtonStyle())
         .accessibilityAddTraits(active ? .isSelected : [])
+        .interactionTarget("mode-\(source)")
     }
 }
 
@@ -709,8 +721,8 @@ private struct ModePickerButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .contentShape(Capsule())
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.965 : 1)
+            .contentShape(Capsule())
             .animation(.spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
     }
 }
@@ -728,7 +740,8 @@ private struct CompactControlButtonStyle: ButtonStyle {
             configuration.label
                 .brightness(hovering && !configuration.isPressed ? 0.025 : 0)
                 .scaleEffect(configuration.isPressed && !reduceMotion ? 0.975 : 1)
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .contentShape(Capsule())
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
@@ -741,10 +754,10 @@ private struct MicMenu: View {
         Menu {
             if RecordingSource.macAudioAvailable {
                 Section("Mode") {
-                    Button { model.selectSource(.mic) } label: { checked(model.recordingSource == .mic, "In-person · Microphone") }
-                        .tip("Select in-person")
-                    Button { model.selectSource(.both) } label: { checked(model.recordingSource == .both, "Virtual · Mic + Mac audio") }
-                        .tip("Select virtual")
+                    Button { model.selectSource(.mic) } label: { checked(model.recordingSource == .mic, "Room audio · Microphone") }
+                        .tip("Select Room audio")
+                    Button { model.selectSource(.both) } label: { checked(model.recordingSource == .both, "Mac audio · Mac audio + mic") }
+                        .tip("Select Mac audio")
                 }
                 Section("Advanced") {
                     Button { model.selectSource(.macAudio) } label: { checked(model.recordingSource == .macAudio, "Mac audio only") }
@@ -767,10 +780,10 @@ private struct MicMenu: View {
         }
         .menuStyle(.button)
         .font(Theme.mono(11))
-        .buttonStyle(IconButtonStyle(size: 24, active: model.inputUID != nil && !Snapshot.isRunning))
+        .buttonStyle(IconButtonStyle(size: 30, active: model.inputUID != nil && !Snapshot.isRunning, filled: true))
         .menuIndicator(.hidden)
         .fixedSize()
-        .onHover { if $0 { model.refreshInputs() } }
+        .onHover { if $0 && !Snapshot.isRunning { model.refreshInputs() } }
         .tip(model.microphoneName)
         .accessibilityLabel("Choose recording source or microphone, currently \(model.inputName)")
     }
@@ -877,7 +890,7 @@ struct StagePanel: View {
                     .font(Theme.mono(12)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.middle)
                 Spacer(minLength: 0)
                 if model.recordingSource == .both {
-                    Text("Virtual").font(Theme.mono(9, .medium)).foregroundStyle(Theme.accentText)
+                    Text("Mac audio").font(Theme.mono(9, .medium)).foregroundStyle(Theme.accentText)
                 }
             }
             VStack(alignment: .leading, spacing: 2) {

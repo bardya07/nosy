@@ -10,6 +10,20 @@ enum RecordingSource: String, CaseIterable, Sendable {
         case .both: "Both"
         }
     }
+    var modeTitle: String {
+        switch self {
+        case .mic: "Room audio"
+        case .both: "Mac audio"
+        case .macAudio: "Mac audio only"
+        }
+    }
+    var caption: String {
+        switch self {
+        case .mic: "Records the sound around you."
+        case .both: "Records sound playing on your Mac, plus your mic."
+        case .macAudio: "Records sound playing on your Mac."
+        }
+    }
     var usesMic: Bool { self != .macAudio }
     var usesMacAudio: Bool { self != .mic }
     static var macAudioAvailable: Bool {

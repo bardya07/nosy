@@ -95,7 +95,7 @@ private struct WindowMaterial: NSViewRepresentable {
 struct WindowBackdrop: View {
     var body: some View {
         ZStack {
-            if !Snapshot.isRunning { WindowMaterial() }
+            if !Snapshot.isRunning { WindowMaterial().allowsHitTesting(false) }
             Theme.background
         }.ignoresSafeArea()
     }
@@ -107,15 +107,37 @@ struct MainWindowChrome: NSViewRepresentable {
     @Binding var titlebarInset: CGFloat
     final class Anchor: NSView {
         var reportInset: ((CGFloat) -> Void)?
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+        override func layout() {
+            super.layout()
+            centerTrafficLights()
+        }
+        @objc private func windowResized(_ notification: Notification) {
+            DispatchQueue.main.async { [weak self] in self?.centerTrafficLights() }
+        }
+        func centerTrafficLights() {
+            guard let window else { return }
+            for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+                guard let button = window.standardWindowButton(kind), let parent = button.superview else { continue }
+                let center = parent.convert(NSPoint(x: bounds.midX, y: bounds.maxY - 22), from: self)
+                let y = center.y - button.frame.height / 2
+                if abs(button.frame.minY - y) > 0.1 { button.setFrameOrigin(NSPoint(x: button.frame.minX, y: y)) }
+            }
+        }
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
+            NotificationCenter.default.removeObserver(self, name: NSWindow.didResizeNotification, object: nil)
             guard let window else { return }
+            NotificationCenter.default.addObserver(self, selector: #selector(windowResized), name: NSWindow.didResizeNotification, object: window)
             window.isOpaque = false
             window.backgroundColor = .clear
             window.titlebarAppearsTransparent = true
             window.hasShadow = false
             let inset = window.contentView?.safeAreaInsets.top ?? 0
-            DispatchQueue.main.async { [weak self] in self?.reportInset?(inset) }
+            DispatchQueue.main.async { [weak self] in
+                self?.reportInset?(inset)
+                self?.centerTrafficLights()
+            }
         }
     }
     func makeNSView(context: Context) -> NSView {
@@ -171,7 +193,7 @@ struct PillButtonStyle: ButtonStyle {
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.45)
                 .contentShape(Capsule())
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
@@ -231,7 +253,7 @@ struct RoundButtonStyle: ButtonStyle {
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.45)
                 .contentShape(Circle())
-                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
@@ -253,7 +275,7 @@ struct InsetButtonStyle: ButtonStyle {
                 .opacity(configuration.isPressed && enabled ? 0.8 : 1)
                 .opacity(enabled ? 1 : 0.45)
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
@@ -278,7 +300,8 @@ struct LinkButtonStyle: ButtonStyle {
                 .underline(hovering && enabled)
                 .opacity(enabled ? (configuration.isPressed ? 0.6 : 1) : 0.45)
                 .scaleEffect(configuration.isPressed && enabled ? 0.97 : 1)
-                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
+                .contentShape(Rectangle())
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
                 .onHover { hovering = $0 }
         }
     }
@@ -313,14 +336,16 @@ struct IconButtonStyle: ButtonStyle {
     var size: CGFloat = 30
     var active = false
     var destructive = false
+    var filled = false
     func makeBody(configuration: Configuration) -> some View {
-        IconBody(configuration: configuration, size: size, active: active, destructive: destructive)
+        IconBody(configuration: configuration, size: size, active: active, destructive: destructive, filled: filled)
     }
     private struct IconBody: View {
         let configuration: ButtonStyleConfiguration
         let size: CGFloat
         let active: Bool
         let destructive: Bool
+        let filled: Bool
         @Environment(\.isEnabled) private var enabled
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isFocused) private var focused
@@ -330,11 +355,14 @@ struct IconButtonStyle: ButtonStyle {
                 .font(.system(size: size * 0.45, weight: .semibold))
                 .foregroundStyle(hovering && enabled && destructive ? Theme.coral : (active || (hovering && enabled) ? Theme.accentText : Theme.muted))
                 .frame(width: size, height: size)
-                .background(hovering && enabled ? (destructive ? Theme.coral.opacity(0.14) : Theme.surface) : .clear, in: Circle())
+                .background(configuration.isPressed && enabled ? Theme.line :
+                    (hovering && enabled ? (destructive ? Theme.coral.opacity(0.14) : Theme.surface) :
+                        (filled ? Theme.raised : .clear)), in: Circle())
+                .overlay(Circle().strokeBorder(filled ? Theme.line : .clear).allowsHitTesting(false))
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.4)
                 .contentShape(Circle())
-                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }

@@ -162,10 +162,10 @@ enum Snapshot {
             }
             guard save(PreviewWindow { MainView(model: model(.transcribing)) }.padding(36).background(PreviewBackdrop()),
                        "transcribing.\(mode)") else { return 1 }
-            let readyInPerson = model(.idle, source: .mic)
-            let readyVirtual = model(.idle, source: .both)
-            guard save(PreviewWindow { MainView(model: readyInPerson) }.padding(36).background(PreviewBackdrop()), "ready-in-person.\(mode)"),
-                  save(PreviewWindow { MainView(model: readyVirtual) }.padding(36).background(PreviewBackdrop()), "ready-virtual.\(mode)") else { return 1 }
+            let readyRoom = model(.idle, source: .mic)
+            let readyMac = model(.idle, source: .both)
+            guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
+                  save(PreviewWindow { MainView(model: readyMac) }.padding(36).background(PreviewBackdrop()), "ready-mac-audio.\(mode)") else { return 1 }
             for (name, dropdown) in [("save-to", MainView.Dropdown.saveTo),
                                      ("session", MainView.Dropdown.session),
                                      ("vocabulary", MainView.Dropdown.vocabulary)] {
@@ -173,6 +173,13 @@ enum Snapshot {
                 guard save(PreviewWindow { MainView(model: fixture, previewDropdown: dropdown) }
                     .padding(36).background(PreviewBackdrop()), "dropdown-\(name).\(mode)") else { return 1 }
             }
+            guard save(PreviewWindow { MainView(model: model(.idle), previewDropdown: .vocabulary, previewVocabularyExpanded: true) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-vocabulary-expanded.\(mode)") else { return 1 }
+            let newFolderPanel = model(.idle)
+            newFolderPanel.selectedLecture = "__new__"
+            newFolderPanel.newLecture = "New seminar"
+            guard save(PreviewWindow { MainView(model: newFolderPanel, previewDropdown: .saveTo) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-new-folder.\(mode)") else { return 1 }
             let longFolder = model(.idle)
             longFolder.selectedLecture = longCourse.lastPathComponent
             guard save(PreviewWindow { MainView(model: longFolder, previewDropdown: .saveTo) }
@@ -277,7 +284,7 @@ private struct PreviewWindow<Content: View>: View {
         content()
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder))
-            .overlay(alignment: .topLeading) { TrafficLights().padding(.leading, 16).padding(.top, 16) }
+            .overlay(alignment: .topLeading) { TrafficLights().padding(.leading, 16).frame(height: 44).allowsHitTesting(false) }
             .shadow(color: Color(hex: 0x0A466E).opacity(0.16), radius: 24, y: 12)
     }
 }
