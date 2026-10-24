@@ -21,12 +21,12 @@ enum MainWindowInteraction {
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             let button = window.standardWindowButton(kind)!
             let center = button.convert(NSPoint(x: button.bounds.midX, y: button.bounds.midY), to: nil)
-            precondition(abs(center.y - (host.bounds.height - 22)) < 1, "Traffic lights center \(center.y), expected \(host.bounds.height - 22)")
+            expect(abs(center.y - (host.bounds.height - 22)) < 1, "Traffic lights center \(center.y), expected \(host.bounds.height - 22)")
         }
 
         func target(_ id: String) -> NSView {
             guard let view = targets(in: host).first(where: { $0.id == id && !$0.visibleRect.isEmpty && !$0.isHiddenOrHasHiddenAncestor }) else {
-                fatalError("Missing visible interaction target: \(id), present: \(targets(in: host).map(\.id))")
+                fail("Missing visible interaction target: \(id), present: \(targets(in: host).map(\.id))")
             }
             return view
         }
@@ -40,12 +40,12 @@ enum MainWindowInteraction {
             }
             let view = target(id)
             let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
-            precondition(host.hitTest(host.convert(point, from: nil)) != nil, "No hit at \(id)")
+            expect(host.hitTest(host.convert(point, from: nil)) != nil, "No hit at \(id)")
             sendClick(point, window: window)
             await settle(host, window)
         }
         func panel(_ open: Bool, _ message: String) {
-            precondition(targets(in: host).contains(where: { $0.id == "dropdown-panel" && !$0.visibleRect.isEmpty }) == open, message)
+            expect(targets(in: host).contains(where: { $0.id == "dropdown-panel" && !$0.visibleRect.isEmpty }) == open, message)
         }
         await click("dropdown-saveTo")
         panel(true, "Save to opens on first click")
@@ -54,10 +54,10 @@ enum MainWindowInteraction {
         await click("new-folder")
         panel(true, "New folder remains open")
         await click("folder-name")
-        precondition(window.firstResponder is NSTextView, "New folder receives text focus")
+        expect(window.firstResponder is NSTextView, "New folder receives text focus")
         (window.firstResponder as? NSTextView)?.insertText("Seminar", replacementRange: NSRange(location: NSNotFound, length: 0))
         await settle(host, window)
-        precondition(model.newLecture == "Seminar", "New folder accepts typing")
+        expect(model.newLecture == "Seminar", "New folder accepts typing")
         await click("dropdown-saveTo")
         panel(false, "Same toggle closes without reopening")
         model.selectedLecture = "MBB322"
@@ -65,10 +65,10 @@ enum MainWindowInteraction {
         await click("dropdown-session")
         await click("session-name")
         panel(true, "Clicking the session field must not dismiss it")
-        precondition(window.firstResponder is NSTextView, "Session field receives focus")
+        expect(window.firstResponder is NSTextView, "Session field receives focus")
         (window.firstResponder as? NSTextView)?.insertText(" Notes", replacementRange: NSRange(location: NSNotFound, length: 0))
         await settle(host, window)
-        precondition(model.session.hasSuffix(" Notes"), "Session typing reaches the binding")
+        expect(model.session.hasSuffix(" Notes"), "Session typing reaches the binding")
         await click("dropdown-vocabulary")
         panel(true, "Switching directly to Vocabulary opens it once")
         let menuSelection = MenuSelectionProbe()
@@ -81,22 +81,26 @@ enum MainWindowInteraction {
         RunLoop.main.add(selectionTimer, forMode: .default)
         await click("subject-menu")
         selectionTimer.invalidate()
-        precondition(menuSelection.selected, "The native subject menu opens and accepts a selection")
+        expect(menuSelection.selected, "The native subject menu opens and accepts a selection")
         panel(true, "Selecting a subject leaves the editor open")
         try await Task.sleep(for: .milliseconds(450))
         let savedSubject = try SubjectSettings.load(folder: model.paths.lectureFolder("MBB322"))
-        precondition(savedSubject.subject == "chemistry", "Subject selection autosaves to the captured folder")
+        expect(savedSubject.subject == "chemistry", "Subject selection autosaves to the captured folder")
         await click("custom-terms-disclosure")
         panel(true, "Custom terms disclosure stays open")
         await click("custom-terms-editor")
         panel(true, "Clicking the custom terms editor stays inside the panel")
-        precondition(window.firstResponder is NSTextView, "Custom terms editor receives focus")
+        expect(window.firstResponder is NSTextView, "Custom terms editor receives focus")
         (window.firstResponder as? NSTextView)?.insertText(" ATP", replacementRange: NSRange(location: NSNotFound, length: 0))
         await settle(host, window)
         panel(true, "Vocabulary autosave does not dismiss the editor")
         await click(RecordingSource.macAudioAvailable ? "mode-both" : "mode-mic")
         panel(false, "An outside control gets its click and dismisses the panel")
-        precondition(model.recordingSource == (RecordingSource.macAudioAvailable ? .both : .mic), "Outside mode click reaches its action")
+        expect(model.recordingSource == (RecordingSource.macAudioAvailable ? .both : .mic), "Outside mode click reaches its action")
+        await click("dropdown-saveTo")
+        panel(true, "Save to reopens")
+        await click("mode-caption")
+        panel(false, "Clicking empty window space dismisses the panel")
         await click("dropdown-session")
         sendKey("\u{1b}", code: 53, window: window)
         await settle(host, window)
@@ -148,6 +152,15 @@ enum MainWindowInteraction {
     }
 }
 
+// Failures print and exit instead of trapping, so no crash reporter dialog appears.
+func expect(_ condition: @autoclosure () -> Bool, _ message: @autoclosure () -> String) {
+    if !condition() { fail(message()) }
+}
+func fail(_ message: String) -> Never {
+    FileHandle.standardError.write(Data("UI TEST FAILED: \(message)\n".utf8))
+    exit(1)
+}
+
 @MainActor
 private final class MenuSelectionProbe: NSObject {
     var menu: NSMenu?
@@ -155,7 +168,7 @@ private final class MenuSelectionProbe: NSObject {
     private let deadline = Date().addingTimeInterval(3)
     @objc func menuBegan(_ notification: Notification) { menu = notification.object as? NSMenu }
     func selectChemistry() {
-        precondition(selected || Date() < deadline, "Native subject menu selection timed out")
+        expect(selected || Date() < deadline, "Native subject menu selection timed out")
         guard !selected, let menu, let index = menu.items.firstIndex(where: { $0.title == "Chemistry" }) else { return }
         menu.performActionForItem(at: index)
         selected = true

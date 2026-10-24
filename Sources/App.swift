@@ -128,6 +128,7 @@ struct MainView: View {
     @State private var titlebarInset: CGFloat = 0
     @State private var homeFromTranscribing = false
     @State private var openDropdown: Dropdown?
+    @State private var dropdownRegion = CGRect.null
     @State private var vocabularyDraft: VocabularyDraft?
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
     enum Field { case lecture, session }
@@ -150,10 +151,10 @@ struct MainView: View {
                     .padding(16).card().padding(.horizontal, 20).padding(.vertical, 16)
             } else {
                 if model.phase == .idle { captureMode }
-                ViewThatFits(in: .vertical) {
-                    details
-                    ScrollView { details }.scrollBounceBehavior(.basedOnSize)
-                }
+                // One instance of the details: duplicate alternatives (ViewThatFits)
+                // reset panel state and fight over text focus when they swap.
+                ScrollView { details }
+                .scrollBounceBehavior(.basedOnSize)
                 .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 240))
                 .padding(.bottom, 12)
                 .dropDestination(for: URL.self) { urls, _ in
@@ -164,6 +165,13 @@ struct MainView: View {
                 controls.padding(.horizontal, 20).padding(.bottom, 16)
             }
         }
+        .coordinateSpace(name: Self.space)
+        .onPreferenceChange(DropdownRegionKey.self) { dropdownRegion = $0 }
+        // Outside clicks close the open panel. The tap ends on mouse-up, after the
+        // clicked control has acted, and both rectangles share one SwiftUI space.
+        .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(Self.space)).onEnded { tap in
+            if !dropdownRegion.contains(tap.location) { closeDropdown() }
+        }, including: openDropdown == nil ? .subviews : .all)
         .frame(width: 400)
         .fixedSize(horizontal: true, vertical: true)
         .background(WindowBackdrop())
@@ -191,8 +199,9 @@ struct MainView: View {
             if phase != .transcribing { homeFromTranscribing = false }
             if phase == .recording || phase == .done { closeDropdown() }
         }
-        .onExitCommand { closeDropdown() }
     }
+
+    private static let space = "nosyMain"
 
     private var showsTranscribingScreen: Bool {
         model.phase == .transcribing && !homeFromTranscribing
@@ -261,6 +270,7 @@ struct MainView: View {
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .interactionTarget("mode-caption")
         }
         .padding(.horizontal, 16).padding(.top, 10)
     }
@@ -334,9 +344,19 @@ struct MainView: View {
                     .interactionTarget("dropdown-panel")
             }
         }
-        // One native boundary includes both the toggles and the panel. It follows
-        // scrolling and titlebar insets without mixing SwiftUI/AppKit coordinates.
-        .background(DropdownDismissMonitor(active: openDropdown != nil) { closeDropdown() }.allowsHitTesting(false))
+        // The toggles plus the open panel: clicks here never dismiss it.
+        .background(GeometryReader { geometry in
+            Color.clear.preference(key: DropdownRegionKey.self, value: geometry.frame(in: .named(Self.space)))
+        })
+        .background {
+            // Escape closes the panel even when nothing inside it has focus.
+            if openDropdown != nil {
+                Button("Close") { closeDropdown() }
+                    .keyboardShortcut(.cancelAction)
+                    .opacity(0).frame(width: 0, height: 0)
+                    .allowsHitTesting(false).accessibilityHidden(true)
+            }
+        }
         // Resizing/moving a control under a mouse-down can cancel its mouse-up.
         .transaction { $0.animation = nil }
         .disabled(model.busy)
@@ -571,86 +591,9 @@ private struct SessionCaretPositioner: NSViewRepresentable {
     }
 }
 
-// A local mouse monitor dismisses the inline panel while leaving the click itself
-// available to the control the user chose next.
-@MainActor
-struct DropdownDismissMonitor: NSViewRepresentable {
-    var active: Bool
-    var onOutside: () -> Void
-
-    final class Boundary: NSView {
-        override func hitTest(_ point: NSPoint) -> NSView? { nil }
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator() }
-    func makeNSView(context: Context) -> NSView {
-        let view = Boundary(frame: .zero)
-        context.coordinator.view = view
-        context.coordinator.update(active: active, onOutside: onOutside)
-        context.coordinator.install()
-        return view
-    }
-    func updateNSView(_ view: NSView, context: Context) {
-        context.coordinator.view = view
-        context.coordinator.update(active: active, onOutside: onOutside)
-    }
-    static func dismantleNSView(_ view: NSView, coordinator: Coordinator) { coordinator.stop() }
-
-    @MainActor
-    final class Coordinator {
-        weak var view: NSView?
-        private var monitor: Any?
-        private var active = false
-        private var pendingDismiss: Timer?
-        private var onOutside: () -> Void = {}
-
-        func update(active: Bool, onOutside: @escaping () -> Void) {
-            self.active = active
-            if !active { pendingDismiss?.invalidate(); pendingDismiss = nil }
-            self.onOutside = onOutside
-        }
-        func install() {
-            guard monitor == nil else { return }
-            monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
-                guard let self, self.active else { return event }
-                // Native menus have their own windows/tracking loops. Choosing a
-                // subject or dismissing that menu must not dismiss its editor.
-                guard let view = self.view, event.window === view.window,
-                      !view.isHiddenOrHasHiddenAncestor, !view.visibleRect.isEmpty else { return event }
-                if event.type == .keyDown {
-                    // Escape must also work when a panel has no focused field.
-                    if event.keyCode == 53 { self.onOutside(); return nil }
-                    return event
-                }
-                self.pendingDismiss?.invalidate()
-                self.pendingDismiss = nil
-                // SwiftUI's unclipped platform host can report a visibleRect
-                // larger than this view. Only its own bounds belong to the panel.
-                if !view.bounds.intersection(view.visibleRect).contains(view.convert(event.locationInWindow, from: nil)) {
-                    // Native controls can consume mouse-up in their tracking loop,
-                    // before local monitors see it. The default-mode timer runs
-                    // after tracking finishes and the physical press is released.
-                    let timer = Timer(timeInterval: 0.016, repeats: true) { [weak self] _ in
-                        MainActor.assumeIsolated { self?.finishOutsideClick() }
-                    }
-                    self.pendingDismiss = timer
-                    RunLoop.main.add(timer, forMode: .default)
-                }
-                return event
-            }
-        }
-        private func finishOutsideClick() {
-            guard NSEvent.pressedMouseButtons & 3 == 0 else { return }
-            pendingDismiss?.invalidate()
-            pendingDismiss = nil
-            if active { onOutside() }
-        }
-        func stop() {
-            pendingDismiss?.invalidate()
-            pendingDismiss = nil
-            if let monitor { NSEvent.removeMonitor(monitor); self.monitor = nil }
-        }
-    }
+private struct DropdownRegionKey: PreferenceKey {
+    static let defaultValue = CGRect.null
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = value.union(nextValue()) }
 }
 
 struct NosyMark: View {

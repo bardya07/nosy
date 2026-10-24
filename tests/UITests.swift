@@ -9,7 +9,7 @@ enum UITests {
         NSApp.setActivationPolicy(.regular)
         Task { @MainActor in
             do { try await run(); exit(0) }
-            catch { fatalError("UI tests failed: \(error)") }
+            catch { fail("\(error)") }
         }
         NSApp.run()
     }
@@ -31,7 +31,7 @@ enum UITests {
         let speech = "# MBB322\n\n## Transcript\n\nATP helps cells.\n\n> [0:01] Exam hint\n"
         try speech.write(to: first, atomically: true, encoding: .utf8)
         try speech.write(to: second, atomically: true, encoding: .utf8)
-        func check(_ condition: Bool, _ message: String) { precondition(condition, message) }
+        func check(_ condition: Bool, _ message: String) { expect(condition, message) }
         let library = TranscriptLibrary()
         library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
         library.reload(paths: paths)
