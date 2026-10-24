@@ -172,8 +172,14 @@ enum Snapshot {
                     MainView(model: model(.idle)).environment(\.previewTipText, tip)
                 }.padding(36).background(PreviewBackdrop()), "tip-\(slug).\(mode)") else { return 1 }
             }
-            for (name, dropdown) in [("save-to", MainView.Dropdown.saveTo),
-                                     ("session", MainView.Dropdown.session),
+            for expanded in [false, true] {
+                let fixture = model(.idle)
+                guard save(PreviewWindow {
+                    MainView(model: fixture, previewSaveToExpanded: expanded)
+                }.padding(36).background(PreviewBackdrop()),
+                    expanded ? "dropdown-save-to.\(mode)" : "save-to-wheel-closed.\(mode)") else { return 1 }
+            }
+            for (name, dropdown) in [("session", MainView.Dropdown.session),
                                      ("vocabulary", MainView.Dropdown.vocabulary)] {
                 let fixture = model(.idle)
                 guard save(PreviewWindow { MainView(model: fixture, previewDropdown: dropdown) }
@@ -184,11 +190,13 @@ enum Snapshot {
             let newFolderPanel = model(.idle)
             newFolderPanel.selectedLecture = "__new__"
             newFolderPanel.newLecture = "New seminar"
-            guard save(PreviewWindow { MainView(model: newFolderPanel, previewDropdown: .saveTo) }
+            guard save(PreviewWindow {
+                MainView(model: newFolderPanel, previewEnteringNewFolderName: true)
+            }
                 .padding(36).background(PreviewBackdrop()), "dropdown-new-folder.\(mode)") else { return 1 }
             let longFolder = model(.idle)
             longFolder.selectedLecture = longCourse.lastPathComponent
-            guard save(PreviewWindow { MainView(model: longFolder, previewDropdown: .saveTo) }
+            guard save(PreviewWindow { MainView(model: longFolder) }
                 .padding(36).background(PreviewBackdrop()), "dropdown-long-folder.\(mode)") else { return 1 }
             let emptyURL = course.appendingPathComponent("Silent.md")
             try? Data("# MBB322\n\n## Transcript\n\n_No speech detected._\n".utf8).write(to: emptyURL)

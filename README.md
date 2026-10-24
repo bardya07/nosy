@@ -3,7 +3,8 @@
 Private, on-device recording and transcription for lectures and meetings.
 
 ![Nosy ready, recording, and saved](preview/nosy.light.png)
-![Choose a save folder](preview/nosy.dropdown-save-to.light.png)
+![Save to wheel open](preview/nosy.dropdown-save-to.light.png)
+![Save to wheel closed](preview/nosy.save-to-wheel-closed.light.png)
 ![Edit the session date](preview/nosy.dropdown-session.light.png)
 ![Choose a vocabulary subject and edit custom terms](preview/nosy.dropdown-vocabulary.light.png)
 ![Transcript library](preview/nosy.library.light.png)

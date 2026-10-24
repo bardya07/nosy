@@ -120,6 +120,8 @@ struct MainView: View {
     var bodyHeightLimit: CGFloat?
     var previewDropdown: Dropdown?
     var previewVocabularyExpanded = false
+    var previewSaveToExpanded = false
+    var previewEnteringNewFolderName = false
     var previewTranscribingHome = false
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -127,15 +129,16 @@ struct MainView: View {
     @State private var dropping = false
     @State private var titlebarInset: CGFloat = 0
     @State private var openDropdown: Dropdown?
+    @State private var saveToExpanded = false
+    @State private var enteringNewFolderName = false
     @State private var dropdownRegion = CGRect.null
     @State private var vocabularyDraft: VocabularyDraft?
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
     enum Field { case lecture, session }
     enum Dropdown: Hashable {
-        case saveTo, session, vocabulary
+        case session, vocabulary
         var accessibilityTitle: String {
             switch self {
-            case .saveTo: "Save to"
             case .session: "Session"
             case .vocabulary: "Vocabulary"
             }
@@ -171,7 +174,9 @@ struct MainView: View {
         .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(Self.space)).onEnded { tap in
             if !dropdownRegion.contains(tap.location) { closeDropdown() }
         }, including: openDropdown == nil ? .subviews : .all)
-        .onExitCommand { if openDropdown != nil { closeDropdown() } }
+        .onExitCommand {
+            if openDropdown != nil || saveToExpanded || enteringNewFolderName { closeDropdown() }
+        }
         .frame(width: 400)
         .fixedSize(horizontal: true, vertical: true)
         .background(WindowBackdrop())
@@ -187,10 +192,12 @@ struct MainView: View {
             model.openWindow = openWindow
             if previewTranscribingHome { model.homeFromTranscribing = true }
             if let previewDropdown { showDropdown(previewDropdown) }
+            if previewSaveToExpanded { saveToExpanded = true }
+            if previewEnteringNewFolderName { enteringNewFolderName = true }
             if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
         .onChange(of: model.selectedLecture) { _, lecture in
-            if lecture == "__new__" { focus = .lecture }
+            if lecture == "__new__", enteringNewFolderName { focus = .lecture }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshSavedTranscript()
@@ -340,9 +347,22 @@ struct MainView: View {
     private var fields: some View {
         VStack(spacing: 8) {
             HStack(spacing: 7) {
-                controlButton(.saveTo, icon: "folder", value: folderTitle, truncation: .middle)
-                controlButton(.session, icon: "pencil", value: model.session, truncation: .tail)
-                controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
+                saveToControl
+                if saveToExpanded {
+                    saveToMenu
+                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                } else {
+                    controlButton(.session, icon: "pencil", value: model.session, truncation: .tail)
+                        .transition(controlTransition)
+                    controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
+                        .transition(controlTransition)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .animation(Motion.state(reduceMotion), value: saveToExpanded)
+            if enteringNewFolderName {
+                newFolderNameEntry
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
             if let openDropdown {
                 dropdownContent(openDropdown)
@@ -363,13 +383,120 @@ struct MainView: View {
                     .allowsHitTesting(false).accessibilityHidden(true)
             }
         }
-        // Resizing/moving a control under a mouse-down can cancel its mouse-up.
-        .transaction { $0.animation = nil }
         .disabled(model.busy)
+        .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
+    }
+
+    private var controlTransition: AnyTransition {
+        reduceMotion ? .opacity : .scale(scale: 0.86, anchor: .trailing).combined(with: .opacity)
     }
 
     private var folderTitle: String {
         model.selectedLecture == "__new__" ? (model.newLecture.isEmpty ? "New folder" : model.newLecture) : model.selectedLecture
+    }
+
+    private var saveToControl: some View {
+        Button(action: toggleSaveToWheel) {
+            HStack(spacing: 5) {
+                Image(systemName: "folder")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Theme.muted)
+                    .rotationEffect(.degrees(saveToExpanded && !reduceMotion ? -360 : 0))
+                    .accessibilityHidden(true)
+                if !saveToExpanded {
+                    Text(folderTitle).font(Theme.text(10.5, .medium)).foregroundStyle(Theme.ink)
+                        .lineLimit(1).truncationMode(.middle).layoutPriority(-1).monospacedDigit()
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.85)))
+                    Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold)).foregroundStyle(Theme.muted)
+                        .accessibilityHidden(true)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, saveToExpanded ? 0 : 8)
+            .frame(width: saveToExpanded ? 34 : nil, height: 34)
+            .frame(maxWidth: saveToExpanded ? nil : .infinity)
+            .background {
+                if saveToExpanded { Circle().fill(Theme.raised) }
+                else { Capsule().fill(Theme.raised) }
+            }
+            .overlay {
+                if saveToExpanded {
+                    Circle().strokeBorder(Theme.accentText.opacity(0.72), lineWidth: 1.2)
+                } else {
+                    Capsule().strokeBorder(Theme.line, lineWidth: 1)
+                }
+            }
+            .contentShape(Capsule())
+        }
+        .focusEffectDisabled()
+        .buttonStyle(CompactControlButtonStyle())
+        .accessibilityLabel(saveToExpanded ? "Folder wheel" : "Save to \(folderTitle)")
+        .accessibilityHint(saveToExpanded ? "Close folder choices" : "Open folder choices")
+        .interactionTarget("dropdown-saveTo")
+        .interactionTarget(saveToExpanded ? "save-to-wheel" : "save-to-button")
+    }
+
+    private var saveToMenu: some View {
+        Menu {
+            ForEach(model.lectures, id: \.self) { lecture in
+                Button {
+                    model.selectedLecture = lecture
+                    dismissSaveToWheel()
+                } label: {
+                    if model.selectedLecture == lecture {
+                        Label(lecture, systemImage: "checkmark")
+                    } else {
+                        Label(lecture, systemImage: "folder")
+                    }
+                }
+                .accessibilityIdentifier("folder-\(lecture)")
+            }
+            if !model.lectures.isEmpty { Divider() }
+            Button("New folder…", systemImage: "folder.badge.plus", action: beginNewFolderName)
+                .accessibilityIdentifier("new-folder")
+            Divider()
+            Button("Choose destination…", systemImage: "externaldrive", action: chooseTranscriptDestination)
+                .disabled(model.working)
+                .accessibilityIdentifier("choose-destination")
+        } label: {
+            HStack(spacing: 6) {
+                Text("Pick folder").font(Theme.text(10.5, .medium))
+                Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+            }
+            .foregroundStyle(Theme.ink)
+            .padding(.horizontal, 10).frame(maxWidth: .infinity, alignment: .leading).frame(height: 34)
+            .background(Theme.raised, in: Capsule())
+            .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button).menuIndicator(.hidden)
+        .buttonStyle(CompactControlButtonStyle())
+        .fixedSize(horizontal: false, vertical: true)
+        .interactionTarget("save-to-picker")
+    }
+
+    private var newFolderNameEntry: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "folder.badge.plus").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accentText)
+                .accessibilityHidden(true)
+            TextField("", text: $model.newLecture,
+                      prompt: Text("Folder name").foregroundStyle(Theme.faint))
+                .textFieldStyle(.plain).font(Theme.text(11)).foregroundStyle(Theme.ink)
+                .focused($focus, equals: .lecture)
+                .accessibilityLabel("New folder name")
+                .interactionTarget("folder-name")
+                .onSubmit(finishNewFolderName)
+            Button(action: finishNewFolderName) {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accentText)
+            }
+            .buttonStyle(.plain).help("Done")
+            .accessibilityLabel("Done")
+            .interactionTarget("new-folder-done")
+        }
+        .padding(.horizontal, 10).frame(height: 36)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.line, lineWidth: 1))
+        .interactionTarget("new-folder-entry")
     }
 
     private func goHome() {
@@ -407,69 +534,6 @@ struct MainView: View {
 
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
         switch control {
-        case .saveTo:
-            VStack(spacing: 2) {
-                if !model.lectures.isEmpty {
-                    ScrollView {
-                        VStack(spacing: 2) {
-                            ForEach(model.lectures, id: \.self) { lecture in
-                                Button {
-                                    model.selectedLecture = lecture
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        if model.selectedLecture == lecture {
-                                            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
-                                        } else {
-                                            Color.clear.frame(width: 14, height: 10)
-                                        }
-                                        Text(lecture).font(Theme.text(11)).foregroundStyle(Theme.ink)
-                                            .lineLimit(1).truncationMode(.middle)
-                                        Spacer(minLength: 0)
-                                    }
-                                    .padding(.horizontal, 8).frame(height: 28)
-                                    .contentShape(Rectangle())
-                                }
-                                .buttonStyle(InsetButtonStyle())
-                                .accessibilityLabel("Save to \(lecture)")
-                                .interactionTarget("folder-\(lecture)")
-                            }
-                        }
-                    }
-                    .scrollBounceBehavior(.basedOnSize)
-                    .frame(height: min(CGFloat(model.lectures.count) * 30 - 2, 128))
-                }
-                if !model.lectures.isEmpty { Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 3) }
-                Button {
-                    model.selectedLecture = "__new__"
-                    model.newLecture = ""
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
-                        Text("New folder…").font(Theme.text(11)).foregroundStyle(Theme.ink)
-                        Spacer(minLength: 0)
-                    }
-                    .padding(.horizontal, 8).frame(height: 28)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(InsetButtonStyle())
-                .interactionTarget("new-folder")
-                if model.selectedLecture == "__new__" {
-                    TextField("", text: $model.newLecture, prompt: Text("Name your folder").foregroundStyle(Theme.faint))
-                        .textFieldStyle(.plain).font(Theme.text(11)).foregroundStyle(Theme.ink)
-                        .focused($focus, equals: .lecture)
-                        .padding(.horizontal, 9).frame(height: 32)
-                        .background(Theme.raised, in: RoundedRectangle(cornerRadius: 7))
-                        .accessibilityLabel("New folder name")
-                        .interactionTarget("folder-name")
-                        .onSubmit {
-                            guard !model.newLecture.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-                            showDropdown(.session)
-                        }
-                }
-            }
-            .padding(8)
-            .card(Theme.surface, radius: 12)
-            .accessibilityElement(children: .contain)
         case .session:
             HStack(spacing: 9) {
                 Image(systemName: "calendar").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.muted)
@@ -499,18 +563,17 @@ struct MainView: View {
     }
 
     private func toggleDropdown(_ control: Dropdown) {
+        if saveToExpanded || enteringNewFolderName { closeSaveToEntry() }
         if openDropdown == control { closeDropdown() }
         else { showDropdown(control) }
     }
 
     private func showDropdown(_ control: Dropdown) {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
-        if control == .saveTo { model.refreshLectures() }
         if control == .vocabulary { prepareVocabularyDraft() }
         openDropdown = control
         switch control {
         case .session: focus = .session
-        case .saveTo: focus = model.selectedLecture == "__new__" ? .lecture : nil
         case .vocabulary: focus = nil
         }
     }
@@ -518,7 +581,53 @@ struct MainView: View {
     private func closeDropdown() {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
         openDropdown = nil
+        saveToExpanded = false
+        enteringNewFolderName = false
         focus = nil
+    }
+
+    private func toggleSaveToWheel() {
+        if openDropdown != nil { closeDropdown() }
+        model.refreshLectures()
+        withAnimation(Motion.state(reduceMotion)) {
+            saveToExpanded.toggle()
+            enteringNewFolderName = false
+        }
+        focus = nil
+    }
+
+    private func dismissSaveToWheel() {
+        withAnimation(Motion.state(reduceMotion)) { saveToExpanded = false }
+        focus = nil
+    }
+
+    private func beginNewFolderName() {
+        model.selectedLecture = "__new__"
+        model.newLecture = ""
+        withAnimation(Motion.state(reduceMotion)) {
+            saveToExpanded = false
+            enteringNewFolderName = true
+        }
+        focus = .lecture
+    }
+
+    private func finishNewFolderName() {
+        guard !model.newLecture.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        withAnimation(Motion.state(reduceMotion)) { enteringNewFolderName = false }
+        focus = nil
+    }
+
+    private func closeSaveToEntry() {
+        withAnimation(Motion.state(reduceMotion)) {
+            saveToExpanded = false
+            enteringNewFolderName = false
+        }
+        focus = nil
+    }
+
+    private func chooseTranscriptDestination() {
+        dismissSaveToWheel()
+        _ = model.chooseTranscriptsFolder()
     }
 
     private func prepareVocabularyDraft() {

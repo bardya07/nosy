@@ -26,6 +26,7 @@ enum UITests {
         try paths.prepareSupport()
         let folder = paths.lectureFolder("MBB322")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: paths.lectureFolder("CHEM281"), withIntermediateDirectories: true)
         let first = folder.appendingPathComponent("First.md")
         let second = folder.appendingPathComponent("Second.md")
         let speech = "# MBB322\n\n## Transcript\n\nATP helps cells.\n\n> [0:01] Exam hint\n"

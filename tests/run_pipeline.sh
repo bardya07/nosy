@@ -89,7 +89,8 @@ python3 - <<'PY'
 import json, os, pathlib
 a = pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])/'audio'
 r = json.loads((a/'20261021-120001.json').read_text())
-assert r['status'] == 'failed' and 'whisper-cli is missing' in r['error']
+assert r['status'] == 'failed' and 'speech engine is missing' in r['error'].lower()
+assert 'your audio is safe' in r['error'].lower()
 assert (a/'20261021-120001.wav').exists()
 PY
 printf 'glycolysis\n NADH   phosphofructokinase\npyruvate ATP\n' > "$NOSY_TRANSCRIPTS_DIR/Biochemistry/vocab.txt"
