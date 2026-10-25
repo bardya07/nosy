@@ -50,6 +50,7 @@ final class TranscriptLibrary: ObservableObject {
     @Published private(set) var items: [TranscriptItem] = []
     @Published private(set) var unfinished: [SessionRecord] = []
     @Published private(set) var selection: URL?
+    @Published private(set) var selectedFolder: String?
     @Published var query = "" { didSet { folders.endSearch(); keepSelectionVisible() } }
     // Open folders in the tree. They are saved to `store` only when the Transcripts window restores them.
     @Published private(set) var folders = TranscriptFolders() {
@@ -139,6 +140,7 @@ final class TranscriptLibrary: ObservableObject {
         keepSelectionVisible()
     }
     var selected: TranscriptItem? { editing ? editingItem : items.first { $0.url == selection } }
+    var importTargetLecture: String? { selectedFolder ?? selected?.lecture }
     var filtered: [TranscriptItem] {
         let needle = query.trimmingCharacters(in: .whitespaces)
         guard !needle.isEmpty else { return items }
@@ -156,6 +158,7 @@ final class TranscriptLibrary: ObservableObject {
     }
     var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
     func isOpen(_ lecture: String) -> Bool { folders.isOpen(lecture, searching: searching) }
+    func selectFolder(_ lecture: String) { selectedFolder = lecture }
     // Rows on screen, top to bottom: a closed folder hides its sessions.
     var visibleRows: [TranscriptItem] { grouped.filter { isOpen($0.lecture) }.flatMap(\.items) }
     func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
@@ -176,7 +179,12 @@ final class TranscriptLibrary: ObservableObject {
     // Selecting a transcript opens its folder, so the one in the reader is always in the tree.
     private func setSelection(_ url: URL?) {
         selection = url
-        guard !searching, let url, let lecture = items.first(where: { $0.url == url })?.lecture else { return }
+        guard let url, let lecture = items.first(where: { $0.url == url })?.lecture else {
+            selectedFolder = nil
+            return
+        }
+        selectedFolder = lecture
+        guard !searching else { return }
         folders.reveal(lecture)
     }
     func move(_ step: Int) {
@@ -257,17 +265,20 @@ struct LibraryView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Focus?
+    @State private var dropping = false
     @State private var copied = false
     var previewQuery: String?
     var previewCollapsed: Bool
+    var previewDropping: Bool
     private var editing: Bool { library.editing }
     private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
-    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false) {
+    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewDropping: Bool = false) {
         self.model = model
         self.previewQuery = previewQuery
         self.previewCollapsed = previewCollapsed
+        self.previewDropping = previewDropping
     }
 
     var body: some View {
@@ -277,12 +288,14 @@ struct LibraryView: View {
             reader
         }
         .frame(minWidth: 720, minHeight: 460)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackdrop())
         .safeAreaPadding(.top, 20)
         .tint(Theme.accentText)
         .onExitCommand(perform: closeAndShowMain)
         .onAppear {
             model.openWindow = openWindow
+            if previewDropping { dropping = true }
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
             model.finishLibraryEditing = { [weak library] in library?.finishEditing() ?? true }
             library.restoreFolders(from: Snapshot.isRunning ? nil : .standard)
@@ -297,6 +310,14 @@ struct LibraryView: View {
         .onChange(of: model.libraryFocus) { reload(); applyFocus() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
         .tipContainerBounds()
+        .dropDestination(for: URL.self) { urls, _ in
+            guard !model.busy else { return false }
+            model.importRecordings(urls, targetLecture: library.importTargetLecture)
+            return true
+        } isTargeted: { dropping = $0 && !model.busy }
+        .overlay {
+            if dropping { AudioDropOverlay().padding(10).allowsHitTesting(false) }
+        }
     }
     private func reload() { library.reload(paths: model.paths) }
     private func applyFocus() {
@@ -337,6 +358,19 @@ struct LibraryView: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 4).padding(.top, 6)
+            Button {
+                model.importRecordingPanel(targetLecture: library.importTargetLecture)
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "square.and.arrow.down").font(.system(size: 12, weight: .semibold))
+                    Text("Import audio")
+                }
+            }
+            .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
+            .tip("Transcribe an audio or video file")
+            .accessibilityLabel("Import audio")
+            .disabled(model.busy)
+            importActivity
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Theme.muted).font(.system(size: 12, weight: .semibold))
                     .accessibilityHidden(true)
@@ -378,11 +412,39 @@ struct LibraryView: View {
         .background(Theme.surface.opacity(0.45))
     }
 
+    @ViewBuilder private var importActivity: some View {
+        if model.importsInProgress > 0 {
+            HStack(spacing: 7) {
+                ProgressView().controlSize(.small)
+                Text("Importing audio · \(model.importsInProgress) left")
+                    .font(Theme.text(11)).foregroundStyle(Theme.muted)
+            }
+            .padding(.horizontal, 4)
+            .accessibilityLabel("Importing audio, \(model.importsInProgress) left")
+        } else if let active = model.active {
+            HStack(spacing: 7) {
+                ProgressView(value: model.transcriptionProgress).controlSize(.small).frame(width: 42)
+                Text(model.transcriptionPauseReason.map { "Paused · \($0)" }
+                     ?? "Transcribing audio · \(Int((model.transcriptionProgress * 100).rounded()))%")
+                    .font(Theme.text(11)).foregroundStyle(Theme.muted).lineLimit(1)
+            }
+            .padding(.horizontal, 4)
+            .accessibilityLabel("Transcribing \(active.lecture) \(active.session)")
+        } else if !model.queue.isEmpty {
+            Text("Audio queued for transcription")
+                .font(Theme.text(11)).foregroundStyle(Theme.muted).padding(.horizontal, 4)
+        } else if let message = model.errorMessage {
+            Text(message).font(Theme.text(11)).foregroundStyle(Theme.coral).lineLimit(2)
+                .padding(.horizontal, 4)
+        }
+    }
+
     // A folder row, with its sessions nested beneath it when open.
     @ViewBuilder private func folderGroup(_ lecture: String, _ items: [TranscriptItem]) -> some View {
         let open = library.isOpen(lecture)
         VStack(alignment: .leading, spacing: 2) {
-            TranscriptFolderRow(lecture: lecture, count: items.count, open: open) {
+            TranscriptFolderRow(lecture: lecture, count: items.count, open: open, selected: library.selectedFolder == lecture) {
+                library.selectFolder(lecture)
                 withAnimation(fold) { library.toggleFolder(lecture) }
             }
             if open {
@@ -555,6 +617,7 @@ private struct TranscriptFolderRow: View {
     let lecture: String
     let count: Int
     let open: Bool
+    let selected: Bool
     let toggle: () -> Void
 
     var body: some View {
@@ -583,6 +646,8 @@ private struct TranscriptFolderRow: View {
             .padding(.horizontal, 10).padding(.vertical, 11)
             .contentShape(Rectangle())
         }
+        .background(selected ? Theme.accent.opacity(0.09) : .clear,
+                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .buttonStyle(FolderRowStyle())
         .accessibilityLabel("\(lecture), \(count) \(count == 1 ? "session" : "sessions")")
         .accessibilityValue(open ? "Expanded" : "Collapsed")
