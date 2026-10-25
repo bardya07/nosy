@@ -3,8 +3,12 @@ import AppKit
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
+    var connector = ClaudeConnector.standard
     @AppStorage("remindAfterHours") private var remindAfterHours = 3
     @AppStorage("compressAudio") private var compressAudio = true
+    @State private var connection: ClaudeConnector.Status = .notAdded
+    @State private var connectionMessage: String?
+    @State private var connectionFailed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -39,6 +43,39 @@ struct SettingsView: View {
                     }
                     note("Folders group transcripts; vocab.txt adds course terms.", tip: "Add course vocabulary")
                 }
+            }
+            section("Connect your AI") {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: connection == .added ? "checkmark.circle.fill" : "circle")
+                            .foregroundStyle(connection == .added ? Theme.green : Theme.muted)
+                        Text(connectionTitle).font(Theme.text(12)).foregroundStyle(Theme.ink)
+                        Spacer(minLength: 0)
+                    }
+                    .fieldChrome()
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Claude Desktop connection")
+                    .accessibilityValue(connectionTitle)
+                    switch connection {
+                    case .added:
+                        Button("Remove") { changeConnection(adding: false) }
+                            .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                            .tip("Remove Nosy from Claude Desktop")
+                    case .notAdded:
+                        Button("Add to Claude Desktop") { changeConnection(adding: true) }
+                            .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                            .tip("Let Claude Desktop read your transcripts")
+                    case .unreadable:
+                        EmptyView()
+                    }
+                    Button("Copy setup for other apps") { copyConnectionSetup() }
+                        .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                        .tip("Copy the setup for Cursor and Claude Code")
+                    Text(connectionNote)
+                        .font(Theme.text(10)).foregroundStyle(connectionIsProblem ? Theme.stop : Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .onAppear { connection = connector.status() }
             }
             section("Audio") {
                 VStack(alignment: .leading, spacing: 8) {
@@ -92,6 +129,45 @@ struct SettingsView: View {
     }
 
     static let columnWidth: CGFloat = 392
+
+    private var connectionTitle: String {
+        switch connection {
+        case .added: "Added"
+        case .notAdded: "Not installed"
+        case .unreadable: "Claude Desktop settings need fixing"
+        }
+    }
+    private var connectionNote: String {
+        if let connectionMessage { return connectionMessage }
+        switch connection {
+        case .added: return "Restart Claude Desktop to load Nosy."
+        case .notAdded: return "Restart Claude Desktop after adding."
+        case .unreadable(let message): return message
+        }
+    }
+    private var connectionIsProblem: Bool {
+        if connectionMessage != nil { return connectionFailed }
+        if case .unreadable = connection { return true }
+        return false
+    }
+    private func changeConnection(adding: Bool) {
+        do {
+            if adding { try connector.add() } else { try connector.remove() }
+            connectionMessage = adding ? "Added. Restart Claude Desktop to use Nosy." : "Removed. Restart Claude Desktop to apply."
+            connectionFailed = false
+        } catch {
+            connectionMessage = error.localizedDescription
+            connectionFailed = true
+        }
+        connection = connector.status()
+    }
+    private func copyConnectionSetup() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(ClaudeDesktopConfig.setupText(command: connector.helperPath), forType: .string)
+        connectionMessage = "Copied the setup."
+        connectionFailed = false
+    }
 
     private var retentionLabel: String {
         switch model.paths.retentionDays {

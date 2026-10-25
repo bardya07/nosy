@@ -15,6 +15,10 @@ swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
     Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
+# The MCP server that lets Claude Desktop and other AI apps read transcripts. Standard library only.
+swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
+    -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
+    Connector/*.swift -o "$APP/Contents/Helpers/nosy-mcp"
 cp -R Resources/Vocabulary "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png Resources/GitHubMark.png "$APP/Contents/Resources/"
@@ -28,8 +32,10 @@ if [[ "$IDENTITY" != - ]]; then SIGN_OPTIONS+=(--timestamp); fi
 # Sign nested code first with the same identity and hardened runtime. An explicit
 # identity must succeed: silently falling back to ad-hoc would break notarization.
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/whisper-cli"
+codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/nosy-mcp"
 codesign "${SIGN_OPTIONS[@]}" --entitlements Resources/Entitlements.plist "$APP"
 codesign --verify --strict "$APP/Contents/Helpers/whisper-cli"
+codesign --verify --strict "$APP/Contents/Helpers/nosy-mcp"
 codesign --verify --deep --strict "$APP"
 printf 'BUILD PASS: %s\n' "$APP"
 if [[ "${1:-}" == install ]]; then

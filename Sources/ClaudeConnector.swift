@@ -1,0 +1,154 @@
+import Foundation
+
+// Adds or removes Nosy's transcript server in Claude Desktop's config. Only the mcpServers.nosy
+// entry changes; every other key is kept. Nothing is written when the file is not valid JSON.
+enum ClaudeDesktopConfig {
+    static let serverName = "nosy"
+
+    enum Failure: LocalizedError, Equatable {
+        case unreadable
+        case serversNotObject
+        case helperMissing
+
+        var errorDescription: String? {
+            switch self {
+            case .unreadable: "Claude Desktop's settings file is not valid JSON, so Nosy left it unchanged. Fix the file, then try again."
+            case .serversNotObject: "The mcpServers entry in Claude Desktop's settings is not an object, so Nosy left the file unchanged."
+            case .helperMissing: "Nosy's connector is missing from this copy of the app. Reinstall Nosy, then try again."
+            }
+        }
+    }
+
+    static func isAdded(_ data: Data?) throws -> Bool {
+        try servers(in: load(data))?[serverName] != nil
+    }
+
+    // The new file contents, or nil when the entry already points at this command.
+    static func adding(to data: Data?, command: String) throws -> Data? {
+        var root = try load(data)
+        var servers = try servers(in: root) ?? [:]
+        if let existing = servers[serverName] as? [String: Any], existing.count == 1, existing["command"] as? String == command {
+            return nil
+        }
+        servers[serverName] = ["command": command]
+        root["mcpServers"] = servers
+        return try encode(root)
+    }
+
+    // The new file contents, or nil when there is no Nosy entry to remove.
+    static func removing(from data: Data?) throws -> Data? {
+        var root = try load(data)
+        guard var servers = try servers(in: root), servers[serverName] != nil else { return nil }
+        servers[serverName] = nil
+        root["mcpServers"] = servers
+        return try encode(root)
+    }
+
+    // What to paste into other apps and into a terminal for Claude Code.
+    static func setupText(command: String) -> String {
+        let snippet: [String: Any] = ["mcpServers": [serverName: ["command": command]]]
+        let json = (try? JSONSerialization.data(withJSONObject: snippet, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]))
+            .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        return """
+        For Claude Desktop, Cursor and other apps that read mcpServers, add this to their config file:
+        \(json)
+
+        For Claude Code, run this in a terminal:
+        claude mcp add \(serverName) -- \(shellQuoted(command))
+        """
+    }
+
+    static func shellQuoted(_ path: String) -> String {
+        let plain = path.unicodeScalars.allSatisfy { scalar in
+            (scalar.value < 128 && (CharacterSet.alphanumerics.contains(scalar))) || "/._-+:@".unicodeScalars.contains(scalar)
+        }
+        if plain { return path }
+        return "'" + path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
+    // An empty or missing file counts as an empty object.
+    private static func load(_ data: Data?) throws -> [String: Any] {
+        guard let data, !data.allSatisfy({ [0x20, 0x09, 0x0A, 0x0D].contains($0) }) else { return [:] }
+        guard let object = try? JSONSerialization.jsonObject(with: data), let root = object as? [String: Any] else {
+            throw Failure.unreadable
+        }
+        return root
+    }
+
+    private static func servers(in root: [String: Any]) throws -> [String: Any]? {
+        guard let value = root["mcpServers"] else { return nil }
+        guard let servers = value as? [String: Any] else { throw Failure.serversNotObject }
+        return servers
+    }
+
+    private static func encode(_ root: [String: Any]) throws -> Data {
+        try JSONSerialization.data(withJSONObject: root, options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes])
+            + Data("\n".utf8)
+    }
+}
+
+// The Settings section's file work. Paths are injectable so previews and tests never touch the real config.
+struct ClaudeConnector: Sendable {
+    enum Status: Equatable, Sendable {
+        case added
+        case notAdded
+        case unreadable(String)
+    }
+
+    let configURL: URL
+    let helperURL: URL
+
+    static var standard: ClaudeConnector {
+        ClaudeConnector(
+            configURL: FileManager.default.homeDirectoryForCurrentUser
+                .appendingPathComponent("Library/Application Support/Claude/claude_desktop_config.json"),
+            helperURL: Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/nosy-mcp"))
+    }
+
+    var helperPath: String { helperURL.path }
+
+    func status() -> Status {
+        do {
+            return try ClaudeDesktopConfig.isAdded(readConfig()) ? .added : .notAdded
+        } catch {
+            return .unreadable(error.localizedDescription)
+        }
+    }
+
+    func add() throws {
+        guard FileManager.default.isExecutableFile(atPath: helperURL.path) else { throw ClaudeDesktopConfig.Failure.helperMissing }
+        let original = try readConfig()
+        guard let updated = try ClaudeDesktopConfig.adding(to: original, command: helperPath) else { return }
+        try replace(original, with: updated)
+    }
+
+    func remove() throws {
+        let original = try readConfig()
+        guard let updated = try ClaudeDesktopConfig.removing(from: original) else { return }
+        try replace(original, with: updated)
+    }
+
+    // A missing file reads as nil. A file that exists but cannot be read throws, so it is never overwritten.
+    private func readConfig() throws -> Data? {
+        guard FileManager.default.fileExists(atPath: configURL.path) else { return nil }
+        return try Data(contentsOf: configURL)
+    }
+
+    private func replace(_ original: Data?, with updated: Data) throws {
+        try FileManager.default.createDirectory(at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let original {
+            // Keep the settings as they were before this change. An existing backup is never overwritten.
+            try original.write(to: backupURL(), options: .withoutOverwriting)
+        }
+        try updated.write(to: configURL, options: .atomic)
+    }
+
+    private func backupURL() -> URL {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd-HHmmss-SSS"
+        let stamp = formatter.string(from: Date())
+        return configURL.deletingLastPathComponent()
+            .appendingPathComponent("claude_desktop_config.backup-\(stamp).json")
+    }
+}

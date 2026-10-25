@@ -370,7 +370,9 @@ enum Snapshot {
                     .padding(36).background(PreviewBackdrop()), "settings-summaries-local.\(mode)"),
                   save(LibraryView(model: model(.idle)).frame(width: 860, height: 560)
                     .clipShape(RoundedRectangle(cornerRadius: 18)).padding(36).background(PreviewBackdrop()), "library.\(mode)"),
-                  save(SettingsView(model: model(.idle)).clipShape(RoundedRectangle(cornerRadius: 18))
+                  save(SettingsView(model: model(.idle), connector: ClaudeConnector(
+                    configURL: fixture.appendingPathComponent("claude_desktop_config.json"),
+                    helperURL: fixture.appendingPathComponent("nosy-mcp"))).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings.\(mode)"),
                   save(PreviewWindow { OnboardingView(model: model(.idle)) }
                     .padding(36).background(PreviewBackdrop()), "onboarding.\(mode)") else { return 1 }
