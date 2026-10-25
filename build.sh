@@ -40,6 +40,20 @@ codesign --verify --strict "$APP/Contents/Helpers/nosy-mcp"
 codesign --verify --deep --strict "$APP"
 printf 'BUILD PASS: %s\n' "$APP"
 if [[ "${1:-}" == install ]]; then
+    # Recheck after compilation, immediately before quitting/replacing the installed app.
+    python3 - <<'PY'
+import json, pathlib, sys
+audio = pathlib.Path.home() / 'Library/Application Support/Nosy/audio'
+sidecars = list(audio.glob('*.json'))
+if sidecars:
+    latest = max(sidecars, key=lambda path: path.stat().st_mtime_ns)
+    try:
+        status = json.loads(latest.read_text())['status']
+    except (OSError, ValueError, KeyError):
+        sys.exit('INSTALL BLOCKED: the newest recording sidecar could not be checked.')
+    if status in ('recording', 'transcribing'):
+        sys.exit('INSTALL BLOCKED: Nosy is still recording or transcribing. Finish that work first.')
+PY
     osascript -e 'quit app "Nosy"' 2>/dev/null || true
     osascript -e 'quit app "Lecture Transcriber"' 2>/dev/null || true
     rm -rf '/Applications/Lecture Transcriber.app'
