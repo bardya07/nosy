@@ -1,6 +1,6 @@
 import Foundation
 
-// Find key moments: prompt and schema building, reply validation, label rules, spacing and the cap,
+// Find key moments: prompt and schema building, reply validation, label rules, spacing and duration ceilings,
 // approximate times for old transcripts, chunk overlap, the engine with scripted replies, placement in
 // the reader, and durable storage beside the transcript: retention, legacy migration and removal. NOSY_KEY_MOMENTS_TRANSCRIPT runs the real local model
 // once on one transcript and prints what it found; nothing is written anywhere.
@@ -70,8 +70,14 @@ enum KeyMomentsTests {
 
         let final = try! JSONSerialization.jsonObject(with: Data(KeyMoments.schema(final: true).utf8)) as! [String: Any]
         let finalMarkers = (final["properties"] as! [String: Any])["markers"] as! [String: Any]
-        check(finalMarkers["maxItems"] as? Int == 10, "final schema caps the result at 10")
+        check(finalMarkers["maxItems"] as? Int == 12, "final schema uses the hard ceiling when no duration is provided")
         check((final["properties"] as! [String: Any])["topic"] == nil, "final schema has no topic")
+        check(KeyMoments.markerBudget(duration: 4 * 60) == 1, "a short recording gets a small ceiling")
+        check(KeyMoments.markerBudget(duration: 30 * 60) == 5, "a 30 minute recording gets a ceiling of 5")
+        check(KeyMoments.markerBudget(duration: 60 * 60) == 9, "a 60 minute recording gets a ceiling of 9")
+        check(KeyMoments.markerBudget(duration: 63 * 60) == 9, "a 63 minute recording gets a ceiling of 9")
+        check(KeyMoments.markerBudget(duration: 90 * 60) == 12, "very long recordings stop at the hard ceiling")
+        check(KeyMoments.chunkPickLimit(markerBudget: 9, chunkCount: 6) == 2, "chunk allowance scales with the duration ceiling")
 
         let prompt = KeyMoments.chunkPrompt(units(count: 2), title: "MBB322 · 2026-10-23", topics: [])
         check(prompt.contains("[0] Steady speech about"), "chunk prompt lists segments with their IDs")
@@ -87,11 +93,17 @@ enum KeyMomentsTests {
         check(prompt.contains(KeyMoments.schema(final: false)), "chunk prompt includes its schema")
 
         let candidates = [KeyMomentCandidate(unit: units(count: 1, every: 1)[0], label: "Enzymes lower energy")]
-        let final0 = KeyMoments.finalPrompt(candidates, title: "MBB322", topics: ["Enzymes"])
+        let final0 = KeyMoments.finalPrompt(candidates, title: "MBB322", topics: ["Enzymes"], duration: 60 * 60)
         check(final0.contains("[0] at 0:00 Enzymes lower energy"), "final prompt shows candidate IDs, time and label")
-        check(final0.contains("Choose at most 10 candidates"), "final prompt caps at 10")
+        check(final0.contains("Choose at most 9 candidates; fewer is better if the content doesn't change"), "final prompt uses the duration based ceiling as guidance")
+        check(final0.contains("Never add markers to fill time or even out spacing"), "final prompt forbids quota and spacing markers")
+        check(final0.contains("Zero is fine for a short or single topic recording"), "final prompt allows no markers")
+        check(!final0.contains("spread the choices across the whole talk"), "final prompt does not demand spacing across the talk")
+        let finalSchema = try! JSONSerialization.jsonObject(with: Data(KeyMoments.schema(final: true, limit: 9).utf8)) as! [String: Any]
+        check(((finalSchema["properties"] as! [String: Any])["markers"] as! [String: Any])["maxItems"] as? Int == 9,
+              "final schema matches the duration ceiling")
         check(final0.contains("Use only the candidate numbers"), "final prompt forbids invented numbers")
-        check(final0.contains(KeyMoments.schema(final: true)), "final prompt includes its schema")
+        check(final0.contains(KeyMoments.schema(final: true, limit: 9)), "final prompt includes its duration based schema")
     }
 
     static func validation() {
@@ -149,13 +161,16 @@ enum KeyMomentsTests {
                                        manualTimes: [200], duration: 3600)
         check(manual.map(\.label) == ["Clear of manual"], "AI markers within a minute of a manual marker are suppressed")
 
-        // Eleven spaced picks: the closest pair is 130 seconds apart (200 and 330), so the later of that pair goes.
-        let times: [Double] = [0, 200, 330, 500, 700, 900, 1100, 1300, 1500, 1700, 1900]
+        // Six picks for a 30 minute lecture: trim to five, dropping the later member of the closest pair.
+        let times: [Double] = [0, 200, 330, 500, 700, 900]
         let crowded = KeyMoments.finish(times.enumerated().map { candidate($0.offset, $0.element, "Label number \($0.offset)") },
-                                        manualTimes: [], duration: nil)
-        check(crowded.count == 10, "the cap is 10 markers")
+                                        manualTimes: [], duration: 30 * 60)
+        check(crowded.count == 5, "the duration ceiling trims excess markers")
         check(!crowded.map(\.t).contains(330) && crowded.map(\.t).contains(200), "the cap drops the later member of the closest pair")
         check(zip(crowded, crowded.dropFirst()).allSatisfy { $1.t - $0.t >= KeyMoments.minimumSpacing }, "kept markers stay 120 seconds apart")
+        check(KeyMoments.finish([], manualTimes: [], duration: 3600).isEmpty, "validation never pads an empty result")
+        let one = KeyMoments.finish([candidate(1, 10, "One clear moment")], manualTimes: [], duration: 3600)
+        check(one.count == 1, "validation never pads a sparse result to the ceiling")
     }
 
     static func approximateTimes() {
@@ -218,7 +233,7 @@ enum KeyMomentsTests {
                     guard line.hasPrefix("["), let close = line.firstIndex(of: "]") else { return nil }
                     return Int(line[line.index(after: line.startIndex)..<close])
                 }
-                let picks = ids.prefix(10).map { #"{"segment_id":\#($0),"label":"Final pick number"}"# }
+                let picks = ids.prefix(KeyMoments.hardMaxMarkers).map { #"{"segment_id":\#($0),"label":"Final pick number"}"# }
                 return #"{"markers":["# + picks.joined(separator: ",") + "]}"
             }
             let body = prompt.components(separatedBy: "<segments>\n").last?.components(separatedBy: "\n</segments>").first ?? ""
@@ -234,7 +249,7 @@ enum KeyMomentsTests {
         let markers = try await KeyMoments.find(units: lecture, duration: 3780, manualTimes: [], title: "MBB322",
             report: { _, _ in },
             complete: { prompt in scripted.reply(prompt) })
-        check((1...10).contains(markers.count), "the scripted run keeps at most 10 markers, got \(markers.count)")
+        check((1...KeyMoments.markerBudget(duration: 3780)).contains(markers.count), "the scripted run stays within its duration ceiling, got \(markers.count)")
         check(zip(markers, markers.dropFirst()).allSatisfy { $1.t - $0.t >= KeyMoments.minimumSpacing }, "run output stays spaced")
         check(markers.allSatisfy { marker in lecture.contains { $0.start == marker.t } }, "every marker time is the start of a real segment")
         check(scripted.prompts.last?.contains("Candidates:") == true, "a final pass runs when candidates exceed the cap")
@@ -273,7 +288,7 @@ enum KeyMomentsTests {
         }
         let fallback = try await KeyMoments.find(units: lecture, duration: 3780, manualTimes: [], title: "x",
             report: { _, _ in }, complete: { prompt in finalBroken.reply(prompt) })
-        check(!fallback.isEmpty && fallback.count <= 10, "a failed final pass still returns moments")
+        check(!fallback.isEmpty && fallback.count <= KeyMoments.markerBudget(duration: 3780), "a failed final pass still returns moments within the duration ceiling")
 
         do {
             _ = try await KeyMoments.find(units: units(count: 4), duration: 12, manualTimes: [], title: "x",
