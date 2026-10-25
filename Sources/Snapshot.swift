@@ -161,9 +161,28 @@ enum Snapshot {
         // Summary settings fixtures write to their own throwaway suites.
         let apiDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-api")!
         let localDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-local")!
+        // Live level and reminder choices get their own throwaway suites as well.
+        let technicalLevel = UserDefaults(suiteName: "com.bardya.nosy.preview.level-technical")!
+        let customReminder = UserDefaults(suiteName: "com.bardya.nosy.preview.custom-reminder")!
         defer {
             apiDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-api")
             localDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-local")
+            technicalLevel.removePersistentDomain(forName: "com.bardya.nosy.preview.level-technical")
+            customReminder.removePersistentDomain(forName: "com.bardya.nosy.preview.custom-reminder")
+        }
+        technicalLevel.set(LevelDisplay.technical.rawValue, forKey: LevelDisplay.storageKey)
+        customReminder.set(45, forKey: ReminderInterval.storageKey)
+        // Claude Desktop states come from fixtures, so the previews never depend on what this Mac has installed.
+        let helperURL = fixture.appendingPathComponent("nosy-mcp")
+        let absentConfig = fixture.appendingPathComponent("claude_desktop_config.json")
+        let connectedConfig = fixture.appendingPathComponent("connected/claude_desktop_config.json")
+        try? manager.createDirectory(at: connectedConfig.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let connectedData = try? ClaudeDesktopConfig.adding(to: nil, command: helperURL.path) {
+            try? connectedData.write(to: connectedConfig)
+        }
+        func desktopConnector(config: URL, installed: Bool, running: Bool) -> ClaudeConnector {
+            ClaudeConnector(configURL: config, helperURL: helperURL,
+                            desktop: { ClaudeDesktopApp.Status(installed: installed, running: running) })
         }
         apiDefaults.set(SummaryProvider.anthropic.rawValue, forKey: SummarySettings.providerKey)
         apiDefaults.set(true, forKey: SummarySettings.automaticKey)
@@ -198,6 +217,11 @@ enum Snapshot {
                        "transcribing.\(mode)") else { return 1 }
             guard save(PreviewWindow { MainView(model: model(.idle), previewDropping: true) }
                     .padding(36).background(PreviewBackdrop()), "drop-main.\(mode)") else { return 1 }
+            // The live level in both readings: the everyday estimate first, then the technical dBFS value.
+            guard save(PreviewWindow { MainView(model: model(.recording)) }
+                    .padding(36).background(PreviewBackdrop()), "recording-estimate.\(mode)"),
+                  save(PreviewWindow { MainView(model: model(.recording)) }.defaultAppStorage(technicalLevel)
+                    .padding(36).background(PreviewBackdrop()), "recording-technical.\(mode)") else { return 1 }
             let readyRoom = model(.idle, source: .mic)
             let readyMac = model(.idle, source: .both)
             guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
@@ -363,6 +387,12 @@ enum Snapshot {
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-folder-delete-hover.\(mode)"),
                   save(PreviewWindow { LibraryView(model: model(.idle), previewDropping: true) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "drop-library.\(mode)") else { return 1 }
+            // A folder row with keyboard focus: Delete moves it to the Trash after the confirmation.
+            guard save(PreviewWindow { LibraryView(model: model(.idle), previewFocusedFolder: "MBB322") }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-folder-focused.\(mode)") else { return 1 }
+            // The folder Trash confirmation, drawn from the same alert the owner sees.
+            let trashConfirmation = LectureFolderTrash.makeConfirmation("MBB322")
+            guard renderAlert(trashConfirmation.alert, scheme: scheme, to: base.appendingPathExtension("trash-confirmation.\(mode).png")) else { return 1 }
             setenv("NOSY_TRANSCRIPTS_DIR", emptyTranscripts.path, 1)
             let emptyLibraryModel = AppModel()
             setenv("NOSY_TRANSCRIPTS_DIR", transcripts.path, 1)
@@ -404,16 +434,23 @@ enum Snapshot {
                     .padding(36).background(PreviewBackdrop()), "settings-summaries.\(mode)"),
                   save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(localDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-summaries-local.\(mode)"),
+                  save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false))
+                    .defaultAppStorage(customReminder).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-reminder-custom.\(mode)"),
                   save(LibraryView(model: model(.idle)).frame(width: 860, height: 560)
                     .clipShape(RoundedRectangle(cornerRadius: 18)).padding(36).background(PreviewBackdrop()), "library.\(mode)"),
-                  save(SettingsView(model: model(.idle), connector: ClaudeConnector(
-                    configURL: fixture.appendingPathComponent("claude_desktop_config.json"),
-                    helperURL: fixture.appendingPathComponent("nosy-mcp"))).clipShape(RoundedRectangle(cornerRadius: 18))
+                  save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false))
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings.\(mode)"),
-                  save(SettingsView(model: model(.idle), connector: ClaudeConnector(
-                    configURL: fixture.appendingPathComponent("claude_desktop_config.json"),
-                    helperURL: fixture.appendingPathComponent("nosy-mcp")), pane: .connect).clipShape(RoundedRectangle(cornerRadius: 18))
+                  save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false),
+                    pane: .connect).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-connect.\(mode)"),
+                  save(SettingsView(model: model(.idle), connector: desktopConnector(config: connectedConfig, installed: true, running: true),
+                    pane: .connect).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-connect-added.\(mode)"),
+                  save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: false, running: false),
+                    pane: .connect).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-connect-missing.\(mode)"),
                   save(PreviewWindow { OnboardingView(model: model(.idle)) }
                     .padding(36).background(PreviewBackdrop()), "onboarding.\(mode)") else { return 1 }
         }
@@ -444,6 +481,22 @@ private struct PreviewBackdrop: View {
             .init(color: Color(hex: 0xD8F4E0), location: 0.72), .init(color: Color(hex: 0x7FCB5A), location: 1)
         ], startPoint: .top, endPoint: .bottom)
     }
+}
+
+// Draws an alert's own window, which SwiftUI cannot host. The alert is never shown on screen.
+@MainActor
+private func renderAlert(_ alert: NSAlert, scheme: ColorScheme, to url: URL) -> Bool {
+    alert.window.appearance = NSAppearance(named: scheme == .dark ? .darkAqua : .aqua)
+    alert.layout()
+    guard let view = alert.window.contentView else { return false }
+    view.layoutSubtreeIfNeeded()
+    RunLoop.main.run(until: Date().addingTimeInterval(0.2))
+    guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return false }
+    view.cacheDisplay(in: view.bounds, to: rep)
+    guard let data = rep.representation(using: .png, properties: [:]) else { return false }
+    do { try data.write(to: url) } catch { print(error); return false }
+    print("SNAPSHOT \(url.path)")
+    return true
 }
 
 @MainActor

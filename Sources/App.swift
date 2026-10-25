@@ -975,7 +975,7 @@ struct MainView: View {
             HStack(spacing: 10) {
                 Text("Level").font(Theme.text(11)).foregroundStyle(Theme.muted)
                 LevelBar(decibels: model.level)
-                LiveLevelReadout(model: model).frame(width: 74, alignment: .trailing)
+                LiveLevelReadout(model: model)
             }
             .padding(.horizontal, 8)
             Text("The level reads live while you record.")
@@ -1259,21 +1259,60 @@ private struct LibraryPillStyle: ButtonStyle {
     }
 }
 
-// Samples the recorder's level about ten times a second, so the dB stat moves smoothly instead of flickering.
+// Samples the recorder's level about ten times a second, so the readout moves smoothly instead of flickering.
+// Tapping it switches between the estimated sound level and the technical value. The choice is remembered.
 struct LiveLevelReadout: View {
     @ObservedObject var model: AppModel
+    @AppStorage(LevelDisplay.storageKey) private var savedDisplay = LevelDisplay.estimate.rawValue
     @State private var shown = InputLevel.silent
+
+    private var display: LevelDisplay { LevelDisplay.stored(savedDisplay) }
+
     var body: some View {
-        Text(InputLevel.readout(shown))
-            .font(Theme.text(12, .semibold)).monospacedDigit()
-            .foregroundStyle(Theme.muted)
-            .lineLimit(1)
-            .onAppear { shown = model.level }
-            .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
-                if shown != model.level { shown = model.level }
+        Button {
+            savedDisplay = display.toggled.rawValue
+        } label: {
+            HStack(spacing: 6) {
+                Text(InputLevel.primary(shown, display: display))
+                    .font(Theme.text(12, .semibold)).monospacedDigit()
+                    .foregroundStyle(Theme.muted)
+                if display == .estimate {
+                    let band = InputLevel.band(shown)
+                    Text(band.label)
+                        .font(Theme.text(9.5, .semibold))
+                        .foregroundStyle(band.tint)
+                        .padding(.horizontal, 6).padding(.vertical, 1)
+                        .background(band.tint.opacity(0.14), in: Capsule())
+                }
             }
-            .accessibilityLabel("Input level")
-            .accessibilityValue(InputLevel.readout(shown))
+            .lineLimit(1)
+            .fixedSize()
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .tip(display == .estimate ? "Estimated sound level. Tap for the technical value." : "Level in dB below full scale. Tap for the estimate.")
+        .onAppear { shown = model.level }
+        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
+            if shown != model.level { shown = model.level }
+        }
+        .accessibilityLabel("Input level")
+        .accessibilityValue(spokenValue)
+        .accessibilityHint("Switches between the estimated sound level and the technical value")
+    }
+
+    private var spokenValue: String {
+        guard display == .estimate else { return InputLevel.technical(shown) }
+        return "\(InputLevel.estimate(shown)) decibels, \(InputLevel.band(shown).label)"
+    }
+}
+
+private extension InputLevel.Band {
+    var tint: Color {
+        switch self {
+        case .quiet: Theme.accentText
+        case .good: Theme.savedText
+        case .loud: Theme.amber
+        }
     }
 }
 
@@ -1292,7 +1331,7 @@ private struct LevelBar: View {
         .animation(reduceMotion ? nil : .linear(duration: 0.1), value: decibels)
         .accessibilityElement()
         .accessibilityLabel("Input level meter")
-        .accessibilityValue(InputLevel.readout(decibels))
+        .accessibilityValue(InputLevel.technical(decibels))
     }
 }
 
@@ -1448,7 +1487,7 @@ struct StagePanel: View {
             Waveform(levels: model.levels, tint: Theme.wavePlayed, active: !model.paused)
                 .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
                 .background(Theme.waveform, in: Capsule())
-                .accessibilityLabel("Live recording input").accessibilityValue("\(Int(model.level)) decibels")
+                .accessibilityLabel("Live recording input").accessibilityValue(InputLevel.technical(model.level))
             RecordingMarkers(model: model)
             if let active = model.active {
                 HStack(spacing: 6) {

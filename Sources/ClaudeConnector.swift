@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Darwin
 
@@ -92,6 +93,80 @@ enum ClaudeDesktopConfig {
     }
 }
 
+// Claude Desktop itself, found by its bundle identifier. Nosy quits it gently and opens it again.
+// It never force quits, so an unsaved prompt or a dialog in Claude Desktop is never lost.
+enum ClaudeDesktopApp {
+    static let bundleID = "com.anthropic.claudefordesktop"
+    static let downloadURL = URL(string: "https://claude.ai/download")!
+
+    struct Status: Equatable, Sendable {
+        var installed: Bool
+        var running: Bool
+    }
+
+    enum RestartOutcome: Equatable {
+        case restarted
+        case notRunning
+        case stillRunning
+        case failed
+    }
+
+    @MainActor static func status() -> Status {
+        Status(installed: NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) != nil,
+               running: stillRunning())
+    }
+
+    @MainActor static func stillRunning() -> Bool {
+        NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).contains { !$0.isTerminated }
+    }
+
+    // Quits a running Claude Desktop, waits for it to finish, then opens it again. A copy that is not running is left alone.
+    @MainActor static func restart() async -> RestartOutcome {
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).filter { !$0.isTerminated }
+        guard !running.isEmpty else { return .notRunning }
+        let url = running.first?.bundleURL ?? NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+        // terminate() asks the app to quit, so it can finish or ask first.
+        for app in running { _ = app.terminate() }
+        // About fifteen seconds for Claude Desktop to close on its own.
+        var waits = 0
+        while stillRunning(), waits < 75 {
+            try? await Task.sleep(for: .milliseconds(200))
+            waits += 1
+        }
+        guard !stillRunning() else { return .stillRunning }
+        guard let url else { return .failed }
+        do {
+            _ = try await NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+            return .restarted
+        } catch {
+            return .failed
+        }
+    }
+}
+
+// The words on the Connect your AI pane. They live here so tests can check them.
+enum ConnectionCopy {
+    static let connected = "Connected to Claude Desktop"
+    static let notConnected = "Not connected yet"
+    static let notInstalled = "Claude Desktop is not installed"
+    static let needsFixing = "Claude Desktop settings need fixing"
+    static let steps = ["Quit and reopen Claude Desktop.", "Ask: \u{201C}Summarize my latest lecture\u{201D}"]
+    static let examplePrompt = "Summarize my latest lecture"
+    static let copiedPrompt = "Copied the example prompt."
+    static let closedNote = "Claude Desktop is not open. Open it to use Nosy."
+    static let installNote = "Install Claude Desktop, then come back here to connect Nosy."
+    static let downloadLabel = "Get Claude Desktop"
+    static let removedNote = "Removed. Restart Claude Desktop to apply."
+
+    static func title(_ status: ClaudeConnector.Status, installed: Bool) -> String {
+        switch status {
+        case .added: connected
+        case .notAdded: installed ? notConnected : notInstalled
+        case .unreadable: needsFixing
+        }
+    }
+}
+
 // The Settings section's file work. Paths are injectable so previews and tests never touch the real config.
 struct ClaudeConnector: Sendable {
     enum Status: Equatable, Sendable {
@@ -102,6 +177,8 @@ struct ClaudeConnector: Sendable {
 
     let configURL: URL
     let helperURL: URL
+    // Whether Claude Desktop is installed and open. Previews replace this so they never depend on this Mac.
+    var desktop: @MainActor @Sendable () -> ClaudeDesktopApp.Status = { ClaudeDesktopApp.status() }
 
     static var standard: ClaudeConnector {
         ClaudeConnector(

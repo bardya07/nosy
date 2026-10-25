@@ -223,7 +223,7 @@ enum UITests {
         let tipTexts = ["Start recording", "All your transcripts", "Change where transcripts are saved", "Open setup",
                         "Pick a subject or setting to fine tune the vocabulary.", "Use today's date"]
         for text in tipTexts {
-            for edge in [VerticalEdge.top, .bottom] {
+            for edge in [TipEdge.top, .bottom, .trailing] {
                 for x in stride(from: CGFloat(0), through: frameSize.width, by: 20) {
                     for y in stride(from: CGFloat(0), through: frameSize.height, by: 15) {
                         let anchor = CGRect(x: x - 10, y: y - 8, width: 20, height: 16)
