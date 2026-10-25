@@ -91,7 +91,9 @@ struct AudioDropOverlay: View {
         GeometryReader { geometry in
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Theme.accent.opacity(0.12))
+                    .fill(Color(nsColor: .windowBackgroundColor).opacity(0.55))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Theme.accent.opacity(0.10))
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .strokeBorder(Theme.accentText, lineWidth: 2)
                 VStack(spacing: 8) {
@@ -102,8 +104,12 @@ struct AudioDropOverlay: View {
                         .font(Theme.text(15, .semibold))
                         .foregroundStyle(Theme.navy)
                 }
-                .padding(20)
-                .background(Theme.surface.opacity(0.92), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.horizontal, 28).padding(.vertical, 20)
+                // Opaque badge: the text behind the drop target must not show through.
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color(nsColor: .windowBackgroundColor)))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.accent.opacity(0.08)).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.line))
+                .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }

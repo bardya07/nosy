@@ -368,9 +368,9 @@ enum Snapshot {
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-summarizing.\(mode)"),
                   save(LibraryView(model: model(.idle), previewSummary: true).frame(width: 720, height: 460)
                     .padding(36).background(PreviewBackdrop()), "library-summary-minimum.\(mode)"),
-                  save(SettingsView(model: summaryModel).defaultAppStorage(apiDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
+                  save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(apiDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-summaries.\(mode)"),
-                  save(SettingsView(model: summaryModel).defaultAppStorage(localDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
+                  save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(localDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-summaries-local.\(mode)"),
                   save(LibraryView(model: model(.idle)).frame(width: 860, height: 560)
                     .clipShape(RoundedRectangle(cornerRadius: 18)).padding(36).background(PreviewBackdrop()), "library.\(mode)"),
@@ -378,6 +378,10 @@ enum Snapshot {
                     configURL: fixture.appendingPathComponent("claude_desktop_config.json"),
                     helperURL: fixture.appendingPathComponent("nosy-mcp"))).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings.\(mode)"),
+                  save(SettingsView(model: model(.idle), connector: ClaudeConnector(
+                    configURL: fixture.appendingPathComponent("claude_desktop_config.json"),
+                    helperURL: fixture.appendingPathComponent("nosy-mcp")), pane: .connect).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-connect.\(mode)"),
                   save(PreviewWindow { OnboardingView(model: model(.idle)) }
                     .padding(36).background(PreviewBackdrop()), "onboarding.\(mode)") else { return 1 }
         }

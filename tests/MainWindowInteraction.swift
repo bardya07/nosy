@@ -92,7 +92,9 @@ enum MainWindowInteraction {
         expect(model.startValidationRequest == initialValidationRequest + 1, "Command R reaches the empty session gate")
         expect(model.phase == .idle && !model.busy, "An empty session never starts recording")
         await panel(true, "Command R opens the Session field")
-        expect(targets(in: host).contains(where: { $0.id == "session-required-message" && !$0.visibleRect.isEmpty }),
+        func messageShown() -> Bool { targets(in: host).contains(where: { $0.id == "session-required-message" && !$0.visibleRect.isEmpty }) }
+        for _ in 0..<20 where !messageShown() { await settle(host, window) }
+        expect(messageShown(),
                "The empty session message appears under the field")
         expect(window.firstResponder is NSTextView, "Command R focuses the Session field")
         expect((window.firstResponder as? NSTextView)?.string.isEmpty == true, "The Session field has no default date")
