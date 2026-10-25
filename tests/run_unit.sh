@@ -6,6 +6,12 @@ source scripts/audio-shim.sh
 python3 tests/InstallGuardTests.py
 mkdir -p "$BUILD_DIR/module-cache"
 clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
+swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" Sources/FeatureGates.swift tests/FeatureGatesTests.swift -o "$BUILD_DIR/FeatureGatesTests"
+"$BUILD_DIR/FeatureGatesTests"
+swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" Sources/RecordingGuidance.swift tests/RecordingGuidanceTests.swift -o "$BUILD_DIR/RecordingGuidanceTests"
+"$BUILD_DIR/RecordingGuidanceTests"
 "$BUILD_DIR/AudioExceptionsTests"
 BACKEND=(Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/KeyMomentStore.swift)
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
@@ -22,6 +28,9 @@ swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-l
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/KeyMomentsTests.swift -o "$BUILD_DIR/KeyMomentsTests"
 "$BUILD_DIR/KeyMomentsTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/AIFeatureSchedulingTests.swift -o "$BUILD_DIR/AIFeatureSchedulingTests"
+"$BUILD_DIR/AIFeatureSchedulingTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/LocalModelTests.swift -o "$BUILD_DIR/LocalModelTests"
 "$BUILD_DIR/LocalModelTests"
@@ -44,7 +53,7 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
     Sources/ClaudeConnector.swift tests/ConnectorTests.swift -o "$BUILD_DIR/ConnectorTests"
 "$BUILD_DIR/ConnectorTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/MainControls.swift tests/MainControlsTests.swift -o "$BUILD_DIR/MainControlsTests"
+    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/RecordingGuidance.swift Sources/MainControls.swift tests/MainControlsTests.swift -o "$BUILD_DIR/MainControlsTests"
 "$BUILD_DIR/MainControlsTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/LibraryTests.swift -o "$BUILD_DIR/LibraryTests"

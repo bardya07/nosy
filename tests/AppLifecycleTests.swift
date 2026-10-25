@@ -92,6 +92,7 @@ enum AppLifecycleTests {
         let suite = "com.bardya.nosy.lifecycle.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(true, forKey: AIFeatures.storageKey)
         defaults.set(SummaryProvider.claudeCode.rawValue, forKey: SummarySettings.providerKey)
         let center = SummaryCenter()
         center.defaults = defaults

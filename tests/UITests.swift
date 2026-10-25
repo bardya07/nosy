@@ -241,8 +241,82 @@ enum UITests {
                 }
             }
         }
+        // Display removal, negative desktop origins, oversized frames and edge clamping.
+        let screens = [NSRect(x: -1440, y: 0, width: 1440, height: 875), NSRect(x: 0, y: 25, width: 1280, height: 775)]
+        for screen in screens {
+            for frame in [NSRect(x: -9000, y: 5000, width: 1000, height: 680),
+                          NSRect(x: 9000, y: -5000, width: 400, height: 300),
+                          NSRect(x: 0, y: 0, width: 4000, height: 3000)] {
+                check(screen.contains(WorkspaceGeometry.clamped(frame, to: screen)), "Every frame fits the remaining visible screen")
+            }
+        }
+        check(WorkspaceGeometry.screen(for: NSRect(x: -1300, y: 30, width: 400, height: 300), screens: screens) == screens[0],
+              "Restoration uses the screen with the greatest overlap")
+        model.workspace.showLibrary()
+        model.workspace.showSettings()
+        check(model.workspace.mode == .library && model.workspace.panel == .settings, "Settings retains the underlying mode")
+        model.workspace.dismissPanel()
+        check(model.workspace.mode == .library, "Closing a panel retains Library")
+        model.workspace.showHome()
+        try await workspaceFrames(model: model)
         try await MainWindowInteraction.run(model: model)
         try await AppLifecycleTests.run()
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
     }
+    // Frame and retained-state integration needs no posted input, so it also runs
+    // when macOS locks the screen and the native click test must report SKIPPED.
+    static func workspaceFrames(model: AppModel) async throws {
+        let host = NSHostingView(rootView: WorkspaceView(model: model))
+        let window = NSWindow(contentRect: NSRect(x: 200, y: 200, width: 400, height: 300),
+                              styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = host
+        defer { window.close() }
+        await MainWindowInteraction.settle(host, window)
+        await MainWindowInteraction.settle(host, window)
+        let home = window.frame
+        expect(abs(home.width - 400) < 1 && home.height < 300, "Home fits its actual compact content")
+        model.workspace.showSettings()
+        await MainWindowInteraction.settle(host, window)
+        expect(window.frame.width >= 656 && model.workspace.mode == .home, "Settings expands Home without changing mode")
+        model.workspace.dismissPanel()
+        await MainWindowInteraction.settle(host, window)
+        expect(window.frame == home, "Closing a Home panel restores the base frame")
+        model.workspace.showLibrary()
+        await MainWindowInteraction.settle(host, window)
+        let library = window.frame
+        expect(library.width >= 720, "Library expands the shared native window")
+        model.workspace.showSettings()
+        await MainWindowInteraction.settle(host, window)
+        model.workspace.dismissPanel()
+        await MainWindowInteraction.settle(host, window)
+        expect(window.frame == library, "Closing a Library panel restores its base frame")
+        let finish = model.finishLibraryEditing
+        model.finishLibraryEditing = { false }
+        model.showHome()
+        expect(model.workspace.mode == .library, "Dirty draft cancellation guards Home without needing mouse input")
+        expect(window.delegate?.windowShouldClose?(window) == false, "The native close delegate guards dirty drafts")
+        model.finishLibraryEditing = finish
+        model.phase = .recording
+        await MainWindowInteraction.settle(host, window)
+        for id in ["library-marker", "library-pause", "library-stop"] {
+            guard let target = MainWindowInteraction.targets(in: host).first(where: { $0.id == id }) else { fail("Missing \(id)") }
+            expect(host.bounds.contains(target.convert(target.bounds, to: host)), "\(id) stays inside Library")
+        }
+        model.showHome()
+        await MainWindowInteraction.settle(host, window)
+        expect(model.recording, "Mode changes retain capture state")
+        model.phase = .idle
+        await MainWindowInteraction.settle(host, window)
+        // Queue presentations back to back; only the base frame may be remembered.
+        model.workspace.showSettings()
+        try await Task.sleep(for: .milliseconds(20))
+        model.workspace.dismissPanel()
+        await MainWindowInteraction.settle(host, window)
+        await MainWindowInteraction.settle(host, window)
+        expect(abs(window.frame.minX - home.minX) < 1 && abs(window.frame.maxY - home.maxY) < 1, "Rapid panel dismissal retains Home's position")
+        if let visible = window.screen?.visibleFrame { expect(visible.contains(window.frame), "Restored Home is on screen") }
+        print("WORKSPACE FRAMES PASS: content fit, panel restoration, mode frames, dirty guards, retained recording and rapid dismissal")
+    }
+
 }

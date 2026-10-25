@@ -98,8 +98,8 @@ enum TranscriptsSettingsTests {
         check(InputLevel.technical(-160) == "\(minus)\u{221E} dBFS", "silence reads as minus infinity")
         check(InputLevel.primary(-38, display: .estimate) == "\u{2248} 56 dB", "the estimate is the primary reading by default")
         check(InputLevel.primary(-38, display: .technical) == "\(minus)38 dBFS", "the technical reading can be the primary reading")
-        check(InputLevel.band(-45) == .quiet && InputLevel.band(-44) == .good && InputLevel.band(-20) == .good
-              && InputLevel.band(-19) == .loud, "Quiet below 50 dB, Good up to 74 dB, Loud from 75 dB")
+        check(InputLevel.band(-40) == .quiet && InputLevel.band(-39) == .good && InputLevel.band(-19) == .good
+              && InputLevel.band(-18) == .loud, "Quiet below 55 dB, Good through 75 dB, Loud above 75 dB")
         check(InputLevel.Band.quiet.label == "Quiet" && InputLevel.Band.good.label == "Good" && InputLevel.Band.loud.label == "Loud",
               "the bands are labelled Quiet, Good and Loud")
         check(LevelDisplay.stored(nil) == .estimate && LevelDisplay.stored("junk") == .estimate

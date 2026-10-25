@@ -20,6 +20,7 @@ enum Snapshot {
         let suite = "com.bardya.nosy.preview.local-models.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set(true, forKey: AIFeatures.storageKey)
         for scheme in [ColorScheme.light, .dark] {
             let mode = scheme == .dark ? "dark" : "light"
             for (name, state) in [("missing", LocalModelStore.State.notDownloaded), ("downloading", .downloading(1_248_000_000)),
@@ -251,6 +252,32 @@ enum Snapshot {
                 render(view.environment(\.colorScheme, scheme).defaultAppStorage(previewDefaults), scheme: scheme,
                        to: base.appendingPathExtension("\(suffix).png"))
             }
+            // Integration previews use the production shell, including its persistent title bar.
+            for (name, source) in [("room", RecordingSource.mic), ("mac", RecordingSource.both)] {
+                let home = model(.idle, source: source)
+                guard save(WorkspaceView(model: home, previewSize: CGSize(width: 400, height: 252))
+                    .padding(36).background(PreviewBackdrop()), "workspace-home-\(name).\(mode)") else { return 1 }
+            }
+            for libraryMode in [false, true] {
+                let fixture = model(.idle)
+                if libraryMode { fixture.workspace.showLibrary() }
+                fixture.workspace.showSettings()
+                guard save(WorkspaceView(model: fixture, previewSize: CGSize(width: libraryMode ? 1000 : 680, height: 680))
+                    .padding(36).background(PreviewBackdrop()), "workspace-settings-\(libraryMode ? "library" : "home").\(mode)") else { return 1 }
+            }
+            for enabled in [false, true] {
+                let fixture = model(.idle)
+                fixture.workspace.showSettings(pane: .summaries)
+                let storage = enabled ? apiDefaults : disabledSummaryDefaults
+                storage.set(enabled, forKey: AIFeatures.storageKey)
+                guard save(WorkspaceView(model: fixture, previewSize: CGSize(width: 680, height: 680), previewSettingsPane: .summaries)
+                    .defaultAppStorage(storage).padding(36).background(PreviewBackdrop()),
+                    "workspace-ai-\(enabled ? "on" : "off").\(mode)") else { return 1 }
+            }
+            let liveLibrary = model(.recording)
+            liveLibrary.workspace.showLibrary()
+            guard save(WorkspaceView(model: liveLibrary, previewSize: CGSize(width: 1000, height: 720))
+                .padding(36).background(PreviewBackdrop()), "workspace-library-recording.\(mode)") else { return 1 }
             let states = mainStates.map { (title: $0.0, model: model($0.1)) }
             let sheet = HStack(alignment: .top, spacing: 28) {
                 ForEach(states.indices, id: \.self) { index in
@@ -424,23 +451,23 @@ enum Snapshot {
                     .padding(36).background(PreviewBackdrop()),
                     "vocabulary-\(expanded ? "expanded" : "collapsed").\(mode)") else { return 1 }
             }
-            guard save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
+            guard save(LibraryPreview(model: model(.idle)).frame(width: 720, height: 504)
                 .padding(36).background(PreviewBackdrop()), "library-minimum.\(mode)") else { return 1 }
             let previousLibrary = fixture.appendingPathComponent("Previous library")
             let locations = model(.idle)
             locations.configurePreview(libraryLocations: [transcripts, previousLibrary])
-            guard save(LibraryView(model: locations).frame(width: 720, height: 460)
+            guard save(LibraryPreview(model: locations).frame(width: 720, height: 504)
                 .padding(36).background(PreviewBackdrop()), "library-locations.\(mode)") else { return 1 }
-            guard save(PreviewWindow { LibraryView(model: model(.idle), previewQuery: "ATP") }
+            guard save(PreviewWindow { LibraryPreview(model: model(.idle), previewQuery: "ATP") }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-search.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: model(.idle)) }
+                  save(PreviewWindow { LibraryPreview(model: model(.idle)) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-reader.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: model(.idle), previewHoveredFolder: "MBB322") }
+                  save(PreviewWindow { LibraryPreview(model: model(.idle), previewHoveredFolder: "MBB322") }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-folder-delete-hover.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: model(.idle), previewDropping: true) }
+                  save(PreviewWindow { LibraryPreview(model: model(.idle), previewDropping: true) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "drop-library.\(mode)") else { return 1 }
             // A folder row with keyboard focus: Delete moves it to the Trash after the confirmation.
-            guard save(PreviewWindow { LibraryView(model: model(.idle), previewFocusedFolder: "MBB322") }
+            guard save(PreviewWindow { LibraryPreview(model: model(.idle), previewFocusedFolder: "MBB322") }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-folder-focused.\(mode)") else { return 1 }
             // The folder Trash confirmation, drawn from the same alert the owner sees.
             let trashConfirmation = LectureFolderTrash.makeConfirmation("MBB322")
@@ -448,19 +475,19 @@ enum Snapshot {
             setenv("NOSY_TRANSCRIPTS_DIR", emptyTranscripts.path, 1)
             let emptyLibraryModel = AppModel()
             setenv("NOSY_TRANSCRIPTS_DIR", transcripts.path, 1)
-            guard save(PreviewWindow { LibraryView(model: emptyLibraryModel) }
+            guard save(PreviewWindow { LibraryPreview(model: emptyLibraryModel) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-empty.\(mode)") else { return 1 }
             let silentLibrary = model(.idle)
             silentLibrary.libraryFocus = emptyURL
-            guard save(PreviewWindow { LibraryView(model: model(.idle), previewCollapsed: true) }
+            guard save(PreviewWindow { LibraryPreview(model: model(.idle), previewCollapsed: true) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-collapsed.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: silentLibrary) }
+                  save(PreviewWindow { LibraryPreview(model: silentLibrary) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-no-speech.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: model(.idle)) }
+                  save(PreviewWindow { LibraryPreview(model: model(.idle)) }
                     .environment(\.previewTipText, "Show in Finder")
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-tip.\(mode)") else { return 1 }
             for phase in [AppPhase.idle, .recording, .done] {
-                guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
+                guard render(WorkspaceView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
                     to: base.appendingPathExtension("native-\(phase).\(mode).png"), native: true) else { return 1 }
             }
             let summarizing = model(.idle)
@@ -476,11 +503,11 @@ enum Snapshot {
                 PreviewWindow { MainView(model: model(.failed)) }
             }.padding(36).background(PreviewBackdrop())
             guard save(activity, "activity.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: model(.idle), previewSummary: true) }
+                  save(PreviewWindow { LibraryPreview(model: model(.idle), previewSummary: true) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-summary.\(mode)"),
-                  save(PreviewWindow { LibraryView(model: summarizing) }
+                  save(PreviewWindow { LibraryPreview(model: summarizing) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-summarizing.\(mode)"),
-                  save(LibraryView(model: model(.idle), previewSummary: true).frame(width: 720, height: 460)
+                  save(LibraryPreview(model: model(.idle), previewSummary: true).frame(width: 720, height: 504)
                     .padding(36).background(PreviewBackdrop()), "library-summary-minimum.\(mode)"),
                   save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(apiDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-summaries.\(mode)"),
@@ -491,7 +518,7 @@ enum Snapshot {
                   save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false))
                     .defaultAppStorage(customReminder).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-reminder-custom.\(mode)"),
-                  save(LibraryView(model: model(.idle)).frame(width: 860, height: 560)
+                  save(LibraryPreview(model: model(.idle)).frame(width: 860, height: 560)
                     .clipShape(RoundedRectangle(cornerRadius: 18)).padding(36).background(PreviewBackdrop()), "library.\(mode)"),
                   save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false))
                     .clipShape(RoundedRectangle(cornerRadius: 18))
@@ -566,7 +593,7 @@ private func render<V: View>(_ view: V, scheme: ColorScheme, to url: URL, native
     window.contentView = host
     host.layoutSubtreeIfNeeded()
     RunLoop.main.run(until: Date().addingTimeInterval(0.6))
-    window.setContentSize(host.fittingSize)
+    if !native { window.setContentSize(host.fittingSize) }
     host.layoutSubtreeIfNeeded()
     RunLoop.main.run(until: Date().addingTimeInterval(0.15))
     if native {
@@ -576,8 +603,7 @@ private func render<V: View>(_ view: V, scheme: ColorScheme, to url: URL, native
         }
         let chrome = surface(in: host)
         print("NATIVE \(url.lastPathComponent): window=\(window.frame.size) content=\(host.bounds.size) fitted=\(host.fittingSize) surface=\(String(describing: chrome?.bounds.size)) regions=\(host.safeAreaRegions)")
-        guard abs(host.bounds.height - host.fittingSize.height) < 1,
-              let chrome, abs(chrome.bounds.height - host.bounds.height) < 1 else { print("Native surface mismatch"); return false }
+        guard let chrome, abs(chrome.bounds.height - host.bounds.height) < 1 else { print("Native surface mismatch"); return false }
     }
     guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return false }
     host.cacheDisplay(in: host.bounds, to: rep)
@@ -594,5 +620,24 @@ private struct TrafficLights: View {
                 Circle().fill($0).frame(width: 12, height: 12)
             }
         }.accessibilityHidden(true)
+    }
+}
+
+private struct LibraryPreview: View {
+    let model: AppModel
+    let library: LibraryView
+    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false,
+         previewDropping: Bool = false, previewHoveredFolder: String? = nil, previewFocusedFolder: String? = nil) {
+        self.model = model
+        model.workspace.showLibrary()
+        library = LibraryView(model: model, previewQuery: previewQuery, previewCollapsed: previewCollapsed,
+                              previewSummary: previewSummary, previewDropping: previewDropping,
+                              previewHoveredFolder: previewHoveredFolder, previewFocusedFolder: previewFocusedFolder)
+    }
+    var body: some View {
+        GeometryReader { geometry in
+            WorkspaceView(model: model, previewSize: geometry.size, previewLibrary: library)
+        }
+        .frame(idealWidth: 1000, idealHeight: 680)
     }
 }

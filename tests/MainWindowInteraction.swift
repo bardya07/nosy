@@ -13,12 +13,12 @@ enum MainWindowInteraction {
             print("MAIN WINDOW INTERACTION SKIPPED: screen is locked; rerun tests/run_unit.sh while logged in")
             return
         }
-        let browseProbe = BrowseActionProbe()
-        let host = NSHostingView(rootView: MainView(model: model, onBrowse: { browseProbe.invoked = true }))
+        let host = NSHostingView(rootView: WorkspaceView(model: model))
         let window = NSWindow(contentRect: NSRect(x: 200, y: 200, width: 400, height: 300),
-                              styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+                              styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                               backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
+        window.title = "Nosy"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.contentView = host
@@ -47,7 +47,14 @@ enum MainWindowInteraction {
                 await settle(host, window)
             }
             let view = target(id)
-            let point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
+            // SwiftUI can animate a representable's layer independently of its NSView frame.
+            // Accessibility reports the rendered control, so posted clicks use that rectangle.
+            let point: NSPoint
+            if let frame = accessibilityFrame(id, in: host) {
+                point = window.convertPoint(fromScreen: NSPoint(x: frame.midX, y: frame.midY))
+            } else {
+                point = view.convert(NSPoint(x: view.bounds.midX, y: view.bounds.midY), to: nil)
+            }
             expect(host.hitTest(host.convert(point, from: nil)) != nil, "No hit at \(id)")
             sendClick(point, window: window)
             await settle(host, window)
@@ -59,6 +66,12 @@ enum MainWindowInteraction {
             for _ in 0..<12 {
                 if hasVisibleTarget(id) == visible { return }
                 await settle(host, window)
+            }
+            if hasVisibleTarget(id) != visible {
+                if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                    host.cacheDisplay(in: host.bounds, to: rep)
+                    try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "/tmp/nosy-workspace-failure.png"))
+                }
             }
             expect(hasVisibleTarget(id) == visible, message)
         }
@@ -107,7 +120,11 @@ enum MainWindowInteraction {
         expect(!targets(in: host).contains(where: { $0.id == "session-required-message" && !$0.visibleRect.isEmpty }),
                "The required message clears after entering a session name")
         await click("browse-transcripts")
-        expect(browseProbe.invoked, "Browse activates the Transcripts action")
+        expect(model.workspace.mode == .library, "Browse activates Library in the same window")
+        expect(window.frame.width >= 720, "Library expands the shared window")
+        expect(NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }.map(\.windowNumber) == [window.windowNumber], "Navigation retains one native window")
+        await click("library-home")
+        expect(model.workspace.mode == .home && abs(window.frame.width - 400) < 1, "The Nosy arrow returns and shrinks Home")
         await waitForTarget("dropdown-panel", visible: false, "Browse closes the Session panel")
         let browse = target("browse-transcripts")
         expect(browse.bounds.width > 80 && browse.bounds.height < 50, "Library is a labeled pill in the window row")
@@ -237,17 +254,91 @@ enum MainWindowInteraction {
         await settle(host, window)
         await waitForTarget("save-to-group", visible: false, "Escape rolls the folder wheel back with its list")
         expect(!hasVisibleTarget("save-to-folders"), "Escape also closes the folder list")
-        print("MAIN WINDOW INTERACTION PASS: native hit testing, folder wheel with inline folder list, new folder typing, session typing, subject menu/autosave, disclosure/editor, outside control action, empty-space dismissal, Home navigation, Escape, repeat toggles, edge press and titlebar centering")
+        // The shared window restores each base frame after a panel, including at screen edges.
+        sendKey("\u{1b}", code: 53, window: window)
+        await settle(host, window)
+        for _ in 0..<5 { await settle(host, window) }
+        let homeFrame = window.frame
+        await click("titlebar-settings")
+        expect(model.workspace.panel == .settings, "The gear opens Settings inside Home")
+        expect(hasVisibleTarget("workspace-panel") && hasVisibleTarget("settings-pane-connect"), "The panel includes its sidebar")
+        expect(window.frame.width >= 656, "Home expands to fit Settings")
+        await click("settings-pane-summaries")
+        expect(hasVisibleTarget("settings-ai-features"), "Summaries exposes the AI features switch")
+        await click("settings-pane-connect")
+        await click("panel-close")
+        for _ in 0..<4 { await settle(host, window) }
+        expect(model.workspace.panel == nil && abs(window.frame.width - 400) < 1, "Closing Settings restores compact Home")
+        expect(abs(window.frame.minX - homeFrame.minX) < 1 && abs(window.frame.maxY - homeFrame.maxY) < 1,
+               "Home's position survives Settings expansion")
+        sendKey(",", code: 43, modifiers: .command, window: window)
+        await settle(host, window)
+        expect(model.workspace.panel == .settings, "Command comma opens the in-window panel")
+        sendKey("\u{1b}", code: 53, window: window)
+        await settle(host, window)
+        expect(model.workspace.panel == nil, "Escape closes Settings")
+        sendKey("l", code: 37, modifiers: .command, window: window)
+        await settle(host, window)
+        expect(model.workspace.mode == .library, "Command L opens Library")
+        for _ in 0..<4 { await settle(host, window) }
+        let libraryFrame = window.frame
+        await click("titlebar-settings")
+        await click("panel-close")
+        for _ in 0..<4 { await settle(host, window) }
+        expect(window.frame == libraryFrame && model.workspace.mode == .library, "Settings restores Library's frame and mode")
+        let originalFinish = model.finishLibraryEditing
+        model.finishLibraryEditing = { false }
+        await click("library-home")
+        expect(model.workspace.mode == .library, "Cancelling a dirty draft blocks Home navigation")
+        window.performClose(nil)
+        expect(window.isVisible, "Cancelling a dirty draft blocks the native close button")
+        model.finishLibraryEditing = originalFinish
+        // A preview phase never starts audio hardware. Browsing and presentation cannot stop it.
+        model.phase = .recording
+        await settle(host, window)
+        expect(hasVisibleTarget("library-recording-bar") && hasVisibleTarget("library-pause") && hasVisibleTarget("library-stop")
+               && hasVisibleTarget("library-marker"), "Recording controls stay reachable while browsing")
+        await click("titlebar-settings")
+        await click("panel-close")
+        expect(model.recording, "Recording survives Settings over Library")
+        await click("library-home")
+        expect(model.recording && model.workspace.mode == .home, "Recording survives the return Home")
+        model.phase = .idle
+        await settle(host, window)
+        // User movement is remembered independently for each mode.
+        if let screen = window.screen?.visibleFrame {
+            let moved = WorkspaceGeometry.clamped(window.frame.offsetBy(dx: 30, dy: -20), to: screen)
+            window.setFrame(moved, display: true)
+            await settle(host, window)
+            model.workspace.showLibrary()
+            for _ in 0..<4 { await settle(host, window) }
+            expect(window.frame == libraryFrame, "Library retains its own position and size")
+            model.showHome()
+            for _ in 0..<4 { await settle(host, window) }
+            expect(abs(window.frame.minX - moved.minX) < 1 && abs(window.frame.maxY - moved.maxY) < 1, "Home retains its own position")
+            expect(screen.contains(window.frame), "The shared window is fully on screen")
+        }
+        print("MAIN WINDOW INTERACTION PASS: native clicks, keyboard navigation, Home controls, Settings sidebar over both modes, frame restoration, dirty guards and Library recording controls")
+
     }
 
     static func settle(_ host: NSView, _ window: NSWindow) async {
-        for _ in 0..<3 {
-            try? await Task.sleep(for: .milliseconds(60))
-            if host.bounds.size != host.fittingSize { window.setContentSize(host.fittingSize) }
+        for _ in 0..<4 {
+            try? await Task.sleep(for: .milliseconds(100))
             host.layoutSubtreeIfNeeded()
             window.displayIfNeeded()
             NSApp.updateWindows()
         }
+    }
+    static func accessibilityFrame(_ id: String, in element: any NSAccessibilityProtocol) -> NSRect? {
+        if element.accessibilityIdentifier() == id {
+            let frame = element.accessibilityFrame()
+            if frame.width > 0 && frame.height > 0 { return frame }
+        }
+        for child in element.accessibilityChildren() ?? [] {
+            if let child = child as? any NSAccessibilityProtocol, let frame = accessibilityFrame(id, in: child) { return frame }
+        }
+        return nil
     }
     static func targets(in view: NSView) -> [InteractionTarget.Anchor] {
         (view as? InteractionTarget.Anchor).map { [$0] } ?? view.subviews.flatMap { targets(in: $0) }
@@ -268,16 +359,18 @@ enum MainWindowInteraction {
     }
 }
 
-@MainActor
-private final class BrowseActionProbe {
-    var invoked = false
-}
-
 // Failures print and exit instead of trapping, so no crash reporter dialog appears.
 func expect(_ condition: @autoclosure () -> Bool, _ message: @autoclosure () -> String) {
     if !condition() { fail(message()) }
 }
 func fail(_ message: String) -> Never {
+    MainActor.assumeIsolated {
+        if let view = NSApp.keyWindow?.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: "/tmp/nosy-one-window-ui-failure.png"))
+        }
+    }
+    MainActor.assumeIsolated { print("WINDOWS \(NSApp.windows.map { ($0.title, $0.frame, $0.isKeyWindow) })") }
     FileHandle.standardError.write(Data("UI TEST FAILED: \(message)\n".utf8))
     exit(1)
 }
