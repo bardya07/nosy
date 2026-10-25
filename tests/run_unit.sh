@@ -3,6 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/paths.sh
 source scripts/audio-shim.sh
+python3 tests/InstallGuardTests.py
 mkdir -p "$BUILD_DIR/module-cache"
 clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
 "$BUILD_DIR/AudioExceptionsTests"
