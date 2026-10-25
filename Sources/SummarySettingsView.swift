@@ -137,10 +137,13 @@ struct SummarySettingsSection: View {
             Spacer(minLength: 0)
             Text(value).font(Theme.text(12)).foregroundStyle(Theme.ink).lineLimit(1).truncationMode(.middle)
             Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
+                .accessibilityHidden(true)
         }
         .padding(.horizontal, 12).frame(height: 38)
         .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
         .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(label).accessibilityValue(value)
     }
     private func hint(_ text: String, color: Color) -> some View {
         Text(text).font(Theme.text(10)).foregroundStyle(color).lineLimit(1).truncationMode(.tail).tip(text)

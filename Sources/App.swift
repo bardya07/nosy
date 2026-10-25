@@ -1209,6 +1209,7 @@ private struct MicMenu: View {
         .onHover { if $0 && !Snapshot.isRunning { model.refreshInputs() } }
         .tip("Microphone")
         .accessibilityLabel("Choose recording source or microphone, currently \(model.inputName)")
+        .accessibilityValue(model.inputName)
     }
     @ViewBuilder private func checked(_ on: Bool, _ title: String) -> some View {
         if on { Label(title, systemImage: "checkmark") } else { Text(title) }

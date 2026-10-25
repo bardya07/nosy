@@ -485,7 +485,10 @@ struct LibraryView: View {
                 Text(libraryPaths.transcripts.lastPathComponent).lineLimit(1).truncationMode(.middle)
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.down").font(.system(size: 9))
+                    .accessibilityHidden(true)
             }.font(Theme.text(11.5)).foregroundStyle(Theme.ink)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Transcript library").accessibilityValue(libraryPaths.transcripts.path)
         }
         .menuStyle(.button).buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: true)).menuIndicator(.hidden)
         .accessibilityLabel("Transcript library").accessibilityValue(libraryPaths.transcripts.path)

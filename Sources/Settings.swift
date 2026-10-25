@@ -93,7 +93,7 @@ struct SettingsView: View {
         section("Transcripts") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {
-                    Image(systemName: "folder.fill").foregroundStyle(Theme.accentText)
+                    Image(systemName: "folder.fill").foregroundStyle(Theme.accentText).accessibilityHidden(true)
                     Text(abbreviated(model.paths.transcripts))
                         .font(Theme.text(12)).foregroundStyle(Theme.ink)
                         .lineLimit(1).truncationMode(.middle)
@@ -248,10 +248,13 @@ struct SettingsView: View {
                 Spacer(minLength: 0)
                 Text(value).font(Theme.text(12)).foregroundStyle(Theme.ink)
                 Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.muted)
+                    .accessibilityHidden(true)
             }
             .padding(.horizontal, 12).frame(height: 38)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
             .contentShape(Rectangle())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(label).accessibilityValue(value)
         }
         .menuStyle(.button).font(Theme.text(11)).buttonStyle(InsetButtonStyle()).menuIndicator(.hidden)
         .tip("Change setting")
