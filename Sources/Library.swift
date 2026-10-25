@@ -128,7 +128,10 @@ final class TranscriptLibrary: ObservableObject {
         items = lectures.flatMap { folder -> [TranscriptItem] in
             guard (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
             let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [])) ?? []
-            return files.filter { $0.pathExtension.lowercased() == "md" }.map { url in
+            let markdown = files.filter { $0.pathExtension.lowercased() == "md" }
+            // A summary sits next to its transcript; it is read from the transcript, not listed.
+            let names = Set(markdown.map(\.lastPathComponent))
+            return markdown.filter { !SummaryFiles.isSummary($0, siblings: names) }.map { url in
                 // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
                 TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
                                recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
@@ -193,6 +196,7 @@ final class TranscriptLibrary: ObservableObject {
         let index = list.firstIndex(where: { $0.url == url })
         do {
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+            if let summary = SummaryFiles.existing(for: url) { try? FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -224,7 +228,9 @@ final class TranscriptLibrary: ObservableObject {
             let target = Core.uniqueTranscript(in: item.url.deletingLastPathComponent(), session: name)
             // Find the sidecar before moving, while it still matches the old path.
             let record = Core.record(forTranscript: item.url, paths: paths)
+            let summary = SummaryFiles.existing(for: item.url)
             try FileManager.default.moveItem(at: item.url, to: target)
+            if let summary { try? FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
             // Keep the recording's sidecar pointing at the transcript so playback still finds its audio.
             if var record {
                 record.transcriptPath = target.path
@@ -258,16 +264,22 @@ struct LibraryView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Focus?
     @State private var copied = false
+    // Transcript | Summary in the reader, and the summary text for the selected transcript.
+    @State private var showSummary = false
+    @State private var summaryText: String?
+    @State private var requestedSummary: URL?
     var previewQuery: String?
     var previewCollapsed: Bool
+    var previewSummary: Bool
     private var editing: Bool { library.editing }
     private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
-    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false) {
+    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false) {
         self.model = model
         self.previewQuery = previewQuery
         self.previewCollapsed = previewCollapsed
+        self.previewSummary = previewSummary
     }
 
     var body: some View {
@@ -290,6 +302,16 @@ struct LibraryView: View {
             applyFocus()
             if previewCollapsed { library.collapseFolders() }
             if let previewQuery { library.query = previewQuery }
+            loadSummary()
+            if previewSummary, summaryText != nil { showSummary = true }
+        }
+        .onChange(of: library.selection) { loadSummary(); showSummary = previewSummary && summaryText != nil }
+        .onReceive(model.summaries.$revision.dropFirst()) { _ in
+            loadSummary()
+            if let requestedSummary, requestedSummary == library.selection, summaryText != nil {
+                showSummary = true
+                self.requestedSummary = nil
+            }
         }
         .onChange(of: model.paths.transcripts) { reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
@@ -298,7 +320,12 @@ struct LibraryView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
         .tipContainerBounds()
     }
-    private func reload() { library.reload(paths: model.paths) }
+    private func reload() { library.reload(paths: model.paths); loadSummary() }
+    private func loadSummary() {
+        summaryText = library.selection.flatMap(SummaryFiles.existing(for:)).flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+        if summaryText == nil { showSummary = false }
+    }
+    private var showingSummary: Bool { showSummary && summaryText != nil && !editing }
     private func applyFocus() {
         guard let url = model.libraryFocus else { return }
         library.open(url, paths: model.paths)
@@ -442,12 +469,26 @@ struct LibraryView: View {
             VStack(spacing: 0) {
                 readerHeader(item).zIndex(1)
                 Rectangle().fill(Theme.line).frame(height: 1)
+                if !editing {
+                    SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: summaryText != nil,
+                               showSummary: $showSummary) { requestedSummary = item.url }
+                    Rectangle().fill(Theme.line).frame(height: 1)
+                }
                 if editing {
                     TextEditor(text: $library.draft)
                         .font(Theme.text(15))
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
+                } else if showingSummary, let summaryText {
+                    ScrollView {
+                        SummaryText(markdown: summaryText)
+                            .padding(.horizontal, 30).padding(.vertical, 24)
+                            .frame(maxWidth: 640, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .scrollIndicators(.automatic)
+                    .textSelection(.enabled)
                 } else {
                     ScrollView {
                         TranscriptText(markdown: item.text) { range, replacement in
@@ -501,14 +542,14 @@ struct LibraryView: View {
                     .tip("Save changes")
                     .keyboardShortcut("s", modifiers: .command)
             } else {
-                Button { library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
+                Button { showSummary = false; library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
                     .tip("Edit").accessibilityLabel("Edit transcript")
-                Button { copy(item.text) } label: {
+                Button { copy(showingSummary ? summaryText ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
-                .tip(copied ? "Copied" : "Copy").accessibilityLabel("Copy transcript")
+                .tip(copied ? "Copied" : "Copy").accessibilityLabel(showingSummary ? "Copy summary" : "Copy transcript")
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")

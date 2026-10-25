@@ -61,6 +61,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var queue: [SessionRecord] = []
     // A transcript the Transcripts window should select when it next appears or updates.
     @Published var libraryFocus: URL?
+    // Summaries run after transcription, one at a time, and never hold up the queue.
+    let summaries = SummaryCenter()
     // Set by any open window so the model can open others (e.g. from a notification).
     var openWindow: OpenWindowAction?
     var finishLibraryEditing: (() -> Bool)?
@@ -117,6 +119,7 @@ final class AppModel: ObservableObject {
            UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) == nil {
             UserDefaults.standard.set(paths.transcripts.path, forKey: AppPaths.transcriptsKey)
         }
+        summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
         refreshInputs()
         refreshLectures()
@@ -509,6 +512,9 @@ final class AppModel: ObservableObject {
             let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
             let outcome = markdown.map { Core.wordCount($0) == 0 } == true ? "No speech detected" : "Transcript saved"
             notify("\(outcome). \(result.lecture) · \(result.session)", path: result.transcriptPath)
+            if let path = result.transcriptPath, markdown.map({ Core.wordCount($0) > 0 }) == true {
+                summaries.transcriptSaved(URL(fileURLWithPath: path))
+            }
         } else if let error {
             if foreground {
                 current = record
@@ -518,6 +524,16 @@ final class AppModel: ObservableObject {
             notify("Transcription failed. \(record.lecture) · \(record.session)")
         }
         pump()
+    }
+
+    // Same back-off as transcription; a local model also waits for whisper to finish.
+    private func summaryWaitReason(_ provider: SummaryProvider) -> String? {
+        let power = Core.powerState()
+        if let reason = Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent) {
+            return reason.prefix(1).uppercased() + reason.dropFirst()
+        }
+        if provider.staysOnMac, job != nil { return "Waiting for transcription" }
+        return nil
     }
 
     // MARK: Recovery
@@ -752,6 +768,7 @@ final class AppModel: ObservableObject {
     }
     func prepareToQuit() async {
         quitting = true
+        summaries.cancelAll()
         job?.cancel()
         // Let the worker settle (cancelled, or finishing a save/compression) before touching sidecars.
         await worker?.value

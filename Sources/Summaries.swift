@@ -1,0 +1,783 @@
+import Foundation
+import Security
+
+// Summaries: one prompt built from the chosen sections, run by a provider the student picks
+// (a CLI they already use, a local server, or their own API key). Nothing here blocks
+// transcription; every failure becomes a short message.
+
+enum SummarySection: String, CaseIterable, Sendable, Identifiable {
+    case notes, terms, questions
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .notes: "Short notes"
+        case .terms: "Key terms with definitions"
+        case .questions: "Likely exam questions"
+        }
+    }
+    var heading: String {
+        switch self {
+        case .notes: "Short notes"
+        case .terms: "Key terms"
+        case .questions: "Likely exam questions"
+        }
+    }
+    var instruction: String {
+        switch self {
+        case .notes: "A concise outline of the main ideas as bullet points, in the order the lecture covers them."
+        case .terms: "Each important term as a bullet point in the form \"- **Term**: one sentence definition\", using the meaning from this lecture."
+        case .questions: "Five to ten questions a professor could plausibly ask about this lecture on an exam, as a numbered list."
+        }
+    }
+    var storageKey: String { "summaries.include.\(rawValue)" }
+    var includedByDefault: Bool { self != .questions }
+}
+
+enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
+    case off, claudeCode, codex, geminiCLI, ollama, lmStudio, openAI, anthropic, gemini
+    var id: String { rawValue }
+
+    enum Kind: Equatable, Sendable { case none, cli(String), local, api }
+    var kind: Kind {
+        switch self {
+        case .off: .none
+        case .claudeCode: .cli("claude")
+        case .codex: .cli("codex")
+        case .geminiCLI: .cli("gemini")
+        case .ollama, .lmStudio: .local
+        case .openAI, .anthropic, .gemini: .api
+        }
+    }
+    var title: String {
+        switch self {
+        case .off: "Off"
+        case .claudeCode: "Claude Code"
+        case .codex: "Codex"
+        case .geminiCLI: "Gemini CLI"
+        case .ollama: "Ollama"
+        case .lmStudio: "LM Studio"
+        case .openAI: "OpenAI API key"
+        case .anthropic: "Anthropic API key"
+        case .gemini: "Gemini API key"
+        }
+    }
+    // Shown greyed next to a provider Nosy can't use yet.
+    var unavailableHint: String {
+        switch self {
+        case .claudeCode: "Install Claude Code to use it"
+        case .codex: "Install the Codex CLI to use it"
+        case .geminiCLI: "Install the Gemini CLI to use it"
+        case .ollama: "Open Ollama to use it"
+        case .lmStudio: "Start the LM Studio server to use it"
+        default: ""
+        }
+    }
+    // The latest small, inexpensive model of each API; editable in Settings.
+    var defaultModel: String {
+        switch self {
+        case .openAI: "gpt-5-mini"
+        case .anthropic: "claude-haiku-5-5"
+        case .gemini: "gemini-2.5-flash"
+        default: ""
+        }
+    }
+    // Ollama and LM Studio run on this Mac; everything else sends the transcript away.
+    var staysOnMac: Bool { self == .off || self == .ollama || self == .lmStudio }
+    var localBase: URL? {
+        switch self {
+        case .ollama: URL(string: "http://localhost:11434")
+        case .lmStudio: URL(string: "http://localhost:1234")
+        default: nil
+        }
+    }
+    // Characters of transcript per request that fit comfortably in the provider's context.
+    var chunkLimit: Int {
+        switch self {
+        case .off: 0
+        case .ollama: 40_000
+        case .lmStudio: 12_000
+        case .claudeCode, .codex, .openAI, .anthropic: 400_000
+        case .geminiCLI, .gemini: 800_000
+        }
+    }
+    var modelKey: String { "summaries.model.\(rawValue)" }
+}
+
+struct SummarySettings: Equatable, Sendable {
+    static let providerKey = "summaries.provider"
+    static let customKey = "summaries.custom"
+    static let automaticKey = "summaries.automatic"
+
+    var provider: SummaryProvider = .off
+    var sections: [SummarySection] = SummarySection.allCases.filter(\.includedByDefault)
+    var custom = ""
+    var automatic = false
+    var model = ""
+
+    static func load(_ defaults: UserDefaults = .standard) -> SummarySettings {
+        var settings = SummarySettings()
+        settings.provider = defaults.string(forKey: providerKey).flatMap(SummaryProvider.init(rawValue:)) ?? .off
+        settings.sections = SummarySection.allCases.filter { defaults.object(forKey: $0.storageKey) as? Bool ?? $0.includedByDefault }
+        settings.custom = defaults.string(forKey: customKey) ?? ""
+        settings.automatic = defaults.bool(forKey: automaticKey)
+        settings.model = (defaults.string(forKey: settings.provider.modelKey) ?? settings.provider.defaultModel)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return settings
+    }
+}
+
+// MARK: Prompt
+
+enum SummaryPrompt {
+    static func sectionSpec(_ sections: [SummarySection], custom: String) -> String {
+        let chosen = sections.isEmpty ? [.notes] : SummarySection.allCases.filter(sections.contains)
+        var text = "Write Markdown with exactly these sections, in this order, each starting with its \"## \" heading:\n\n"
+        text += chosen.map { "## \($0.heading)\n\($0.instruction)" }.joined(separator: "\n\n")
+        let extra = custom.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !extra.isEmpty { text += "\n\nAdditional instructions from the student:\n\(extra)" }
+        text += "\n\nWrite only the summary: no title, preamble or closing remarks. Use only what the lecture supports."
+        return text
+    }
+
+    static func build(transcript: String, sections: [SummarySection], custom: String, part: (index: Int, count: Int)? = nil) -> String {
+        var text = "You are helping a student review a lecture. Below is an automatic transcript; it can contain speech recognition mistakes, so infer the intended terms.\n\n"
+        if let part, part.count > 1 {
+            text += "This is part \(part.index) of \(part.count) of the transcript. Summarize only this part; the parts are merged afterwards.\n\n"
+        }
+        text += sectionSpec(sections, custom: custom)
+        text += "\n\n<transcript>\n\(transcript.trimmingCharacters(in: .whitespacesAndNewlines))\n</transcript>\n"
+        return text
+    }
+
+    static func merge(partials: [String], sections: [SummarySection], custom: String) -> String {
+        var text = "You are helping a student review a lecture. Below are summaries of consecutive parts of one lecture. Merge them into one summary of the whole lecture, keeping the lecture's order and removing repeats.\n\n"
+        text += sectionSpec(sections, custom: custom)
+        for (index, partial) in partials.enumerated() {
+            text += "\n\n<part number=\"\(index + 1)\">\n\(partial.trimmingCharacters(in: .whitespacesAndNewlines))\n</part>"
+        }
+        return text + "\n"
+    }
+}
+
+// Splits a long transcript at paragraph, then sentence, then word boundaries.
+enum SummaryChunker {
+    static func chunks(_ text: String, limit: Int) -> [String] {
+        guard limit > 0, text.count > limit else { return [text] }
+        var pieces: [String] = []
+        for paragraph in text.components(separatedBy: "\n\n") where !paragraph.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if paragraph.count <= limit { pieces.append(paragraph); continue }
+            var sentence = ""
+            for character in paragraph {
+                sentence.append(character)
+                if ".!?".contains(character) { pieces += split(sentence, limit: limit); sentence = "" }
+            }
+            if !sentence.isEmpty { pieces += split(sentence, limit: limit) }
+        }
+        var result: [String] = []
+        var current = ""
+        for piece in pieces {
+            let joined = current.isEmpty ? piece : current + "\n\n" + piece
+            if joined.count <= limit { current = joined } else {
+                if !current.isEmpty { result.append(current) }
+                current = piece
+            }
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
+    }
+    private static func split(_ text: String, limit: Int) -> [String] {
+        guard text.count > limit else { return [text] }
+        var result: [String] = []
+        var current = ""
+        for word in text.split(separator: " ", omittingEmptySubsequences: false) {
+            let joined = current.isEmpty ? String(word) : current + " " + word
+            if joined.count <= limit { current = joined; continue }
+            if !current.isEmpty { result.append(current) }
+            var rest = Substring(word)
+            while rest.count > limit { result.append(String(rest.prefix(limit))); rest = rest.dropFirst(limit) }
+            current = String(rest)
+        }
+        if !current.isEmpty { result.append(current) }
+        return result
+    }
+}
+
+// MARK: Files
+
+enum SummaryFiles {
+    static let suffix = " summary"
+
+    // `<transcript name> summary.md`, next to the transcript.
+    static func url(for transcript: URL) -> URL {
+        transcript.deletingLastPathComponent()
+            .appendingPathComponent(transcript.deletingPathExtension().lastPathComponent + suffix)
+            .appendingPathExtension("md")
+    }
+    // A file is a summary only when its transcript sits beside it, so a session that
+    // happens to be called "Week 1 summary" still shows up as a transcript.
+    static func isSummary(_ url: URL, siblings: Set<String>) -> Bool {
+        let name = url.deletingPathExtension().lastPathComponent
+        guard url.pathExtension.lowercased() == "md", name.hasSuffix(suffix), name.count > suffix.count else { return false }
+        return siblings.contains(String(name.dropLast(suffix.count)) + ".md")
+    }
+    static func existing(for transcript: URL) -> URL? {
+        let url = url(for: transcript)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+    static func document(body: String, transcript: URL, provider: SummaryProvider, date: Date = Date()) -> String {
+        let name = transcript.deletingPathExtension().lastPathComponent
+        let day = Core.dateString(date, format: "MMM d, yyyy")
+        return "# \(name) summary\n\n_Summarized with \(provider.title) on \(day)._\n\n\(body.trimmingCharacters(in: .whitespacesAndNewlines))\n"
+    }
+    // Model replies sometimes wrap Markdown in a code fence.
+    static func clean(_ reply: String) -> String {
+        var text = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        if text.hasPrefix("```") {
+            var lines = text.components(separatedBy: "\n")
+            lines.removeFirst()
+            if lines.last?.trimmingCharacters(in: .whitespaces) == "```" { lines.removeLast() }
+            text = lines.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return text
+    }
+}
+
+// MARK: Keychain
+
+// API keys live only in the macOS Keychain, as generic passwords under one service.
+struct SummaryKeychain: Sendable {
+    static let standard = SummaryKeychain(service: "com.bardya.nosy.summaries")
+    let service: String
+
+    private func query(_ account: String) -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
+    }
+    func save(_ key: String, account: String) throws {
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw LectureError.message("The key is empty.") }
+        let data = Data(trimmed.utf8)
+        let status = SecItemUpdate(query(account) as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if status == errSecItemNotFound {
+            var item = query(account)
+            item[kSecValueData as String] = data
+            item[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+            item[kSecAttrLabel as String] = "Nosy summaries key"
+            let added = SecItemAdd(item as CFDictionary, nil)
+            guard added == errSecSuccess else { throw failure(added) }
+        } else if status != errSecSuccess {
+            throw failure(status)
+        }
+    }
+    func read(account: String) -> String? {
+        var item = query(account)
+        item[kSecReturnData as String] = true
+        item[kSecMatchLimit as String] = kSecMatchLimitOne
+        var result: CFTypeRef?
+        guard SecItemCopyMatching(item as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+    func delete(account: String) throws {
+        let status = SecItemDelete(query(account) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw failure(status) }
+    }
+    // What Settings shows instead of the key.
+    static func masked(_ key: String) -> String {
+        key.count > 8 ? "••••••••" + key.suffix(4) : "••••••••"
+    }
+    private func failure(_ status: OSStatus) -> Error {
+        LectureError.message("Keychain error \(status): \(SecCopyErrorMessageString(status, nil) as String? ?? "unknown")")
+    }
+}
+
+// MARK: Detection
+
+struct SummaryDetection: Equatable, Sendable {
+    var executables: [SummaryProvider: URL] = [:]
+    // nil: the server isn't running. Empty: running with no models.
+    var localModels: [SummaryProvider: [String]] = [:]
+    var searchPath = ""
+    var checked = false
+
+    func isAvailable(_ provider: SummaryProvider) -> Bool {
+        switch provider.kind {
+        case .none, .api: true
+        case .cli: executables[provider] != nil
+        case .local: localModels[provider] != nil
+        }
+    }
+}
+
+enum SummaryDetector {
+    static func searchDirectories(home: URL, loginPath: String?) -> [URL] {
+        var paths = ["/opt/homebrew/bin", "/usr/local/bin"]
+        paths += [".local/bin", ".npm-global/bin", ".claude/local", ".bun/bin", ".volta/bin", ".cargo/bin"]
+            .map { home.appendingPathComponent($0).path }
+        let nvm = home.appendingPathComponent(".nvm/versions/node")
+        let versions = (try? FileManager.default.contentsOfDirectory(atPath: nvm.path)) ?? []
+        paths += versions.sorted { $0.compare($1, options: .numeric) == .orderedDescending }
+            .map { nvm.appendingPathComponent($0).appendingPathComponent("bin").path }
+        paths += (loginPath ?? "").split(separator: ":").map(String.init)
+        paths += ["/usr/bin", "/bin"]
+        var seen = Set<String>()
+        return paths.filter { !$0.isEmpty && seen.insert($0).inserted }.map { URL(fileURLWithPath: $0, isDirectory: true) }
+    }
+    static func findExecutable(_ name: String, in directories: [URL]) -> URL? {
+        for directory in directories {
+            let url = directory.appendingPathComponent(name)
+            var isDirectory: ObjCBool = false
+            if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory), !isDirectory.boolValue,
+               FileManager.default.isExecutableFile(atPath: url.path) { return url }
+        }
+        return nil
+    }
+    // Apps launched from the Dock don't get the shell's PATH; ask the login shell for it.
+    static func loginShellPath(timeout: TimeInterval = 3) -> String? {
+        let shell = ProcessInfo.processInfo.environment["SHELL"].flatMap { FileManager.default.isExecutableFile(atPath: $0) ? $0 : nil } ?? "/bin/zsh"
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: shell)
+        process.arguments = ["-l", "-i", "-c", "printf '__NOSY_PATH__%s__NOSY_PATH__' \"$PATH\""]
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        process.standardInput = FileHandle.nullDevice
+        do { try process.run() } catch { return nil }
+        let deadline = DispatchTime.now() + timeout
+        let done = DispatchSemaphore(value: 0)
+        let output = LockedData()
+        DispatchQueue.global(qos: .utility).async {
+            output.append(pipe.fileHandleForReading.readDataToEndOfFile())
+            done.signal()
+        }
+        if done.wait(timeout: deadline) == .timedOut { process.terminate(); return nil }
+        process.waitUntilExit()
+        let text = String(decoding: output.value, as: UTF8.self)
+        let parts = text.components(separatedBy: "__NOSY_PATH__")
+        return parts.count >= 3 ? parts[1] : nil
+    }
+    static func detectExecutables(in directories: [URL]) -> [SummaryProvider: URL] {
+        var found: [SummaryProvider: URL] = [:]
+        for provider in SummaryProvider.allCases {
+            if case .cli(let name) = provider.kind, let url = findExecutable(name, in: directories) { found[provider] = url }
+        }
+        return found
+    }
+    static func detect(home: URL = FileManager.default.homeDirectoryForCurrentUser) async -> SummaryDetection {
+        let local = await withTaskGroup(of: (SummaryProvider, [String]?).self) { group in
+            for provider in [SummaryProvider.ollama, .lmStudio] {
+                group.addTask { (provider, await localModels(provider)) }
+            }
+            var result: [SummaryProvider: [String]] = [:]
+            for await (provider, models) in group { result[provider] = models }
+            return result
+        }
+        let (directories, executables) = await Task.detached(priority: .utility) {
+            let directories = searchDirectories(home: home, loginPath: loginShellPath())
+            return (directories, detectExecutables(in: directories))
+        }.value
+        return SummaryDetection(executables: executables, localModels: local,
+                                searchPath: directories.map(\.path).joined(separator: ":"), checked: true)
+    }
+    static func localModels(_ provider: SummaryProvider) async -> [String]? {
+        guard let base = provider.localBase else { return nil }
+        let url = provider == .ollama ? base.appendingPathComponent("api/tags") : base.appendingPathComponent("v1/models")
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 1.5
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return provider == .ollama ? parseOllamaModels(data) : parseOpenAIModels(data)
+    }
+    static func parseOllamaModels(_ data: Data) -> [String] {
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        return ((json?["models"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }.sorted()
+    }
+    static func parseOpenAIModels(_ data: Data) -> [String] {
+        let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        return ((json?["data"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }.sorted()
+    }
+}
+
+final class LockedData: @unchecked Sendable {
+    private let lock = NSLock()
+    private var data = Data()
+    func append(_ more: Data) { lock.lock(); data.append(more); lock.unlock() }
+    var value: Data { lock.lock(); defer { lock.unlock() }; return data }
+}
+
+private final class LockedFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var flag = false
+    func set() { lock.lock(); flag = true; lock.unlock() }
+    var value: Bool { lock.lock(); defer { lock.unlock() }; return flag }
+}
+
+// MARK: Running
+
+enum SummaryError: LocalizedError, Equatable {
+    case off, notInstalled(String), noKey(String), noModel, serverDown(String), timedOut, empty, failed(String, String)
+    var errorDescription: String? {
+        switch self {
+        case .off: "Choose a summary provider in Settings."
+        case .notInstalled(let name): "\(name) isn't installed."
+        case .noKey(let name): "Add your \(name) in Settings."
+        case .noModel: "Pick a model for summaries in Settings."
+        case .serverDown(let name): "\(name) isn't running. Open it and try again."
+        case .timedOut: "The summary took too long. Try again."
+        case .empty: "The provider sent back an empty summary."
+        case .failed(let name, let detail): "\(name): \(SummaryError.short(detail))"
+        }
+    }
+    static func short(_ text: String) -> String {
+        let line = text.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { !$0.isEmpty } ?? "Something went wrong."
+        return line.count > 120 ? String(line.prefix(117)) + "..." : line
+    }
+}
+
+struct SummaryRequest: Sendable {
+    var provider: SummaryProvider
+    var model: String
+    var executable: URL?
+    var searchPath = ""
+    var apiKey: String?
+    var timeout: TimeInterval = 600
+    var chunkLimit: Int?
+}
+
+enum SummaryRunner {
+    // Arguments for each CLI. The prompt always goes through stdin, so it never shows in `ps`.
+    static func cliArguments(_ provider: SummaryProvider, model: String, lastMessage: URL) -> [String] {
+        let model = model.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch provider {
+        case .claudeCode:
+            return ["-p", "--output-format", "text"] + (model.isEmpty ? [] : ["--model", model])
+        case .codex:
+            return ["exec", "--sandbox", "read-only", "--skip-git-repo-check", "--color", "never",
+                    "--output-last-message", lastMessage.path] + (model.isEmpty ? [] : ["--model", model]) + ["-"]
+        case .geminiCLI:
+            return ["-p", "Follow the instructions above and reply with the summary only."] + (model.isEmpty ? [] : ["--model", model])
+        default:
+            return []
+        }
+    }
+
+    static func run(_ prompt: String, request: SummaryRequest, job: TranscriptionJob) async throws -> String {
+        switch request.provider.kind {
+        case .none: throw SummaryError.off
+        case .cli: return try await runCLI(prompt, request: request, job: job)
+        case .local, .api: return try await runHTTP(prompt, request: request)
+        }
+    }
+
+    private static func runCLI(_ prompt: String, request: SummaryRequest, job: TranscriptionJob) async throws -> String {
+        guard let executable = request.executable else { throw SummaryError.notInstalled(request.provider.title) }
+        return try await withTaskCancellationHandler {
+            try await Task.detached(priority: .utility) {
+                try blockingCLI(prompt, request: request, executable: executable, job: job)
+            }.value
+        } onCancel: {
+            job.cancel()
+        }
+    }
+
+    private static func blockingCLI(_ prompt: String, request: SummaryRequest, executable: URL, job: TranscriptionJob) throws -> String {
+        let provider = request.provider
+        // An empty scratch folder: the CLI has no project files to read or change.
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-summary-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        let lastMessage = scratch.appendingPathComponent("last-message.txt")
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = cliArguments(provider, model: request.model, lastMessage: lastMessage)
+        process.currentDirectoryURL = scratch
+        process.qualityOfService = .utility
+        var environment = ProcessInfo.processInfo.environment
+        let existing = environment["PATH"] ?? ""
+        environment["PATH"] = [executable.deletingLastPathComponent().path, request.searchPath, existing]
+            .filter { !$0.isEmpty }.joined(separator: ":")
+        environment["NO_COLOR"] = "1"
+        process.environment = environment
+        let input = Pipe(), output = Pipe(), errors = Pipe()
+        process.standardInput = input
+        process.standardOutput = output
+        process.standardError = errors
+        let out = LockedData(), err = LockedData(), timedOut = LockedFlag()
+        let group = DispatchGroup()
+        try job.launch(process)
+        group.enter()
+        DispatchQueue.global(qos: .utility).async { out.append(output.fileHandleForReading.readDataToEndOfFile()); group.leave() }
+        group.enter()
+        DispatchQueue.global(qos: .utility).async { err.append(errors.fileHandleForReading.readDataToEndOfFile()); group.leave() }
+        DispatchQueue.global(qos: .utility).async {
+            try? input.fileHandleForWriting.write(contentsOf: Data(prompt.utf8))
+            try? input.fileHandleForWriting.close()
+        }
+        let timer = DispatchWorkItem { if process.isRunning { timedOut.set(); job.cancel() } }
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + request.timeout, execute: timer)
+        process.waitUntilExit()
+        timer.cancel()
+        group.wait()
+        if timedOut.value { throw SummaryError.timedOut }
+        try job.checkCancellation()
+        let stdout = String(decoding: out.value, as: UTF8.self)
+        guard process.terminationStatus == 0 else {
+            let stderr = String(decoding: err.value, as: UTF8.self)
+            let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            let detail = trimmed.isEmpty ? stdout.trimmingCharacters(in: .whitespacesAndNewlines) : trimmed
+            throw SummaryError.failed(provider.title, detail.isEmpty ? "exited with status \(process.terminationStatus)" : detail)
+        }
+        let last = (try? String(contentsOf: lastMessage, encoding: .utf8)) ?? ""
+        let reply = SummaryFiles.clean(last.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? stdout : last)
+        guard !reply.isEmpty else { throw SummaryError.empty }
+        return reply
+    }
+
+    // The request each HTTP provider expects. Keys travel only in headers.
+    static func httpRequest(_ prompt: String, request: SummaryRequest) throws -> URLRequest {
+        let provider = request.provider
+        let model = request.model.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !model.isEmpty else { throw SummaryError.noModel }
+        let key = request.apiKey?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if provider.kind == .api, key.isEmpty { throw SummaryError.noKey(provider.title) }
+        let url: URL
+        var body: [String: Any]
+        var headers = ["Content-Type": "application/json"]
+        let messages = [["role": "user", "content": prompt]]
+        switch provider {
+        case .ollama:
+            url = provider.localBase!.appendingPathComponent("api/chat")
+            body = ["model": model, "messages": messages, "stream": false, "options": ["num_ctx": 16_384]]
+        case .lmStudio:
+            url = provider.localBase!.appendingPathComponent("v1/chat/completions")
+            body = ["model": model, "messages": messages]
+        case .openAI:
+            url = URL(string: "https://api.openai.com/v1/chat/completions")!
+            body = ["model": model, "messages": messages]
+            headers["Authorization"] = "Bearer \(key)"
+        case .anthropic:
+            url = URL(string: "https://api.anthropic.com/v1/messages")!
+            body = ["model": model, "max_tokens": 16_000, "messages": messages]
+            headers["x-api-key"] = key
+            headers["anthropic-version"] = "2026-10-21"
+        case .gemini:
+            let name = model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
+            url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(name):generateContent")!
+            body = ["contents": [["role": "user", "parts": [["text": prompt]]]]]
+            headers["x-goog-api-key"] = key
+        default:
+            throw SummaryError.off
+        }
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.timeoutInterval = request.timeout
+        for (field, value) in headers { urlRequest.setValue(value, forHTTPHeaderField: field) }
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
+        return urlRequest
+    }
+
+    static func parseReply(_ data: Data, provider: SummaryProvider) -> String? {
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return nil }
+        switch provider {
+        case .ollama:
+            return (json["message"] as? [String: Any])?["content"] as? String
+        case .lmStudio, .openAI:
+            let choice = (json["choices"] as? [[String: Any]])?.first
+            return (choice?["message"] as? [String: Any])?["content"] as? String
+        case .anthropic:
+            let blocks = (json["content"] as? [[String: Any]]) ?? []
+            let text = blocks.filter { $0["type"] as? String == "text" }.compactMap { $0["text"] as? String }.joined()
+            return text.isEmpty ? nil : text
+        case .gemini:
+            let candidate = (json["candidates"] as? [[String: Any]])?.first
+            let parts = ((candidate?["content"] as? [String: Any])?["parts"] as? [[String: Any]]) ?? []
+            let text = parts.compactMap { $0["text"] as? String }.joined()
+            return text.isEmpty ? nil : text
+        default:
+            return nil
+        }
+    }
+    static func parseError(_ data: Data) -> String? {
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return nil }
+        if let error = json["error"] as? [String: Any] { return error["message"] as? String }
+        return json["error"] as? String
+    }
+
+    private static func runHTTP(_ prompt: String, request: SummaryRequest) async throws -> String {
+        let urlRequest = try httpRequest(prompt, request: request)
+        let data: Data, response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: urlRequest)
+        } catch let error as URLError {
+            switch error.code {
+            case .cancelled: throw CancellationError()
+            case .timedOut: throw SummaryError.timedOut
+            case .cannotConnectToHost, .cannotFindHost, .networkConnectionLost:
+                if request.provider.kind == .local { throw SummaryError.serverDown(request.provider.title) }
+                throw SummaryError.failed(request.provider.title, error.localizedDescription)
+            default: throw SummaryError.failed(request.provider.title, error.localizedDescription)
+            }
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            let detail = parseError(data) ?? HTTPURLResponse.localizedString(forStatusCode: status)
+            throw SummaryError.failed(request.provider.title, detail)
+        }
+        guard let reply = parseReply(data, provider: request.provider).map(SummaryFiles.clean), !reply.isEmpty else { throw SummaryError.empty }
+        return reply
+    }
+}
+
+enum Summarizer {
+    // One request when the transcript fits; otherwise each part, then a merge.
+    static func summarize(_ transcript: String, settings: SummarySettings, request: SummaryRequest, job: TranscriptionJob,
+                          beforeEachStep: @Sendable () async throws -> Void = {},
+                          progress: @escaping @Sendable (_ step: Int, _ total: Int) -> Void = { _, _ in }) async throws -> String {
+        let parts = SummaryChunker.chunks(transcript, limit: request.chunkLimit ?? request.provider.chunkLimit)
+        let total = parts.count == 1 ? 1 : parts.count + 1
+        if parts.count == 1 {
+            try await beforeEachStep()
+            progress(1, 1)
+            return try await SummaryRunner.run(SummaryPrompt.build(transcript: transcript, sections: settings.sections, custom: settings.custom),
+                                               request: request, job: job)
+        }
+        var partials: [String] = []
+        for (index, part) in parts.enumerated() {
+            try await beforeEachStep()
+            progress(index + 1, total)
+            partials.append(try await SummaryRunner.run(SummaryPrompt.build(transcript: part, sections: settings.sections, custom: settings.custom,
+                                                                            part: (index + 1, parts.count)), request: request, job: job))
+        }
+        try await beforeEachStep()
+        progress(total, total)
+        return try await SummaryRunner.run(SummaryPrompt.merge(partials: partials, sections: settings.sections, custom: settings.custom),
+                                           request: request, job: job)
+    }
+}
+
+// MARK: Queue
+
+// Runs summaries one at a time, after transcription, and remembers what each transcript is doing.
+@MainActor
+final class SummaryCenter: ObservableObject {
+    enum Status: Equatable { case queued, running(step: Int, total: Int), waiting(String) }
+    @Published private(set) var status: [String: Status] = [:]
+    @Published private(set) var errors: [String: String] = [:]
+    // Bumped whenever a summary file is written, so open readers reload.
+    @Published private(set) var revision = 0
+    @Published private(set) var detection = SummaryDetection()
+    @Published private(set) var detecting = false
+    // Returns why summaries should wait (a hot Mac, low battery, a local model competing with transcription).
+    var waitReason: @MainActor (SummaryProvider) -> String? = { _ in nil }
+    var keychain = SummaryKeychain.standard
+    var defaults = UserDefaults.standard
+    // Previews show a saved key without touching the Keychain.
+    var previewKeyTail: String?
+
+    private var queue: [URL] = []
+    private var worker: Task<Void, Never>?
+    private var job: TranscriptionJob?
+
+    func refreshDetection() {
+        guard !detecting else { return }
+        detecting = true
+        Task {
+            detection = await SummaryDetector.detect()
+            detecting = false
+        }
+    }
+    func configurePreview(detection: SummaryDetection, keyTail: String? = nil, status: [String: Status] = [:]) {
+        self.detection = detection
+        previewKeyTail = keyTail
+        self.status = status
+    }
+    func isBusy(_ transcript: URL) -> Bool { status[transcript.standardizedFileURL.path] != nil }
+    func status(for transcript: URL) -> Status? { status[transcript.standardizedFileURL.path] }
+    func error(for transcript: URL) -> String? { errors[transcript.standardizedFileURL.path] }
+
+    // Called when a transcript saves; only runs when the student chose automatic summaries.
+    func transcriptSaved(_ transcript: URL) {
+        let settings = SummarySettings.load(defaults)
+        guard settings.automatic, settings.provider != .off else { return }
+        summarize(transcript)
+    }
+    func summarize(_ transcript: URL) {
+        let key = transcript.standardizedFileURL.path
+        guard status[key] == nil else { return }
+        errors[key] = nil
+        guard SummarySettings.load(defaults).provider != .off else { errors[key] = SummaryError.off.localizedDescription; return }
+        status[key] = .queued
+        queue.append(transcript)
+        pump()
+    }
+    func cancelAll() {
+        queue.removeAll()
+        job?.cancel()
+        worker?.cancel()
+    }
+
+    private func pump() {
+        guard worker == nil, !queue.isEmpty else { return }
+        let transcript = queue.removeFirst()
+        let key = transcript.standardizedFileURL.path
+        let job = TranscriptionJob()
+        self.job = job
+        worker = Task {
+            do {
+                try await run(transcript, key: key, job: job)
+            } catch is CancellationError {
+            } catch {
+                errors[key] = (error as? SummaryError)?.localizedDescription ?? SummaryError.short(error.localizedDescription)
+            }
+            status[key] = nil
+            worker = nil
+            self.job = nil
+            pump()
+        }
+    }
+
+    private func run(_ transcript: URL, key: String, job: TranscriptionJob) async throws {
+        let settings = SummarySettings.load(defaults)
+        guard settings.provider != .off else { throw SummaryError.off }
+        if !detection.checked, settings.provider.kind != .api {
+            detection = await SummaryDetector.detect()
+        }
+        var request = SummaryRequest(provider: settings.provider, model: settings.model,
+                                     executable: detection.executables[settings.provider], searchPath: detection.searchPath)
+        switch settings.provider.kind {
+        case .cli:
+            if request.executable == nil { detection = await SummaryDetector.detect() }
+            request.executable = detection.executables[settings.provider]
+            guard request.executable != nil else { throw SummaryError.notInstalled(settings.provider.title) }
+        case .api:
+            let keychain = keychain
+            let account = settings.provider.rawValue
+            request.apiKey = await Task.detached { keychain.read(account: account) }.value
+            guard request.apiKey != nil else { throw SummaryError.noKey(settings.provider.title) }
+        case .local:
+            guard !settings.model.isEmpty else { throw SummaryError.noModel }
+        case .none:
+            throw SummaryError.off
+        }
+        let markdown = try await Task.detached(priority: .utility) { try String(contentsOf: transcript, encoding: .utf8) }.value
+        guard Core.wordCount(markdown) > 0 else { throw LectureError.message("This transcript has no speech to summarize.") }
+        let provider = settings.provider
+        let body = try await Summarizer.summarize(markdown, settings: settings, request: request, job: job,
+            beforeEachStep: { [weak self] in try await self?.waitUntilReady(provider, key: key) },
+            progress: { [weak self] step, total in
+                Task { @MainActor in self?.status[key] = .running(step: step, total: total) }
+            })
+        let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
+        let target = SummaryFiles.url(for: transcript)
+        try await Task.detached(priority: .utility) { try Data(document.utf8).write(to: target, options: .atomic) }.value
+        revision += 1
+    }
+
+    // Respects the same back-off as transcription: wait while the Mac is hot or the battery is low.
+    private func waitUntilReady(_ provider: SummaryProvider, key: String) async throws {
+        while let reason = waitReason(provider) {
+            status[key] = .waiting(reason)
+            try await Task.sleep(for: .seconds(15))
+        }
+        try Task.checkCancellation()
+    }
+}

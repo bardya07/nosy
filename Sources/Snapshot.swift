@@ -74,12 +74,31 @@ enum Snapshot {
 
         For next time, trace each carbon through the pathway and keep a separate account of ATP, NADH and FADH2. Explain why a cell might make lactate, and how gluconeogenesis differs from simply running glycolysis backwards.
         """
+        let summaryFixture = """
+        ## Short notes
+        - Glucose to ATP: glycolysis in the cytosol feeds the citric acid cycle in the mitochondria.
+        - Enzymes speed reactions by lowering activation energy; the active site positions the substrate.
+        - Phosphofructokinase is the key control point; ATP inhibits it and ADP signals demand.
+        - NADH and FADH2 carry electrons to the electron transport chain, which builds a proton gradient.
+
+        ## Key terms
+        - **Activation energy**: the energy barrier an enzyme lowers so a reaction runs faster.
+        - **Allosteric regulation**: control of an enzyme by a molecule binding away from the active site.
+        - **Chemiosmosis**: ATP synthase using the flow of protons back across the membrane to make ATP.
+
+        ## Likely exam questions
+        1. Why is phosphofructokinase a good place to regulate glycolysis?
+        2. Trace one glucose carbon from glycolysis to carbon dioxide.
+        3. Why does the proton gradient need an intact inner membrane?
+        """
         do {
             try manager.createDirectory(at: course, withIntermediateDirectories: true)
             try manager.createDirectory(at: emptyTranscripts, withIntermediateDirectories: true)
             try manager.createDirectory(at: support, withIntermediateDirectories: true)
             try Data(text.utf8).write(to: transcript)
             try Data(vocabulary.utf8).write(to: course.appendingPathComponent("vocab.txt"))
+            try Data(SummaryFiles.document(body: summaryFixture, transcript: transcript, provider: .claudeCode, date: date).utf8)
+                .write(to: SummaryFiles.url(for: transcript))
             let paths = AppPaths()
             try paths.prepareSupport()
             let previewRecord = SessionRecord(id: "preview-audio", lecture: "MBB322", session: "2026-10-23",
@@ -139,6 +158,21 @@ enum Snapshot {
         catch { print(error); return 1 }
         let mainStates: [(String, AppPhase)] = [("Ready", .idle), ("Recording", .recording), ("Saved", .done)]
         let previewDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview")!
+        // Summary settings fixtures write to their own throwaway suites.
+        let apiDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-api")!
+        let localDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-local")!
+        defer {
+            apiDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-api")
+            localDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-local")
+        }
+        apiDefaults.set(SummaryProvider.anthropic.rawValue, forKey: SummarySettings.providerKey)
+        apiDefaults.set(true, forKey: SummarySettings.automaticKey)
+        apiDefaults.set(true, forKey: SummarySection.questions.storageKey)
+        apiDefaults.set("Use British spelling.", forKey: SummarySettings.customKey)
+        localDefaults.set(SummaryProvider.ollama.rawValue, forKey: SummarySettings.providerKey)
+        localDefaults.set("qwen3:8b", forKey: SummaryProvider.ollama.modelKey)
+        let summaryDetection = SummaryDetection(executables: [.claudeCode: URL(fileURLWithPath: "/opt/homebrew/bin/claude")],
+                                                localModels: [.ollama: ["llama3.2:3b", "qwen3:8b"]], checked: true)
         // A suite separate from the user's settings; the previews do not change preferences.
         for scheme in [ColorScheme.light, .dark] {
             let mode = scheme == .dark ? "dark" : "light"
@@ -311,12 +345,29 @@ enum Snapshot {
                 guard render(MainView(model: model(phase)).environment(\.colorScheme, scheme), scheme: scheme,
                     to: base.appendingPathExtension("native-\(phase).\(mode).png"), native: true) else { return 1 }
             }
+            let summarizing = model(.idle)
+            let chemistry = transcripts.appendingPathComponent("CHEM281").appendingPathComponent("2026-10-21.md")
+            summarizing.libraryFocus = chemistry
+            summarizing.summaries.configurePreview(detection: summaryDetection,
+                status: [chemistry.standardizedFileURL.path: .running(step: 2, total: 4)])
+            let summaryModel = model(.idle)
+            summaryModel.summaries.configurePreview(detection: summaryDetection, keyTail: SummaryKeychain.masked("sk-ant-preview-key-7Qx2"))
             let activity = HStack(alignment: .top, spacing: 28) {
                 PreviewWindow { MainView(model: model(.recording, paused: true)) }
                 PreviewWindow { MainView(model: model(.transcribing)) }
                 PreviewWindow { MainView(model: model(.failed)) }
             }.padding(36).background(PreviewBackdrop())
             guard save(activity, "activity.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: model(.idle), previewSummary: true) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-summary.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: summarizing) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-summarizing.\(mode)"),
+                  save(LibraryView(model: model(.idle), previewSummary: true).frame(width: 720, height: 460)
+                    .padding(36).background(PreviewBackdrop()), "library-summary-minimum.\(mode)"),
+                  save(SettingsView(model: summaryModel).defaultAppStorage(apiDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-summaries.\(mode)"),
+                  save(SettingsView(model: summaryModel).defaultAppStorage(localDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-summaries-local.\(mode)"),
                   save(LibraryView(model: model(.idle)).frame(width: 860, height: 560)
                     .clipShape(RoundedRectangle(cornerRadius: 18)).padding(36).background(PreviewBackdrop()), "library.\(mode)"),
                   save(SettingsView(model: model(.idle)).clipShape(RoundedRectangle(cornerRadius: 18))

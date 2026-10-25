@@ -15,6 +15,8 @@ struct SettingsView: View {
                 }
             }
 
+            HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
             section("Transcripts") {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 10) {
@@ -71,16 +73,25 @@ struct SettingsView: View {
                     note("Keep lid open; closed Macs sleep. Mic silence warns.", tip: "Mac sleep behavior")
                 }
             }
+            }
+            .frame(width: Self.columnWidth)
+            section("Summaries") {
+                SummarySettingsSection(summaries: model.summaries)
+            }
+            .frame(width: Self.columnWidth)
+            }
         }
         .font(Theme.text(13))
         .foregroundStyle(Theme.ink)
         .padding(24)
-        .frame(width: 440)
+        .frame(width: Self.columnWidth * 2 + 16 + 48)
         .fixedSize(horizontal: false, vertical: true)
         .background(WindowBackdrop())
         .tint(Theme.accentText)
         .tipContainerBounds()
     }
+
+    static let columnWidth: CGFloat = 392
 
     private var retentionLabel: String {
         switch model.paths.retentionDays {
