@@ -146,11 +146,12 @@ enum Snapshot {
             let previewRecord = SessionRecord(id: "preview-audio", lecture: "MBB322", session: "2026-10-23",
                 startedAt: date, endedAt: date.addingTimeInterval(60), status: .done,
                 transcriptPath: transcript.path, markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused, review")],
-                aiMarkers: [AIMarker(t: 4, label: "Enzymes lower activation energy", anchor: KeyMoments.anchor("Think of an enzyme as a way"), approximate: true),
-                            AIMarker(t: 40, label: "Glycolysis control points", anchor: KeyMoments.anchor("In glycolysis, hexokinase adds"), approximate: true),
-                            AIMarker(t: 300, label: "Electron transport chain", anchor: KeyMoments.anchor("The electron transport chain uses"), approximate: true)],
                 vocabularyTerms: Vocabulary.entries(vocabulary))
             try previewRecord.save(in: paths)
+            try KeyMomentStore.replace([AIMarker(t: 4, label: "Enzymes lower activation energy", anchor: KeyMoments.anchor("Think of an enzyme as a way"), approximate: true),
+                                        AIMarker(t: 40, label: "Glycolysis control points", anchor: KeyMoments.anchor("In glycolysis, hexokinase adds"), approximate: true),
+                                        AIMarker(t: 300, label: "Electron transport chain", anchor: KeyMoments.anchor("The electron transport chain uses"), approximate: true)],
+                                       transcript: transcript, paths: paths)
             let audio = paths.audioFile(previewRecord.id, "wav")
             try Core.wavHeader(pcmBytes: 1_920_000).write(to: audio)
             let audioFile = try FileHandle(forWritingTo: audio)

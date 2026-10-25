@@ -20,6 +20,15 @@ struct SummaryBar: View {
     private var cloudName: String { provider.title.replacingOccurrences(of: " API key", with: "") }
 
     var body: some View {
+        // Full labels when the reader has room. Narrower readers keep the same actions as icons, each with its tip.
+        ViewThatFits(in: .horizontal) {
+            bar(compact: false)
+            bar(compact: true)
+        }
+        .padding(.horizontal, 22).padding(.vertical, 8)
+    }
+
+    private func bar(compact: Bool) -> some View {
         HStack(spacing: 10) {
             if hasSummary {
                 HStack(spacing: 2) {
@@ -47,23 +56,9 @@ struct SummaryBar: View {
                 .tip("Remove AI markers")
                 .accessibilityLabel("Remove AI markers")
             }
-            findButton
-            Button(action: summarize) {
-                HStack(spacing: 6) {
-                    if status != nil {
-                        ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
-                    } else {
-                        Image(systemName: hasSummary ? "arrow.clockwise" : "sparkles").font(.system(size: 11, weight: .semibold))
-                    }
-                    Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize"))
-                }
-            }
-            .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
-            .disabled(status != nil)
-            .tip(buttonTip)
-            .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
+            findButton(compact: compact)
+            summarizeButton(compact: compact)
         }
-        .padding(.horizontal, 22).padding(.vertical, 8)
     }
 
     @ViewBuilder private var statusText: some View {
@@ -98,7 +93,7 @@ struct SummaryBar: View {
             .tip(text, edge: .bottom)
     }
 
-    @ViewBuilder private var findButton: some View {
+    @ViewBuilder private func findButton(compact: Bool) -> some View {
         if moments != nil {
             Button("Cancel") { summaries.cancelMoments(transcript) }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
@@ -107,14 +102,30 @@ struct SummaryBar: View {
         } else {
             Button(action: findKeyMoments) {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles").font(.system(size: 11, weight: .semibold))
-                    Text("Find key moments")
+                    Image(systemName: "sparkle.magnifyingglass").font(.system(size: 11, weight: .semibold))
+                    if !compact { Text("Find key moments") }
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
+            .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
             .tip(findTip)
             .accessibilityLabel("Find key moments")
         }
+    }
+    private func summarizeButton(compact: Bool) -> some View {
+        Button(action: summarize) {
+            HStack(spacing: 6) {
+                if status != nil {
+                    ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: hasSummary ? "arrow.clockwise" : "sparkles").font(.system(size: 11, weight: .semibold))
+                }
+                if !compact { Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize")) }
+            }
+        }
+        .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
+        .disabled(status != nil)
+        .tip(buttonTip)
+        .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
     }
     private var findTip: String {
         if provider == .off { return "Turn on summaries in Settings" }

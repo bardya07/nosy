@@ -40,12 +40,18 @@ enum MainControlsTests {
 
         // The live dB stat: whole decibels, a true minus sign, and silence as minus infinity.
         let minus = "\u{2212}"
-        check(InputLevel.readout(-23.4) == "\(minus)23 dB", "a level of -23.4 reads as minus 23 dB")
-        check(InputLevel.readout(-23.6) == "\(minus)24 dB", "readings round to the nearest decibel")
-        check(InputLevel.readout(0.4) == "0 dB", "a reading at full scale never shows a positive number")
-        check(InputLevel.readout(-160) == "\(minus)\u{221E} dB", "the silent sentinel reads as minus infinity")
-        check(InputLevel.readout(-99.6) == "\(minus)\u{221E} dB", "a level below -99 reads as silence")
-        check(InputLevel.readout(.nan) == "\(minus)\u{221E} dB", "a missing reading never prints nan")
+        check(InputLevel.technical(-23.4) == "\(minus)23 dBFS", "a level of -23.4 reads as minus 23 dBFS")
+        check(InputLevel.technical(-23.6) == "\(minus)24 dBFS", "readings round to the nearest decibel")
+        check(InputLevel.technical(0.4) == "0 dBFS", "a reading at full scale never shows a positive number")
+        check(InputLevel.technical(-160) == "\(minus)\u{221E} dBFS", "the silent sentinel reads as minus infinity")
+        check(InputLevel.technical(-99.6) == "\(minus)\u{221E} dBFS", "a level below -99 reads as silence")
+        check(InputLevel.technical(.nan) == "\(minus)\u{221E} dBFS", "a missing reading never prints nan")
+        // The estimate is the everyday sound level, with the calibration offset, clamped to the meter's range.
+        check(InputLevel.estimateText(-23.4) == "\u{2248} 71 dB", "the estimate adds the calibration offset")
+        check(InputLevel.estimateText(-160) == "\u{2248} 20 dB", "silence estimates at the bottom of the range")
+        check(InputLevel.band(-160) == .quiet && InputLevel.band(-23.4) == .good && InputLevel.band(-5) == .loud, "the Quiet, Good and Loud bands")
+        check(InputLevel.primary(-23.4, display: .estimate) == "\u{2248} 71 dB" && InputLevel.primary(-23.4, display: .technical) == "\(minus)23 dBFS",
+              "the chosen display sets the first readout")
         check(InputLevel.fraction(-60) == 0 && InputLevel.fraction(0) == 1, "the meter runs from -60 to 0 dB")
         check(abs(InputLevel.fraction(-30) - 0.5) < 0.0001, "the meter is linear in decibels")
         check(InputLevel.fraction(-160) == 0 && InputLevel.fraction(12) == 1, "the meter stays inside its bar")

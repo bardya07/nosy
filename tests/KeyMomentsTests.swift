@@ -2,14 +2,14 @@ import Foundation
 
 // Find key moments: prompt and schema building, reply validation, label rules, spacing and the cap,
 // approximate times for old transcripts, chunk overlap, the engine with scripted replies, placement in
-// the reader, and sidecar persistence and removal. NOSY_KEY_MOMENTS_TRANSCRIPT runs the real local model
+// the reader, and durable storage beside the transcript: retention, legacy migration and removal. NOSY_KEY_MOMENTS_TRANSCRIPT runs the real local model
 // once on one transcript and prints what it found; nothing is written anywhere.
 @main
 enum KeyMomentsTests {
     static func main() async {
         do {
             try await run()
-            print("KEY MOMENTS TESTS PASS: schema and prompts, validation, selection, approximate times, chunking, engine, placement, persistence, removal")
+            print("KEY MOMENTS TESTS PASS: schema and prompts, validation, selection, approximate times, chunking, engine, placement, storage, retention, removal")
             if let transcript = ProcessInfo.processInfo.environment["NOSY_KEY_MOMENTS_TRANSCRIPT"] {
                 try await realRun(transcript)
             }
@@ -336,90 +336,104 @@ enum KeyMomentsTests {
         let root = manager.temporaryDirectory.appendingPathComponent("nosy-key-moments-\(UUID().uuidString)")
         defer { try? manager.removeItem(at: root) }
         let paths = AppPaths(environment: ["NOSY_SUPPORT_DIR": root.appendingPathComponent("support").path,
-                                          "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("transcripts").path])
+                                          "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("transcripts").path],
+                             retentionDays: 14)
         try paths.prepareSupport()
         let folder = paths.lectureFolder("MBB322")
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
         let transcript = folder.appendingPathComponent("2026-10-23.md")
         try Data("# MBB322 — 2026-10-23\n\n- Date: 2026-10-23\n- Started: 16:13\n- Length: 60 min\n\n## Transcript\n\nHello there.\n".utf8).write(to: transcript)
+        check(KeyMomentStore.url(for: transcript) == folder.appendingPathComponent(".2026-10-23.key-moments.json"),
+              "the store is a hidden file beside its transcript")
 
         let started = Date(timeIntervalSince1970: 1_790_000_000)
-        var record = SessionRecord(id: "20261023-161300", lecture: "MBB322", session: "2026-10-23", startedAt: started,
+        let record = SessionRecord(id: "20261023-161300", lecture: "MBB322", session: "2026-10-23", startedAt: started,
                                    endedAt: started, status: .done, transcriptPath: transcript.path,
                                    markers: [SessionMarker(t: 12, label: "Exam hint"), SessionMarker(t: 31, label: "Confused, review")])
-        record.aiMarkers = [AIMarker(t: 60, label: "Enzymes lower energy", anchor: "think of an enzyme", approximate: false),
-                            AIMarker(t: 400, label: "Chemiosmosis basics", anchor: "", approximate: true),
-                            AIMarker(t: 900, label: "Exam practice tips", anchor: "", approximate: true)]
         try record.save(in: paths)
         let manual = record.markers
+        let sidecarBefore = try SessionRecord.read(paths.audioFile(record.id, "json"))
 
-        let loaded = try SessionRecord.read(paths.audioFile(record.id, "json"))
-        check(loaded == record, "AI markers round trip through the sidecar")
+        try KeyMomentStore.replace([AIMarker(t: 60, label: "Enzymes lower energy", anchor: "think of an enzyme", approximate: false),
+                                    AIMarker(t: 400, label: "Chemiosmosis basics", anchor: "", approximate: true),
+                                    AIMarker(t: 900, label: "Exam practice tips", anchor: "", approximate: true)],
+                                   transcript: transcript, paths: paths)
+        check(KeyMomentStore.markers(for: transcript, paths: paths).map(\.label) == ["Enzymes lower energy", "Chemiosmosis basics", "Exam practice tips"],
+              "AI markers round trip beside the transcript")
+        let sidecarNow = try SessionRecord.read(paths.audioFile(record.id, "json"))
+        check(sidecarNow == sidecarBefore, "AI markers never touch the recording sidecar")
         check(Core.records(in: paths).count == 1, "the record lists once")
 
         try KeyMomentStore.remove(at: 1, transcript: transcript, paths: paths)
+        check(KeyMomentStore.markers(for: transcript, paths: paths).map(\.label) == ["Enzymes lower energy", "Exam practice tips"], "removing one AI marker keeps the rest")
         let afterRemove = try SessionRecord.read(paths.audioFile(record.id, "json"))
-        check(afterRemove.aiMarkers.map(\.label) == ["Enzymes lower energy", "Exam practice tips"], "removing one AI marker keeps the rest")
         check(afterRemove.markers == manual, "removing AI markers never touches manual markers")
-        check(afterRemove.transcriptPath == transcript.path && afterRemove.status == .done, "other sidecar fields are kept")
-
         try KeyMomentStore.remove(at: 99, transcript: transcript, paths: paths)
-        let unchanged = try SessionRecord.read(paths.audioFile(record.id, "json"))
-        check(unchanged.aiMarkers.count == 2, "removing an index that is not there changes nothing")
-
+        check(KeyMomentStore.markers(for: transcript, paths: paths).count == 2, "removing an index that is not there changes nothing")
         try KeyMomentStore.replace([AIMarker(t: 120, label: "Fresh set of picks", anchor: "")], transcript: transcript, paths: paths)
-        let fresh = try SessionRecord.read(paths.audioFile(record.id, "json"))
-        check(fresh.aiMarkers.map(\.label) == ["Fresh set of picks"], "a new run replaces AI markers")
-
+        check(KeyMomentStore.markers(for: transcript, paths: paths).map(\.label) == ["Fresh set of picks"], "a new run replaces AI markers")
         try KeyMomentStore.removeAll(transcript: transcript, paths: paths)
-        let cleared = try SessionRecord.read(paths.audioFile(record.id, "json"))
-        check(cleared.aiMarkers.isEmpty && cleared.markers == manual, "Remove AI markers clears only AI markers")
+        check(KeyMomentStore.markers(for: transcript, paths: paths).isEmpty, "Remove AI markers clears the AI markers")
+        let afterClear = try SessionRecord.read(paths.audioFile(record.id, "json"))
+        check(afterClear.markers == manual, "Remove AI markers keeps the manual markers")
 
-        // Sidecars from before this change have no aiMarkers key and still load.
-        let old = #"{"id":"20261022-101000","lecture":"MBB322","session":"old","startedAt":"2026-10-22T10:10:00Z","status":"done","markers":[{"t":5,"label":"Old marker"}]}"#
-        try Data(old.utf8).write(to: paths.audioFile("20261022-101000", "json"))
-        let oldRecord = try SessionRecord.read(paths.audioFile("20261022-101000", "json"))
-        check(oldRecord.aiMarkers.isEmpty && oldRecord.markers.first?.label == "Old marker", "old sidecars load with no AI markers and keep manual markers")
+        // Retention deletes the audio and its sidecar, but the key moments are beside the transcript and stay.
+        try KeyMomentStore.replace([AIMarker(t: 120, label: "Survives retention", anchor: "")], transcript: transcript, paths: paths)
+        var old = record
+        old.transcribedAt = started.addingTimeInterval(-40 * 86_400)
+        try old.save(in: paths)
+        try Data("audio".utf8).write(to: paths.audioFile(record.id, "m4a"))
+        try Core.applyRetention(paths: paths)
+        check(!manager.fileExists(atPath: paths.audioFile(record.id, "json").path), "retention deletes the sidecar")
+        check(!manager.fileExists(atPath: paths.audioFile(record.id, "m4a").path), "retention deletes the audio")
+        check(KeyMomentStore.markers(for: transcript, paths: paths).map(\.label) == ["Survives retention"], "AI markers survive retention")
 
-        // A damaged AI marker is dropped, not allowed to break the whole sidecar.
-        let damaged = #"{"id":"20261021-101000","lecture":"MBB322","session":"damaged","startedAt":"2026-10-21T10:10:00Z","status":"done","aiMarkers":[{"t":-4,"label":"Negative time"},{"t":50,"label":"Kept marker","anchor":"kept words"}]}"#
-        try Data(damaged.utf8).write(to: paths.audioFile("20261021-101000", "json"))
-        let damagedRecord = try SessionRecord.read(paths.audioFile("20261021-101000", "json"))
-        check(damagedRecord.aiMarkers.map(\.label) == ["Kept marker"] && damagedRecord.aiMarkers.first?.approximate == false, "a negative AI marker is dropped and defaults fill in")
+        // Transcripts from before this store kept markers and timings in the recording folder. Retention copies them across first.
+        let legacyTranscript = folder.appendingPathComponent("2026-08-01.md")
+        try Data("# MBB322 — 2026-08-01\n\n- Length: 50 min\n\n## Transcript\n\nHello there.\n".utf8).write(to: legacyTranscript)
+        let legacySidecar = #"{"id":"20260801-100000","lecture":"MBB322","session":"2026-08-01","startedAt":"2026-08-01T10:00:00Z","endedAt":"2026-08-01T10:50:00Z","status":"done","transcribedAt":"2026-08-01T11:00:00Z","transcriptPath":"\#(legacyTranscript.path)","markers":[{"t":5,"label":"Old marker"}],"aiMarkers":[{"t":60,"label":"Legacy AI marker","anchor":"hello there"},{"t":-4,"label":"Damaged"}]}"#
+        try Data(legacySidecar.utf8).write(to: paths.audioFile("20260801-100000", "json"))
+        try Data(#"{"version":1,"segments":[{"from":0,"to":1500,"text":"Hello there."}]}"#.utf8).write(to: paths.audioFile("20260801-100000", "segments.json"))
+        try Core.applyRetention(paths: paths)
+        check(!manager.fileExists(atPath: paths.audioFile("20260801-100000", "json").path), "retention deletes the legacy sidecar")
+        check(!manager.fileExists(atPath: paths.audioFile("20260801-100000", "segments.json").path), "retention deletes the legacy segments file")
+        check(KeyMomentStore.markers(for: legacyTranscript, paths: paths).map(\.label) == ["Legacy AI marker"], "legacy AI markers survive retention, damaged ones dropped")
+        check(KeyMomentStore.segments(for: legacyTranscript, paths: paths)?.segments.map(\.text) == ["Hello there."], "legacy timings survive retention")
 
-        // The segments file sits beside the sidecar and is never mistaken for a record.
-        let records = Core.records(in: paths).count
-        let segments = SavedSegments(segments: [.init(from: 0, to: 1500, text: "Hello there.")])
-        try JSONEncoder().encode(segments).write(to: KeyMoments.segmentsURL(id: record.id, paths: paths))
-        check(Core.records(in: paths).count == records, "a segments file is not a record")
-        check(KeyMoments.loadSegments(id: record.id, paths: paths) == segments, "saved segments load back unchanged")
-        check(KeyMoments.isSegmentsFile(KeyMoments.segmentsURL(id: record.id, paths: paths)), "the segments file is recognized")
+        // A damaged marker in the file is dropped, and the rest still load.
+        let damaged = Data(#"{"version":1,"markers":[{"t":"soon","label":"Broken"},{"t":-4,"label":"Negative"},{"t":50,"label":"Kept marker","anchor":"kept words"}]}"#.utf8)
+        let damagedFile = try JSONDecoder().decode(KeyMomentsFile.self, from: damaged)
+        check(damagedFile.markers.map(\.label) == ["Kept marker"], "a damaged marker is dropped and the rest load")
 
         // Text lines match Whisper segments one to one, so the saved text is the final text the reader shows.
         let json = Data(#"{"transcription":[{"offsets":{"from":0,"to":1500},"text":" raw one"},{"offsets":{"from":1500,"to":3000},"text":" raw two"}]}"#.utf8)
         let decoded = try JSONDecoder().decode(TranscriptSegments.self, from: json)
-        try KeyMoments.saveSegments(decoded.transcription, text: "Final one.\nFinal two.\n", id: "aligned", paths: paths)
-        let aligned = KeyMoments.loadSegments(id: "aligned", paths: paths)
-        check(aligned?.segments.map(\.text) == ["Final one.", "Final two."], "aligned lines give the final text")
-        try KeyMoments.saveSegments(decoded.transcription, text: "Only one line.\n", id: "misaligned", paths: paths)
-        check(KeyMoments.loadSegments(id: "misaligned", paths: paths)?.segments.map(\.text) == ["raw one", "raw two"],
+        let aligned = folder.appendingPathComponent("aligned.md")
+        try KeyMomentStore.start(transcript: aligned, segments: decoded.transcription, text: "Final one.\nFinal two.\n")
+        check(KeyMomentStore.segments(for: aligned, paths: paths)?.segments.map(\.text) == ["Final one.", "Final two."], "aligned lines give the final text")
+        let misaligned = folder.appendingPathComponent("misaligned.md")
+        try KeyMomentStore.start(transcript: misaligned, segments: decoded.transcription, text: "Only one line.\n")
+        check(KeyMomentStore.segments(for: misaligned, paths: paths)?.segments.map(\.text) == ["raw one", "raw two"],
               "misaligned text falls back to Whisper's own segment text")
 
-        // A plan needs the record; without one, nothing is saved and the user sees a short reason.
+        // A new transcript never inherits an old file's markers, and a rename carries the file along.
+        let stale = folder.appendingPathComponent("stale.md")
+        try KeyMomentStore.replace([AIMarker(t: 1, label: "Stale marker", anchor: "")], transcript: stale, paths: paths)
+        try KeyMomentStore.start(transcript: stale, segments: decoded.transcription, text: "Final one.\nFinal two.\n")
+        check(KeyMomentStore.markers(for: stale, paths: paths).isEmpty, "a new transcript never inherits an old file's markers")
+        let renamed = folder.appendingPathComponent("renamed.md")
+        try KeyMomentStore.move(from: aligned, to: renamed)
+        check(!manager.fileExists(atPath: KeyMomentStore.url(for: aligned).path), "the old name no longer has a file")
+        check(KeyMomentStore.segments(for: renamed, paths: paths)?.segments.count == 2, "rename moves the timings with the transcript")
+
+        // A transcript whose recording is gone still plans key moments from its text and header length.
         let orphan = folder.appendingPathComponent("orphan.md")
-        try Data("# x\n\n- Length: 5 min\n\n## Transcript\n\nWords here.\n".utf8).write(to: orphan)
-        do {
-            _ = try KeyMoments.plan(transcript: orphan, paths: paths)
-            check(false, "a transcript without a record has no plan")
-        } catch {
-            check(error as? KeyMomentError == .noRecord, "a transcript without a recording says so")
-        }
-        do {
-            try KeyMomentStore.replace([], transcript: orphan, paths: paths)
-            check(false, "a transcript without a record cannot store markers")
-        } catch {
-            check(error as? KeyMomentError == .noRecord, "storing without a record is refused")
-        }
+        try Data("# x\n\n- Length: 5 min\n\n## Transcript\n\n> [0:30] Manual\n\nWords here and more words.\n".utf8).write(to: orphan)
+        let plan = try KeyMoments.plan(transcript: orphan, paths: paths)
+        check(plan.duration == 300 && plan.title == "MBB322 · orphan", "a transcript without a recording plans from its own text")
+        check(plan.manualTimes == [30], "manual markers are read from the transcript text")
+        try KeyMomentStore.replace([AIMarker(t: 120, label: "Without a recording", anchor: "")], transcript: orphan, paths: paths)
+        check(KeyMomentStore.markers(for: orphan, paths: paths).map(\.label) == ["Without a recording"], "a transcript without a recording stores its markers")
     }
 
     // Uses the installed Qwen3 4B through the bundled helper. Prints timings and the markers; writes nothing.

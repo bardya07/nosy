@@ -7,7 +7,7 @@ python3 tests/InstallGuardTests.py
 mkdir -p "$BUILD_DIR/module-cache"
 clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
 "$BUILD_DIR/AudioExceptionsTests"
-BACKEND=(Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift)
+BACKEND=(Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/KeyMomentStore.swift)
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" tests/CoreTests.swift -o "$BUILD_DIR/CoreTests"
 "$BUILD_DIR/CoreTests"
@@ -19,6 +19,15 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/SummaryTests.swift -o "$BUILD_DIR/SummaryTests"
 "$BUILD_DIR/SummaryTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/KeyMomentsTests.swift -o "$BUILD_DIR/KeyMomentsTests"
+"$BUILD_DIR/KeyMomentsTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/LocalModelTests.swift -o "$BUILD_DIR/LocalModelTests"
+"$BUILD_DIR/LocalModelTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/TranscriptsSettingsTests.swift -o "$BUILD_DIR/TranscriptsSettingsTests"
+"$BUILD_DIR/TranscriptsSettingsTests"
 "$BUILD_DIR/TranscriberTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/TranscriptBlocks.swift Sources/Transcriber.swift tests/VocabularyTests.swift -o "$BUILD_DIR/VocabularyTests"

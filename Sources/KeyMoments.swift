@@ -2,43 +2,8 @@ import Foundation
 
 // Find key moments: an explicit request that picks up to 10 AI markers from a finished transcript.
 // The model only chooses segment numbers and writes short labels. Nosy maps each number to its
-// stored start time, so the model never supplies a time. AI markers live in the recording sidecar,
-// never in the transcript file, so removing them cannot touch the owner's text or manual markers.
-
-struct AIMarker: Codable, Sendable, Equatable {
-    var t: TimeInterval
-    var label: String
-    // The first words of the marked segment. The reader uses them to sit the marker beside its paragraph.
-    var anchor: String
-    // True when the time came from text position because the transcript kept no segment timings.
-    var approximate: Bool
-
-    init(t: TimeInterval, label: String, anchor: String = "", approximate: Bool = false) {
-        self.t = t
-        self.label = label
-        self.anchor = anchor
-        self.approximate = approximate
-    }
-    private enum CodingKeys: String, CodingKey { case t, label, anchor, approximate }
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        t = try c.decode(TimeInterval.self, forKey: .t)
-        label = try c.decode(String.self, forKey: .label)
-        anchor = try c.decodeIfPresent(String.self, forKey: .anchor) ?? ""
-        approximate = try c.decodeIfPresent(Bool.self, forKey: .approximate) ?? false
-    }
-}
-
-// Whisper segment timings, saved at transcription time as `<id>.segments.json`. Milliseconds, compact.
-struct SavedSegments: Codable, Sendable, Equatable {
-    struct Item: Codable, Sendable, Equatable {
-        var from: Int
-        var to: Int
-        var text: String
-    }
-    var version = 1
-    var segments: [Item]
-}
+// stored start time, so the model never supplies a time. AI markers live beside the transcript in
+// KeyMomentStore, never in the transcript file, so removing them cannot touch the owner's text or manual markers.
 
 // One piece of the transcript the model can point at. `id` is stable across chunks of one transcript.
 struct KeyMomentUnit: Equatable, Sendable {
@@ -65,7 +30,6 @@ struct KeyMomentCandidate: Equatable, Sendable {
 
 // Everything a run needs, read once before the first model call.
 struct KeyMomentPlan: Sendable {
-    let recordID: String
     let units: [KeyMomentUnit]
     let duration: TimeInterval?
     let manualTimes: [TimeInterval]
@@ -78,10 +42,9 @@ struct PlacedMarker: Equatable, Sendable {
 }
 
 enum KeyMomentError: LocalizedError, Equatable, Sendable {
-    case noRecord, noSpeech, noLength, badReply
+    case noSpeech, noLength, badReply
     var errorDescription: String? {
         switch self {
-        case .noRecord: "This transcript's recording isn't in Nosy's library, so key moments can't be saved for it."
         case .noSpeech: "This transcript has no speech to find moments in."
         case .noLength: "Nosy can't tell how long this lecture is."
         case .badReply: "The model didn't return usable moments. Try again."
@@ -107,28 +70,7 @@ enum KeyMoments {
     static let minimumSentence = 40
     static let maximumSentence = 800
 
-    // MARK: Storage
-
-    static func segmentsURL(id: String, paths: AppPaths) -> URL { paths.audioFile(id, "segments.json") }
-    static func isSegmentsFile(_ url: URL) -> Bool { url.lastPathComponent.hasSuffix(".segments.json") }
-
-    // Called once a transcript is final. Lines are the final transcript lines when they match Whisper's
-    // segments one to one, so later anchors match the text the reader shows.
-    static func saveSegments(_ segments: [TranscriptSegments.Segment], text: String, id: String, paths: AppPaths) throws {
-        var lines = text.components(separatedBy: "\n")
-        if lines.last == "" { lines.removeLast() }
-        let aligned = lines.count == segments.count
-        let items = segments.enumerated().map { index, segment in
-            SavedSegments.Item(from: segment.offsets.from, to: segment.offsets.to,
-                               text: Core.collapseWhitespace(aligned ? lines[index] : (segment.text ?? "")))
-        }
-        try JSONEncoder().encode(SavedSegments(segments: items)).write(to: segmentsURL(id: id, paths: paths), options: .atomic)
-    }
-
-    static func loadSegments(id: String, paths: AppPaths) -> SavedSegments? {
-        guard let data = try? Data(contentsOf: segmentsURL(id: id, paths: paths)) else { return nil }
-        return try? JSONDecoder().decode(SavedSegments.self, from: data)
-    }
+    // MARK: Units
 
     static func timedUnits(_ saved: SavedSegments) -> [KeyMomentUnit] {
         saved.segments.enumerated().compactMap { index, item in
@@ -419,10 +361,13 @@ enum KeyMoments {
 
     // MARK: Plan and run
 
-    static func lectureDuration(record: SessionRecord, markdown: String, paths: AppPaths) -> TimeInterval? {
-        let audio = Core.audioDuration(id: record.id, paths: paths)
-        if audio > 0 { return audio }
-        if let saved = loadSegments(id: record.id, paths: paths), let last = saved.segments.last, last.to > 0 {
+    // The lecture length: the recording when it still exists, then the saved timings, then the transcript header.
+    static func lectureDuration(transcript: URL, markdown: String, paths: AppPaths) -> TimeInterval? {
+        if let record = Core.record(forTranscript: transcript, paths: paths) {
+            let audio = Core.audioDuration(id: record.id, paths: paths)
+            if audio > 0 { return audio }
+        }
+        if let saved = KeyMomentStore.segments(for: transcript, paths: paths), let last = saved.segments.last, last.to > 0 {
             return Double(last.to) / 1000
         }
         return headerLength(markdown)
@@ -436,21 +381,36 @@ enum KeyMoments {
         return minutes * 60
     }
 
+    // Works from the transcript alone, so key moments still run after the recording is deleted.
     static func plan(transcript: URL, paths: AppPaths) throws -> KeyMomentPlan {
-        guard let record = Core.record(forTranscript: transcript, paths: paths) else { throw KeyMomentError.noRecord }
         let markdown = try String(contentsOf: transcript, encoding: .utf8)
         guard Core.wordCount(markdown) > 0 else { throw KeyMomentError.noSpeech }
-        let duration = lectureDuration(record: record, markdown: markdown, paths: paths)
+        let duration = lectureDuration(transcript: transcript, markdown: markdown, paths: paths)
         let units: [KeyMomentUnit]
-        if let saved = loadSegments(id: record.id, paths: paths) {
+        if let saved = KeyMomentStore.segments(for: transcript, paths: paths) {
             units = timedUnits(saved)
         } else {
             guard let duration else { throw KeyMomentError.noLength }
             units = approximateUnits(markdown: markdown, duration: duration)
         }
         guard !units.isEmpty else { throw KeyMomentError.noSpeech }
-        return KeyMomentPlan(recordID: record.id, units: units, duration: duration,
-                             manualTimes: record.markers.map(\.t), title: "\(record.lecture) · \(record.session)")
+        let record = Core.record(forTranscript: transcript, paths: paths)
+        let manual = record?.markers.map(\.t) ?? manualTimes(markdown)
+        let folder = transcript.deletingLastPathComponent().lastPathComponent
+        let session = transcript.deletingPathExtension().lastPathComponent
+        let title = record.map { "\($0.lecture) · \($0.session)" } ?? "\(folder) · \(session)"
+        return KeyMomentPlan(units: units, duration: duration, manualTimes: manual, title: title)
+    }
+
+    // Manual markers as the transcript writes them ("> [1:02] Label"), for transcripts whose recording is gone.
+    static func manualTimes(_ markdown: String) -> [TimeInterval] {
+        markdown.components(separatedBy: .newlines).compactMap { line -> TimeInterval? in
+            guard let parsed = SessionMarker.parse(line) else { return nil }
+            let parts = parsed.timestamp.split(separator: ":")
+            let numbers = parts.compactMap { Double($0) }
+            guard numbers.count == parts.count else { return nil }
+            return numbers.reduce(0) { $0 * 60 + $1 }
+        }
     }
 
     // The engine. `report` runs before each model call (it waits and shows progress); `complete` sends one
@@ -511,25 +471,5 @@ enum KeyMoments {
         try await report(current, total)
         if let reply = parse(try await complete(prompt + repairNote)) { return reply }
         throw KeyMomentError.badReply
-    }
-}
-
-// Read-modify-write of the recording sidecar. Only `aiMarkers` ever changes here.
-enum KeyMomentStore {
-    static func update(transcript: URL, paths: AppPaths, _ change: (inout [AIMarker]) -> Void) throws {
-        guard var record = Core.record(forTranscript: transcript, paths: paths) else { throw KeyMomentError.noRecord }
-        change(&record.aiMarkers)
-        try record.save(in: paths)
-    }
-    static func replace(_ markers: [AIMarker], transcript: URL, paths: AppPaths) throws {
-        try update(transcript: transcript, paths: paths) { $0 = markers }
-    }
-    static func remove(at index: Int, transcript: URL, paths: AppPaths) throws {
-        try update(transcript: transcript, paths: paths) { markers in
-            if markers.indices.contains(index) { markers.remove(at: index) }
-        }
-    }
-    static func removeAll(transcript: URL, paths: AppPaths) throws {
-        try update(transcript: transcript, paths: paths) { $0.removeAll() }
     }
 }

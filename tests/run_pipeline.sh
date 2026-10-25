@@ -9,7 +9,7 @@ if [[ -z "${NOSY_TEST_APP:-}" ]]; then
     swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
         -module-cache-path "$BUILD_DIR/module-cache" \
         "${AUDIO_SHIM[@]}" Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/AudioInputs.swift \
-        Sources/RecordingSource.swift Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift Sources/Headless.swift tests/HeadlessMain.swift \
+        Sources/RecordingSource.swift Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift Sources/KeyMomentStore.swift Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift Sources/Headless.swift tests/HeadlessMain.swift \
         -o "$BUILD_DIR/NosyHeadless"
     export NOSY_TEST_APP="$BUILD_DIR/NosyHeadless"
 fi
@@ -120,6 +120,11 @@ for id, filename in [('20261021-120000','Energy.md'), ('20261021-120001','Energy
     else:
         assert '> [' not in text, 'Unmarked transcripts must retain their existing format'
     assert pathlib.Path(r['transcriptPath']) == transcripts/filename
+    # Timed segments are stored beside the transcript (not in the recording folder), so Find key moments outlives the audio.
+    stored = json.loads((transcripts/('.' + filename[:-3] + '.key-moments.json')).read_text())
+    timed = stored['segments']['segments']
+    assert timed and all(item['to'] >= item['from'] and item['text'].strip() for item in timed), stored
+    assert not (audio/f'{id}.segments.json').exists(), 'Segments must not be written to the recording folder'
     assert not (audio/f'{id}.pcm').exists()
     if os.environ['NOSY_TEST_AAC'] == '1':
         assert (audio/f'{id}.m4a').stat().st_size > 0, 'Successful transcript must compress audio'

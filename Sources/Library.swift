@@ -222,6 +222,8 @@ final class TranscriptLibrary: ObservableObject {
         do {
             if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+            // Key moments go with their transcript. A leftover hidden file is harmless and is replaced if the name comes back.
+            try? KeyMomentStore.trash(transcript: url)
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -285,11 +287,15 @@ final class TranscriptLibrary: ObservableObject {
         let target = Core.uniqueTranscript(in: item.url.deletingLastPathComponent(), session: try Core.sanitize(name))
         let record = Core.record(forTranscript: item.url, paths: paths)
         let summary = SummaryFiles.existing(for: item.url)
+        let hasMoments = FileManager.default.fileExists(atPath: KeyMomentStore.url(for: item.url).path)
         try FileManager.default.moveItem(at: item.url, to: target)
+        var movedMoments = false
         do {
             if let summary { try FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
+            if hasMoments { try KeyMomentStore.move(from: item.url, to: target); movedMoments = true }
             if var record { record.transcriptPath = target.path; try record.save(in: paths) }
         } catch {
+            if movedMoments { try? KeyMomentStore.move(from: target, to: item.url) }
             if let summary, FileManager.default.fileExists(atPath: SummaryFiles.url(for: target).path) {
                 try? FileManager.default.moveItem(at: SummaryFiles.url(for: target), to: summary)
             }
@@ -330,7 +336,7 @@ struct LibraryView: View {
     // Transcript | Summary in the reader, and the summary text for the selected transcript.
     @State private var showSummary = false
     @State private var summaryText: String?
-    // AI markers from the recording sidecar for the selected transcript, and the lecture length they are placed by.
+    // AI markers beside the selected transcript, and the lecture length they are placed by.
     @State private var aiMarkers: [AIMarker] = []
     @State private var markerDuration: TimeInterval = 0
     @State private var requestedSummary: URL?
@@ -415,13 +421,13 @@ struct LibraryView: View {
         loadMarkers()
     }
     private func loadMarkers() {
-        guard let url = library.selection, let record = Core.record(forTranscript: url, paths: model.paths) else {
+        guard let url = library.selection else {
             aiMarkers = []
             markerDuration = 0
             return
         }
-        aiMarkers = record.aiMarkers
-        markerDuration = KeyMoments.lectureDuration(record: record, markdown: library.selected?.text ?? "", paths: model.paths) ?? 0
+        aiMarkers = KeyMomentStore.markers(for: url, paths: model.paths)
+        markerDuration = KeyMoments.lectureDuration(transcript: url, markdown: library.selected?.text ?? "", paths: model.paths) ?? 0
     }
     private func removeAIMarker(at index: Int, transcript: URL) {
         do {

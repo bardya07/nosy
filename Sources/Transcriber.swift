@@ -192,8 +192,6 @@ enum Transcriber {
                 catch { /* Optional refinement failure keeps the successful first pass. */ }
             }
             let segments = try? JSONDecoder().decode(TranscriptSegments.self, from: Data(contentsOf: jsonURL))
-            // Timings are kept beside the sidecar for later key moments. A failure here never fails the transcript.
-            if let segments { try? KeyMoments.saveSegments(segments.transcription, text: text, id: record.id, paths: paths) }
             let body: String?
             if record.markers.isEmpty { body = nil }
             else {
@@ -205,6 +203,8 @@ enum Transcriber {
             let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text, body: body)
             try job.checkCancellation()
             let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)
+            // Timings sit beside the transcript for later key moments, so they outlive the audio. A failure never fails the transcript.
+            try? KeyMomentStore.start(transcript: target, segments: segments?.transcription, text: text)
             record.transcriptPath = target.path
             record.status = .done
             record.transcribedAt = Date()
