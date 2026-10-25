@@ -9,7 +9,6 @@ struct SummaryBar: View {
     @Binding var showSummary: Bool
     var requested: () -> Void = {}
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
-    @Environment(\.openSettings) private var openSettings
 
     private var provider: SummaryProvider { SummaryProvider(rawValue: providerRaw) ?? .off }
     private var status: SummaryCenter.Status? { summaries.status(for: transcript) }
@@ -41,13 +40,13 @@ struct SummaryBar: View {
                     } else {
                         Image(systemName: hasSummary ? "arrow.clockwise" : "sparkles").font(.system(size: 11, weight: .semibold))
                     }
-                    Text(status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize"))
+                    Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize"))
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
             .disabled(status != nil)
             .tip(buttonTip)
-            .accessibilityLabel(hasSummary ? "Summarize again" : "Summarize")
+            .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
         }
         .padding(.horizontal, 22).padding(.vertical, 8)
     }
@@ -69,12 +68,12 @@ struct SummaryBar: View {
             .tip(text, edge: .bottom)
     }
     private var buttonTip: String {
-        if provider == .off { return "Choose a provider in Settings" }
+        if provider == .off { return "Turn on summaries in Settings" }
         if status != nil { return "Summary in progress" }
         return provider.staysOnMac ? "Summarize on this Mac" : "Summarize with \(provider.title.replacingOccurrences(of: " API key", with: ""))"
     }
     private func summarize() {
-        guard provider != .off else { openSettings(); return }
+        guard provider != .off else { SummarySettingsWindow.open(); return }
         requested()
         summaries.summarize(transcript)
     }

@@ -6,6 +6,10 @@ source scripts/paths.sh
 source scripts/audio-shim.sh
 APP="$BUILD_DIR/Nosy.app"
 WHISPER="$PWD/vendor/whisper/whisper-cli"
+LLAMA="$PWD/vendor/llama/nosy-llama"
+[[ -x "$LLAMA" ]] || { printf 'Build the bundled summary engine first: ./scripts/build-llama.sh\n' >&2; exit 1; }
+[[ $(lipo -archs "$LLAMA") == arm64 ]] || { printf 'nosy-llama must be arm64.\n' >&2; exit 1; }
+otool -L "$LLAMA" | awk 'NR > 1 && $1 !~ /^\/usr\/lib\// && $1 !~ /^\/System\/Library\// { bad = 1 } END { exit bad }'
 [[ -x "$WHISPER" ]] || { printf 'Build the bundled speech engine first: ./scripts/build-whisper.sh\n' >&2; exit 1; }
 [[ $(lipo -archs "$WHISPER") == arm64 ]] || { printf 'whisper-cli must be arm64.\n' >&2; exit 1; }
 otool -L "$WHISPER" | awk 'NR > 1 && $1 !~ /^\/usr\/lib\// && $1 !~ /^\/System\/Library\// { bad = 1 } END { exit bad }'
@@ -24,6 +28,7 @@ cp -R Resources/Vocabulary "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png Resources/GitHubMark.png "$APP/Contents/Resources/"
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"
+install -m 755 "$LLAMA" "$APP/Contents/Helpers/nosy-llama"
 cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 xattr -cr "$APP"
 # Set NOSY_CODESIGN_IDENTITY to use a local signing identity; default to ad-hoc.
@@ -34,9 +39,11 @@ if [[ "$IDENTITY" != - ]]; then SIGN_OPTIONS+=(--timestamp); fi
 # identity must succeed: silently falling back to ad-hoc would break notarization.
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/whisper-cli"
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/nosy-mcp"
+codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/nosy-llama"
 codesign "${SIGN_OPTIONS[@]}" --entitlements Resources/Entitlements.plist "$APP"
 codesign --verify --strict "$APP/Contents/Helpers/whisper-cli"
 codesign --verify --strict "$APP/Contents/Helpers/nosy-mcp"
+codesign --verify --strict "$APP/Contents/Helpers/nosy-llama"
 codesign --verify --deep --strict "$APP"
 printf 'BUILD PASS: %s\n' "$APP"
 if [[ "${1:-}" == install ]]; then

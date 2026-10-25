@@ -1,5 +1,6 @@
 import Foundation
 import Security
+import Combine
 
 // Summaries: one prompt built from the chosen sections, run by a provider the student picks
 // (a CLI they already use, a local server, or their own API key). Nothing here blocks
@@ -34,13 +35,14 @@ enum SummarySection: String, CaseIterable, Sendable, Identifiable {
 }
 
 enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
-    case off, claudeCode, codex, geminiCLI, ollama, lmStudio, openAI, anthropic, gemini
+    case off, qwen, smol, claudeCode, codex, geminiCLI, ollama, lmStudio, openAI, anthropic, gemini
     var id: String { rawValue }
 
-    enum Kind: Equatable, Sendable { case none, cli(String), local, api }
+    enum Kind: Equatable, Sendable { case none, builtIn, cli(String), local, api }
     var kind: Kind {
         switch self {
         case .off: .none
+        case .qwen, .smol: .builtIn
         case .claudeCode: .cli("claude")
         case .codex: .cli("codex")
         case .geminiCLI: .cli("gemini")
@@ -51,6 +53,8 @@ enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
     var title: String {
         switch self {
         case .off: "Off"
+        case .qwen: "Qwen3 4B"
+        case .smol: "SmolLM3 3B"
         case .claudeCode: "Claude Code"
         case .codex: "Codex"
         case .geminiCLI: "Gemini CLI"
@@ -81,8 +85,15 @@ enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
         default: ""
         }
     }
-    // Ollama and LM Studio run on this Mac; everything else sends the transcript away.
-    var staysOnMac: Bool { self == .off || self == .ollama || self == .lmStudio }
+    // Built in models and local apps keep the transcript on this Mac.
+    var staysOnMac: Bool { self == .off || builtInModel != nil || self == .ollama || self == .lmStudio }
+    var builtInModel: LocalModel? { self == .qwen ? .qwen : self == .smol ? .smol : nil }
+    static let menuGroups: [(title: String, providers: [SummaryProvider])] = [
+        ("Built in (on this Mac)", [.qwen, .smol]),
+        ("Your AI apps", [.claudeCode, .codex, .geminiCLI]),
+        ("Local apps", [.ollama, .lmStudio]),
+        ("API keys", [.openAI, .anthropic, .gemini])
+    ]
     var localBase: URL? {
         switch self {
         case .ollama: URL(string: "http://localhost:11434")
@@ -94,6 +105,7 @@ enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
     var chunkLimit: Int {
         switch self {
         case .off: 0
+        case .qwen, .smol: 9_600
         case .ollama: 40_000
         case .lmStudio: 12_000
         case .claudeCode, .codex, .openAI, .anthropic: 400_000
@@ -327,7 +339,7 @@ struct SummaryDetection: Equatable, Sendable {
 
     func isAvailable(_ provider: SummaryProvider) -> Bool {
         switch provider.kind {
-        case .none, .api: true
+        case .none, .api, .builtIn: true
         case .cli: executables[provider] != nil
         case .local: localModels[provider] != nil
         }
@@ -446,16 +458,17 @@ private final class LockedFlag: @unchecked Sendable {
 // MARK: Running
 
 enum SummaryError: LocalizedError, Equatable {
-    case off, notInstalled(String), noKey(String), noModel, serverDown(String), timedOut, empty, failed(String, String)
+    case off, notInstalled(String), noKey(String), noModel, serverDown(String), timedOut, empty, contextLimit, failed(String, String)
     var errorDescription: String? {
         switch self {
-        case .off: "Choose a summary provider in Settings."
+        case .off: "Turn on summaries in Settings."
         case .notInstalled(let name): "\(name) isn't installed."
         case .noKey(let name): "Add your \(name) in Settings."
         case .noModel: "Pick a model for summaries in Settings."
         case .serverDown(let name): "\(name) isn't running. Open it and try again."
         case .timedOut: "The summary took too long. Try again."
         case .empty: "The provider sent back an empty summary."
+        case .contextLimit: "This excerpt exceeds the summary model context. Try a shorter transcript."
         case .failed(let name, let detail): "\(name): \(SummaryError.short(detail))"
         }
     }
@@ -474,6 +487,9 @@ struct SummaryRequest: Sendable {
     var apiKey: String?
     var timeout: TimeInterval = 600
     var chunkLimit: Int?
+    var outputTokens = 600
+    var pauseState: LlamaPauseState?
+    var processActivity: (@Sendable (Bool) async -> Void)?
 }
 
 enum SummaryRunner {
@@ -497,6 +513,16 @@ enum SummaryRunner {
         switch request.provider.kind {
         case .none: throw SummaryError.off
         case .cli: return try await runCLI(prompt, request: request, job: job)
+        case .builtIn:
+            await request.processActivity?(true)
+            do {
+                let result = try await runCLI(prompt, request: request, job: job)
+                await request.processActivity?(false)
+                return result
+            } catch {
+                await request.processActivity?(false)
+                throw error
+            }
         case .local, .api: return try await runHTTP(prompt, request: request)
         }
     }
@@ -521,7 +547,7 @@ enum SummaryRunner {
         let lastMessage = scratch.appendingPathComponent("last-message.txt")
         let process = Process()
         process.executableURL = executable
-        process.arguments = cliArguments(provider, model: request.model, lastMessage: lastMessage)
+        // Set arguments after creating the private prompt file below.
         process.currentDirectoryURL = scratch
         process.qualityOfService = .utility
         var environment = ProcessInfo.processInfo.environment
@@ -540,6 +566,9 @@ enum SummaryRunner {
                 throw LectureError.message("Could not prepare the summary request.")
             }
         }
+        process.arguments = provider.builtInModel != nil
+            ? LlamaRunner.arguments(model: request.model, promptFile: inputURL, tokens: request.outputTokens)
+            : cliArguments(provider, model: request.model, lastMessage: lastMessage)
         let input = try FileHandle(forReadingFrom: inputURL)
         let output = try FileHandle(forWritingTo: outputURL)
         let errors = try FileHandle(forWritingTo: errorURL)
@@ -550,7 +579,19 @@ enum SummaryRunner {
         let timedOut = LockedFlag()
         try job.launch(process)
         let timer = DispatchWorkItem { if process.isRunning { timedOut.set(); job.cancel() } }
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + request.timeout, execute: timer)
+        if provider.builtInModel != nil {
+            var elapsed: TimeInterval = 0
+            var last = ProcessInfo.processInfo.systemUptime
+            while process.isRunning {
+                let now = ProcessInfo.processInfo.systemUptime
+                if request.pauseState?.value != true { elapsed += now - last }
+                last = now
+                if elapsed >= request.timeout { timedOut.set(); job.cancel(); break }
+                Thread.sleep(forTimeInterval: 0.05)
+            }
+        } else {
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + request.timeout, execute: timer)
+        }
         process.waitUntilExit()
         timer.cancel()
         if timedOut.value { throw SummaryError.timedOut }
@@ -562,6 +603,7 @@ enum SummaryRunner {
         }
         let stdout = try read(outputURL)
         guard process.terminationStatus == 0 else {
+            if provider.builtInModel != nil, process.terminationStatus == 3 { throw SummaryError.contextLimit }
             let stderr = try read(errorURL, limit: 8192)
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             let detail = trimmed.isEmpty ? stdout.trimmingCharacters(in: .whitespacesAndNewlines) : trimmed
@@ -684,7 +726,12 @@ enum Summarizer {
     // One request when the transcript fits; otherwise each part, then a merge.
     static func summarize(_ transcript: String, settings: SummarySettings, request: SummaryRequest, job: TranscriptionJob,
                           beforeEachStep: @Sendable () async throws -> Void = {},
-                          progress: @escaping @Sendable (_ step: Int, _ total: Int) -> Void = { _, _ in }) async throws -> String {
+                          progress: @escaping @Sendable (_ step: Int, _ total: Int) -> Void = { _, _ in },
+                          cacheRoot: URL? = nil) async throws -> String {
+        if request.provider.builtInModel != nil {
+            return try await LlamaRunner.summarize(transcript, settings: settings, request: request, job: job, cacheRoot: cacheRoot,
+                beforeEachStep: beforeEachStep, progress: progress)
+        }
         let parts = SummaryChunker.chunks(transcript, limit: request.chunkLimit ?? request.provider.chunkLimit)
         let total = parts.count == 1 ? 1 : parts.count + 1
         if parts.count == 1 {
@@ -744,13 +791,14 @@ final class SummaryCenter: ObservableObject {
     var waitReason: @MainActor (SummaryProvider) -> String? = { _ in nil }
     var keychain = SummaryKeychain.standard
     var defaults = UserDefaults.standard
+    @Published private(set) var localModels = LocalModelStore()
     // Previews show a saved key without touching the Keychain.
     var previewKeyTail: String?
 
     private var queue: [URL] = []
     private var worker: Task<Void, Never>?
     private var job: TranscriptionJob?
-    var hasPendingWork: Bool { worker != nil || !queue.isEmpty }
+    var hasPendingWork: Bool { worker != nil || !queue.isEmpty || localModels.hasDownloads }
 
     func refreshDetection() {
         guard !detecting else { return }
@@ -760,7 +808,8 @@ final class SummaryCenter: ObservableObject {
             detecting = false
         }
     }
-    func configurePreview(detection: SummaryDetection, keyTail: String? = nil, status: [String: Status] = [:]) {
+    func configurePreview(detection: SummaryDetection, keyTail: String? = nil, status: [String: Status] = [:], localModels: LocalModelStore? = nil) {
+        if let localModels { self.localModels = localModels }
         self.detection = detection
         previewKeyTail = keyTail
         self.status = status
@@ -793,6 +842,7 @@ final class SummaryCenter: ObservableObject {
     func shutdown() async {
         cancelAll()
         await worker?.value
+        await localModels.shutdown()
     }
 
     private func pump() {
@@ -818,12 +868,26 @@ final class SummaryCenter: ObservableObject {
     private func run(_ transcript: URL, key: String, job: TranscriptionJob) async throws {
         let settings = SummarySettings.load(defaults)
         guard settings.provider != .off else { throw SummaryError.off }
-        if !detection.checked, settings.provider.kind != .api {
+        if !detection.checked, settings.provider.kind != .api, settings.provider.builtInModel == nil {
             detection = await SummaryDetector.detect()
         }
+        let pauseState = LlamaPauseState()
         var request = SummaryRequest(provider: settings.provider, model: settings.model,
                                      executable: detection.executables[settings.provider], searchPath: detection.searchPath)
         switch settings.provider.kind {
+        case .builtIn:
+            guard let model = settings.provider.builtInModel, localModels.available(model) else {
+                throw SummaryError.failed(settings.provider.title, "Download this model in Settings, then try again.")
+            }
+            request.pauseState = pauseState
+            request.executable = LlamaRunner.bundledHelper
+            request.model = localModels.file(model).path
+            request.processActivity = { [weak self] active in
+                await self?.localModels.setLoaded(model, active)
+            }
+            guard FileManager.default.isExecutableFile(atPath: LlamaRunner.bundledHelper.path) else {
+                throw SummaryError.notInstalled("The built in summary engine")
+            }
         case .cli:
             if request.executable == nil { detection = await SummaryDetector.detect() }
             request.executable = detection.executables[settings.provider]
@@ -841,6 +905,28 @@ final class SummaryCenter: ObservableObject {
         let markdown = try await Task.detached(priority: .utility) { try String(contentsOf: transcript, encoding: .utf8) }.value
         guard Core.wordCount(markdown) > 0 else { throw LectureError.message("This transcript has no speech to summarize.") }
         let provider = settings.provider
+        // Published changes stop the child synchronously before recording starts. The periodic
+        // monitor also handles temperature, battery and transcription changes during a pass.
+        let activity = provider.builtInModel == nil ? nil : Self.observeLocalActivity(model: AppModel.shared, job: job, pauseState: pauseState)
+        let monitor: Task<Void, Never>? = provider.builtInModel == nil ? nil : Task { [weak self] in
+            var previousStatus: Status?
+            while !Task.isCancelled {
+                guard let self else { return }
+                if let reason = localWaitReason() ?? waitReason(provider) {
+                    pauseState.set(true); job.suspend()
+                    if case .running = status[key] { previousStatus = status[key]; status[key] = .waiting(reason) }
+                } else {
+                    pauseState.set(false); job.resume()
+                    if let previousStatus, case .waiting = status[key] { status[key] = previousStatus }
+                    previousStatus = nil
+                }
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+        defer {
+            activity?.cancel(); monitor?.cancel(); job.resume()
+            if let model = provider.builtInModel { localModels.setLoaded(model, false) }
+        }
         let body = try await Summarizer.summarize(markdown, settings: settings, request: request, job: job,
             beforeEachStep: { [weak self] in try await self?.waitUntilReady(provider, key: key) },
             progress: { [weak self] step, total in
@@ -848,7 +934,7 @@ final class SummaryCenter: ObservableObject {
                     guard let self, self.job === job, self.status[key] != nil else { return }
                     self.status[key] = .running(step: step, total: total)
                 }
-            })
+            }, cacheRoot: localModels.root)
         let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
         try Task.checkCancellation()
         try await Task.detached(priority: .utility) { try SummaryFiles.save(document, for: transcript, expectedText: markdown) }.value
@@ -857,10 +943,25 @@ final class SummaryCenter: ObservableObject {
 
     // Respects the same back-off as transcription: wait while the Mac is hot or the battery is low.
     private func waitUntilReady(_ provider: SummaryProvider, key: String) async throws {
-        while let reason = waitReason(provider) {
+        while let reason = (provider.builtInModel == nil ? nil : localWaitReason()) ?? waitReason(provider) {
             status[key] = .waiting(reason)
             try await Task.sleep(for: .seconds(15))
         }
         try Task.checkCancellation()
+    }
+
+    static func observeLocalActivity(model: AppModel, job: TranscriptionJob, pauseState: LlamaPauseState? = nil) -> AnyCancellable {
+        model.$phase.combineLatest(model.$transitioning, model.$active, model.$queue).sink { phase, transitioning, active, queue in
+            if phase == .recording || transitioning || active != nil || !queue.isEmpty { pauseState?.set(true); job.suspend() }
+        }
+    }
+
+    private func localWaitReason() -> String? {
+        let model = AppModel.shared
+        if model.recording || model.transitioning { return "Waiting for recording to finish" }
+        if model.active != nil || !model.queue.isEmpty { return "Waiting for transcription" }
+        if ProcessInfo.processInfo.isLowPowerModeEnabled { return "Low Power Mode is on" }
+        let power = Core.powerState()
+        return Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent)
     }
 }

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(nosy_llama LANGUAGES C CXX)
+add_subdirectory("${LLAMA_SOURCE}" llama-build)
+add_executable(nosy-llama main.cpp)
+target_link_libraries(nosy-llama PRIVATE llama)
+target_compile_features(nosy-llama PRIVATE cxx_std_17)

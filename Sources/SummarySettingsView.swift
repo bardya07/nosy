@@ -34,6 +34,8 @@ struct SummarySettingsSection: View {
             }
             switch provider.kind {
             case .none: EmptyView()
+            case .builtIn:
+                if let model = provider.builtInModel { LocalModelCard(model: model, store: summaries.localModels).id(provider) }
             case .cli: SummaryModelField(provider: provider, placeholder: "Model (CLI default)").id(provider)
             case .local: localModelMenu.id(provider)
             case .api:
@@ -42,14 +44,14 @@ struct SummarySettingsSection: View {
             }
             whenMenu
             Text(provider == .off
-                 ? "Summaries send the transcript to the provider you choose. Ollama and LM Studio keep it on this Mac."
+                 ? "Built in models, Ollama and LM Studio keep transcripts on this Mac. Other providers receive them."
                  : provider.staysOnMac ? "\(provider.title) keeps the transcript on this Mac. Other providers receive it."
                  : "Summaries send the transcript to \(provider.title.replacingOccurrences(of: " API key", with: "")). Ollama and LM Studio keep it on this Mac.")
                 .font(Theme.text(10)).foregroundStyle(Theme.muted)
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 .tip("Where transcripts go")
         }
-        .onAppear { if !Snapshot.isRunning { summaries.refreshDetection() } }
+        .onAppear { if !Snapshot.isRunning { summaries.refreshDetection(); summaries.localModels.refresh() } }
     }
 
     private func includeToggle(_ title: String, _ value: Binding<Bool>) -> some View {
@@ -62,19 +64,13 @@ struct SummarySettingsSection: View {
 
     private var providerMenu: some View {
         Menu {
-            // Placeholder: the built in local model lands here later.
-            Button("Built in local model (coming soon)") {}.disabled(true)
+            providerOption(.off)
             Divider()
-            ForEach(SummaryProvider.allCases) { option in
-                let available = summaries.detection.isAvailable(option) || !summaries.detection.checked && !Snapshot.isRunning
-                Button {
-                    providerRaw = option.rawValue
-                } label: {
-                    if option == provider { Label(label(option, available: available), systemImage: "checkmark") }
-                    else { Text(label(option, available: available)) }
+            ForEach(SummaryProvider.menuGroups, id: \.title) { group in
+                Section(group.title) {
+                    ForEach(group.providers) { option in providerOption(option) }
                 }
-                .disabled(!available && option != provider)
-                if option == .off || option == .geminiCLI || option == .lmStudio { Divider() }
+                Divider()
             }
             Divider()
             Button(summaries.detecting ? "Checking…" : "Check again") { summaries.refreshDetection() }
@@ -86,8 +82,20 @@ struct SummarySettingsSection: View {
         .tip("Choose who writes summaries")
         .accessibilityLabel("Summary provider").accessibilityValue(provider.title)
     }
-    private func label(_ option: SummaryProvider, available: Bool) -> String {
-        available || option.unavailableHint.isEmpty ? option.title : "\(option.title) · \(option.unavailableHint.lowercased())"
+    private func providerOption(_ option: SummaryProvider) -> some View {
+        let available = summaries.detection.isAvailable(option) || !summaries.detection.checked && !Snapshot.isRunning
+        let title: String = {
+            if let model = option.builtInModel {
+                let suffix = model == LocalModel.recommended() ? "recommended" : model == .smol ? "smaller, for 8 GB Macs" : "for more than 8 GB"
+                return "\(model.name) · \(model.sizeLabel) · \(suffix)"
+            }
+            return available || option.unavailableHint.isEmpty ? option.title : "\(option.title) · \(option.unavailableHint.lowercased())"
+        }()
+        return Button { providerRaw = option.rawValue } label: {
+            if option == provider { Label(title, systemImage: "checkmark") }
+            else { Text(title) }
+        }
+        .disabled(!available && option != provider)
     }
 
     @AppStorage("summaries.model.ollama") private var ollamaModel = ""

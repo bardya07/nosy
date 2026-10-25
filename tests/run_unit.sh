@@ -16,8 +16,8 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
 "$BUILD_DIR/BackendTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift tests/TranscriberTests.swift -o "$BUILD_DIR/TranscriberTests"
-swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift Sources/Summaries.swift tests/SummaryTests.swift -o "$BUILD_DIR/SummaryTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/SummaryTests.swift -o "$BUILD_DIR/SummaryTests"
 "$BUILD_DIR/SummaryTests"
 "$BUILD_DIR/TranscriberTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \

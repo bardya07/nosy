@@ -7,6 +7,47 @@ enum Snapshot {
     static var isRunning = false
     private static var transcriptRoot: String?
 
+    // Focused built in model previews; no other preview, real file, or preference is touched.
+    private static func runLocalModels(_ out: String) -> Int32 {
+        _ = NSApplication.shared
+        isRunning = true
+        defer { isRunning = false }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-local-previews-\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let base = URL(fileURLWithPath: out).deletingPathExtension()
+        try? FileManager.default.createDirectory(at: base.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let suite = "com.bardya.nosy.preview.local-models.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        for scheme in [ColorScheme.light, .dark] {
+            let mode = scheme == .dark ? "dark" : "light"
+            for (name, state) in [("missing", LocalModelStore.State.notDownloaded), ("downloading", .downloading(1_248_000_000)),
+                                  ("verifying", .verifying), ("downloaded", .downloaded), ("loaded", .loaded),
+                                  ("error", .error("SHA256 verification failed. Download the model again."))] {
+                let model = AppModel()
+                model.summaries.configurePreview(detection: SummaryDetection(checked: true), localModels: LocalModelStore(root: root))
+                model.summaries.localModels.configurePreview(.qwen, state: state, diskBytes: state == .notDownloaded || name == "error" ? 0 : name == "downloading" ? 1_248_000_000 : 2_497_281_120)
+                defaults.set(SummaryProvider.qwen.rawValue, forKey: SummarySettings.providerKey)
+                let view = SettingsView(model: model, pane: .summaries).defaultAppStorage(defaults)
+                    .environment(\.colorScheme, scheme).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(24).background(PreviewBackdrop())
+                guard render(view, scheme: scheme, to: base.appendingPathExtension("\(name).\(mode).png")) else { return 1 }
+            }
+            defaults.set(SummaryProvider.smol.rawValue, forKey: SummarySettings.providerKey)
+            let smol = LocalModelCard(model: .smol, store: LocalModelStore(root: root)).frame(width: SettingsView.columnWidth)
+                .environment(\.colorScheme, scheme).padding(24).background(PreviewBackdrop())
+            guard render(smol, scheme: scheme, to: base.appendingPathExtension("smol.\(mode).png")) else { return 1 }
+            defaults.set(SummaryProvider.off.rawValue, forKey: SummarySettings.providerKey)
+            let reader = SummaryBar(transcript: root.appendingPathComponent("lecture.md"), summaries: SummaryCenter(),
+                hasSummary: false, showSummary: .constant(false)).defaultAppStorage(defaults)
+                .frame(width: 500).environment(\.colorScheme, scheme).padding(24).background(PreviewBackdrop())
+            guard render(reader, scheme: scheme, to: base.appendingPathExtension("reader-off.\(mode).png")) else { return 1 }
+        }
+        print("LOCAL MODEL PREVIEWS PASS: \(base.path)")
+        return 0
+    }
+
     static func displayPath(_ path: String) -> String? {
         guard isRunning, let root = transcriptRoot, path.hasPrefix(root) else { return nil }
         return "~/Nosy" + path.dropFirst(root.count)
@@ -14,6 +55,7 @@ enum Snapshot {
 
     static func run(_ args: [String]) -> Int32 {
         guard let out = args.first else { print("Usage: --headless-snapshot <out.png>"); return 1 }
+        if args.contains("--local-models") { return runLocalModels(out) }
         _ = NSApplication.shared
         isRunning = true
         let manager = FileManager.default
