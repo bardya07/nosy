@@ -1,17 +1,23 @@
 import SwiftUI
 import AppKit
 
-// The strip under the reader header: Transcript | Summary, and the Summarize button with its progress.
+// The strip under the reader header: Transcript | Summary, the two AI tools (Find key moments and
+// Summarize), and their progress. Both run one local pass at a time, so the bar shows whichever is active.
 struct SummaryBar: View {
     let transcript: URL
     @ObservedObject var summaries: SummaryCenter
     let hasSummary: Bool
     @Binding var showSummary: Bool
+    var paths = AppPaths()
+    var aiMarkerCount = 0
     var requested: () -> Void = {}
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
 
     private var provider: SummaryProvider { SummaryProvider(rawValue: providerRaw) ?? .off }
     private var status: SummaryCenter.Status? { summaries.status(for: transcript) }
+    private var moments: SummaryCenter.Status? { summaries.momentStatus(for: transcript) }
+    private var note: SummaryCenter.Note? { summaries.momentNote(for: transcript) }
+    private var cloudName: String { provider.title.replacingOccurrences(of: " API key", with: "") }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -28,11 +34,20 @@ struct SummaryBar: View {
                 .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Show transcript or summary")
-            } else if status == nil, summaries.error(for: transcript) == nil {
+            } else if status == nil, moments == nil, summaries.error(for: transcript) == nil, note == nil {
                 Text("No summary yet").font(Theme.text(11.5)).foregroundStyle(Theme.muted)
             }
             statusText
             Spacer(minLength: 0)
+            if aiMarkerCount > 0, moments == nil {
+                Button(action: removeAIMarkers) {
+                    Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(IconButtonStyle(size: 28))
+                .tip("Remove AI markers")
+                .accessibilityLabel("Remove AI markers")
+            }
+            findButton
             Button(action: summarize) {
                 HStack(spacing: 6) {
                     if status != nil {
@@ -52,30 +67,98 @@ struct SummaryBar: View {
     }
 
     @ViewBuilder private var statusText: some View {
-        switch status {
-        case .queued?:
-            label("Queued", color: Theme.muted)
-        case .running(let step, let total)?:
-            label(total > 1 ? "Part \(step) of \(total)" : "Writing summary…", color: Theme.muted)
-        case .waiting(let reason)?:
-            label("Paused. \(reason)", color: Theme.warmText)
-        case nil:
-            if let error = summaries.error(for: transcript) { label(error, color: Theme.validationText) }
+        if let moments {
+            switch moments {
+            case .queued:
+                label("Find key moments queued", color: Theme.muted)
+            case .running(let step, let total):
+                label("Finding moments · \(step) of \(total)", color: Theme.muted)
+            case .waiting(let reason):
+                label("Paused. \(reason)", color: Theme.warmText)
+            }
+        } else {
+            switch status {
+            case .queued?:
+                label("Queued", color: Theme.muted)
+            case .running(let step, let total)?:
+                label(total > 1 ? "Part \(step) of \(total)" : "Writing summary…", color: Theme.muted)
+            case .waiting(let reason)?:
+                label("Paused. \(reason)", color: Theme.warmText)
+            case nil:
+                if let error = summaries.error(for: transcript) {
+                    label(error, color: Theme.validationText)
+                } else if let note {
+                    label(note.text, color: note.failed ? Theme.validationText : Theme.muted)
+                }
+            }
         }
     }
     private func label(_ text: String, color: Color) -> some View {
         Text(text).font(Theme.text(11.5)).foregroundStyle(color).lineLimit(1).truncationMode(.tail)
             .tip(text, edge: .bottom)
     }
+
+    @ViewBuilder private var findButton: some View {
+        if moments != nil {
+            Button("Cancel") { summaries.cancelMoments(transcript) }
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
+                .tip("Stop finding key moments")
+                .accessibilityLabel("Cancel finding key moments")
+        } else {
+            Button(action: findKeyMoments) {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles").font(.system(size: 11, weight: .semibold))
+                    Text("Find key moments")
+                }
+            }
+            .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
+            .tip(findTip)
+            .accessibilityLabel("Find key moments")
+        }
+    }
+    private var findTip: String {
+        if provider == .off { return "Turn on summaries in Settings" }
+        return provider.staysOnMac ? "Find key moments on this Mac" : "Find key moments with \(cloudName)"
+    }
     private var buttonTip: String {
         if provider == .off { return "Turn on summaries in Settings" }
         if status != nil { return "Summary in progress" }
-        return provider.staysOnMac ? "Summarize on this Mac" : "Summarize with \(provider.title.replacingOccurrences(of: " API key", with: ""))"
+        return provider.staysOnMac ? "Summarize on this Mac" : "Summarize with \(cloudName)"
     }
+
     private func summarize() {
         guard provider != .off else { SummarySettingsWindow.open(); return }
         requested()
         summaries.summarize(transcript)
+    }
+    // Off explains itself in the bar and opens Settings. Cloud and CLI providers ask once before the first run.
+    private func findKeyMoments() {
+        guard provider != .off else {
+            summaries.findMoments(transcript, paths: paths)
+            SummarySettingsWindow.open()
+            return
+        }
+        guard confirmedOffMac() else { return }
+        summaries.findMoments(transcript, paths: paths)
+    }
+    private func confirmedOffMac() -> Bool {
+        guard !provider.staysOnMac else { return true }
+        let key = "keyMoments.confirmed.\(provider.rawValue)"
+        if UserDefaults.standard.bool(forKey: key) { return true }
+        let alert = NSAlert()
+        alert.messageText = "Send this transcript to \(cloudName)?"
+        alert.informativeText = "Finding key moments sends the transcript text to \(cloudName), which runs outside this Mac. Nosy asks once for each provider. Built in and local models keep the text on this Mac."
+        alert.addButton(withTitle: "Find key moments")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return false }
+        UserDefaults.standard.set(true, forKey: key)
+        return true
+    }
+    private func removeAIMarkers() {
+        do {
+            try KeyMomentStore.removeAll(transcript: transcript, paths: paths)
+            summaries.markersChanged()
+        } catch { NSAlert(error: error).runModal() }
     }
 }
 

@@ -169,6 +169,7 @@ struct TranscriptSegments: Decodable {
     struct Segment: Decodable {
         struct Offsets: Decodable { let from: Int; let to: Int }
         let offsets: Offsets
+        let text: String?
     }
     let transcription: [Segment]
 }
@@ -187,13 +188,15 @@ struct SessionRecord: Codable, Sendable, Equatable {
     var transcribedAt: Date?
 
     var markers: [SessionMarker] = []
+    // Find key moments output. Kept apart from `markers`, so manual markers are never touched.
+    var aiMarkers: [AIMarker] = []
     // Terms available to this transcription, frozen so later vocabulary edits do not
     // invent hits for an older lecture. Legacy recordings leave this unknown.
     var vocabularyTerms: [String]?
 
     // Old sidecars predate markers; keep recovery and Retry compatible with them.
     enum CodingKeys: String, CodingKey {
-        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers, vocabularyTerms
+        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers, aiMarkers, vocabularyTerms
     }
 
     func save(in paths: AppPaths) throws {
@@ -228,6 +231,9 @@ extension SessionRecord {
         dismissed = try c.decodeIfPresent(Bool.self, forKey: .dismissed)
         transcribedAt = try c.decodeIfPresent(Date.self, forKey: .transcribedAt)
         markers = try c.decodeIfPresent([SessionMarker].self, forKey: .markers) ?? []
+        // A bad AI marker is dropped rather than failing the whole recording sidecar.
+        aiMarkers = (try c.decodeIfPresent([AIMarker].self, forKey: .aiMarkers) ?? [])
+            .filter { $0.t.isFinite && $0.t >= 0 && $0.t < Double(Int.max) }
         vocabularyTerms = try c.decodeIfPresent([String].self, forKey: .vocabularyTerms)
         guard markers.allSatisfy({ $0.t.isFinite && $0.t >= 0 && $0.t < Double(Int.max) }) else {
             throw LectureError.message("Invalid marker timestamp in recording sidecar.")
@@ -623,7 +629,7 @@ enum Core {
     }
     static func records(in paths: AppPaths) -> [SessionRecord] {
         let urls = (try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)) ?? []
-        return urls.filter { $0.pathExtension == "json" }.compactMap { try? SessionRecord.read($0) }
+        return urls.filter { $0.pathExtension == "json" && !KeyMoments.isSegmentsFile($0) }.compactMap { try? SessionRecord.read($0) }
             .sorted { $0.startedAt > $1.startedAt }
     }
     static func record(forTranscript url: URL, paths: AppPaths) -> SessionRecord? {

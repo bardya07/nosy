@@ -777,13 +777,21 @@ enum Summarizer {
 
 // MARK: Queue
 
-// Runs summaries one at a time, after transcription, and remembers what each transcript is doing.
+// Runs local work one at a time, after transcription: summaries, then key moments. It remembers what each transcript is doing.
 @MainActor
 final class SummaryCenter: ObservableObject {
     enum Status: Equatable { case queued, running(step: Int, total: Int), waiting(String) }
+    // One short line under the reader's bar. Failed notes use the error colour.
+    struct Note: Equatable { let text: String; let failed: Bool }
+    // Which progress table a pass reports into.
+    private enum Lane { case summary, moments }
+
     @Published private(set) var status: [String: Status] = [:]
     @Published private(set) var errors: [String: String] = [:]
-    // Bumped whenever a summary file is written, so open readers reload.
+    // Find key moments progress and its latest note, keyed by transcript like summaries.
+    @Published private(set) var moments: [String: Status] = [:]
+    @Published private(set) var momentNotes: [String: Note] = [:]
+    // Bumped whenever a summary file is written or AI markers change, so open readers reload.
     @Published private(set) var revision = 0
     @Published private(set) var detection = SummaryDetection()
     @Published private(set) var detecting = false
@@ -796,9 +804,10 @@ final class SummaryCenter: ObservableObject {
     var previewKeyTail: String?
 
     private var queue: [URL] = []
+    private var momentQueue: [(transcript: URL, paths: AppPaths)] = []
     private var worker: Task<Void, Never>?
     private var job: TranscriptionJob?
-    var hasPendingWork: Bool { worker != nil || !queue.isEmpty || localModels.hasDownloads }
+    var hasPendingWork: Bool { worker != nil || !queue.isEmpty || !momentQueue.isEmpty || localModels.hasDownloads }
 
     func refreshDetection() {
         guard !detecting else { return }
@@ -814,9 +823,14 @@ final class SummaryCenter: ObservableObject {
         previewKeyTail = keyTail
         self.status = status
     }
-    func isBusy(_ transcript: URL) -> Bool { status[transcript.standardizedFileURL.path] != nil }
+    func isBusy(_ transcript: URL) -> Bool {
+        let key = transcript.standardizedFileURL.path
+        return status[key] != nil || moments[key] != nil
+    }
     func status(for transcript: URL) -> Status? { status[transcript.standardizedFileURL.path] }
     func error(for transcript: URL) -> String? { errors[transcript.standardizedFileURL.path] }
+    func momentStatus(for transcript: URL) -> Status? { moments[transcript.standardizedFileURL.path] }
+    func momentNote(for transcript: URL) -> Note? { momentNotes[transcript.standardizedFileURL.path] }
 
     // Called when a transcript saves; only runs when the student chose automatic summaries.
     func transcriptSaved(_ transcript: URL) {
@@ -833,9 +847,39 @@ final class SummaryCenter: ObservableObject {
         queue.append(transcript)
         pump()
     }
+    // Explicit only: the reader's Find key moments button. Waits behind a running summary.
+    func findMoments(_ transcript: URL, paths: AppPaths) {
+        let key = transcript.standardizedFileURL.path
+        guard moments[key] == nil else { return }
+        momentNotes[key] = nil
+        guard SummarySettings.load(defaults).provider != .off else {
+            momentNotes[key] = Note(text: SummaryError.off.localizedDescription, failed: true)
+            return
+        }
+        moments[key] = .queued
+        momentQueue.append((transcript, paths))
+        pump()
+    }
+    func cancelMoments(_ transcript: URL) {
+        let key = transcript.standardizedFileURL.path
+        if let index = momentQueue.firstIndex(where: { $0.transcript.standardizedFileURL.path == key }) {
+            momentQueue.remove(at: index)
+            moments[key] = nil
+            return
+        }
+        // Not queued, so it is the running pass: stop its process and its wait.
+        if moments[key] != nil {
+            job?.cancel()
+            worker?.cancel()
+        }
+    }
+    // Called after AI markers change on disk, so open readers load them again.
+    func markersChanged() { revision += 1 }
     func cancelAll() {
         for transcript in queue { status[transcript.standardizedFileURL.path] = nil }
         queue.removeAll()
+        for item in momentQueue { moments[item.transcript.standardizedFileURL.path] = nil }
+        momentQueue.removeAll()
         job?.cancel()
         worker?.cancel()
     }
@@ -846,32 +890,110 @@ final class SummaryCenter: ObservableObject {
     }
 
     private func pump() {
-        guard worker == nil, !queue.isEmpty else { return }
-        let transcript = queue.removeFirst()
-        let key = transcript.standardizedFileURL.path
-        let job = TranscriptionJob()
-        self.job = job
-        worker = Task {
-            do {
-                try await run(transcript, key: key, job: job)
-            } catch is CancellationError {
-            } catch {
-                errors[key] = (error as? SummaryError)?.localizedDescription ?? SummaryError.short(error.localizedDescription)
+        guard worker == nil else { return }
+        if !queue.isEmpty {
+            let transcript = queue.removeFirst()
+            let key = transcript.standardizedFileURL.path
+            let job = TranscriptionJob()
+            self.job = job
+            worker = Task {
+                do {
+                    try await run(transcript, key: key, job: job)
+                } catch is CancellationError {
+                } catch {
+                    errors[key] = (error as? SummaryError)?.localizedDescription ?? SummaryError.short(error.localizedDescription)
+                }
+                status[key] = nil
+                worker = nil
+                self.job = nil
+                pump()
             }
-            status[key] = nil
-            worker = nil
-            self.job = nil
-            pump()
+        } else if !momentQueue.isEmpty {
+            let item = momentQueue.removeFirst()
+            let key = item.transcript.standardizedFileURL.path
+            let job = TranscriptionJob()
+            self.job = job
+            worker = Task {
+                do {
+                    try await runMoments(item.transcript, paths: item.paths, key: key, job: job)
+                } catch is CancellationError {
+                } catch {
+                    momentNotes[key] = Note(text: SummaryError.short((error as? LocalizedError)?.errorDescription ?? error.localizedDescription), failed: true)
+                }
+                moments[key] = nil
+                worker = nil
+                self.job = nil
+                pump()
+            }
         }
     }
 
     private func run(_ transcript: URL, key: String, job: TranscriptionJob) async throws {
         let settings = SummarySettings.load(defaults)
         guard settings.provider != .off else { throw SummaryError.off }
+        let pauseState = LlamaPauseState()
+        let request = try await providerRequest(settings, pauseState: pauseState)
+        let markdown = try await Task.detached(priority: .utility) { try String(contentsOf: transcript, encoding: .utf8) }.value
+        guard Core.wordCount(markdown) > 0 else { throw LectureError.message("This transcript has no speech to summarize.") }
+        let provider = settings.provider
+        // Published changes stop the child synchronously before recording starts. The periodic
+        // monitor also handles temperature, battery and transcription changes during a pass.
+        let guards = startGuard(provider, lane: .summary, key: key, job: job, pauseState: pauseState)
+        defer {
+            guards.activity?.cancel(); guards.monitor?.cancel(); job.resume()
+            if let model = provider.builtInModel { localModels.setLoaded(model, false) }
+        }
+        let body = try await Summarizer.summarize(markdown, settings: settings, request: request, job: job,
+            beforeEachStep: { [weak self] in try await self?.waitUntilReady(provider, lane: .summary, key: key) },
+            progress: { [weak self] step, total in
+                Task { @MainActor in
+                    guard let self, self.job === job, self.status[key] != nil else { return }
+                    self.status[key] = .running(step: step, total: total)
+                }
+            }, cacheRoot: localModels.root)
+        let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
+        try Task.checkCancellation()
+        try await Task.detached(priority: .utility) { try SummaryFiles.save(document, for: transcript, expectedText: markdown) }.value
+        revision += 1
+    }
+
+    // Find key moments: the same provider and pause rules as summaries, one model call per chunk.
+    private func runMoments(_ transcript: URL, paths: AppPaths, key: String, job: TranscriptionJob) async throws {
+        let settings = SummarySettings.load(defaults)
+        guard settings.provider != .off else { throw SummaryError.off }
+        let pauseState = LlamaPauseState()
+        var request = try await providerRequest(settings, pauseState: pauseState)
+        request.outputTokens = KeyMoments.outputTokens
+        let finalRequest = request
+        let provider = settings.provider
+        let guards = startGuard(provider, lane: .moments, key: key, job: job, pauseState: pauseState)
+        defer {
+            guards.activity?.cancel(); guards.monitor?.cancel(); job.resume()
+            if let model = provider.builtInModel { localModels.setLoaded(model, false) }
+        }
+        let plan = try await Task.detached(priority: .utility) { try KeyMoments.plan(transcript: transcript, paths: paths) }.value
+        let markers = try await KeyMoments.find(units: plan.units, duration: plan.duration, manualTimes: plan.manualTimes, title: plan.title,
+            report: { [weak self] current, total in
+                try await self?.waitUntilReady(provider, lane: .moments, key: key)
+                await self?.reportMoments(key, job: job, current: current, total: total)
+            },
+            complete: { prompt in try await SummaryRunner.run(prompt, request: finalRequest, job: job) })
+        try Task.checkCancellation()
+        try await Task.detached(priority: .utility) { try KeyMomentStore.replace(markers, transcript: transcript, paths: paths) }.value
+        momentNotes[key] = markers.isEmpty ? Note(text: "No clear key moments found.", failed: false) : nil
+        revision += 1
+    }
+
+    private func reportMoments(_ key: String, job: TranscriptionJob, current: Int, total: Int) {
+        guard self.job === job, moments[key] != nil else { return }
+        moments[key] = .running(step: current, total: total)
+    }
+
+    // The request for the chosen provider. Built in and local engines are checked here before any run.
+    private func providerRequest(_ settings: SummarySettings, pauseState: LlamaPauseState) async throws -> SummaryRequest {
         if !detection.checked, settings.provider.kind != .api, settings.provider.builtInModel == nil {
             detection = await SummaryDetector.detect()
         }
-        let pauseState = LlamaPauseState()
         var request = SummaryRequest(provider: settings.provider, model: settings.model,
                                      executable: detection.executables[settings.provider], searchPath: detection.searchPath)
         switch settings.provider.kind {
@@ -902,49 +1024,41 @@ final class SummaryCenter: ObservableObject {
         case .none:
             throw SummaryError.off
         }
-        let markdown = try await Task.detached(priority: .utility) { try String(contentsOf: transcript, encoding: .utf8) }.value
-        guard Core.wordCount(markdown) > 0 else { throw LectureError.message("This transcript has no speech to summarize.") }
-        let provider = settings.provider
-        // Published changes stop the child synchronously before recording starts. The periodic
-        // monitor also handles temperature, battery and transcription changes during a pass.
-        let activity = provider.builtInModel == nil ? nil : Self.observeLocalActivity(model: AppModel.shared, job: job, pauseState: pauseState)
-        let monitor: Task<Void, Never>? = provider.builtInModel == nil ? nil : Task { [weak self] in
+        return request
+    }
+
+    // Local passes pause while recording, transcribing or a hot Mac needs the machine. Cloud and CLI passes never pause.
+    private func startGuard(_ provider: SummaryProvider, lane: Lane, key: String, job: TranscriptionJob,
+                            pauseState: LlamaPauseState) -> (activity: AnyCancellable?, monitor: Task<Void, Never>?) {
+        guard provider.builtInModel != nil else { return (nil, nil) }
+        let activity = Self.observeLocalActivity(model: AppModel.shared, job: job, pauseState: pauseState)
+        let monitor = Task { [weak self] in
             var previousStatus: Status?
             while !Task.isCancelled {
                 guard let self else { return }
-                if let reason = localWaitReason() ?? waitReason(provider) {
+                if let reason = self.localWaitReason() ?? self.waitReason(provider) {
                     pauseState.set(true); job.suspend()
-                    if case .running = status[key] { previousStatus = status[key]; status[key] = .waiting(reason) }
+                    if case .running = self.phase(lane, key) { previousStatus = self.phase(lane, key); self.setPhase(lane, key, .waiting(reason)) }
                 } else {
                     pauseState.set(false); job.resume()
-                    if let previousStatus, case .waiting = status[key] { status[key] = previousStatus }
+                    if let previousStatus, case .waiting = self.phase(lane, key) { self.setPhase(lane, key, previousStatus) }
                     previousStatus = nil
                 }
                 try? await Task.sleep(for: .seconds(1))
             }
         }
-        defer {
-            activity?.cancel(); monitor?.cancel(); job.resume()
-            if let model = provider.builtInModel { localModels.setLoaded(model, false) }
-        }
-        let body = try await Summarizer.summarize(markdown, settings: settings, request: request, job: job,
-            beforeEachStep: { [weak self] in try await self?.waitUntilReady(provider, key: key) },
-            progress: { [weak self] step, total in
-                Task { @MainActor in
-                    guard let self, self.job === job, self.status[key] != nil else { return }
-                    self.status[key] = .running(step: step, total: total)
-                }
-            }, cacheRoot: localModels.root)
-        let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
-        try Task.checkCancellation()
-        try await Task.detached(priority: .utility) { try SummaryFiles.save(document, for: transcript, expectedText: markdown) }.value
-        revision += 1
+        return (activity, monitor)
+    }
+
+    private func phase(_ lane: Lane, _ key: String) -> Status? { lane == .summary ? status[key] : moments[key] }
+    private func setPhase(_ lane: Lane, _ key: String, _ value: Status?) {
+        if lane == .summary { status[key] = value } else { moments[key] = value }
     }
 
     // Respects the same back-off as transcription: wait while the Mac is hot or the battery is low.
-    private func waitUntilReady(_ provider: SummaryProvider, key: String) async throws {
+    private func waitUntilReady(_ provider: SummaryProvider, lane: Lane, key: String) async throws {
         while let reason = (provider.builtInModel == nil ? nil : localWaitReason()) ?? waitReason(provider) {
-            status[key] = .waiting(reason)
+            setPhase(lane, key, .waiting(reason))
             try await Task.sleep(for: .seconds(15))
         }
         try Task.checkCancellation()

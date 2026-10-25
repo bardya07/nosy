@@ -325,6 +325,9 @@ struct LibraryView: View {
     // Transcript | Summary in the reader, and the summary text for the selected transcript.
     @State private var showSummary = false
     @State private var summaryText: String?
+    // AI markers from the recording sidecar for the selected transcript, and the lecture length they are placed by.
+    @State private var aiMarkers: [AIMarker] = []
+    @State private var markerDuration: TimeInterval = 0
     @State private var requestedSummary: URL?
     @State private var browsingRoot: URL?
     private var libraryPaths: AppPaths { model.paths.browsingLibrary(at: browsingRoot ?? model.paths.transcripts) }
@@ -401,6 +404,22 @@ struct LibraryView: View {
     private func loadSummary() {
         summaryText = library.selection.flatMap(SummaryFiles.existing(for:)).flatMap { try? String(contentsOf: $0, encoding: .utf8) }
         if summaryText == nil { showSummary = false }
+        loadMarkers()
+    }
+    private func loadMarkers() {
+        guard let url = library.selection, let record = Core.record(forTranscript: url, paths: model.paths) else {
+            aiMarkers = []
+            markerDuration = 0
+            return
+        }
+        aiMarkers = record.aiMarkers
+        markerDuration = KeyMoments.lectureDuration(record: record, markdown: library.selected?.text ?? "", paths: model.paths) ?? 0
+    }
+    private func removeAIMarker(at index: Int, transcript: URL) {
+        do {
+            try KeyMomentStore.remove(at: index, transcript: transcript, paths: model.paths)
+            model.summaries.markersChanged()
+        } catch { NSAlert(error: error).runModal() }
     }
     private var showingSummary: Bool { showSummary && summaryText != nil && !editing }
     private func applyFocus() {
@@ -629,7 +648,7 @@ struct LibraryView: View {
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if !editing {
                     SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: summaryText != nil,
-                               showSummary: $showSummary) { requestedSummary = item.url }
+                               showSummary: $showSummary, paths: model.paths, aiMarkerCount: aiMarkers.count) { requestedSummary = item.url }
                     Rectangle().fill(Theme.line).frame(height: 1)
                 }
                 if editing {
@@ -649,7 +668,8 @@ struct LibraryView: View {
                     .textSelection(.enabled)
                 } else {
                     ScrollView {
-                        TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url)) { range, replacement in
+                        TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: aiMarkers,
+                                       duration: markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
                             guard !summaries.isBusy(item.url) else { return }
                             let folder = item.url.deletingLastPathComponent()
                             do {
@@ -1290,49 +1310,90 @@ private struct OpenWithMenu: View {
 }
 
 // Renders transcript paragraphs and markers; the session title and details live in the header.
+// AI markers come from the sidecar and are drawn beside their paragraph, never written into the text.
 private struct TranscriptText: View {
     let markdown: String
     var canCorrect = true
+    var aiMarkers: [AIMarker] = []
+    var duration: TimeInterval = 0
+    var removeAI: (Int) -> Void = { _ in }
     let correct: (NSRange, String) -> Void
+
+    private enum Row {
+        case block(TranscriptBlock)
+        case ai(index: Int, marker: AIMarker)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            ForEach(visibleBlocks, id: \.offset) { block in
-                switch block.content {
-                case .title: EmptyView()
-                case .meta(let items):
-                    Text(items.map { "• \($0)" }.joined(separator: "\n"))
-                        .font(Theme.text(15))
-                        .lineSpacing(5)
-                case .heading(let text):
-                    Text(text).font(Theme.text(16, .semibold)).foregroundStyle(Theme.ink).padding(.top, 6)
-                        .accessibilityAddTraits(.isHeader)
-                case .marker(let timestamp, let label):
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Image(systemName: "bookmark.fill").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
-                        Text(timestamp).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.accentText)
-                        Text(label).font(Theme.text(15)).foregroundStyle(Theme.ink)
-                    }
-                    .foregroundStyle(Theme.accentText)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Marker at \(timestamp): \(label)")
-                case .paragraph(let text) where TranscriptDisplay.isNoSpeech(text):
-                    Text("No speech detected.")
-                        .font(Theme.text(15)).italic()
-                        .foregroundStyle(Theme.muted)
-                case .paragraph(let text):
-                    // Replace line breaks one-for-one so selection offsets still address the source.
-                    FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " "), canCorrect: canCorrect) { range, replacement in
-                        if let source = block.sourceRange(range) { correct(source, replacement) }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                switch row {
+                case .ai(let index, let marker):
+                    AIMarkerRow(marker: marker) { removeAI(index) }
+                case .block(let block):
+                    blockView(block)
                 }
             }
         }
         .textSelection(.enabled)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private func blockView(_ block: TranscriptBlock) -> some View {
+        switch block.content {
+        case .title: EmptyView()
+        case .meta(let items):
+            Text(items.map { "• \($0)" }.joined(separator: "\n"))
+                .font(Theme.text(15))
+                .lineSpacing(5)
+        case .heading(let text):
+            Text(text).font(Theme.text(16, .semibold)).foregroundStyle(Theme.ink).padding(.top, 6)
+                .accessibilityAddTraits(.isHeader)
+        case .marker(let timestamp, let label):
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "bookmark.fill").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
+                Text(timestamp).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.accentText)
+                Text(label).font(Theme.text(15)).foregroundStyle(Theme.ink)
+            }
+            .foregroundStyle(Theme.accentText)
+            .padding(.vertical, 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Marker at \(timestamp): \(label)")
+        case .paragraph(let text) where TranscriptDisplay.isNoSpeech(text):
+            Text("No speech detected.")
+                .font(Theme.text(15)).italic()
+                .foregroundStyle(Theme.muted)
+        case .paragraph(let text):
+            // Replace line breaks one-for-one so selection offsets still address the source.
+            FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " "), canCorrect: canCorrect) { range, replacement in
+                if let source = block.sourceRange(range) { correct(source, replacement) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // Each AI marker goes before the paragraph it sits beside. Manual markers keep their place in the text.
+    private var rows: [Row] {
+        let blocks = visibleBlocks
+        let paragraphs = blocks.compactMap { block -> String? in
+            if case .paragraph(let text) = block.content { return text }
+            return nil
+        }
+        guard !aiMarkers.isEmpty else { return blocks.map(Row.block) }
+        let placed = KeyMoments.placements(aiMarkers, paragraphs: paragraphs, duration: duration > 0 ? duration : nil)
+        var result: [Row] = []
+        var ordinal = 0
+        for block in blocks {
+            if case .paragraph = block.content {
+                result += (placed[ordinal] ?? []).map { Row.ai(index: $0.index, marker: $0.marker) }
+                ordinal += 1
+            }
+            result.append(.block(block))
+        }
+        result += (placed[paragraphs.count] ?? []).map { Row.ai(index: $0.index, marker: $0.marker) }
+        return result
     }
 
     private var visibleBlocks: [TranscriptBlock] {
@@ -1346,6 +1407,36 @@ private struct TranscriptText: View {
             case .marker, .paragraph: return true
             }
         }
+    }
+}
+
+// An AI marker: a sparkle and softer type, so it never reads as one of the owner's bookmarks. Removable one at a time.
+private struct AIMarkerRow: View {
+    let marker: AIMarker
+    let remove: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "sparkles").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
+            Text(Core.timer(marker.t)).font(Theme.text(12)).monospacedDigit()
+            Text(marker.label).font(Theme.text(14)).italic()
+            Spacer(minLength: 8)
+            Button(action: remove) {
+                Image(systemName: "xmark").font(.system(size: 9, weight: .semibold))
+            }
+            .buttonStyle(IconButtonStyle(size: 22))
+            .opacity(hovering ? 1 : 0.35)
+            .tip("Remove marker")
+            .accessibilityLabel("Remove AI marker at \(Core.timer(marker.t)): \(marker.label)")
+        }
+        .foregroundStyle(Theme.muted)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onHover { hovering = $0 }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("AI marker at \(Core.timer(marker.t)): \(marker.label)")
     }
 }
 

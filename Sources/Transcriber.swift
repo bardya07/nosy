@@ -151,8 +151,9 @@ enum Transcriber {
             process.qualityOfService = .utility
             process.executableURL = executable
             process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture, vocabularyText: vocabularyText)
+            // JSON always: its segment timings feed Find key moments and marker insertion.
             if smart { process.arguments! += ["-ojf"] }
-            else if !record.markers.isEmpty { process.arguments! += ["-oj"] }
+            else { process.arguments! += ["-oj"] }
             process.standardOutput = FileHandle.nullDevice
             let stderrPipe = Pipe()
             defer {
@@ -190,10 +191,15 @@ enum Transcriber {
                 catch is CancellationError { throw CancellationError() }
                 catch { /* Optional refinement failure keeps the successful first pass. */ }
             }
+            let segments = try? JSONDecoder().decode(TranscriptSegments.self, from: Data(contentsOf: jsonURL))
+            // Timings are kept beside the sidecar for later key moments. A failure here never fails the transcript.
+            if let segments { try? KeyMoments.saveSegments(segments.transcription, text: text, id: record.id, paths: paths) }
             let body: String?
             if record.markers.isEmpty { body = nil }
             else {
-                let segments = try JSONDecoder().decode(TranscriptSegments.self, from: Data(contentsOf: jsonURL))
+                guard let segments else {
+                    throw LectureError.message("Could not match marker timestamps to transcript segments. Your recording and markers are kept; try Retry.")
+                }
                 body = try Core.markedParagraphs(text, markers: record.markers, segments: segments)
             }
             let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text, body: body)
