@@ -786,15 +786,17 @@ final class AppModel: ObservableObject {
 
     // Fixtures must render the real view paths without starting a recorder or queue.
     func configurePreview(active: SessionRecord? = nil, queued: [SessionRecord] = [], pauseReason: String? = nil,
-                          source: RecordingSource = .mic, libraryLocations: [URL]? = nil) {
+                          source: RecordingSource = .mic, libraryLocations: [URL]? = nil,
+                          microphones: [AudioInputs.Device] = [], selectedMicrophone: String? = nil) {
         precondition(Snapshot.isRunning)
         self.active = active
         self.libraryLocations = libraryLocations ?? [paths.transcripts]
         queue = queued
         transcriptionPauseReason = pauseReason
-        inputUID = nil
+        inputUID = selectedMicrophone
         recordingSource = source
         systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone")
+        inputs = microphones
     }
     @discardableResult func chooseTranscriptsFolder() -> Bool {
         guard !working else { return false }
@@ -824,6 +826,22 @@ final class AppModel: ObservableObject {
         paths = AppPaths()
         refreshLectures()
         refreshDependencies()
+    }
+    // Moves a folder and its transcripts to the Trash. Refused while any recording, transcription,
+    // import or summary is running, so no work lands in a folder that disappears underneath it.
+    func trashLecture(_ lecture: String) {
+        guard !working, !summaries.hasPendingWork else {
+            showError("Finish the current recording, transcription or summary before deleting a folder.")
+            return
+        }
+        do {
+            try LectureFolderTrash.move(lecture, paths: paths)
+        } catch {
+            showError("Couldn't move \"\(lecture)\" to the Trash: \(error.localizedDescription)")
+            return
+        }
+        // refreshLectures picks another folder, or New folder, when the selected one is gone.
+        refreshLectures()
     }
     func revealTranscriptsFolder() {
         try? FileManager.default.createDirectory(at: paths.transcripts, withIntermediateDirectories: true)

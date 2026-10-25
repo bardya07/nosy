@@ -202,12 +202,15 @@ enum Snapshot {
             let readyMac = model(.idle, source: .both)
             guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
                   save(PreviewWindow { MainView(model: readyMac) }.padding(36).background(PreviewBackdrop()), "ready-mac-audio.\(mode)") else { return 1 }
-            for tip in ["Microphone", "Start recording", "Home", "Open GitHub", "All transcripts"] {
+            for tip in ["Microphone", "Start recording", "Home", "Open GitHub", "All your transcripts"] {
                 let slug = tip.lowercased().replacingOccurrences(of: " ", with: "-")
                 guard save(PreviewWindow {
                     MainView(model: model(.idle)).environment(\.previewTipText, tip)
                 }.padding(36).background(PreviewBackdrop()), "tip-\(slug).\(mode)") else { return 1 }
             }
+            guard save(PreviewWindow {
+                MainView(model: model(.idle)).environment(\.previewTipText, "Settings (⌘,)")
+            }.padding(36).background(PreviewBackdrop()), "tip-settings.\(mode)") else { return 1 }
             let sessionTip = "Use today's date"
             guard save(PreviewWindow {
                 MainView(model: model(.idle), previewDropdown: .session)
@@ -248,6 +251,28 @@ enum Snapshot {
             guard save(PreviewWindow {
                 MainView(model: model(.idle), previewSessionRequired: true)
             }.padding(36).background(PreviewBackdrop()), "session-required.\(mode)") else { return 1 }
+            // Microphone panel: the device list with the current choice checked, and the meter while recording.
+            let microphones = [AudioInputs.Device(id: "preview-yeti", name: "Yeti Stereo Microphone"),
+                               AudioInputs.Device(id: "preview-airpods", name: "AirPods Pro")]
+            let micIdle = model(.idle)
+            micIdle.configurePreview(source: .mic, microphones: microphones, selectedMicrophone: "preview-yeti")
+            let micRecording = model(.recording)
+            micRecording.configurePreview(source: .mic, microphones: microphones, selectedMicrophone: "preview-yeti")
+            guard save(PreviewWindow { MainView(model: micIdle, previewDropdown: .microphone) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-microphone.\(mode)"),
+                  save(PreviewWindow { MainView(model: micRecording, previewDropdown: .microphone) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-microphone-recording.\(mode)") else { return 1 }
+            // A folder row with its trash button showing (the hover state).
+            guard save(PreviewWindow {
+                MainView(model: model(.idle), previewSaveToExpanded: true, previewFolderListOpen: true,
+                         previewHoveredFolder: "CHEM281")
+            }.padding(36).background(PreviewBackdrop()), "dropdown-folder-delete.\(mode)") else { return 1 }
+            // Vocabulary opens even before a folder has a name, and says what to do.
+            let unnamedFolder = model(.idle)
+            unnamedFolder.selectedLecture = "__new__"
+            unnamedFolder.newLecture = ""
+            guard save(PreviewWindow { MainView(model: unnamedFolder, previewDropdown: .vocabulary) }
+                .padding(36).background(PreviewBackdrop()), "dropdown-vocabulary-no-folder.\(mode)") else { return 1 }
             guard save(PreviewWindow { MainView(model: model(.idle), previewDropdown: .vocabulary, previewVocabularyExpanded: true) }
                 .padding(36).background(PreviewBackdrop()), "dropdown-vocabulary-expanded.\(mode)") else { return 1 }
             let newFolderPanel = model(.idle)

@@ -220,7 +220,7 @@ enum UITests {
               "An empty session is gated before any recording work begins")
         // Tips are placed on the window's own bounds: whole, two lines at most, from every anchor.
         let frameSize = CGSize(width: 400, height: 300)
-        let tipTexts = ["Start recording", "All transcripts", "Change where transcripts are saved", "Open setup",
+        let tipTexts = ["Start recording", "All your transcripts", "Change where transcripts are saved", "Open setup",
                         "Pick a subject or setting to fine tune the vocabulary.", "Use today's date"]
         for text in tipTexts {
             for edge in [VerticalEdge.top, .bottom] {

@@ -85,8 +85,9 @@ enum MainWindowInteraction {
         let initialValidationRequest = model.startValidationRequest
         expect(model.session.isEmpty, "The Ready session name starts empty")
         let titlebarActions = target("titlebar-tools")
-        expect(titlebarActions.bounds.width < 40, "GitHub is the only action at the right of the title bar")
+        expect(titlebarActions.bounds.width < 70, "GitHub and Settings are the only actions at the right of the title bar")
         expect(targets(in: host).contains(where: { $0.id == "titlebar-github" }), "GitHub stays reachable in the title bar")
+        expect(targets(in: host).contains(where: { $0.id == "titlebar-settings" }), "Settings stays reachable in the title bar")
         sendKey("r", code: 15, modifiers: .command, window: window)
         await settle(host, window)
         expect(model.startValidationRequest == initialValidationRequest + 1, "Command R reaches the empty session gate")
@@ -95,7 +96,7 @@ enum MainWindowInteraction {
         func messageShown() -> Bool { targets(in: host).contains(where: { $0.id == "session-required-message" && !$0.visibleRect.isEmpty }) }
         for _ in 0..<20 where !messageShown() { await settle(host, window) }
         expect(messageShown(),
-               "The empty session message appears under the field")
+               "The empty session message appears above the field")
         expect(window.firstResponder is NSTextView, "Command R focuses the Session field")
         expect((window.firstResponder as? NSTextView)?.string.isEmpty == true, "The Session field has no default date")
         await click("primary-action")
@@ -109,12 +110,12 @@ enum MainWindowInteraction {
         expect(browseProbe.invoked, "Browse activates the Transcripts action")
         await waitForTarget("dropdown-panel", visible: false, "Browse closes the Session panel")
         let browse = target("browse-transcripts")
-        expect(abs(browse.bounds.width - 48) < 1 && abs(browse.bounds.height - 48) < 1, "All transcripts is a 48 point circle")
+        expect(browse.bounds.width > 80 && browse.bounds.height < 50, "Library is a labeled pill in the window row")
         let primary = target("primary-action")
         let primaryFrame = primary.convert(primary.bounds, to: host)
         let browseFrame = browse.convert(browse.bounds, to: host)
         expect(primaryFrame.maxX <= browseFrame.minX && browseFrame.maxX <= host.bounds.width - 20 + 1,
-               "Start recording and All transcripts fit the window row")
+               "Start recording and Library fit the window row")
         await click("dropdown-saveTo")
         expect(hasVisibleTarget("save-to-group"), "Save to rolls into the folder group")
         expect(hasVisibleTarget("save-to-pick") && hasVisibleTarget("save-to-destination"),

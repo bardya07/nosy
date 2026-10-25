@@ -162,6 +162,7 @@ struct MainView: View {
     var previewSessionRequired = false
     var previewTranscribingHome = false
     var previewDropping = false
+    var previewHoveredFolder: String? = nil
     var onBrowse: (() -> Void)? = nil
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -171,20 +172,22 @@ struct MainView: View {
     @State private var openDropdown: Dropdown?
     @State private var saveToExpanded = false
     @State private var enteringNewFolderName = false
-    @State private var sessionNameRequired = false
+    @State private var sessionGate = SessionNameGate()
+    @State private var hoveredFolder: String?
     @State private var startShake = 0
     @State private var suppressOutsideDismiss = false
-    @State private var dropdownRegion = CGRect.null
+    @State private var dropdownRegions: [CGRect] = []
     @State private var vocabularyDraft: VocabularyDraft?
     @State private var vocabularyDrafts: [URL: VocabularyDraft] = [:]
     enum Field { case lecture, session }
     enum Dropdown: Hashable {
-        case session, vocabulary, folders
+        case session, vocabulary, folders, microphone
         var accessibilityTitle: String {
             switch self {
             case .session: "Session"
             case .vocabulary: "Vocabulary"
             case .folders: "Folders"
+            case .microphone: "Microphone"
             }
         }
     }
@@ -207,14 +210,14 @@ struct MainView: View {
             }
         }
         .coordinateSpace(name: Self.space)
-        .onPreferenceChange(DropdownRegionKey.self) { dropdownRegion = $0 }
+        .onPreferenceChange(DropdownRegionKey.self) { dropdownRegions = $0 }
         // Outside clicks close the open panel. The tap ends on mouse-up, after the
         // clicked control has acted, and both rectangles share one SwiftUI space.
         .simultaneousGesture(SpatialTapGesture(coordinateSpace: .named(Self.space)).onEnded { tap in
             guard openDropdown != nil || saveToExpanded || enteringNewFolderName else { return }
             if suppressOutsideDismiss {
                 suppressOutsideDismiss = false
-            } else if !dropdownRegion.contains(tap.location) {
+            } else if !dropdownRegions.contains(where: { $0.contains(tap.location) }) {
                 closeDropdown()
             }
         }, including: openDropdown == nil && !saveToExpanded && !enteringNewFolderName ? .subviews : .all)
@@ -261,17 +264,13 @@ struct MainView: View {
             }
             if previewEnteringNewFolderName { enteringNewFolderName = true }
             if previewSessionRequired {
-                sessionNameRequired = true
+                sessionGate.request()
                 showDropdown(.session)
             }
             if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
         .onChange(of: model.startValidationRequest) { _, _ in requestSessionName() }
-        .onChange(of: model.session) { _, session in
-            if !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                sessionNameRequired = false
-            }
-        }
+        .onChange(of: model.session) { _, session in sessionGate.sessionChanged(to: session) }
         .onChange(of: model.selectedLecture) { _, lecture in
             if lecture == "__new__", enteringNewFolderName { focus = .lecture }
         }
@@ -280,7 +279,8 @@ struct MainView: View {
         }
         .onChange(of: model.phase) { _, phase in
             if phase != .transcribing { model.homeFromTranscribing = false }
-            if phase == .recording || phase == .done { closeDropdown() }
+            // The microphone panel stays open while recording, so its level meter stays live.
+            if phase == .done || (phase == .recording && openDropdown != .microphone) { closeDropdown() }
         }
     }
 
@@ -324,6 +324,15 @@ struct MainView: View {
                     .tip("Open GitHub", edge: .bottom)
                     .accessibilityLabel("Open Nosy on GitHub")
                     .interactionTarget("titlebar-github")
+                    SettingsLink {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 13, weight: .medium))
+                            .frame(width: 14, height: 14)
+                    }
+                    .buttonStyle(IconButtonStyle(size: 24))
+                    .tip("Settings (⌘,)", edge: .bottom)
+                    .accessibilityLabel("Settings")
+                    .interactionTarget("titlebar-settings")
                 }
                 .interactionTarget("titlebar-tools")
             }
@@ -416,24 +425,16 @@ struct MainView: View {
 
     private var fields: some View {
         VStack(spacing: 8) {
+            // Session and Vocabulary keep their identity, so opening the wheel rolls them into bubbles in place.
             HStack(spacing: 7) {
                 saveToControl
                 if saveToExpanded {
                     folderChoices
                         .transition(reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity))
-                    // Session and Vocabulary stay reachable as small bubbles while the wheel is open.
-                    controlBubble(.session, icon: "pencil", tip: "Session")
-                        .transition(controlTransition)
-                    controlBubble(.vocabulary, icon: "book.closed", tip: "Vocabulary")
-                        .transition(controlTransition)
-                } else {
-                    controlButton(.session, icon: "pencil", value: sessionControlTitle,
-                                  truncation: .tail, placeholder: sessionIsEmpty)
-                        .frame(minWidth: 128)
-                        .transition(controlTransition)
-                    controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
-                        .transition(controlTransition)
                 }
+                controlButton(.session, icon: "pencil", value: sessionControlTitle,
+                              truncation: .tail, placeholder: sessionIsEmpty, minWidth: 128)
+                controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .animation(Motion.state(reduceMotion), value: saveToExpanded)
@@ -441,7 +442,7 @@ struct MainView: View {
                 newFolderNameEntry
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
-            if let openDropdown {
+            if let openDropdown, openDropdown != .microphone {
                 dropdownContent(openDropdown)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
@@ -450,7 +451,7 @@ struct MainView: View {
         }
         // The toggles plus the open panel: clicks here never dismiss it.
         .background(GeometryReader { geometry in
-            Color.clear.preference(key: DropdownRegionKey.self, value: geometry.frame(in: .named(Self.space)))
+            Color.clear.preference(key: DropdownRegionKey.self, value: [geometry.frame(in: .named(Self.space))])
         })
         .background {
             // Escape closes the panel even when nothing inside it has focus.
@@ -463,10 +464,6 @@ struct MainView: View {
         }
         .disabled(model.busy)
         .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
-    }
-
-    private var controlTransition: AnyTransition {
-        reduceMotion ? .opacity : .scale(scale: 0.86, anchor: .trailing).combined(with: .opacity)
     }
 
     private var folderTitle: String {
@@ -595,7 +592,7 @@ struct MainView: View {
     }
 
     private func requestSessionName() {
-        sessionNameRequired = true
+        sessionGate.request()
         startShake += 1
         suppressOutsideDismiss = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { suppressOutsideDismiss = false }
@@ -609,51 +606,44 @@ struct MainView: View {
 
     private var sessionControlTitle: String { sessionIsEmpty ? "Session name" : model.session }
 
+    // One control per dropdown. With the wheel open it rolls into a bubble in place: the same
+    // button resizes and moves, so the spring carries it to its compact spot instead of swapping views.
     private func controlButton(_ control: Dropdown, icon: String, value: String,
-                               truncation: Text.TruncationMode, placeholder: Bool = false) -> some View {
-        Button { toggleDropdown(control) } label: {
-            HStack(spacing: 5) {
-                Image(systemName: icon).font(.system(size: 10, weight: .medium)).foregroundStyle(Theme.muted)
+                               truncation: Text.TruncationMode, placeholder: Bool = false,
+                               minWidth: CGFloat? = nil) -> some View {
+        let compact = saveToExpanded
+        let warn = control == .session && sessionIsEmpty
+        return Button { toggleDropdown(control) } label: {
+            HStack(spacing: compact ? 0 : 5) {
+                Image(systemName: icon).font(.system(size: compact ? 11 : 10, weight: .medium)).foregroundStyle(Theme.muted)
                     .accessibilityHidden(true)
-                Text(value).font(Theme.text(10.5, .medium)).foregroundStyle(placeholder ? Theme.muted : Theme.ink)
-                    .lineLimit(1).truncationMode(truncation).layoutPriority(placeholder ? 0 : -1).monospacedDigit()
-                Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold)).foregroundStyle(Theme.muted)
-                    .accessibilityHidden(true)
+                if !compact {
+                    Text(value).font(Theme.text(10.5, .medium)).foregroundStyle(placeholder ? Theme.muted : Theme.ink)
+                        .lineLimit(1).truncationMode(truncation).layoutPriority(placeholder ? 0 : -1).monospacedDigit()
+                        .transition(.opacity)
+                    Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold)).foregroundStyle(Theme.muted)
+                        .accessibilityHidden(true)
+                        .transition(.opacity)
+                }
             }
-            .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity).frame(height: 34)
-            .background(control == .session && sessionIsEmpty ? Theme.validationFill : Theme.raised, in: Capsule())
+            .padding(.horizontal, compact ? 0 : 8)
+            .frame(width: compact ? 34 : nil, height: 34)
+            .frame(minWidth: compact ? nil : minWidth, maxWidth: compact ? nil : .infinity)
+            .background(warn ? Theme.validationFill : Theme.raised, in: Capsule())
             .overlay(RoundedRectangle(cornerRadius: 17, style: .circular)
-                .strokeBorder(control == .session && sessionIsEmpty ? Theme.validationBorder :
+                .strokeBorder(warn ? Theme.validationBorder :
                               (openDropdown == control ? Theme.accentText.opacity(0.72) : Theme.line),
-                              lineWidth: control == .session && sessionIsEmpty ? 1.2 : (openDropdown == control ? 1.2 : 1)))
+                              lineWidth: warn ? 1.2 : (openDropdown == control ? 1.2 : 1)))
             .contentShape(Capsule())
         }
         .focusEffectDisabled()
         .buttonStyle(CompactControlButtonStyle())
-        .disabled(control == .vocabulary && model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .accessibilityLabel(control == .session && placeholder ? "Session name" : "\(control.accessibilityTitle): \(value)")
-        .accessibilityHint("Opens \(control.accessibilityTitle.lowercased()) controls")
-        .interactionTarget("dropdown-\(control)")
-    }
-
-    // Icon only, the wheel's size and chrome. A click rolls the wheel back and opens its own panel.
-    private func controlBubble(_ control: Dropdown, icon: String, tip: String) -> some View {
-        let warn = control == .session && sessionIsEmpty
-        return Button { toggleDropdown(control) } label: {
-            Image(systemName: icon).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.muted)
-                .frame(width: 34, height: 34)
-                .background(warn ? Theme.validationFill : Theme.raised, in: Circle())
-                .overlay(Circle().strokeBorder(warn ? Theme.validationBorder : Theme.line, lineWidth: warn ? 1.2 : 1))
-                .contentShape(Circle())
-        }
-        .focusEffectDisabled()
-        .buttonStyle(CompactControlButtonStyle())
-        .disabled(control == .vocabulary && model.lectureName.trimmingCharacters(in: .whitespaces).isEmpty)
-        .tip(tip)
-        .accessibilityLabel(control.accessibilityTitle)
-        .accessibilityHint("Closes folder choices and opens \(control.accessibilityTitle.lowercased()) controls")
-        .interactionTarget("wheel-\(control)")
+        .if(compact) { $0.tip(control == .session ? "Session" : "Vocabulary") }
+        .accessibilityLabel(compact ? control.accessibilityTitle
+                            : (control == .session && placeholder ? "Session name" : "\(control.accessibilityTitle): \(value)"))
+        .accessibilityHint(compact ? "Closes folder choices and opens \(control.accessibilityTitle.lowercased()) controls"
+                           : "Opens \(control.accessibilityTitle.lowercased()) controls")
+        .interactionTarget(compact ? "wheel-\(control)" : "dropdown-\(control)")
     }
 
     @ViewBuilder private func dropdownContent(_ control: Dropdown) -> some View {
@@ -664,23 +654,29 @@ struct MainView: View {
                     ScrollView {
                         VStack(spacing: 2) {
                             ForEach(model.lectures, id: \.self) { lecture in
-                                Button { chooseFolder(lecture) } label: {
-                                    HStack(spacing: 8) {
-                                        if model.selectedLecture == lecture {
-                                            Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
-                                        } else {
-                                            Color.clear.frame(width: 14, height: 10)
+                                HStack(spacing: 4) {
+                                    Button { chooseFolder(lecture) } label: {
+                                        HStack(spacing: 8) {
+                                            if model.selectedLecture == lecture {
+                                                Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentText).frame(width: 14)
+                                            } else {
+                                                Color.clear.frame(width: 14, height: 10)
+                                            }
+                                            Text(lecture).font(Theme.text(11)).foregroundStyle(Theme.ink)
+                                                .lineLimit(1).truncationMode(.middle)
+                                            Spacer(minLength: 0)
                                         }
-                                        Text(lecture).font(Theme.text(11)).foregroundStyle(Theme.ink)
-                                            .lineLimit(1).truncationMode(.middle)
-                                        Spacer(minLength: 0)
+                                        .padding(.horizontal, 8).frame(height: 28)
+                                        .contentShape(Rectangle())
                                     }
-                                    .padding(.horizontal, 8).frame(height: 28)
-                                    .contentShape(Rectangle())
+                                    .buttonStyle(InsetButtonStyle())
+                                    .accessibilityLabel("Save to \(lecture)")
+                                    .interactionTarget("folder-\(lecture)")
+                                    deleteFolderButton(lecture)
                                 }
-                                .buttonStyle(InsetButtonStyle())
-                                .accessibilityLabel("Save to \(lecture)")
-                                .interactionTarget("folder-\(lecture)")
+                                .onHover { inside in
+                                    if inside { hoveredFolder = lecture } else if hoveredFolder == lecture { hoveredFolder = nil }
+                                }
                             }
                         }
                     }
@@ -706,18 +702,27 @@ struct MainView: View {
             .interactionTarget("save-to-folders")
         case .session:
             VStack(alignment: .leading, spacing: 7) {
+                if sessionGate.required {
+                    // Above the field: the message sits where the cursor is about to type.
+                    Text(SessionNameGate.message)
+                        .font(Theme.text(10.5, .medium))
+                        .foregroundStyle(Theme.validationText)
+                        .lineLimit(1)
+                        .transition(.opacity)
+                        .interactionTarget("session-required-message")
+                }
                 HStack(spacing: 9) {
                     TextField("", text: $model.session,
                               prompt: Text("Session name").foregroundStyle(Theme.faint))
                         .textFieldStyle(.plain).font(Theme.text(12)).foregroundStyle(Theme.ink)
                         .focused($focus, equals: .session)
                         .padding(.horizontal, 9).frame(height: 34)
-                        .background(sessionNameRequired ? Theme.validationFill : Theme.raised,
+                        .background(sessionGate.required ? Theme.validationFill : Theme.raised,
                                     in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous)
-                            .strokeBorder(sessionNameRequired ? Theme.validationBorder :
+                            .strokeBorder(sessionGate.required ? Theme.validationBorder :
                                           (focus == .session ? Theme.accentText : Theme.line),
-                                          lineWidth: sessionNameRequired || focus == .session ? 1.4 : 1))
+                                          lineWidth: sessionGate.required || focus == .session ? 1.4 : 1))
                         .background(SessionCaretPositioner(focused: focus == .session))
                         .accessibilityLabel("Session name")
                         .interactionTarget("session-name")
@@ -730,21 +735,26 @@ struct MainView: View {
                     .accessibilityLabel("Use today's date")
                     .interactionTarget("session-today")
                 }
-                if sessionNameRequired {
-                    Text("Name this session")
-                        .font(Theme.text(10.5, .medium))
-                        .foregroundStyle(Theme.validationText)
-                        .lineLimit(1)
-                        .interactionTarget("session-required-message")
-                }
             }
             .padding(10).card(Theme.surface, radius: 12)
+            .animation(Motion.hover, value: sessionGate.required)
         case .vocabulary:
             if let vocabularyDraft {
                 VocabularyEditor(draft: vocabularyDraft, close: { closeDropdown() }, inline: true,
                                  expanded: previewVocabularyExpanded)
                     .card(Theme.surface, radius: 12)
+            } else {
+                // No folder name yet: the panel still opens and says what to do next.
+                Text("Name the folder first to add vocabulary")
+                    .font(Theme.text(10.5, .medium)).foregroundStyle(Theme.muted)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10).card(Theme.surface, radius: 12)
+                    .interactionTarget("vocabulary-needs-folder")
             }
+        case .microphone:
+            // The microphone panel sits above the controls row, so it is drawn there.
+            EmptyView()
         }
     }
 
@@ -754,26 +764,28 @@ struct MainView: View {
         else { showDropdown(control) }
     }
 
+    // Panels slide from their button on the same spring the wheel uses, and roll back the same way.
     private func showDropdown(_ control: Dropdown) {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
         if control == .vocabulary { prepareVocabularyDraft() }
-        openDropdown = control
+        // Previews keep their fixture devices; the real device list never leaks into a snapshot.
+        if control == .microphone && !Snapshot.isRunning { model.refreshInputs() }
+        withAnimation(Motion.state(reduceMotion)) { openDropdown = control }
         switch control {
         case .session: focus = .session
-        case .vocabulary, .folders: focus = nil
+        case .vocabulary, .folders, .microphone: focus = nil
         }
     }
 
-    // Every dismissal (outside tap, Escape, a choice, the wheel again) closes the folder
-    // wheel with the same motion it opened with. Other panels close without animation.
+    // Every dismissal (outside tap, Escape, a choice, the wheel again) animates the open panel and the wheel out together.
     private func closeDropdown() {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
-        let rollsWheel = saveToExpanded || enteringNewFolderName
-        withAnimation(rollsWheel ? Motion.state(reduceMotion) : nil) {
+        withAnimation(Motion.state(reduceMotion)) {
             openDropdown = nil
             saveToExpanded = false
             enteringNewFolderName = false
         }
+        hoveredFolder = nil
         focus = nil
     }
 
@@ -787,6 +799,7 @@ struct MainView: View {
 
     private func toggleFolderList() {
         focus = nil
+        hoveredFolder = nil
         if folderListOpen {
             withAnimation(Motion.state(reduceMotion)) { openDropdown = nil }
         } else {
@@ -798,6 +811,37 @@ struct MainView: View {
     private func chooseFolder(_ lecture: String) {
         model.selectedLecture = lecture
         closeDropdown()
+    }
+
+    // Each folder row shows a trash button on hover. Nothing moves until the owner confirms.
+    private func deleteFolderButton(_ lecture: String) -> some View {
+        let shown = (hoveredFolder ?? previewHoveredFolder) == lecture
+        return Button { confirmTrashFolder(lecture) } label: {
+            Image(systemName: "trash").font(.system(size: 10, weight: .medium))
+                .accessibilityHidden(true)
+        }
+        .buttonStyle(IconButtonStyle(size: 24, destructive: true))
+        .opacity(shown ? 1 : 0)
+        .allowsHitTesting(shown)
+        .animation(Motion.hover, value: shown)
+        .tip("Delete folder")
+        .accessibilityLabel("Delete folder \(lecture)")
+        .interactionTarget("folder-delete-\(lecture)")
+    }
+
+    private func confirmTrashFolder(_ lecture: String) {
+        guard model.finishLibraryEditing?() ?? true else { return }
+        let alert = NSAlert()
+        alert.messageText = "Move \"\(lecture)\" and its transcripts to the Trash?"
+        let trash = alert.addButton(withTitle: "Move to Trash")
+        trash.hasDestructiveAction = true
+        trash.keyEquivalent = ""
+        // Cancel is the default so a stray Return never moves a folder.
+        alert.addButton(withTitle: "Cancel").keyEquivalent = "\r"
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        if let url = model.vocabularyURL(for: lecture) { vocabularyDrafts[url] = nil }
+        model.trashLecture(lecture)
+        hoveredFolder = nil
     }
 
     private func beginNewFolderName() {
@@ -836,62 +880,165 @@ struct MainView: View {
         }
     }
 
+    // The microphone panel and the controls row share one hit region, so the mic button can
+    // toggle its own panel without the outside-tap dismissal closing it first.
     @ViewBuilder private var controls: some View {
-        // Recording adds Pause, so the row tightens to stay inside the 20pt margins.
-        HStack(spacing: model.recording ? 8 : 10) {
-            if model.recording {
-                Button { model.togglePause() } label: {
-                    Text(model.paused ? "Resume" : "Pause").lineLimit(1).fixedSize()
-                }
-                .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 10))
-                .frame(width: 84)
-                .keyboardShortcut("p", modifiers: .command)
-                .tip(model.paused ? "Resume recording" : "Pause recording", edge: .top)
-                .accessibilityLabel(model.paused ? "Resume recording" : "Pause recording")
-                .disabled(model.transitioning)
-                .transition(.soft(reduceMotion))
+        VStack(spacing: 10) {
+            if openDropdown == .microphone {
+                microphonePanel
+                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
-            MicMenu(model: model)
-                .disabled(model.micLocked)
-                .accessibilityLabel("Change recording source or microphone")
-            Button(action: primaryAction) {
-                if showsHomeAction {
-                    Label("Home", systemImage: "house")
-                        .labelStyle(.titleAndIcon)
-                } else {
-                    HStack(spacing: 10) {
-                        Text(primaryTitle).lineLimit(1).fixedSize()
-                        if showsCommandR {
-                            Text("⌘R").font(Theme.text(11, .medium)).monospacedDigit().opacity(0.6)
-                        }
+            // Recording adds Pause, so the row tightens to stay inside the 20pt margins.
+            HStack(spacing: model.recording ? 8 : 10) {
+                if model.recording {
+                    Button { model.togglePause() } label: {
+                        Text(model.paused ? "Resume" : "Pause").lineLimit(1).fixedSize()
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 46, horizontalPadding: 10))
+                    .frame(width: 84)
+                    .keyboardShortcut("p", modifiers: .command)
+                    .tip(model.paused ? "Resume recording" : "Pause recording", edge: .top)
+                    .accessibilityLabel(model.paused ? "Resume recording" : "Pause recording")
+                    .disabled(model.transitioning)
+                    .transition(.soft(reduceMotion))
+                }
+                micButton
+                primaryButton
+                libraryButton
+            }
+        }
+        .background(GeometryReader { geometry in
+            Color.clear.preference(key: DropdownRegionKey.self, value: [geometry.frame(in: .named(Self.space))])
+        })
+    }
+
+    // Start stays fully lit. With no session name it turns red and asks for one instead.
+    private var primaryButton: some View {
+        Button(action: primaryAction) {
+            if showsHomeAction {
+                Label("Home", systemImage: "house")
+                    .labelStyle(.titleAndIcon)
+            } else {
+                HStack(spacing: 10) {
+                    Text(primaryTitle).lineLimit(1).fixedSize()
+                    if showsCommandR {
+                        Text("⌘R").font(Theme.text(11, .medium)).monospacedDigit().opacity(0.6)
                     }
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: model.recording ? 46 : 48,
-                                         horizontalPadding: model.recording ? 14 : nil))
-            // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
-            .keyboardShortcut(model.recording
-                ? KeyboardShortcut(.return, modifiers: .command)
-                : ((model.phase == .idle || model.homeFromTranscribing) ? KeyboardShortcut(.return) : nil))
-            .tip(showsHomeAction ? "Return home" : (model.recording ? "Stop and transcribe" : "Start recording"))
-            .accessibilityLabel(showsHomeAction ? "Home" : primaryTitle)
-            .interactionTarget("primary-action")
-            .modifier(StartShake(animatableData: reduceMotion ? 0 : CGFloat(startShake)))
-            .animation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.4), value: startShake)
-            .disabled(model.recording ? model.transitioning : (!showsHomeAction && !model.hasLecture))
-            Button {
-                closeDropdown()
-                if let onBrowse { onBrowse() } else { openWindow(id: "library") }
-            } label: {
-                Image(systemName: "doc.text")
-            }
-            .buttonStyle(TranscriptsBubbleStyle())
-            .tip("All transcripts", edge: .top)
-            .accessibilityLabel("All transcripts")
-            .accessibilityHint("Opens the Transcripts window")
-            .interactionTarget("browse-transcripts")
         }
+        .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: 46,
+                                     horizontalPadding: model.recording ? 14 : 16))
+        .overlay {
+            if sessionGate.required && !model.recording && !showsHomeAction {
+                RoundedRectangle(cornerRadius: 23, style: .circular)
+                    .strokeBorder(Theme.validationBorder, lineWidth: 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .animation(Motion.hover, value: sessionGate.required)
+        // Return starts; stopping takes ⌘Return so a stray keypress cannot end a lecture.
+        .keyboardShortcut(model.recording
+            ? KeyboardShortcut(.return, modifiers: .command)
+            : ((model.phase == .idle || model.homeFromTranscribing) ? KeyboardShortcut(.return) : nil))
+        .tip(showsHomeAction ? "Return home" : (model.recording ? "Stop and transcribe" : "Start recording"))
+        .accessibilityLabel(showsHomeAction ? "Home" : primaryTitle)
+        .interactionTarget("primary-action")
+        .modifier(StartShake(animatableData: reduceMotion ? 0 : CGFloat(startShake)))
+        .animation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.4), value: startShake)
+        .disabled(model.recording ? model.transitioning : (!showsHomeAction && !model.hasLecture))
     }
+
+    private var micButton: some View {
+        Button { toggleDropdown(.microphone) } label: {
+            Image(systemName: model.inputUID == nil || Snapshot.isRunning ? "mic" : "mic.fill")
+        }
+        .buttonStyle(IconButtonStyle(size: 44,
+                                     active: (model.inputUID != nil && !Snapshot.isRunning) || openDropdown == .microphone,
+                                     filled: true))
+        .onHover { if $0 && !Snapshot.isRunning { model.refreshInputs() } }
+        .tip("Microphone", edge: .top)
+        .accessibilityLabel("Change recording source or microphone")
+        .accessibilityValue(model.inputName)
+        .accessibilityHint("Opens microphone and level controls")
+        .interactionTarget("mic-button")
+    }
+
+    // Input device, recording source and a live level, in the card style of the other panels.
+    private var microphonePanel: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            FieldLabel("Microphone").padding(.horizontal, 8).padding(.top, 2)
+            micRow(model.systemInput.map { "System default (\($0.name))" } ?? "System default",
+                   chosen: model.inputUID == nil) { model.selectInput(nil) }
+            ForEach(model.inputs) { device in
+                micRow(device.name, chosen: model.inputUID == device.id) { model.selectInput(device.id) }
+            }
+            if RecordingSource.macAudioAvailable {
+                FieldLabel("Source").padding(.horizontal, 8).padding(.top, 6)
+                micRow("Room audio · Microphone", chosen: model.recordingSource == .mic) { model.selectSource(.mic) }
+                micRow("Mac audio · Mac audio + mic", chosen: model.recordingSource == .both) { model.selectSource(.both) }
+                micRow("Mac audio only", chosen: model.recordingSource == .macAudio) { model.selectSource(.macAudio) }
+            }
+            Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
+            HStack(spacing: 10) {
+                Text("Level").font(Theme.text(11)).foregroundStyle(Theme.muted)
+                LevelBar(decibels: model.level)
+                LiveLevelReadout(model: model).frame(width: 74, alignment: .trailing)
+            }
+            .padding(.horizontal, 8)
+            Text("The level reads live while you record.")
+                .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+                .padding(.horizontal, 8).padding(.top, 2)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card(Theme.surface, radius: 12)
+        .interactionTarget("microphone-panel")
+    }
+
+    // Changing the device or source is locked while a recording runs; the meter stays live.
+    private func micRow(_ title: String, chosen: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+            closeDropdown()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark").font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Theme.accentText).frame(width: 14)
+                    .opacity(chosen ? 1 : 0)
+                Text(title).font(Theme.text(11)).foregroundStyle(Theme.ink)
+                    .lineLimit(1).truncationMode(.middle)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8).frame(height: 28)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(InsetButtonStyle())
+        .disabled(model.micLocked)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(chosen ? .isSelected : [])
+        .interactionTarget("mic-\(title)")
+    }
+
+    // Opens the Transcripts window. Flat Frutiger Aero pill; it is the only way to reach the library.
+    private var libraryButton: some View {
+        Button {
+            closeDropdown()
+            if let onBrowse { onBrowse() } else { openWindow(id: "library") }
+        } label: {
+            if model.recording {
+                Image(systemName: "books.vertical")
+            } else {
+                Label("Library", systemImage: "books.vertical")
+            }
+        }
+        .buttonStyle(LibraryPillStyle(compact: model.recording))
+        .tip("All your transcripts", edge: .top)
+        .accessibilityLabel("Library")
+        .accessibilityHint("Opens the Transcripts window")
+        .interactionTarget("browse-transcripts")
+    }
+
     private func primaryAction() {
         focus = nil
         if showsHomeAction { goHome() }
@@ -930,11 +1077,6 @@ private struct SessionCaretPositioner: NSViewRepresentable {
             }
         }
     }
-}
-
-private struct DropdownRegionKey: PreferenceKey {
-    static let defaultValue = CGRect.null
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = value.union(nextValue()) }
 }
 
 struct NosyMark: View {
@@ -1084,13 +1226,16 @@ private struct StartShake: GeometryEffect {
     }
 }
 
-// Frutiger Aero gloss: aqua at the top, sky blue at the base, a sheen and an inner glow.
-private struct TranscriptsBubbleStyle: ButtonStyle {
+// Frutiger Aero, flat: the aqua-to-sky gradient with no glossy highlights. Hover lifts, press squishes.
+private struct LibraryPillStyle: ButtonStyle {
+    // Icon only while recording: Pause, the microphone and Stop need the row's full width.
+    var compact = false
     func makeBody(configuration: Configuration) -> some View {
-        TranscriptsBubbleBody(configuration: configuration)
+        LibraryPillBody(configuration: configuration, compact: compact)
     }
-    private struct TranscriptsBubbleBody: View {
+    private struct LibraryPillBody: View {
         let configuration: ButtonStyleConfiguration
+        let compact: Bool
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isFocused) private var focused
         @State private var hovering = false
@@ -1098,14 +1243,19 @@ private struct TranscriptsBubbleStyle: ButtonStyle {
             let squish = configuration.isPressed && !reduceMotion
             let lift = hovering && !configuration.isPressed && !reduceMotion
             configuration.label
-                .font(.system(size: 17, weight: .semibold))
+                .font(Theme.text(13, .semibold))
                 .foregroundStyle(.white)
-                .shadow(color: Color(hex: 0x03365A).opacity(0.55), radius: 1, y: 1)
-                .frame(width: 48, height: 48)
-                .background { TranscriptsBubbleFace(lifted: hovering && !reduceMotion) }
-                .scaleEffect(x: squish ? 1.07 : (lift ? 1.06 : 1), y: squish ? 0.92 : (lift ? 1.06 : 1))
-                .contentShape(Circle())
-                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+                .shadow(color: Color(hex: 0x03365A).opacity(0.4), radius: 1, y: 1)
+                .padding(.horizontal, compact ? 0 : 14)
+                .frame(width: compact ? 46 : nil, height: 46)
+                .fixedSize()
+                .background(Capsule().fill(LinearGradient(colors: [Theme.aeroTop, Theme.aeroMid, Theme.aeroBase],
+                                                          startPoint: .top, endPoint: .bottom)))
+                .overlay(RoundedRectangle(cornerRadius: 23, style: .circular).strokeBorder(Theme.aeroEdge.opacity(0.4), lineWidth: 1))
+                .shadow(color: Theme.aeroGlow.opacity(lift ? 0.4 : 0.2), radius: lift ? 9 : 5, y: lift ? 5 : 3)
+                .scaleEffect(x: squish ? 1.03 : (lift ? 1.03 : 1), y: squish ? 0.94 : (lift ? 1.03 : 1))
+                .contentShape(Capsule())
+                .overlay(RoundedRectangle(cornerRadius: 25, style: .circular).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in
                     withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 0.62)) {
                         hovering = inside
@@ -1117,27 +1267,46 @@ private struct TranscriptsBubbleStyle: ButtonStyle {
     }
 }
 
-private struct TranscriptsBubbleFace: View {
-    let lifted: Bool
+// Samples the recorder's level about ten times a second, so the dB stat moves smoothly instead of flickering.
+struct LiveLevelReadout: View {
+    @ObservedObject var model: AppModel
+    @State private var shown = InputLevel.silent
     var body: some View {
-        ZStack {
-            Circle().fill(LinearGradient(colors: [Theme.aeroTop, Theme.aeroMid, Theme.aeroBase],
-                                         startPoint: .top, endPoint: .bottom))
-            // Glassy sheen over the upper half.
-            Ellipse()
-                .fill(LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.18)], startPoint: .top, endPoint: .bottom))
-                .frame(width: 36, height: 21)
-                .offset(y: -12.5)
-            // Inner glow: soft light just inside the rim.
-            Circle().strokeBorder(.white.opacity(0.5), lineWidth: 1.6).blur(radius: 1).padding(1.5)
-            // Light bouncing back up from the base.
-            Ellipse().fill(.white.opacity(0.22)).frame(width: 24, height: 7).offset(y: 18)
-            Circle().strokeBorder(Theme.aeroEdge.opacity(0.5), lineWidth: 1)
-        }
-        .frame(width: 48, height: 48)
-        .clipShape(Circle())
-        .shadow(color: Theme.aeroGlow.opacity(lifted ? 0.5 : 0.3), radius: lifted ? 10 : 6, y: lifted ? 5 : 3)
+        Text(InputLevel.readout(shown))
+            .font(Theme.text(12, .semibold)).monospacedDigit()
+            .foregroundStyle(Theme.muted)
+            .lineLimit(1)
+            .onAppear { shown = model.level }
+            .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
+                if shown != model.level { shown = model.level }
+            }
+            .accessibilityLabel("Input level")
+            .accessibilityValue(InputLevel.readout(shown))
     }
+}
+
+private struct LevelBar: View {
+    let decibels: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.line)
+                Capsule().fill(Theme.accentText)
+                    .frame(width: geometry.size.width * InputLevel.fraction(decibels))
+            }
+        }
+        .frame(height: 6)
+        .animation(reduceMotion ? nil : .linear(duration: 0.1), value: decibels)
+        .accessibilityElement()
+        .accessibilityLabel("Input level meter")
+        .accessibilityValue(InputLevel.readout(decibels))
+    }
+}
+
+private struct DropdownRegionKey: PreferenceKey {
+    static let defaultValue: [CGRect] = []
+    static func reduce(value: inout [CGRect], nextValue: () -> [CGRect]) { value.append(contentsOf: nextValue()) }
 }
 
 private struct ModePickerButtonStyle: ButtonStyle {
@@ -1168,51 +1337,6 @@ private struct CompactControlButtonStyle: ButtonStyle {
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
         }
-    }
-}
-
-private struct MicMenu: View {
-    @ObservedObject var model: AppModel
-    var body: some View {
-        Menu {
-            if RecordingSource.macAudioAvailable {
-                Section("Mode") {
-                    Button { model.selectSource(.mic) } label: { checked(model.recordingSource == .mic, "Room audio · Microphone") }
-                        .tip("Select Room audio")
-                    Button { model.selectSource(.both) } label: { checked(model.recordingSource == .both, "Mac audio · Mac audio + mic") }
-                        .tip("Select Mac audio")
-                }
-                Section("Advanced") {
-                    Button { model.selectSource(.macAudio) } label: { checked(model.recordingSource == .macAudio, "Mac audio only") }
-                        .tip("Mac audio only")
-                }
-                Divider()
-            }
-
-            Button { model.selectInput(nil) } label: {
-                checked(model.inputUID == nil, "System default" + (model.systemInput.map { " (\($0.name))" } ?? ""))
-            }
-            .tip("Use system default")
-            if !model.inputs.isEmpty { Divider() }
-            ForEach(model.inputs) { device in
-                Button { model.selectInput(device.id) } label: { checked(model.inputUID == device.id, device.name) }
-                    .tip("Select microphone")
-            }
-        } label: {
-            Image(systemName: model.inputUID == nil || Snapshot.isRunning ? "mic" : "mic.fill")
-        }
-        .menuStyle(.button)
-        .font(Theme.text(11))
-        .buttonStyle(IconButtonStyle(size: 44, active: model.inputUID != nil && !Snapshot.isRunning, filled: true))
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .onHover { if $0 && !Snapshot.isRunning { model.refreshInputs() } }
-        .tip("Microphone")
-        .accessibilityLabel("Choose recording source or microphone, currently \(model.inputName)")
-        .accessibilityValue(model.inputName)
-    }
-    @ViewBuilder private func checked(_ on: Bool, _ title: String) -> some View {
-        if on { Label(title, systemImage: "checkmark") } else { Text(title) }
     }
 }
 
@@ -1317,13 +1441,17 @@ struct StagePanel: View {
                     Text("Mac audio").font(Theme.text(9, .medium)).foregroundStyle(Theme.accentText)
                 }
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(Core.timer(model.duration))
-                    .font(Theme.text(44)).monospacedDigit().tracking(-1.32)
-                    .foregroundStyle(model.paused ? Theme.muted : Theme.navy)
-                    .contentTransition(.numericText())
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(model.duration))
-                    .accessibilityLabel("Recorded \(Core.timer(model.duration))")
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(Core.timer(model.duration))
+                        .font(Theme.text(44)).monospacedDigit().tracking(-1.32)
+                        .foregroundStyle(model.paused ? Theme.muted : Theme.navy)
+                        .contentTransition(.numericText())
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(model.duration))
+                        .accessibilityLabel("Recorded \(Core.timer(model.duration))")
+                }
+                Spacer(minLength: 0)
+                LiveLevelReadout(model: model)
             }
             Waveform(levels: model.levels, tint: Theme.wavePlayed, active: !model.paused)
                 .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
