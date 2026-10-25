@@ -85,7 +85,6 @@ final class OnboardingModel: ObservableObject {
 struct OnboardingView: View {
     @ObservedObject var model: AppModel
     @StateObject private var setup = OnboardingModel()
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     init(model: AppModel, setup: OnboardingModel = OnboardingModel()) {
@@ -214,7 +213,7 @@ struct OnboardingView: View {
             }
             Spacer()
             if setup.step == .engine, model.setupMessage != nil {
-                Button("Skip for now") { model.finishOnboarding(); dismiss() }
+                Button("Skip for now") { model.finishOnboarding(); model.workspace.dismissPanel() }
                     .buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Skip setup step")
             }
             Button(setup.step == .engine ? "Start using Nosy" : "Continue") {
@@ -223,7 +222,7 @@ struct OnboardingView: View {
                     if next == .engine { model.refreshDependencies() }
                 } else {
                     model.finishOnboarding()
-                    dismiss()
+                    model.workspace.dismissPanel()
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))

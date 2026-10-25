@@ -47,6 +47,7 @@ struct SummaryBar: View {
     var keyMoments: [ReaderKeyMoment] = []
     var requested: () -> Void = {}
     var selectMoment: (ReaderKeyMoment) -> Void = { _ in }
+    var openSettings: () -> Void = {}
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
     @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
     @Namespace private var toggleAnimation
@@ -235,7 +236,7 @@ struct SummaryBar: View {
     }
 
     private func summarize() {
-        guard provider != .off else { SummarySettingsWindow.open(); return }
+        guard provider != .off else { openSettings(); return }
         requested()
         summaries.summarize(transcript)
     }
@@ -243,7 +244,7 @@ struct SummaryBar: View {
     private func findKeyMoments() {
         guard provider != .off else {
             summaries.findMoments(transcript, paths: paths)
-            SummarySettingsWindow.open()
+            openSettings()
             return
         }
         guard confirmedOffMac() else { return }

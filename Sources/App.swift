@@ -68,27 +68,17 @@ struct NosyApp: App {
     @StateObject private var model = AppModel.shared
     var body: some Scene {
         Window("Nosy", id: "main") {
-            MainView(model: model)
+            WorkspaceView(model: model)
                 .onAppear { model.launch() }
         }
         .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
+        .defaultSize(width: 400, height: 300)
         .commands {
-            CommandGroup(replacing: .newItem) {
-                FileCommands(model: model)
+            CommandGroup(replacing: .newItem) { FileCommands(model: model) }
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings…") { model.workspace.showSettings(); delegate.showWindow() }
+                    .keyboardShortcut(",", modifiers: .command)
             }
-        }
-        Window("Transcripts", id: "library") {
-            LibraryView(model: model)
-        }
-        .defaultSize(width: 860, height: 600)
-        Window("Welcome to Nosy", id: "welcome") {
-            OnboardingView(model: model)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .windowResizability(.contentSize)
-        Settings {
-            SettingsView(model: model)
         }
     }
 }
@@ -125,12 +115,12 @@ struct AudioDropOverlay: View {
 
 private struct FileCommands: View {
     @ObservedObject var model: AppModel
-    @Environment(\.openWindow) private var openWindow
     var body: some View {
         Button("Start Recording") {
             guard model.phase == .idle || model.homeFromTranscribing else { return }
             model.start()
         }
+        .keyboardShortcut("r", modifiers: .command)
         .tip("Start recording")
         .disabled((model.phase != .idle && !model.homeFromTranscribing) || model.busy || !model.hasLecture)
         Button("Add Marker") { model.addMarker() }
@@ -138,7 +128,7 @@ private struct FileCommands: View {
             .tip("Mark this moment")
             .disabled(!model.recording || model.transitioning)
         Divider()
-        Button("Transcripts") { openWindow(id: "library") }.keyboardShortcut("t", modifiers: .command).tip("Open transcripts")
+        Button("Library") { model.showInLibrary(nil) }.keyboardShortcut("l", modifiers: .command).tip("Open Library")
         Button("Import Recording…") { model.importRecording() }
             .keyboardShortcut("i", modifiers: .command)
             .tip("Import audio")
@@ -147,7 +137,7 @@ private struct FileCommands: View {
             .keyboardShortcut("o", modifiers: [.command, .shift])
             .tip("Show save folder")
         Divider()
-        Button("Set Up Nosy…") { openWindow(id: "welcome") }.tip("Open setup")
+        Button("Set Up Nosy…") { model.workspace.showSetup() }.tip("Open setup")
     }
 }
 
@@ -163,11 +153,10 @@ struct MainView: View {
     var previewDropping = false
     var previewHoveredFolder: String? = nil
     var onBrowse: (() -> Void)? = nil
-    @Environment(\.openWindow) private var openWindow
+    var embedded = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Field?
     @State private var dropping = false
-    @State private var titlebarInset: CGFloat = 0
     @State private var openDropdown: Dropdown?
     @State private var saveToExpanded = false
     @State private var enteringNewFolderName = false
@@ -193,7 +182,7 @@ struct MainView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            titlebar.zIndex(20)
+            if !embedded { WorkspaceTitlebar(model: model, onHome: goHome).zIndex(20) }
             if showsTranscribingScreen {
                 StagePanel(model: model, onHome: { model.homeFromTranscribing = true })
                     .padding(16).card().padding(.horizontal, 20).padding(.vertical, 16)
@@ -231,7 +220,6 @@ struct MainView: View {
             if dropping { AudioDropOverlay().padding(10).allowsHitTesting(false) }
         }
         .background(WindowBackdrop())
-        .background(MainWindowChrome(titlebarInset: $titlebarInset).allowsHitTesting(false))
         .background {
             Button("Start recording") { model.start() }
                 .keyboardShortcut("r", modifiers: .command)
@@ -241,9 +229,8 @@ struct MainView: View {
         }
         // Tips draw inside the window's clip, so every bubble stays within the rounded window.
         .tipContainerBounds()
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
-        .padding(.top, -titlebarInset)
+        .clipShape(RoundedRectangle(cornerRadius: embedded ? 0 : 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(embedded ? 0 : 0.78)).allowsHitTesting(false))
         .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: model.phase)
         .animation(Motion.state(reduceMotion), value: model.paused)
@@ -252,7 +239,6 @@ struct MainView: View {
         .animation(Motion.state(reduceMotion), value: saveToExpanded)
         .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
         .onAppear {
-            model.openWindow = openWindow
             if previewDropping { dropping = true }
             if previewTranscribingHome { model.homeFromTranscribing = true }
             if let previewDropdown { showDropdown(previewDropdown) }
@@ -266,8 +252,8 @@ struct MainView: View {
                 sessionGate.request()
                 showDropdown(.session)
             }
-            if model.needsOnboarding && !Snapshot.isRunning { openWindow(id: "welcome") }
         }
+        .onReceive(model.workspace.$homeRequest.dropFirst()) { _ in goHome() }
         .onChange(of: model.startValidationRequest) { _, _ in requestSessionName() }
         .onChange(of: model.session) { _, session in sessionGate.sessionChanged(to: session) }
         .onChange(of: model.selectedLecture) { _, lecture in
@@ -305,54 +291,6 @@ struct MainView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    // Center the brand independently from the native traffic lights and trailing action.
-    private var titlebar: some View {
-        ZStack {
-            HStack(spacing: 8) {
-                Color.clear.frame(width: 56).accessibilityHidden(true)
-                Spacer(minLength: 0)
-                HStack(spacing: 6) {
-                    StatusPill(model: model).fixedSize()
-                    Button { NSWorkspace.shared.open(URL(string: "https://github.com/bardya07/nosy")!) } label: {
-                        Image(nsImage: Self.githubMark)
-                            .renderingMode(.template)
-                            .resizable().interpolation(.high).scaledToFit()
-                            .frame(width: 14, height: 14)
-                    }
-                    .buttonStyle(IconButtonStyle(size: 24))
-                    .tip("Open GitHub", edge: .bottom)
-                    .accessibilityLabel("Open Nosy on GitHub")
-                    .interactionTarget("titlebar-github")
-                    SettingsLink {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 13, weight: .medium))
-                            .frame(width: 14, height: 14)
-                    }
-                    .buttonStyle(IconButtonStyle(size: 24))
-                    .tip("Settings (⌘,)", edge: .bottom)
-                    .accessibilityLabel("Settings")
-                    .interactionTarget("titlebar-settings")
-                }
-                .interactionTarget("titlebar-tools")
-            }
-            Button(action: goHome) {
-                HStack(spacing: 6) {
-                    NosyMark(size: 18)
-                    Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
-                }
-            }
-            .buttonStyle(TitlebarBrandButtonStyle())
-            .tip("Home", edge: .bottom)
-            .accessibilityLabel("Home")
-            .accessibilityElement(children: .combine)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 44)
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
-    }
-
-    private static let githubMark = Bundle.main.image(forResource: "GitHubMark") ?? NSImage()
-
     private var captureMode: some View {
         VStack(spacing: 7) {
             CaptureModePicker(model: model)
@@ -370,7 +308,7 @@ struct MainView: View {
         if !model.recording, let setup = model.setupMessage {
             Banner(symbol: "exclamationmark.triangle.fill", tint: Theme.amber, text: setup) {
                 HStack(spacing: 14) {
-                    Button("Set up…") { openWindow(id: "welcome") }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Open setup")
+                    Button("Set up…") { model.workspace.showSetup() }.buttonStyle(LinkButtonStyle(tint: Theme.ink)).tip("Open setup")
                     Button("Check again") { model.refreshDependencies() }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Check setup")
                 }
             }.transition(.soft(reduceMotion))
@@ -1012,11 +950,11 @@ struct MainView: View {
         .interactionTarget("mic-\(title)")
     }
 
-    // Opens the Transcripts window. Flat Frutiger Aero pill; it is the only way to reach the library.
+    // Browse the Library without interrupting capture.
     private var libraryButton: some View {
         Button {
             closeDropdown()
-            if let onBrowse { onBrowse() } else { openWindow(id: "library") }
+            if let onBrowse { onBrowse() } else { model.showInLibrary(nil) }
         } label: {
             if model.recording {
                 Image(systemName: "books.vertical")
@@ -1027,7 +965,7 @@ struct MainView: View {
         .buttonStyle(LibraryPillStyle(compact: model.recording))
         .tip("All your transcripts", edge: .top)
         .accessibilityLabel("Library")
-        .accessibilityHint("Opens the Transcripts window")
+        .accessibilityHint("Opens Library inside Nosy")
         .interactionTarget("browse-transcripts")
     }
 
@@ -1204,7 +1142,7 @@ private extension View {
     }
 }
 
-private struct TitlebarBrandButtonStyle: ButtonStyle {
+struct TitlebarBrandButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hovering = false
     func makeBody(configuration: Configuration) -> some View {
@@ -1492,7 +1430,7 @@ private struct CompactControlButtonStyle: ButtonStyle {
     }
 }
 
-private struct StatusPill: View {
+struct StatusPill: View {
     @ObservedObject var model: AppModel
     @ViewBuilder
     var body: some View {

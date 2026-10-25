@@ -15,7 +15,7 @@ Choose **Room audio** to capture your microphone, or **Mac audio** to capture yo
 
 Choose where to **Save to**, name the **Session**, and select **Vocab**. Use the circular calendar button to enter today's date as a session name. Pick a folder from the Save to wheel, or choose a destination there too. Vocabulary options include **Auto**, **General**, and subject packs, including **Meetings & Work**. Auto chooses packs from the folder name or course and meeting keywords.
 
-Press **⌘M** or click **Mark moment** while recording to add a timestamped marker. Use **All transcripts** beside Start recording to browse past saves.
+Press **⌘M** or click **Mark moment** while recording to add a timestamped marker. Use **Library** beside Start recording, or **⌘L**, to browse past saves in the same window. The **← Nosy** button returns to compact Home. Recording continues while you browse, with controls along the bottom of Library. The title bar gear and **⌘,** open Settings over the current mode.
 
 Nosy transcribes on your Mac. Your recordings, transcripts, and vocabulary stay on your device.
 

@@ -4,6 +4,7 @@ import AppKit
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     var connector = ClaudeConnector.standard
+    var showsHeading = true
     @AppStorage(ReminderInterval.storageKey) private var reminderMinutes = ReminderInterval.defaultMinutes
     @AppStorage(LectureFolderTrash.askKey) private var askBeforeDeleting = true
     @AppStorage("compressAudio") private var compressAudio = true
@@ -17,28 +18,32 @@ struct SettingsView: View {
     @State private var pane: Pane
     private static let customReminderTag = -1
 
-    init(model: AppModel, connector: ClaudeConnector = .standard, pane: Pane = .general) {
+    init(model: AppModel, connector: ClaudeConnector = .standard, pane: Pane = .general, showsHeading: Bool = true) {
         self.model = model
         self.connector = connector
+        self.showsHeading = showsHeading
         _pane = State(initialValue: pane)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 12) {
-                NosyMark(size: 40)
-                Text("Settings").font(Theme.display(20, .bold)).tracking(-0.4)
+            if showsHeading {
+                HStack(spacing: 12) {
+                    NosyMark(size: 40)
+                    Text("Settings").font(Theme.display(20, .bold)).tracking(-0.4)
+                }
             }
             HStack(alignment: .top, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(Pane.allCases) { pane in paneButton(pane) }
                 }
                 .frame(width: Self.sidebarWidth, alignment: .leading)
-                VStack(alignment: .leading, spacing: 18) {
-                    switch pane {
-                    case .general: generalPane
-                    case .summaries: summariesPane
-                    case .connect: connectPane
+                Group {
+                    if showsHeading {
+                        paneContent
+                    } else {
+                        ScrollView { paneContent }
+                            .scrollIndicators(.never)
                     }
                 }
                 .frame(width: Self.columnWidth, alignment: .topLeading)
@@ -47,11 +52,22 @@ struct SettingsView: View {
         .font(Theme.text(13))
         .foregroundStyle(Theme.ink)
         .padding(24)
-        .frame(width: Self.sidebarWidth + 16 + Self.columnWidth + 48, alignment: .topLeading)
-        .fixedSize(horizontal: false, vertical: true)
+        .frame(width: Self.width, alignment: .topLeading)
+        .fixedSize(horizontal: false, vertical: showsHeading)
         .background(WindowBackdrop())
         .tint(Theme.accentText)
         .tipContainerBounds()
+    }
+
+    private var paneContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            switch pane {
+            case .general: generalPane
+            case .summaries: summariesPane
+            case .connect: connectPane
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 
     enum Pane: String, CaseIterable, Identifiable {
@@ -91,6 +107,7 @@ struct SettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(InsetButtonStyle())
+        .interactionTarget("settings-pane-\(option.rawValue)")
         .accessibilityLabel(option.title)
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
@@ -200,6 +217,7 @@ struct SettingsView: View {
             }
             .toggleStyle(.switch).tint(Theme.accentText)
             .accessibilityLabel("AI features")
+            .interactionTarget("settings-ai-features")
             section("Summaries") {
                 SummarySettingsSection(summaries: model.summaries)
             }
@@ -301,6 +319,7 @@ struct SettingsView: View {
         }
     }
 
+    static let width: CGFloat = sidebarWidth + 16 + columnWidth + 48
     static let sidebarWidth: CGFloat = 168
     static let columnWidth: CGFloat = 392
 

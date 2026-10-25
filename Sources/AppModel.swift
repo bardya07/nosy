@@ -61,14 +61,13 @@ final class AppModel: ObservableObject {
     @Published private(set) var active: SessionRecord?
     @Published private(set) var queue: [SessionRecord] = []
     @Published private(set) var importsInProgress = 0
-    // A transcript the Transcripts window should select when it next appears or updates.
+    // A transcript the Library should select when it next appears or updates.
     @Published var libraryFocus: URL?
     // Summaries run after transcription, one at a time, and never hold up the queue.
     let summaries = SummaryCenter()
-    // Set by any open window so the model can open others (e.g. from a notification).
-    var openWindow: OpenWindowAction?
+    let workspace = WorkspaceNavigation()
     var finishLibraryEditing: (() -> Bool)?
-    // The Transcripts window drops a trashed folder from its tree through this, whichever window trashed it.
+    // The Library drops a trashed folder from its tree through this, wherever it was trashed.
     var onFolderTrashed: ((String, AppPaths) -> Void)?
     var finishOnboardingWork: (() async -> Void)?
 
@@ -717,10 +716,15 @@ final class AppModel: ObservableObject {
         current?.transcriptPath = new?.path
         refreshSavedTranscript()
     }
+    func showHome() {
+        guard finishLibraryEditing?() ?? true else { return }
+        workspace.showHome()
+    }
     func showInLibrary(_ url: URL?) {
         libraryFocus = url
         NSApp.activate(ignoringOtherApps: true)
-        openWindow?(id: "library")
+        workspace.showLibrary()
+        NSApp.windows.first(where: { $0.title == "Nosy" })?.makeKeyAndOrderFront(nil)
     }
     var inputName: String {
         recordingSource.inputName(mic: microphoneName)

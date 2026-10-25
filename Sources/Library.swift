@@ -327,8 +327,6 @@ struct LibraryView: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var summaries: SummaryCenter
     @StateObject private var library = TranscriptLibrary()
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Focus?
     @State private var dropping = false
@@ -375,11 +373,9 @@ struct LibraryView: View {
         .frame(minWidth: 720, minHeight: 460)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackdrop())
-        .safeAreaPadding(.top, 20)
         .tint(Theme.accentText)
         .onExitCommand(perform: closeAndShowMain)
         .onAppear {
-            model.openWindow = openWindow
             if previewDropping { dropping = true }
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
             model.finishLibraryEditing = { [weak library = library] in library?.finishEditing() ?? true }
@@ -393,6 +389,7 @@ struct LibraryView: View {
             loadSummary()
             if previewSummary, summaryText != nil { showSummary = true }
         }
+        .onReceive(model.workspace.$mode) { if $0 != .library { audioPlayer.stop() } }
         .onChange(of: library.selection) { loadSummary(); showSummary = previewSummary && summaryText != nil }
         .onReceive(model.summaries.$revision.dropFirst()) { _ in
             loadSummary()
@@ -481,30 +478,12 @@ struct LibraryView: View {
         library.open(url, paths: libraryPaths)
         model.libraryFocus = nil
     }
-    private func closeAndShowMain() {
-        guard library.finishEditing() else { return }
-        dismiss()
-        openWindow(id: "main")
-        DispatchQueue.main.async {
-            NSApp.activate(ignoringOtherApps: true)
-            NSApp.windows.first(where: { $0.title == "Nosy" })?.makeKeyAndOrderFront(nil)
-        }
-    }
+    private func closeAndShowMain() { model.showHome() }
 
     // MARK: Sidebar
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Button(action: closeAndShowMain) {
-                HStack(spacing: 7) {
-                    Image(systemName: "house.fill").font(.system(size: 12, weight: .semibold))
-                    Text("Nosy")
-                }
-            }
-            .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
-            .keyboardShortcut("w", modifiers: .command)
-            .accessibilityLabel("Close Transcripts and return to Nosy")
-
             HStack(spacing: 10) {
                 NosyMark(size: 32)
                 VStack(alignment: .leading, spacing: 2) {
@@ -709,7 +688,7 @@ struct LibraryView: View {
                     SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: summaryText != nil,
                                showSummary: $showSummary, paths: model.paths, aiMarkerCount: aiMarkers.count,
                                keyMoments: readerKeyMoments, requested: { requestedSummary = item.url },
-                               selectMoment: selectMoment)
+                               selectMoment: selectMoment, openSettings: { model.workspace.showSettings(pane: .summaries) })
                     Rectangle().fill(Theme.line).frame(height: 1)
                 }
                 if editing {
@@ -1013,7 +992,6 @@ struct RecentView: View {
     var compact = false
     var onHome: () -> Void = {}
     @StateObject private var library = TranscriptLibrary()
-    @Environment(\.openWindow) private var openWindow
 
     init(model: AppModel, selection: Binding<URL?>, showingAudio: Binding<Bool>,
          compact: Bool = false, onHome: @escaping () -> Void = {}) {
@@ -1057,7 +1035,7 @@ struct RecentView: View {
             HStack {
                 Text("Recent").font(Theme.label).foregroundStyle(Theme.muted)
                 Spacer()
-                Button("See all") { openWindow(id: "library") }
+                Button("See all") { model.showInLibrary(nil) }
                     .buttonStyle(LinkButtonStyle(tint: Theme.navy))
                     .tip("Open transcripts")
             }

@@ -68,25 +68,3 @@ struct LocalModelCard: View {
     }
     private var isError: Bool { if case .error = state { return true }; return removalError != nil }
 }
-
-// Open the Summaries pane directly, sharing the live SummaryCenter and the normal Settings view.
-// Kept here so this feature does not change the app's General or connector settings implementation.
-@MainActor
-enum SummarySettingsWindow {
-    private static var window: NSWindow?
-    static func open() {
-        if let window {
-            window.contentViewController = NSHostingController(rootView: SettingsView(model: AppModel.shared, pane: .summaries))
-            window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return
-        }
-        let controller = NSHostingController(rootView: SettingsView(model: AppModel.shared, pane: .summaries))
-        let panel = NSWindow(contentViewController: controller)
-        panel.title = "Settings"
-        panel.styleMask = [.titled, .closable, .miniaturizable]
-        panel.isReleasedWhenClosed = false
-        panel.center()
-        window = panel
-        panel.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-}
