@@ -7,6 +7,7 @@ struct SettingsView: View {
     @AppStorage(ReminderInterval.storageKey) private var reminderMinutes = ReminderInterval.defaultMinutes
     @AppStorage(LectureFolderTrash.askKey) private var askBeforeDeleting = true
     @AppStorage("compressAudio") private var compressAudio = true
+    @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
     @State private var customReminder = false
     @State private var connection: ClaudeConnector.Status = .notAdded
     @State private var desktop = ClaudeDesktopApp.Status(installed: false, running: false)
@@ -188,8 +189,25 @@ struct SettingsView: View {
     }
 
     private var summariesPane: some View {
-        section("Summaries") {
-            SummarySettingsSection(summaries: model.summaries)
+        VStack(alignment: .leading, spacing: 14) {
+            Toggle(isOn: $aiFeaturesEnabled) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("AI features").font(Theme.text(13, .semibold)).foregroundStyle(Theme.ink)
+                    Text("Summaries and key moments. Off keeps everything on this Mac.")
+                        .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .toggleStyle(.switch).tint(Theme.accentText)
+            .accessibilityLabel("AI features")
+            section("Summaries") {
+                SummarySettingsSection(summaries: model.summaries)
+            }
+            .disabled(!aiFeaturesEnabled)
+            .opacity(aiFeaturesEnabled ? 1 : 0.45)
+        }
+        .onChange(of: aiFeaturesEnabled) { _, enabled in
+            model.summaries.aiFeaturesChanged(enabled)
         }
     }
 

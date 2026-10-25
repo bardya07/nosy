@@ -835,10 +835,11 @@ final class SummaryCenter: ObservableObject {
     // Called when a transcript saves; only runs when the student chose automatic summaries.
     func transcriptSaved(_ transcript: URL) {
         let settings = SummarySettings.load(defaults)
-        guard settings.automatic, settings.provider != .off else { return }
+        guard AIFeatures.enabled(defaults), settings.automatic, settings.provider != .off else { return }
         summarize(transcript)
     }
     func summarize(_ transcript: URL) {
+        guard AIFeatures.enabled(defaults) else { return }
         let key = transcript.standardizedFileURL.path
         guard status[key] == nil else { return }
         errors[key] = nil
@@ -849,6 +850,7 @@ final class SummaryCenter: ObservableObject {
     }
     // Explicit only: the reader's Find key moments button. Waits behind a running summary.
     func findMoments(_ transcript: URL, paths: AppPaths) {
+        guard AIFeatures.enabled(defaults) else { return }
         let key = transcript.standardizedFileURL.path
         guard moments[key] == nil else { return }
         momentNotes[key] = nil
@@ -883,6 +885,9 @@ final class SummaryCenter: ObservableObject {
         job?.cancel()
         worker?.cancel()
     }
+    func aiFeaturesChanged(_ enabled: Bool) {
+        if !enabled { cancelAll() }
+    }
     func shutdown() async {
         cancelAll()
         await worker?.value
@@ -891,6 +896,13 @@ final class SummaryCenter: ObservableObject {
 
     private func pump() {
         guard worker == nil else { return }
+        guard AIFeatures.enabled(defaults) else {
+            for transcript in queue { status[transcript.standardizedFileURL.path] = nil }
+            queue.removeAll()
+            for item in momentQueue { moments[item.transcript.standardizedFileURL.path] = nil }
+            momentQueue.removeAll()
+            return
+        }
         if !queue.isEmpty {
             let transcript = queue.removeFirst()
             let key = transcript.standardizedFileURL.path
@@ -929,10 +941,12 @@ final class SummaryCenter: ObservableObject {
     }
 
     private func run(_ transcript: URL, key: String, job: TranscriptionJob) async throws {
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         let settings = SummarySettings.load(defaults)
         guard settings.provider != .off else { throw SummaryError.off }
         let pauseState = LlamaPauseState()
         let request = try await providerRequest(settings, pauseState: pauseState)
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         let markdown = try await Task.detached(priority: .utility) { try String(contentsOf: transcript, encoding: .utf8) }.value
         guard Core.wordCount(markdown) > 0 else { throw LectureError.message("This transcript has no speech to summarize.") }
         let provider = settings.provider
@@ -953,16 +967,19 @@ final class SummaryCenter: ObservableObject {
             }, cacheRoot: localModels.root)
         let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
         try Task.checkCancellation()
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         try await Task.detached(priority: .utility) { try SummaryFiles.save(document, for: transcript, expectedText: markdown) }.value
         revision += 1
     }
 
     // Find key moments: the same provider and pause rules as summaries, one model call per chunk.
     private func runMoments(_ transcript: URL, paths: AppPaths, key: String, job: TranscriptionJob) async throws {
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         let settings = SummarySettings.load(defaults)
         guard settings.provider != .off else { throw SummaryError.off }
         let pauseState = LlamaPauseState()
         var request = try await providerRequest(settings, pauseState: pauseState)
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         request.outputTokens = KeyMoments.outputTokens
         let finalRequest = request
         let provider = settings.provider
@@ -979,6 +996,7 @@ final class SummaryCenter: ObservableObject {
             },
             complete: { prompt in try await SummaryRunner.run(prompt, request: finalRequest, job: job) })
         try Task.checkCancellation()
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         try await Task.detached(priority: .utility) { try KeyMomentStore.replace(markers, transcript: transcript, paths: paths) }.value
         momentNotes[key] = markers.isEmpty ? Note(text: "No clear key moments found.", failed: false) : nil
         revision += 1
@@ -1057,7 +1075,9 @@ final class SummaryCenter: ObservableObject {
 
     // Respects the same back-off as transcription: wait while the Mac is hot or the battery is low.
     private func waitUntilReady(_ provider: SummaryProvider, lane: Lane, key: String) async throws {
+        guard AIFeatures.enabled(defaults) else { throw CancellationError() }
         while let reason = (provider.builtInModel == nil ? nil : localWaitReason()) ?? waitReason(provider) {
+            guard AIFeatures.enabled(defaults) else { throw CancellationError() }
             setPhase(lane, key, .waiting(reason))
             try await Task.sleep(for: .seconds(15))
         }

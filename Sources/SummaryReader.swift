@@ -1,6 +1,40 @@
 import SwiftUI
 import AppKit
 
+struct ReaderKeyMoment: Identifiable, Equatable {
+    enum Source: Equatable { case ai, user }
+    let id: String
+    let target: String
+    let time: TimeInterval
+    let label: String
+    let source: Source
+}
+
+private struct ReaderHoverLift: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var hovering = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: hovering && !reduceMotion ? -1 : 0)
+            .shadow(color: Theme.accent.opacity(hovering && !reduceMotion ? 0.12 : 0), radius: 5, y: 3)
+            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+    }
+}
+
+struct ReaderPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
+            .animation(Motion.press, value: configuration.isPressed)
+    }
+}
+
+extension View {
+    func readerHoverLift() -> some View { modifier(ReaderHoverLift()) }
+}
+
 // The strip under the reader header: Transcript | Summary, the two AI tools (Find key moments and
 // Summarize), and their progress. Both run one local pass at a time, so the bar shows whichever is active.
 struct SummaryBar: View {
@@ -10,8 +44,13 @@ struct SummaryBar: View {
     @Binding var showSummary: Bool
     var paths = AppPaths()
     var aiMarkerCount = 0
+    var keyMoments: [ReaderKeyMoment] = []
     var requested: () -> Void = {}
+    var selectMoment: (ReaderKeyMoment) -> Void = { _ in }
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
+    @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
+    @Namespace private var toggleAnimation
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var provider: SummaryProvider { SummaryProvider(rawValue: providerRaw) ?? .off }
     private var status: SummaryCenter.Status? { summaries.status(for: transcript) }
@@ -20,12 +59,18 @@ struct SummaryBar: View {
     private var cloudName: String { provider.title.replacingOccurrences(of: " API key", with: "") }
 
     var body: some View {
-        // Full labels when the reader has room. Narrower readers keep the same actions as icons, each with its tip.
-        ViewThatFits(in: .horizontal) {
-            bar(compact: false)
-            bar(compact: true)
+        VStack(spacing: 0) {
+            // Full labels when the reader has room. Narrower readers keep the same actions as icons, each with its tip.
+            ViewThatFits(in: .horizontal) {
+                bar(compact: false)
+                bar(compact: true)
+            }
+            .padding(.horizontal, 22).padding(.vertical, 8)
+            if !keyMoments.isEmpty {
+                keyMomentStrip
+                    .padding(.horizontal, 22).padding(.bottom, 8)
+            }
         }
-        .padding(.horizontal, 22).padding(.vertical, 8)
     }
 
     private func bar(compact: Bool) -> some View {
@@ -33,32 +78,72 @@ struct SummaryBar: View {
             if hasSummary {
                 HStack(spacing: 2) {
                     Button { showSummary = false } label: { Text("Transcript") }
-                        .buttonStyle(ReaderToggleStyle(selected: !showSummary))
+                        .buttonStyle(ReaderToggleStyle(selected: !showSummary, namespace: toggleAnimation))
+                        .readerHoverLift()
                         .tip("Read transcript")
                     Button { showSummary = true } label: { Text("Summary") }
-                        .buttonStyle(ReaderToggleStyle(selected: showSummary))
+                        .buttonStyle(ReaderToggleStyle(selected: showSummary, namespace: toggleAnimation))
+                        .readerHoverLift()
                         .tip("Read summary")
                 }
                 .padding(2).background(Theme.surface.opacity(0.68), in: Capsule())
                 .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                .animation(.spring(response: 0.32, dampingFraction: 0.78), value: showSummary)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Show transcript or summary")
             } else if status == nil, moments == nil, summaries.error(for: transcript) == nil, note == nil {
                 Text("No summary yet").font(Theme.text(11.5)).foregroundStyle(Theme.muted)
             }
-            statusText
-            Spacer(minLength: 0)
-            if aiMarkerCount > 0, moments == nil {
-                Button(action: removeAIMarkers) {
-                    Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
+            if aiFeaturesEnabled {
+                statusText
+                Spacer(minLength: 0)
+                if aiMarkerCount > 0, moments == nil {
+                    Button(action: removeAIMarkers) {
+                        Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
+                    }
+                    .buttonStyle(IconButtonStyle(size: 28))
+                    .readerHoverLift()
+                    .tip("Remove AI markers")
+                    .accessibilityLabel("Remove AI markers")
                 }
-                .buttonStyle(IconButtonStyle(size: 28))
-                .tip("Remove AI markers")
-                .accessibilityLabel("Remove AI markers")
+                findButton(compact: compact)
+                    .animation(Motion.state(reduceMotion), value: moments != nil)
+                summarizeButton(compact: compact)
+                    .animation(Motion.state(reduceMotion), value: status != nil)
             }
-            findButton(compact: compact)
-            summarizeButton(compact: compact)
         }
+    }
+
+    private var keyMomentStrip: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 7) {
+                ForEach(keyMoments) { moment in
+                    Button { selectMoment(moment) } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: moment.source == .ai ? "sparkles" : "bookmark.fill")
+                                .font(.system(size: 9, weight: .semibold))
+                                .accessibilityHidden(true)
+                            Text(Core.timer(moment.time)).monospacedDigit()
+                            Text(moment.label).lineLimit(1)
+                        }
+                        .font(Theme.text(10.5, .medium))
+                        .foregroundStyle(moment.source == .ai ? Theme.muted : Theme.accentText)
+                        .padding(.horizontal, 10).frame(height: 26)
+                        .background(Theme.raised, in: Capsule())
+                        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                        .contentShape(Capsule())
+                    }
+                    .buttonStyle(ReaderPressStyle())
+                    .readerHoverLift()
+                    .tip("Seek to \(Core.timer(moment.time))")
+                    .accessibilityLabel("\(moment.source == .ai ? "AI key moment" : "Bookmark") at \(Core.timer(moment.time)): \(moment.label)")
+                }
+            }
+        }
+        .scrollIndicators(.hidden)
+        .scrollBounceBehavior(.basedOnSize)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Key moments")
     }
 
     @ViewBuilder private var statusText: some View {
@@ -95,8 +180,16 @@ struct SummaryBar: View {
 
     @ViewBuilder private func findButton(compact: Bool) -> some View {
         if moments != nil {
-            Button("Cancel") { summaries.cancelMoments(transcript) }
+            Button { summaries.cancelMoments(transcript) } label: {
+                HStack(spacing: 6) {
+                    ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                    if !compact { Text("Finding moments") }
+                    else { Text("Cancel") }
+                }
+            }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
+                .readerHoverLift()
                 .tip("Stop finding key moments")
                 .accessibilityLabel("Cancel finding key moments")
         } else {
@@ -107,6 +200,7 @@ struct SummaryBar: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
+            .readerHoverLift()
             .tip(findTip)
             .accessibilityLabel("Find key moments")
         }
@@ -116,13 +210,16 @@ struct SummaryBar: View {
             HStack(spacing: 6) {
                 if status != nil {
                     ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 } else {
                     Image(systemName: hasSummary ? "arrow.clockwise" : "sparkles").font(.system(size: 11, weight: .semibold))
+                        .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 }
                 if !compact { Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize")) }
             }
         }
         .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
+        .readerHoverLift()
         .disabled(status != nil)
         .tip(buttonTip)
         .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
@@ -175,10 +272,14 @@ struct SummaryBar: View {
 
 struct ReaderToggleStyle: ButtonStyle {
     let selected: Bool
-    func makeBody(configuration: Configuration) -> some View { ToggleBody(configuration: configuration, selected: selected) }
+    let namespace: Namespace.ID
+    func makeBody(configuration: Configuration) -> some View {
+        ToggleBody(configuration: configuration, selected: selected, namespace: namespace)
+    }
     private struct ToggleBody: View {
         let configuration: ButtonStyleConfiguration
         let selected: Bool
+        let namespace: Namespace.ID
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -188,7 +289,13 @@ struct ReaderToggleStyle: ButtonStyle {
                 .font(Theme.text(11.5, .medium))
                 .foregroundStyle(selected ? Theme.ink : Theme.muted)
                 .padding(.horizontal, 11).frame(height: 24)
-                .background(selected ? Theme.raised : (hovering && enabled ? Theme.surface : .clear), in: Capsule())
+                .background {
+                    if selected {
+                        Capsule().fill(Theme.raised).matchedGeometryEffect(id: "reader-toggle", in: namespace)
+                    } else {
+                        Capsule().fill(hovering && enabled ? Theme.surface : .clear)
+                    }
+                }
                 .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
                 .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.42)
