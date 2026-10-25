@@ -8,7 +8,7 @@ enum LibraryTests {
     static func main() {
         do {
             try run()
-            print("LIBRARY TESTS PASS: folder tree, search, remembered folders, no-speech reader")
+            print("LIBRARY TESTS PASS: onboarding steps, folder tree and Trash, search, remembered folders, no-speech reader")
         } catch {
             FileHandle.standardError.write(Data("LIBRARY TEST FAILED: \(error)\n".utf8))
             exit(1)
@@ -23,6 +23,9 @@ enum LibraryTests {
     }
 
     static func run() throws {
+        check(OnboardingModel.Step.allCases.count == 4 && OnboardingModel.Step.allCases.last == .engine,
+              "onboarding has four steps and the speech engine is last")
+
         // Folder state on its own.
         var folders = TranscriptFolders()
         check(!folders.isOpen("A", searching: false), "folders start closed")
@@ -197,6 +200,44 @@ enum LibraryTests {
         check(SummaryFiles.existing(for: renamed) != nil && !FileManager.default.fileExists(atPath: SummaryFiles.url(for: newest).path), "rename carries the matching summary")
         let preservedNote = try String(contentsOf: unrelatedSummary, encoding: .utf8)
         check(preservedNote == "Owner note", "rename never overwrites a colliding summary name")
+
+        // Folder deletion moves only a folder inside the selected library and refreshes selection.
+        let trashLibraryRoot = root.appendingPathComponent("trash-library", isDirectory: true)
+        let testTrash = root.appendingPathComponent("test-trash", isDirectory: true)
+        let removeFolder = trashLibraryRoot.appendingPathComponent("Remove", isDirectory: true)
+        let keepFolder = trashLibraryRoot.appendingPathComponent("Keep", isDirectory: true)
+        try FileManager.default.createDirectory(at: removeFolder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: keepFolder, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: testTrash, withIntermediateDirectories: true)
+        let removedTranscript = removeFolder.appendingPathComponent("2026-10-24.md")
+        let keptTranscript = keepFolder.appendingPathComponent("2026-10-23.md")
+        try "# Remove\n\n- Date: 2026-10-24\n- Length: 1 min\n\n## Transcript\n\nRemove me.\n"
+            .write(to: removedTranscript, atomically: true, encoding: .utf8)
+        try "# Keep\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nKeep me.\n"
+            .write(to: keptTranscript, atomically: true, encoding: .utf8)
+        let trashPaths = paths.browsingLibrary(at: trashLibraryRoot)
+        let trashLibrary = TranscriptLibrary()
+        trashLibrary.reload(paths: trashPaths)
+        check(trashLibrary.select(removedTranscript), "folder Trash fixture selects the folder being removed")
+        let movedFolder = testTrash.appendingPathComponent("Remove", isDirectory: true)
+        check(trashLibrary.trashFolder("Remove", paths: trashPaths) { folder in
+            try FileManager.default.moveItem(at: folder, to: movedFolder)
+        }, "a folder inside the selected library can move to Trash")
+        check(!FileManager.default.fileExists(atPath: removeFolder.path)
+              && FileManager.default.fileExists(atPath: movedFolder.appendingPathComponent("2026-10-24.md").path)
+              && FileManager.default.fileExists(atPath: keepFolder.path), "only the requested folder and its transcript moved")
+        check(trashLibrary.grouped.map(\.lecture) == ["Keep"] && trashLibrary.selection == keptTranscript
+              && trashLibrary.selectedFolder == "Keep", "folder removal refreshes the tree and selects a remaining transcript")
+
+        let outsideFolder = root.appendingPathComponent("outside-library", isDirectory: true)
+        try FileManager.default.createDirectory(at: outsideFolder, withIntermediateDirectories: true)
+        var outsideMoveCalled = false
+        var refusedOutsideFolder = false
+        do {
+            try TranscriptLibrary.moveFolderToTrash(outsideFolder, in: trashLibraryRoot) { _ in outsideMoveCalled = true }
+        } catch { refusedOutsideFolder = true }
+        check(refusedOutsideFolder && !outsideMoveCalled && FileManager.default.fileExists(atPath: outsideFolder.path),
+              "folder Trash refuses paths outside the selected library")
     }
 
     static func require<T>(_ value: T?, _ what: String) throws -> T {
