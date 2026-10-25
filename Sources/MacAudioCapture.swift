@@ -76,6 +76,7 @@ final class MacAudioCapture: SystemAudioCapturing {
                 ]]
             ]
             try Self.check(AudioHardwareCreateAggregateDevice(composition as CFDictionary, &aggregate), "create the tap aggregate")
+            let frameBytes = asbd.mBytesPerFrame
             try Self.check(AudioDeviceCreateIOProcIDWithBlock(&ioProc, aggregate, nil) { _, input, inputTime, _, _ in
                 let time = inputTime.pointee
                 let host = time.mFlags.contains(.hostTimeValid)
@@ -83,8 +84,11 @@ final class MacAudioCapture: SystemAudioCapturing {
                 // nil/empty buffers are legitimate when all tapped apps are idle.
                 let buffers = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: input))
                 let expected = format.isInterleaved ? 1 : Int(format.channelCount)
+                let channels = format.isInterleaved ? format.channelCount : 1
                 guard buffers.count == expected,
-                      buffers.allSatisfy({ $0.mData != nil && $0.mDataByteSize > 0 }) else {
+                      frameBytes > 0,
+                      buffers.allSatisfy({ $0.mData != nil && $0.mDataByteSize > 0 && $0.mNumberChannels == channels
+                          && $0.mDataByteSize % frameBytes == 0 && $0.mDataByteSize == buffers[0].mDataByteSize }) else {
                     receive(nil, host); return
                 }
                 let buffer = AVAudioPCMBuffer(pcmFormat: format, bufferListNoCopy: input, deallocator: nil)

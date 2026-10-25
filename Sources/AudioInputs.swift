@@ -2,6 +2,9 @@ import AVFoundation
 import AudioToolbox
 import CoreAudio
 import Foundation
+#if canImport(NosyAudioBridge)
+import NosyAudioBridge
+#endif
 
 enum AudioInputs {
     struct Device: Identifiable, Hashable, Sendable {
@@ -33,7 +36,7 @@ enum AudioInputs {
     }
 
     static func current(on engine: AVAudioEngine) -> Device? {
-        guard let unit = engine.inputNode.audioUnit else { return nil }
+        guard let input = try? inputNode(on: engine), let unit = input.audioUnit else { return nil }
         var id = AudioDeviceID(kAudioObjectUnknown)
         var size = UInt32(MemoryLayout<AudioDeviceID>.size)
         guard AudioUnitGetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
@@ -64,7 +67,7 @@ enum AudioInputs {
     }
 
     private static func setDevice(_ id: AudioDeviceID, on engine: AVAudioEngine) throws {
-        guard let unit = engine.inputNode.audioUnit else {
+        guard let unit = try inputNode(on: engine).audioUnit else {
             throw LectureError.message("The microphone audio unit is unavailable.")
         }
         var current = AudioDeviceID(kAudioObjectUnknown)
@@ -79,6 +82,15 @@ enum AudioInputs {
             throw NSError(domain: NSOSStatusErrorDomain, code: Int(status),
                           userInfo: [NSLocalizedDescriptionKey: "Could not select the microphone (CoreAudio error \(status))."])
         }
+    }
+    private static func inputNode(on engine: AVAudioEngine) throws -> AVAudioInputNode {
+        #if canImport(NosyAudioBridge)
+        var error: NSError?
+        if let input = NosyAudioInput(engine, &error) { return input }
+        throw error ?? LectureError.message("The microphone is unavailable.")
+        #else
+        throw LectureError.message("Nosy's audio support is missing. Reinstall Nosy, then try again.")
+        #endif
     }
 
     private static func address(_ selector: AudioObjectPropertySelector,

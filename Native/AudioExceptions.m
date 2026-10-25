@@ -9,6 +9,10 @@ NSArray<AVAudioFormat *> *NosyAudioFormats(AVAudioEngine *engine, NSError **erro
     @try { return @[[engine.inputNode outputFormatForBus:0], [engine.inputNode inputFormatForBus:0]]; }
     @catch (NSException *exception) { AudioError(exception, error); return nil; }
 }
+AVAudioInputNode *NosyAudioInput(AVAudioEngine *engine, NSError **error) {
+    @try { return engine.inputNode; }
+    @catch (NSException *exception) { AudioError(exception, error); return nil; }
+}
 BOOL NosyAudioStart(AVAudioEngine *engine, AVAudioFormat *format, AVAudioNodeTapBlock block, NSError **error) {
     @try {
         [engine.inputNode removeTapOnBus:0];
