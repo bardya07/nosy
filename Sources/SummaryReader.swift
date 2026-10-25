@@ -45,7 +45,7 @@ struct SummaryBar: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
-            .allowsHitTesting(status == nil)
+            .disabled(status != nil)
             .tip(buttonTip)
             .accessibilityLabel(hasSummary ? "Summarize again" : "Summarize")
         }

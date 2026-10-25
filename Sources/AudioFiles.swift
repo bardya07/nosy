@@ -33,13 +33,16 @@ enum AudioImport {
 
 enum AudioFiles {
     static func importRecording(from source: URL, lecture: String, session: String, paths: AppPaths) throws -> SessionRecord {
+        try Task.checkCancellation()
         let lecture = try Core.sanitize(lecture)
         let session = try Core.sanitize(session)
+        try paths.validateLectureFolder(lecture)
         try paths.prepareSupport()
         try FileManager.default.createDirectory(at: paths.lectureFolder(lecture), withIntermediateDirectories: true)
         let id = Core.newID(in: paths)
         do {
             let wav = try decode(source: source, id: id, paths: paths)
+            try Task.checkCancellation()
             let startedAt = (try? source.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date()
             let duration = Core.duration(pcmBytes: max(0, Core.fileSize(wav) - 44))
             let record = SessionRecord(id: id, lecture: lecture, session: session, startedAt: startedAt,
@@ -57,10 +60,12 @@ enum AudioFiles {
         let m4a = paths.audioFile(id, "m4a")
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).m4a")
         defer { try? FileManager.default.removeItem(at: temporary) }
+        var expectedDuration = 0.0
         // Scope both files so the encoder is closed (including its final AAC packet and
         // container metadata) before verifying or publishing the result.
         try autoreleasepool {
             let input = try AVAudioFile(forReading: wav)
+            expectedDuration = Double(input.length) / input.processingFormat.sampleRate
             guard input.length > 0,
                   let buffer = AVAudioPCMBuffer(pcmFormat: input.processingFormat, frameCapacity: 8192) else {
                 throw LectureError.message("Recorded audio is empty or unreadable.")
@@ -80,12 +85,18 @@ enum AudioFiles {
         }
         let verified = try AVAudioFile(forReading: temporary)
         guard verified.length > 0, verified.processingFormat.sampleRate > 0,
+              abs(Double(verified.length) / verified.processingFormat.sampleRate - expectedDuration) <= 0.1,
               let probe = AVAudioPCMBuffer(pcmFormat: verified.processingFormat, frameCapacity: 1024) else {
             throw LectureError.message("Compressed audio could not be verified; the WAV is kept.")
         }
         try verified.read(into: probe)
         guard probe.frameLength > 0 else {
             throw LectureError.message("Compressed audio could not be read; the WAV is kept.")
+        }
+        verified.framePosition = max(0, verified.length - 1024)
+        try verified.read(into: probe)
+        guard probe.frameLength > 0 else {
+            throw LectureError.message("The end of the compressed audio could not be read; the WAV is kept.")
         }
         if #available(macOS 15, *) { verified.close() }
         let durable = try FileHandle(forReadingFrom: temporary)
@@ -191,6 +202,7 @@ enum AudioFiles {
         }
         var readError: Error?
         while true {
+            try Task.checkCancellation()
             var conversionError: NSError?
             let status = converter.convert(to: output, error: &conversionError) { requested, inputStatus in
                 guard audio.framePosition < audio.length else {
@@ -241,6 +253,7 @@ enum AudioFiles {
         guard reader.startReading() else { throw reader.error ?? LectureError.message("Could not read the audio track.") }
         defer { reader.cancelReading() }
         while try autoreleasepool(invoking: { () throws -> Bool in
+            try Task.checkCancellation()
             guard let sample = output.copyNextSampleBuffer() else { return false }
             guard let block = CMSampleBufferGetDataBuffer(sample) else {
                 throw LectureError.message("Could not decode audio samples.")

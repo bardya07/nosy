@@ -90,7 +90,7 @@ final class TranscriptLibrary: ObservableObject {
     func cancelEdit() { editing = false; editingItem = nil; editingPaths = nil }
     @discardableResult func saveDraft() -> Bool {
         guard let item = editingItem, let paths = editingPaths,
-              save(draft, to: item.url, paths: paths) else { return false }
+              save(draft, to: item.url, paths: paths, expectedText: item.text) else { return false }
         cancelEdit()
         return true
     }
@@ -129,12 +129,14 @@ final class TranscriptLibrary: ObservableObject {
         // Transcripts Nosy wrote stay listed even if their header was edited away.
         let written = Set(Core.records(in: paths).compactMap(\.transcriptPath).map { URL(fileURLWithPath: $0).standardizedFileURL.path })
         items = lectures.flatMap { folder -> [TranscriptItem] in
-            guard (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
+            guard Core.isContained(folder, in: root),
+                  (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
             let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [])) ?? []
             let markdown = files.filter { $0.pathExtension.lowercased() == "md" }
             // A summary sits next to its transcript; it is read from the transcript, not listed.
             let names = Set(markdown.map(\.lastPathComponent))
-            return markdown.filter { !SummaryFiles.isSummary($0, siblings: names) }.compactMap { url in
+            return markdown.filter { Core.isContained($0, in: root)
+                && (written.contains($0.standardizedFileURL.path) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
                 // Only files Nosy wrote: never the owner's other notes that share the folder.
                 guard let text = try? String(contentsOf: url, encoding: .utf8),
                       Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) else { return nil }
@@ -204,12 +206,12 @@ final class TranscriptLibrary: ObservableObject {
 
     // Moves a transcript to the Trash (recoverable) and selects its neighbour.
     func trash(_ url: URL, paths: AppPaths) {
-        guard finishEditing() else { return }
+        guard items.contains(where: { $0.url == url }), Core.isContained(url, in: paths.transcripts), finishEditing() else { return }
         let list = ordered
         let index = list.firstIndex(where: { $0.url == url })
         do {
+            if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-            if let summary = SummaryFiles.existing(for: url) { try? FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -238,27 +240,40 @@ final class TranscriptLibrary: ObservableObject {
         do {
             let name = try Core.sanitize(field.stringValue)
             guard name != item.session else { return }
-            let target = Core.uniqueTranscript(in: item.url.deletingLastPathComponent(), session: name)
-            // Find the sidecar before moving, while it still matches the old path.
-            let record = Core.record(forTranscript: item.url, paths: paths)
-            let summary = SummaryFiles.existing(for: item.url)
-            try FileManager.default.moveItem(at: item.url, to: target)
-            if let summary { try? FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
-            // Keep the recording's sidecar pointing at the transcript so playback still finds its audio.
-            if var record {
-                record.transcriptPath = target.path
-                try? record.save(in: paths)
-            }
-            didChange?(item.url, target)
-            setSelection(target)
-            reload(paths: paths)
+            try rename(item, to: name, paths: paths)
         } catch {
             NSAlert(error: error).runModal()
         }
     }
-    @discardableResult func save(_ text: String, to url: URL, paths: AppPaths) -> Bool {
+    func rename(_ item: TranscriptItem, to name: String, paths: AppPaths) throws {
+        guard items.contains(item), Core.isContained(item.url, in: paths.transcripts) else {
+            throw LectureError.message("This transcript is outside the selected library.")
+        }
+        let target = Core.uniqueTranscript(in: item.url.deletingLastPathComponent(), session: try Core.sanitize(name))
+        let record = Core.record(forTranscript: item.url, paths: paths)
+        let summary = SummaryFiles.existing(for: item.url)
+        try FileManager.default.moveItem(at: item.url, to: target)
         do {
-            try Data(text.utf8).write(to: url, options: .atomic)
+            if let summary { try FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
+            if var record { record.transcriptPath = target.path; try record.save(in: paths) }
+        } catch {
+            if let summary, FileManager.default.fileExists(atPath: SummaryFiles.url(for: target).path) {
+                try? FileManager.default.moveItem(at: SummaryFiles.url(for: target), to: summary)
+            }
+            try? FileManager.default.moveItem(at: target, to: item.url)
+            throw error
+        }
+        didChange?(item.url, target)
+        reload(paths: paths)
+        setSelection(target)
+    }
+    @discardableResult func save(_ text: String, to url: URL, paths: AppPaths, expectedText: String? = nil) -> Bool {
+        do {
+            guard Core.isContained(url, in: paths.transcripts) else { throw LectureError.message("This transcript is outside the selected library.") }
+            guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
+                throw LectureError.message("Reload this transcript before editing it.")
+            }
+            try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             didChange?(url, url)
             reload(paths: paths)
             return true
@@ -271,6 +286,7 @@ final class TranscriptLibrary: ObservableObject {
 
 struct LibraryView: View {
     @ObservedObject var model: AppModel
+    @ObservedObject private var summaries: SummaryCenter
     @StateObject private var library = TranscriptLibrary()
     @Environment(\.openWindow) private var openWindow
     @Environment(\.dismiss) private var dismiss
@@ -282,6 +298,8 @@ struct LibraryView: View {
     @State private var showSummary = false
     @State private var summaryText: String?
     @State private var requestedSummary: URL?
+    @State private var browsingRoot: URL?
+    private var libraryPaths: AppPaths { model.paths.browsingLibrary(at: browsingRoot ?? model.paths.transcripts) }
     var previewQuery: String?
     var previewCollapsed: Bool
     var previewSummary: Bool
@@ -292,6 +310,7 @@ struct LibraryView: View {
 
     init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false, previewDropping: Bool = false) {
         self.model = model
+        _summaries = ObservedObject(wrappedValue: model.summaries)
         self.previewQuery = previewQuery
         self.previewCollapsed = previewCollapsed
         self.previewSummary = previewSummary
@@ -314,7 +333,7 @@ struct LibraryView: View {
             model.openWindow = openWindow
             if previewDropping { dropping = true }
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
-            model.finishLibraryEditing = { [weak library] in library?.finishEditing() ?? true }
+            model.finishLibraryEditing = { [weak library = library] in library?.finishEditing() ?? true }
             library.restoreFolders(from: Snapshot.isRunning ? nil : .standard)
             reload()
             applyFocus()
@@ -331,7 +350,7 @@ struct LibraryView: View {
                 self.requestedSummary = nil
             }
         }
-        .onChange(of: model.paths.transcripts) { reload() }
+        .onChange(of: model.paths.transcripts) { browsingRoot = nil; reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
         .onChange(of: model.active?.id) { reload() }
         .onChange(of: model.libraryFocus) { reload(); applyFocus() }
@@ -346,7 +365,7 @@ struct LibraryView: View {
             if dropping { AudioDropOverlay().padding(10).allowsHitTesting(false) }
         }
     }
-    private func reload() { library.reload(paths: model.paths); loadSummary() }
+    private func reload() { library.reload(paths: libraryPaths); loadSummary() }
     private func loadSummary() {
         summaryText = library.selection.flatMap(SummaryFiles.existing(for:)).flatMap { try? String(contentsOf: $0, encoding: .utf8) }
         if summaryText == nil { showSummary = false }
@@ -354,7 +373,11 @@ struct LibraryView: View {
     private var showingSummary: Bool { showSummary && summaryText != nil && !editing }
     private func applyFocus() {
         guard let url = model.libraryFocus else { return }
-        library.open(url, paths: model.paths)
+        guard library.finishEditing() else { model.libraryFocus = nil; return }
+        if let root = model.libraryLocations.first(where: { Core.isContained(url, in: $0) }) {
+            browsingRoot = root
+        }
+        library.open(url, paths: libraryPaths)
         model.libraryFocus = nil
     }
     private func closeAndShowMain() {
@@ -390,6 +413,7 @@ struct LibraryView: View {
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 4).padding(.top, 6)
+            if model.libraryLocations.count > 1 { libraryLocationMenu }
             Button {
                 model.importRecordingPanel(targetLecture: library.importTargetLecture)
             } label: {
@@ -443,6 +467,30 @@ struct LibraryView: View {
         .frame(width: 250)
         .background(Theme.surface.opacity(0.45))
     }
+    private var libraryLocationMenu: some View {
+        Menu {
+            ForEach(model.libraryLocations, id: \.path) { root in
+                Button {
+                    guard library.finishEditing() else { return }
+                    browsingRoot = root
+                    reload()
+                } label: {
+                    let label = root.path.replacingOccurrences(of: FileManager.default.homeDirectoryForCurrentUser.path, with: "~")
+                    if root == libraryPaths.transcripts { Label(label, systemImage: "checkmark") }
+                    else { Text(label) }
+                }
+            }
+        } label: {
+            HStack {
+                Text(libraryPaths.transcripts.lastPathComponent).lineLimit(1).truncationMode(.middle)
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.down").font(.system(size: 9))
+            }.font(Theme.text(11.5)).foregroundStyle(Theme.ink)
+        }
+        .menuStyle(.button).buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: true)).menuIndicator(.hidden)
+        .accessibilityLabel("Transcript library").accessibilityValue(libraryPaths.transcripts.path)
+        .tip("Browse current and previous libraries")
+    }
 
     @ViewBuilder private var importActivity: some View {
         if model.importsInProgress > 0 {
@@ -485,8 +533,8 @@ struct LibraryView: View {
                         TranscriptSidebarRow(item: item, selected: library.selection == item.url,
                             open: { library.select(item.url); focus = .list },
                             reveal: { NSWorkspace.shared.activateFileViewerSelecting([item.url]) },
-                            rename: { library.rename(item, paths: model.paths) },
-                            trash: { library.trash(item.url, paths: model.paths) })
+                            rename: { library.rename(item, paths: libraryPaths) },
+                            trash: { library.trash(item.url, paths: libraryPaths) }, mutationsLocked: summaries.isBusy(item.url))
                             .id(item.url)
                     }
                 }
@@ -558,12 +606,13 @@ struct LibraryView: View {
                     .textSelection(.enabled)
                 } else {
                     ScrollView {
-                        TranscriptText(markdown: item.text) { range, replacement in
+                        TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url)) { range, replacement in
+                            guard !summaries.isBusy(item.url) else { return }
                             let folder = item.url.deletingLastPathComponent()
                             do {
                                 try Vocabulary.remember(replacement, folder: folder)
                                 let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
-                                _ = library.save(corrected, to: item.url, paths: model.paths)
+                                _ = library.save(corrected, to: item.url, paths: libraryPaths, expectedText: item.text)
                             } catch { NSAlert(error: error).runModal() }
                         }
                         .padding(.horizontal, 30).padding(.vertical, 24)
@@ -609,9 +658,10 @@ struct LibraryView: View {
                     .tip("Save changes")
                     .keyboardShortcut("s", modifiers: .command)
             } else {
-                Button { showSummary = false; library.beginEditing(paths: model.paths) } label: { Image(systemName: "pencil") }
+                Button { showSummary = false; library.beginEditing(paths: libraryPaths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
                     .tip("Edit").accessibilityLabel("Edit transcript")
+                    .disabled(summaries.isBusy(item.url))
                 Button { copy(showingSummary ? summaryText ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
@@ -621,11 +671,12 @@ struct LibraryView: View {
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
                 OpenWithMenu(url: item.url)
-                Button { library.trash(item.url, paths: model.paths) } label: { Image(systemName: "trash") }
+                Button { library.trash(item.url, paths: libraryPaths) } label: { Image(systemName: "trash") }
                     .buttonStyle(IconButtonStyle(size: 32, destructive: true))
                     .keyboardShortcut(focus == .list ? KeyboardShortcut(.delete, modifiers: .command) : nil)
                     .tip("Move to Trash")
                     .accessibilityLabel("Move transcript to Trash")
+                    .disabled(summaries.isBusy(item.url))
             }
         }
         .padding(.horizontal, 22).padding(.vertical, 14)
@@ -637,9 +688,7 @@ struct LibraryView: View {
         let date = Core.dateString(start, format: "MMM d, yyyy")
         let time = Core.dateString(start, format: "HH:mm")
         let duration: TimeInterval
-        if let record, let endedAt = record.endedAt {
-            duration = max(0, endedAt.timeIntervalSince(record.startedAt))
-        } else if let record {
+        if let record, Core.audioDuration(id: record.id, paths: model.paths) > 0 {
             duration = Core.audioDuration(id: record.id, paths: model.paths)
         } else if let line = item.text.components(separatedBy: .newlines).first(where: { $0.hasPrefix("- Length:") }),
                   let minutes = line.dropFirst("- Length:".count).trimmingCharacters(in: .whitespaces).split(separator: " ").first.flatMap({ Double($0) }) {
@@ -753,6 +802,7 @@ private struct TranscriptSidebarRow: View {
     let reveal: () -> Void
     let rename: () -> Void
     let trash: () -> Void
+    var mutationsLocked = false
     @State private var hovering = false
 
     var body: some View {
@@ -785,9 +835,11 @@ private struct TranscriptSidebarRow: View {
         .onHover { hovering = $0 }
         .contextMenu {
             Button("Rename…", action: rename)
+                .disabled(mutationsLocked)
             Button("Show in Finder", action: reveal)
             Divider()
             Button("Move to Trash", role: .destructive, action: trash)
+                .disabled(mutationsLocked)
         }
     }
 }
@@ -1179,6 +1231,7 @@ private struct OpenWithMenu: View {
 // Renders transcript paragraphs and markers; the session title and details live in the header.
 private struct TranscriptText: View {
     let markdown: String
+    var canCorrect = true
     let correct: (NSRange, String) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -1209,7 +1262,7 @@ private struct TranscriptText: View {
                         .foregroundStyle(Theme.muted)
                 case .paragraph(let text):
                     // Replace line breaks one-for-one so selection offsets still address the source.
-                    FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " ")) { range, replacement in
+                    FixWordView(markdown: text.replacingOccurrences(of: "\n", with: " ").replacingOccurrences(of: "\r", with: " "), canCorrect: canCorrect) { range, replacement in
                         if let source = block.sourceRange(range) { correct(source, replacement) }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)

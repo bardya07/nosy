@@ -93,23 +93,52 @@ enum SummaryTests {
         check(document.hasSuffix("## Short notes\n- a\n"), "document keeps the body")
         check(SummaryFiles.clean("```markdown\n## Key terms\n- a\n```") == "## Key terms\n- a", "code fences are removed")
         check(SummaryFiles.clean("  ## Notes  ") == "## Notes", "replies are trimmed")
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-summary-files-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("Week.md")
+        let second = SummaryFiles.url(for: first)
+        let text = "# Course\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nSpeech.\n"
+        try Data(text.utf8).write(to: first)
+        try Data(text.utf8).write(to: second)
+        check(!SummaryFiles.isSummary(second, siblings: ["Week.md", "Week summary.md"]), "a real transcript ending in summary stays visible")
+        check(SummaryFiles.existing(for: first) == nil, "another transcript is never read as a summary")
+        var refused = false
+        do { try SummaryFiles.save(document, for: first, expectedText: text) } catch { refused = true }
+        let preserved = try String(contentsOf: second, encoding: .utf8)
+        check(refused && preserved == text, "summarizing cannot overwrite a transcript")
+        try FileManager.default.removeItem(at: second)
+        try Data("Owner note".utf8).write(to: second)
+        refused = false
+        do { try SummaryFiles.save(document, for: first, expectedText: text) } catch { refused = true }
+        check(refused && SummaryFiles.existing(for: first) == nil, "an unrelated note is neither overwritten nor treated as a summary")
+        try FileManager.default.removeItem(at: second)
+        try SummaryFiles.save(document, for: first, expectedText: text)
+        check(SummaryFiles.existing(for: first) == second, "a generated summary is recognised")
+        try Data((text + "Edited").utf8).write(to: first)
+        refused = false
+        do { try SummaryFiles.save("Replacement", for: first, expectedText: text) } catch { refused = true }
+        check(refused, "a stale summary cannot replace one after an edit")
     }
 
     static func keychain() throws {
         let store = SummaryKeychain(service: "com.bardya.nosy.summaries.tests.\(UUID().uuidString)")
         defer { try? store.delete(account: "anthropic"); try? store.delete(account: "openAI") }
-        check(store.read(account: "anthropic") == nil, "nothing is stored at first")
+        func read(account: String) -> String? {
+            do { return try store.read(account: account) } catch { fatalError("Unexpected Keychain failure: \(error)") }
+        }
+        check(read(account: "anthropic") == nil, "nothing is stored at first")
         try store.save(" sk-test-1234567890 ", account: "anthropic")
-        check(store.read(account: "anthropic") == "sk-test-1234567890", "a saved key reads back trimmed")
+        check(read(account: "anthropic") == "sk-test-1234567890", "a saved key reads back trimmed")
         try store.save("sk-test-replaced-abcd", account: "anthropic")
-        check(store.read(account: "anthropic") == "sk-test-replaced-abcd", "saving again replaces the key")
-        check(store.read(account: "openAI") == nil, "accounts are separate")
+        check(read(account: "anthropic") == "sk-test-replaced-abcd", "saving again replaces the key")
+        check(read(account: "openAI") == nil, "accounts are separate")
         try store.delete(account: "anthropic")
-        check(store.read(account: "anthropic") == nil, "remove deletes the key")
+        check(read(account: "anthropic") == nil, "remove deletes the key")
         try store.delete(account: "anthropic")
         var threw = false
         do { try store.save("   ", account: "openAI") } catch { threw = true }
-        check(threw && store.read(account: "openAI") == nil, "an empty key is refused")
+        check(threw && read(account: "openAI") == nil, "an empty key is refused")
         check(SummaryKeychain.masked("sk-test-replaced-abcd") == "••••••••abcd", "masking shows only the last four")
         check(SummaryKeychain.masked("short") == "••••••••", "short keys show nothing")
     }

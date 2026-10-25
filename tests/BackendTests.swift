@@ -256,6 +256,12 @@ enum BackendTests {
         try old.save(in: rehearsal)
         try Data([0]).write(to: rehearsal.audioFile(old.id, "m4a"))
         try Core.applyRetention(paths: rehearsal, now: now)
+        check(manager.fileExists(atPath: rehearsal.audioFile(old.id, "m4a").path), "retention keeps the only audio when the transcript is missing")
+        let retainedTranscript = root.appendingPathComponent("retained-transcript.md")
+        try Data("Saved transcript".utf8).write(to: retainedTranscript)
+        old.transcriptPath = retainedTranscript.path
+        try old.save(in: rehearsal)
+        try Core.applyRetention(paths: rehearsal, now: now)
         check(!manager.fileExists(atPath: rehearsal.audioFile(old.id, "m4a").path)
               && !manager.fileExists(atPath: rehearsal.audioFile(old.id, "json").path), "retention deletes M4A and sidecar")
         check(manager.fileExists(atPath: rehearsal.audioFile(records[2].id, "m4a").path), "retention preserves unfinished compressed audio")

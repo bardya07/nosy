@@ -218,11 +218,33 @@ enum SummaryFiles {
     static func isSummary(_ url: URL, siblings: Set<String>) -> Bool {
         let name = url.deletingPathExtension().lastPathComponent
         guard url.pathExtension.lowercased() == "md", name.hasSuffix(suffix), name.count > suffix.count else { return false }
-        return siblings.contains(String(name.dropLast(suffix.count)) + ".md")
+        return siblings.contains(String(name.dropLast(suffix.count)) + ".md") && !Core.isTranscript(at: url)
     }
     static func existing(for transcript: URL) -> URL? {
         let url = url(for: transcript)
-        return FileManager.default.fileExists(atPath: url.path) ? url : nil
+        return isOwnedSummary(url) ? url : nil
+    }
+    static func isOwnedSummary(_ url: URL) -> Bool {
+        guard (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true,
+              let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        let header = String(decoding: (try? handle.read(upToCount: 4096)) ?? Data(), as: UTF8.self)
+        return header.hasPrefix("# ") && header.contains("\n\n_Summarized with ") && !Core.isTranscript(header)
+    }
+    static func save(_ document: String, for transcript: URL, expectedText: String) throws {
+        guard try String(contentsOf: transcript, encoding: .utf8) == expectedText else {
+            throw LectureError.message("The transcript changed while summarizing. Try again with the updated text.")
+        }
+        let target = url(for: transcript)
+        // Never replace a transcript or an unrelated note that happens to have this name.
+        if (try? FileManager.default.attributesOfItem(atPath: target.path)) != nil {
+            guard isOwnedSummary(target) else {
+                throw LectureError.message("Another file already uses this summary name. Rename the transcript, then try again.")
+            }
+            try Data(document.utf8).write(to: target, options: .atomic)
+        } else if try !Core.exclusiveWrite(Data(document.utf8), to: target) {
+            throw LectureError.message("Another file used this summary name. Try again.")
+        }
     }
     static func document(body: String, transcript: URL, provider: SummaryProvider, date: Date = Date()) -> String {
         let name = transcript.deletingPathExtension().lastPathComponent

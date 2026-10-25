@@ -130,7 +130,7 @@ struct SettingsView: View {
                     }
                 }
                 note(compressAudio ? "About 22 MB per hour." : "About 115 MB per hour.", tip: "Storage estimate")
-                note("Audio deleted after transcript saves; unfinished stays.", tip: "Audio cleanup rules")
+                note("Unfinished audio stays. Saved audio follows this limit.", tip: "Audio cleanup rules")
             }
         }
         section("While recording") {

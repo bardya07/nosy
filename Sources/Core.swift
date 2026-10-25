@@ -65,6 +65,27 @@ struct AppPaths: Sendable {
         return home.appendingPathComponent("Documents/Nosy", isDirectory: true)
     }
     var audio: URL { support.appendingPathComponent("audio", isDirectory: true) }
+    func browsingLibrary(at folder: URL) -> AppPaths { AppPaths(transcripts: folder, original: self) }
+    private init(transcripts: URL, original: AppPaths) {
+        self.transcripts = transcripts
+        support = original.support
+        whisperOverride = original.whisperOverride
+        usesDefaultSupport = original.usesDefaultSupport
+        engineBundle = original.engineBundle
+        engineSearchPath = original.engineSearchPath
+        retentionOverride = original.retentionOverride
+        modelOverride = original.modelOverride
+        vadModelOverride = original.vadModelOverride
+    }
+    static func libraryLocations(current: URL, previous: [String], home: URL = FileManager.default.homeDirectoryForCurrentUser) -> [URL] {
+        let candidates = [current] + previous.map { URL(fileURLWithPath: $0, isDirectory: true) }
+            + [home.appendingPathComponent("Desktop/Lecture Transcripts"), home.appendingPathComponent("Documents/Nosy")]
+        var seen = Set<String>()
+        return candidates.filter { url in
+            guard seen.insert(url.resolvingSymlinksInPath().standardizedFileURL.path).inserted else { return false }
+            return url == current || Core.containsTranscripts(url)
+        }
+    }
     var model: URL { modelOverride ?? support.appendingPathComponent("models/ggml-large-v3-turbo.bin") }
     var vadModel: URL { vadModelOverride ?? support.appendingPathComponent("models/ggml-silero-v5.1.2.bin") }
     func rehearsal(in directory: URL) -> AppPaths {
@@ -109,8 +130,16 @@ struct AppPaths: Sendable {
     func lectureFolder(_ name: String) -> URL { transcripts.appendingPathComponent(name, isDirectory: true) }
     func lectures() -> [String] {
         let urls = (try? FileManager.default.contentsOfDirectory(at: transcripts, includingPropertiesForKeys: [.isDirectoryKey], options: [])) ?? []
-        return urls.filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
+        return urls.filter { Core.isContained($0, in: transcripts)
+            && (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
             .map(\.lastPathComponent).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+    }
+    func validateLectureFolder(_ name: String) throws {
+        guard !name.isEmpty, name != ".", name != "..", !name.contains("/"), !name.contains("\\"),
+              !name.unicodeScalars.contains(where: CharacterSet.controlCharacters.contains),
+              Core.isContained(lectureFolder(name), in: transcripts) else {
+            throw LectureError.message("This folder points outside your transcript library. Choose another folder.")
+        }
     }
 }
 
@@ -207,6 +236,10 @@ extension SessionRecord {
 }
 
 enum Core {
+    static func isContained(_ url: URL, in root: URL) -> Bool {
+        let base = root.resolvingSymlinksInPath().standardizedFileURL.path
+        return url.resolvingSymlinksInPath().standardizedFileURL.path.hasPrefix(base == "/" ? base : base + "/")
+    }
     static func spokenText(_ markdown: String) -> String {
         let body = markdown.range(of: "## Transcript").map { String(markdown[$0.upperBound...]) } ?? markdown
         return body
@@ -378,7 +411,8 @@ enum Core {
         while true {
             let name = number == 1 ? session : "\(session)-\(number)"
             let url = folder.appendingPathComponent(name).appendingPathExtension("md")
-            if !pathEntryExists(at: url) { return url }
+            let summary = folder.appendingPathComponent(name + " summary.md")
+            if !pathEntryExists(at: url), !pathEntryExists(at: summary) { return url }
             number += 1
         }
     }
@@ -422,6 +456,12 @@ enum Core {
     static func fileSize(_ url: URL) -> Int64 {
         ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size]) as? NSNumber)?.int64Value ?? 0
     }
+    static func saveTranscriptEdits(_ text: String, to url: URL, expectedText: String) throws {
+        guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
+            throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+        }
+        try Data(text.utf8).write(to: url, options: .atomic)
+    }
     static func duration(pcmBytes: Int64) -> TimeInterval { Double(max(0, pcmBytes)) / Double(bytesPerSecond) }
     static func audioDuration(id: String, paths: AppPaths) -> TimeInterval {
         let pcm = paths.audioFile(id, "pcm")
@@ -433,14 +473,17 @@ enum Core {
         }
         return 0
     }
-    static func minutes(_ seconds: TimeInterval) -> Int { max(1, Int((seconds / 60).rounded())) }
+    static func minutes(_ seconds: TimeInterval) -> Int {
+        guard seconds.isFinite else { return 1 }
+        return max(1, Int(min(Double(Int.max / 60), max(0, seconds / 60)).rounded()))
+    }
     static func timer(_ seconds: TimeInterval) -> String {
-        let n = max(0, Int(seconds))
+        let n = seconds.isFinite ? Int(min(Double(Int.max / 2), max(0, seconds))) : 0
         return n >= 3600 ? String(format: "%d:%02d:%02d", n / 3600, (n / 60) % 60, n % 60)
             : String(format: "%d:%02d", n / 60, n % 60)
     }
     static func reminderTime(_ seconds: TimeInterval) -> String {
-        let n = max(0, Int(seconds))
+        let n = seconds.isFinite ? Int(min(Double(Int.max / 2), max(0, seconds))) : 0
         return String(format: "%d:%02d", n / 3600, (n / 60) % 60)
     }
     static func wavHeader(pcmBytes: Int64) throws -> Data {
@@ -559,9 +602,9 @@ enum Core {
         let manager = FileManager.default
         let subfolders = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])) ?? []
         return subfolders.contains { sub in
-            guard (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
+            guard isContained(sub, in: folder), (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
             let files = (try? manager.contentsOfDirectory(at: sub, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
-            return files.contains { isTranscript(at: $0) }
+            return files.contains { isContained($0, in: folder) && isTranscript(at: $0) }
         }
     }
     static func markdown(record: SessionRecord, duration: TimeInterval, text: String, body: String? = nil) -> String {
@@ -602,6 +645,9 @@ enum Core {
     }
     static func applyRetention(paths: AppPaths, now: Date = Date()) throws {
         for record in retentionCandidates(records(in: paths), now: now, days: paths.retentionDays) {
+            // A lost or trashed transcript must never cost the owner the only remaining audio.
+            guard let transcript = record.transcriptPath,
+                  FileManager.default.isReadableFile(atPath: transcript) else { continue }
             let files = try FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
             for url in files where url.lastPathComponent.hasPrefix(record.id + ".") {
                 try FileManager.default.removeItem(at: url)

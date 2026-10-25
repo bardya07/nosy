@@ -4,6 +4,7 @@ import SwiftUI
 // Native selection supplies an exact source range for the correction action.
 struct FixWordView: NSViewRepresentable {
     let markdown: String
+    var canCorrect = true
     let correct: (NSRange, String) -> Void
 
     func makeNSView(context: Context) -> NSTextView {
@@ -33,6 +34,7 @@ struct FixWordView: NSViewRepresentable {
     func updateNSView(_ nsView: NSTextView, context: Context) {
         guard let view = nsView as? CorrectionTextView else { return }
         view.correct = correct
+        view.canCorrect = canCorrect
         guard view.string != markdown else { return }
         // Retain raw-source offsets; styling keeps the editable source and selection identical.
         let paragraph = NSMutableParagraphStyle()
@@ -65,21 +67,22 @@ struct FixWordView: NSViewRepresentable {
 
 private final class CorrectionTextView: NSTextView {
     var correct: ((NSRange, String) -> Void)?
+    var canCorrect = true
     override func menu(for event: NSEvent) -> NSMenu? {
         let menu = super.menu(for: event) ?? NSMenu()
         let item = NSMenuItem(title: "Fix this word…", action: #selector(fixWord), keyEquivalent: "")
         item.target = self
-        item.isEnabled = selectedRange().length > 0 && selectedRange().length <= 100
+        item.isEnabled = canCorrect && selectedRange().length > 0 && selectedRange().length <= 100
         menu.insertItem(item, at: 0)
         return menu
     }
     override func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
-        if menuItem.action == #selector(fixWord) { return selectedRange().length > 0 && selectedRange().length <= 100 }
+        if menuItem.action == #selector(fixWord) { return canCorrect && selectedRange().length > 0 && selectedRange().length <= 100 }
         return super.validateMenuItem(menuItem)
     }
     @objc private func fixWord() {
         let range = selectedRange()
-        guard range.length > 0, range.length <= 100, NSMaxRange(range) <= (string as NSString).length else { return }
+        guard canCorrect, range.length > 0, range.length <= 100, NSMaxRange(range) <= (string as NSString).length else { return }
         let source = (string as NSString).substring(with: range)
         let alert = NSAlert()
         alert.messageText = "Fix this word"

@@ -435,8 +435,9 @@ enum TipPlacement {
         let oneLineWidth = ceil((text as NSString).size(withAttributes: [.font: font]).width)
         let available = max(minWidth, min(maxWidth, container.width - 2 * margin))
         let width = min(max(minWidth, oneLineWidth + 2 * horizontalPadding), available)
-        // Never more than two lines: the text view is limited to two as well.
-        let textHeight = min(ceil(wrappedHeight(text, width: width)), maxLines * lineHeight)
+        // Error details and file paths can need more than two lines. Fit the whole tip
+        // whenever the window has room, rather than cutting off the only visible explanation.
+        let textHeight = min(ceil(wrappedHeight(text, width: width)), max(lineHeight, container.height - 2 * margin - 2 * verticalPadding - 2))
         let height = max(24, textHeight + 2 * verticalPadding + 2)
         let halfWidth = width / 2
         let halfHeight = height / 2
@@ -507,7 +508,7 @@ private struct TipLayer: View {
                 Text(anchor.text)
                     .font(Theme.text(10, .medium))
                     .foregroundStyle(Theme.ink)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, TipPlacement.horizontalPadding)
                     .padding(.vertical, TipPlacement.verticalPadding)

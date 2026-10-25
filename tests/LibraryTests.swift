@@ -74,6 +74,17 @@ enum LibraryTests {
         library.reload(paths: paths)
         check(Set(library.items.map(\.url)) == [newest, older, chemistry], "only Nosy transcripts are listed, never other markdown")
         check(!library.grouped.map(\.lecture).contains("Hamstr stuff"), "a folder without transcripts gets no group")
+        let outside = root.appendingPathComponent("outside")
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        try String(contentsOf: newest, encoding: .utf8).write(to: outside.appendingPathComponent("Owner.md"), atomically: true, encoding: .utf8)
+        try FileManager.default.createSymbolicLink(at: paths.lectureFolder("Outside"), withDestinationURL: outside)
+        try FileManager.default.createSymbolicLink(at: mbb.appendingPathComponent("Outside.md"), withDestinationURL: outside.appendingPathComponent("Owner.md"))
+        library.reload(paths: paths)
+        check(!library.items.contains { $0.session == "Owner" || $0.session == "Outside" }, "outside symlinks are not listed")
+        check(!paths.lectures().contains("Outside"), "outside symlinks are not offered as save folders")
+        var refused = false
+        do { try paths.validateLectureFolder("Outside") } catch { refused = true }
+        check(refused, "recording or importing cannot write through an outside symlink")
         check(Core.isTranscript("# MBB322 — 2026-10-23\r\n\r\n- Date: 2026-10-23\r\n- Started: 16:13\r\n- Length: 52 min\r\n\r\n## Transcript\r\n\r\nText"),
               "a real header with CRLF line endings is a transcript")
         check(!Core.isTranscript("Notes\n# Heading\n- Date: x\n- Length: y\n## Transcript"), "the title must come first")
@@ -91,6 +102,12 @@ enum LibraryTests {
         check(AppPaths.dedicatedTranscripts(for: legacy, home: home).path == legacy.standardizedFileURL.path, "the old Lecture Transcripts folder keeps working")
         check(AppPaths.dedicatedTranscripts(for: paths.transcripts, home: home).path == paths.transcripts.standardizedFileURL.path,
               "a folder that already holds Nosy transcripts is used as is")
+        try FileManager.default.createDirectory(at: legacy.appendingPathComponent("Course"), withIntermediateDirectories: true)
+        try String(contentsOf: newest, encoding: .utf8).write(to: legacy.appendingPathComponent("Course/Existing.md"), atomically: true, encoding: .utf8)
+        let locations = AppPaths.libraryLocations(current: dedicated, previous: [paths.transcripts.path, legacy.path], home: home)
+        check(locations == [dedicated, paths.transcripts, legacy], "current, previous and legacy libraries remain reachable without duplicates")
+        check(paths.browsingLibrary(at: legacy).transcripts == legacy && paths.browsingLibrary(at: legacy).audio == paths.audio,
+              "browsing an older library preserves the audio support location")
         let downloadsNames = try FileManager.default.contentsOfDirectory(atPath: downloads.path).sorted()
         check(downloadsNames == ["MB"], "choosing a folder moves or creates nothing by itself")
         check(library.selection == newest, "the newest transcript opens selected")
@@ -164,6 +181,22 @@ enum LibraryTests {
         check(!TranscriptDisplay.isNoSpeech("ATP helps cells."), "speech is not silent")
         let onDisk = try String(contentsOf: newest, encoding: .utf8)
         check(onDisk.contains("ATP drives work."), "reading never rewrites transcripts")
+        library.query = ""
+        library.reload(paths: paths)
+        let item = try require(library.items.first(where: { $0.url == newest }), "rename fixture")
+        let summary = SummaryFiles.document(body: "## Notes\nUseful notes.", transcript: newest, provider: .ollama)
+        try SummaryFiles.save(summary, for: newest, expectedText: onDisk)
+        let unrelatedSummary = mbb.appendingPathComponent("Renamed summary.md")
+        try Data("Owner note".utf8).write(to: unrelatedSummary)
+        var record = SessionRecord(id: "rename", lecture: "MBB322", session: item.session, startedAt: now, status: .done, transcriptPath: newest.path)
+        try record.save(in: paths)
+        try library.rename(item, to: "Renamed", paths: paths)
+        let renamed = mbb.appendingPathComponent("Renamed-2.md")
+        record = try SessionRecord.read(paths.audioFile(record.id, "json"))
+        check(library.selection == renamed && record.transcriptPath == renamed.path, "rename keeps selection and the recording sidecar together")
+        check(SummaryFiles.existing(for: renamed) != nil && !FileManager.default.fileExists(atPath: SummaryFiles.url(for: newest).path), "rename carries the matching summary")
+        let preservedNote = try String(contentsOf: unrelatedSummary, encoding: .utf8)
+        check(preservedNote == "Owner note", "rename never overwrites a colliding summary name")
     }
 
     static func require<T>(_ value: T?, _ what: String) throws -> T {

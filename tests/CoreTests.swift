@@ -233,6 +233,8 @@ enum CoreTests {
         check(Core.duration(pcmBytes: -1) == 0, "nonnegative duration")
         check(Core.minutes(0) == 1 && Core.minutes(89) == 1 && Core.minutes(90) == 2, "rounded minutes")
         check(Core.timer(61) == "1:01" && Core.timer(3661) == "1:01:01", "timer formatting")
+        check(Core.minutes(.nan) == 1 && Core.minutes(.infinity) == 1, "nonfinite duration metadata cannot crash the reader")
+        check(Core.timer(.nan) == "0:00" && Core.reminderTime(.infinity) == "0:00", "nonfinite clock values display safely")
         check(Core.reminderTime(10800) == "3:00", "hour reminder")
         check(Core.paragraphs(" [BLANK_AUDIO]\n[Music]\n(silence)\n\n") == "_No speech detected._", "empty and marker stripping")
         check(Core.paragraphs(" Hello. \n\n World!\n[mUsIc]") == "Hello. World!", "segment joining")
@@ -278,6 +280,10 @@ enum CoreTests {
         check(try Core.exclusiveWrite(Data("first".utf8), to: exclusive), "exclusive write creates file")
         check(!(try Core.exclusiveWrite(Data("second".utf8), to: exclusive)), "exclusive write never overwrites")
         check((try? String(contentsOf: exclusive, encoding: .utf8)) == "first", "exclusive write kept original")
+        try Core.saveTranscriptEdits("external edit", to: exclusive, expectedText: "first")
+        var refusedEdit = false
+        do { try Core.saveTranscriptEdits("stale draft", to: exclusive, expectedText: "first") } catch { refusedEdit = true }
+        check(refusedEdit && (try? String(contentsOf: exclusive, encoding: .utf8)) == "external edit", "a stale editor cannot overwrite an external change")
         check(Core.retentionCandidates([record], now: now, days: 30).isEmpty, "retention 30 keeps 15-day-old audio")
         check(Core.retentionCandidates([record], now: now, days: 7).map(\.id) == [record.id], "retention 7 deletes 15-day-old audio")
         var imported = record; imported.id = "imported"; imported.transcribedAt = now
@@ -298,6 +304,10 @@ enum CoreTests {
         check(recovered.first?.status == .failed && recovered.first?.error == "App closed unexpectedly", "unfinished becomes failed")
         check(Core.audioDuration(id: unfinished.id, paths: paths) == 3, "recovered actual byte length")
         check(try Core.recover(paths: paths).count == 2, "recovery survives another launch")
+        try Core.applyRetention(paths: paths, now: now)
+        check(FileManager.default.fileExists(atPath: wav.path), "retention preserves audio when its transcript is missing")
+        record.transcriptPath = first.path
+        try record.save(in: paths)
         try Core.applyRetention(paths: paths, now: now)
         check(!FileManager.default.fileExists(atPath: wav.path), "retention deletes old done audio")
         check(!FileManager.default.fileExists(atPath: paths.audioFile(record.id, "json").path), "retention deletes sidecar")

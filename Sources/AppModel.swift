@@ -27,6 +27,7 @@ final class AppModel: ObservableObject {
     @Published var phase: AppPhase = .idle
     @Published var homeFromTranscribing = false
     @Published var lectures: [String] = []
+    @Published private(set) var libraryLocations: [URL] = []
     @Published var selectedLecture = "__new__"
     @Published var newLecture = ""
     @Published var session = ""
@@ -88,12 +89,21 @@ final class AppModel: ObservableObject {
     private var completing = false
     static let waveformLength = 46
     static var today: String { Core.dateString(Date(), format: "yyyy-MM-dd") }
+    private let stressReason: () -> String?
+    init(stressReason: @escaping () -> String? = {
+        let power = Core.powerState()
+        return Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent)
+    }) { self.stressReason = stressReason }
 
     var recording: Bool { phase == .recording }
     // Course/session fields lock while a recording starts, runs or stops.
     var busy: Bool { phase == .recording || transitioning }
-    var working: Bool { busy || active != nil || !queue.isEmpty }
+    var working: Bool { busy || importsInProgress > 0 || active != nil || !queue.isEmpty }
     var lectureName: String { selectedLecture == "__new__" ? newLecture : selectedLecture }
+    private func rememberLibrary(_ folder: URL) {
+        let previous = UserDefaults.standard.stringArray(forKey: "previousTranscriptLibraries") ?? []
+        UserDefaults.standard.set(Array(([folder.path] + previous.filter { $0 != folder.path }).prefix(20)), forKey: "previousTranscriptLibraries")
+    }
     var hasLecture: Bool { !lectureName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     var canStart: Bool {
         !busy && hasLecture && !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -126,6 +136,7 @@ final class AppModel: ObservableObject {
            let stored = UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) {
             let dedicated = AppPaths.dedicatedTranscripts(for: URL(fileURLWithPath: stored, isDirectory: true))
             if dedicated.path != URL(fileURLWithPath: stored).standardizedFileURL.path {
+                rememberLibrary(paths.transcripts)
                 UserDefaults.standard.set(dedicated.path, forKey: AppPaths.transcriptsKey)
                 paths = AppPaths()
             }
@@ -202,9 +213,12 @@ final class AppModel: ObservableObject {
     func refreshDependencies() { setupMessage = Core.setupMessage(paths: paths) }
     func refreshLectures() {
         lectures = paths.lectures()
+        libraryLocations = Snapshot.isRunning ? [paths.transcripts] : AppPaths.libraryLocations(current: paths.transcripts,
+            previous: UserDefaults.standard.stringArray(forKey: "previousTranscriptLibraries") ?? [])
         if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }
     }
     private func notify(_ title: String, path: String? = nil) {
+        guard !Snapshot.isRunning else { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.sound = .default
@@ -274,6 +288,7 @@ final class AppModel: ObservableObject {
                     alert.addButton(withTitle: "Continue"); alert.addButton(withTitle: "Cancel")
                     guard alert.runModal() == .alertFirstButtonReturn else { transitioning = false; updateActivity(); return }
                 }
+                try paths.validateLectureFolder(lecture)
                 try FileManager.default.createDirectory(at: paths.lectureFolder(lecture), withIntermediateDirectories: true)
                 let record = SessionRecord(id: Core.newID(in: paths), lecture: lecture, session: session, startedAt: Date(), status: .recording)
                 try record.save(in: paths)
@@ -641,6 +656,7 @@ final class AppModel: ObservableObject {
     func vocabularyURL(for lecture: String) -> URL? {
         let name = lecture.trimmingCharacters(in: .whitespaces)
         guard let safe = try? Core.sanitize(name) else { return nil }
+        do { try paths.validateLectureFolder(safe) } catch { return nil }
         return paths.lectureFolder(safe).appendingPathComponent("vocab.txt")
     }
     func vocabulary(for lecture: String) -> String {
@@ -655,6 +671,7 @@ final class AppModel: ObservableObject {
     @discardableResult func saveVocabulary(_ text: String, for lecture: String, settings: SubjectSettings? = nil) -> Bool {
         guard let url = vocabularyURL(for: lecture) else { return false }
         do {
+            try paths.validateLectureFolder(lecture)
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
@@ -758,9 +775,10 @@ final class AppModel: ObservableObject {
 
     // Fixtures must render the real view paths without starting a recorder or queue.
     func configurePreview(active: SessionRecord? = nil, queued: [SessionRecord] = [], pauseReason: String? = nil,
-                          source: RecordingSource = .mic) {
+                          source: RecordingSource = .mic, libraryLocations: [URL]? = nil) {
         precondition(Snapshot.isRunning)
         self.active = active
+        self.libraryLocations = libraryLocations ?? [paths.transcripts]
         queue = queued
         transcriptionPauseReason = pauseReason
         inputUID = nil
@@ -782,6 +800,7 @@ final class AppModel: ObservableObject {
         let folder = AppPaths.dedicatedTranscripts(for: url)
         do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
         catch { showError("Couldn't create \(folder.lastPathComponent): \(error.localizedDescription)"); return false }
+        rememberLibrary(paths.transcripts)
         UserDefaults.standard.set(folder.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
         return true

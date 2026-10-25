@@ -325,6 +325,11 @@ enum Snapshot {
             }
             guard save(LibraryView(model: model(.idle)).frame(width: 720, height: 460)
                 .padding(36).background(PreviewBackdrop()), "library-minimum.\(mode)") else { return 1 }
+            let previousLibrary = fixture.appendingPathComponent("Previous library")
+            let locations = model(.idle)
+            locations.configurePreview(libraryLocations: [transcripts, previousLibrary])
+            guard save(LibraryView(model: locations).frame(width: 720, height: 460)
+                .padding(36).background(PreviewBackdrop()), "library-locations.\(mode)") else { return 1 }
             guard save(PreviewWindow { LibraryView(model: model(.idle), previewQuery: "ATP") }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-search.\(mode)"),
                   save(PreviewWindow { LibraryView(model: model(.idle)) }
