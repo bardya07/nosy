@@ -102,6 +102,11 @@ final class OnboardingModel: ObservableObject {
         rehearsalTask?.cancel()
         rehearsalJob?.cancel()
     }
+    func shutdown() async {
+        download?.cancel()
+        cancelRehearsal()
+        await rehearsalTask?.value
+    }
     private func rehearse(paths: AppPaths, inputUID: String?) async {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Nosy-rehearsal-\(UUID().uuidString)", isDirectory: true)
         defer { try? FileManager.default.removeItem(at: folder) }
@@ -178,8 +183,13 @@ struct OnboardingView: View {
             footer
         }
         .frame(width: 520, height: 470)
-        .onDisappear { setup.cancelRehearsal() }
-        .onAppear { if !Snapshot.isRunning { setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio) } }
+        .onDisappear { setup.cancelRehearsal(); model.finishOnboardingWork = nil }
+        .onAppear {
+            if !Snapshot.isRunning {
+                setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+                model.finishOnboardingWork = { [weak setup = setup] in await setup?.shutdown() }
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         }
@@ -194,7 +204,7 @@ struct OnboardingView: View {
     @ViewBuilder private var content: some View {
         switch setup.step {
         case .welcome:
-            page(title: "Meet Nosy", body: "Nosy transcribes lectures and meetings entirely on your Mac. Nothing is uploaded, ever.") {
+            page(title: "Meet Nosy", body: "Recording and transcription stay on your Mac. Optional summaries use the provider you choose.") {
                 NosyMark(size: 72)
             }
         case .microphone:

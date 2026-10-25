@@ -242,6 +242,7 @@ enum UITests {
             }
         }
         try await MainWindowInteraction.run(model: model)
+        try await AppLifecycleTests.run()
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
     }
 }

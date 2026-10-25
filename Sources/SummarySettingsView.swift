@@ -215,7 +215,8 @@ private struct SummaryKeyField: View {
     }
     private func load() {
         if Snapshot.isRunning { saved = summaries.previewKeyTail; return }
-        saved = summaries.keychain.read(account: provider.rawValue).map(SummaryKeychain.masked)
+        do { saved = try summaries.keychain.read(account: provider.rawValue).map(SummaryKeychain.masked) }
+        catch { failure = SummaryError.short(error.localizedDescription) }
     }
     private func save() {
         let key = draft.trimmingCharacters(in: .whitespacesAndNewlines)

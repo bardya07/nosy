@@ -27,9 +27,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // A dirty transcript draft must be saved or explicitly discarded before
         // either the immediate or background-work termination path.
         guard model.finishLibraryEditing?() ?? true else { return .terminateCancel }
-        guard model.working else { return .terminateNow }
+        guard model.working else {
+            // Summaries can be the only remaining work. They must cancel and reap their CLI too.
+            guard model.summaries.hasPendingWork || model.finishOnboardingWork != nil else { return .terminateNow }
+            Task { await model.prepareToQuit(); sender.reply(toApplicationShouldTerminate: true) }
+            return .terminateLater
+        }
         let alert = NSAlert()
-        alert.messageText = model.recording ? "A recording is still in progress. Quit anyway?" : "A recording is still transcribing. Quit anyway?"
+        alert.messageText = model.recording ? "A recording is still in progress. Quit anyway?"
+            : model.importsInProgress > 0 ? "Audio is still importing. Quit anyway?"
+            : model.active != nil || !model.queue.isEmpty ? "A recording is still transcribing. Quit anyway?" : "Nosy is still working. Quit anyway?"
         alert.informativeText = "Your audio is kept, so you can transcribe it the next time you open Nosy."
         // Cancel is the default so a stray Return never ends a lecture.
         let quit = alert.addButton(withTitle: "Quit")

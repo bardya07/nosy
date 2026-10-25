@@ -290,13 +290,18 @@ struct SummaryKeychain: Sendable {
             throw failure(status)
         }
     }
-    func read(account: String) -> String? {
+    func read(account: String) throws -> String? {
         var item = query(account)
         item[kSecReturnData as String] = true
         item[kSecMatchLimit as String] = kSecMatchLimitOne
         var result: CFTypeRef?
-        guard SecItemCopyMatching(item as CFDictionary, &result) == errSecSuccess, let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        let status = SecItemCopyMatching(item as CFDictionary, &result)
+        if status == errSecItemNotFound { return nil }
+        guard status == errSecSuccess else { throw failure(status) }
+        guard let data = result as? Data, let key = String(data: data, encoding: .utf8) else {
+            throw LectureError.message("The saved key could not be read from Keychain. Save it again in Settings.")
+        }
+        return key
     }
     func delete(account: String) throws {
         let status = SecItemDelete(query(account) as CFDictionary)
@@ -358,21 +363,27 @@ enum SummaryDetector {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: shell)
         process.arguments = ["-l", "-i", "-c", "printf '__NOSY_PATH__%s__NOSY_PATH__' \"$PATH\""]
-        let pipe = Pipe()
-        process.standardOutput = pipe
+        let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-path-\(UUID().uuidString)")
+        guard FileManager.default.createFile(atPath: temporary.path, contents: Data(), attributes: [.posixPermissions: 0o600]),
+              let output = try? FileHandle(forWritingTo: temporary) else { return nil }
+        defer { try? output.close(); try? FileManager.default.removeItem(at: temporary) }
+        process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         process.standardInput = FileHandle.nullDevice
         do { try process.run() } catch { return nil }
-        let deadline = DispatchTime.now() + timeout
-        let done = DispatchSemaphore(value: 0)
-        let output = LockedData()
-        DispatchQueue.global(qos: .utility).async {
-            output.append(pipe.fileHandleForReading.readDataToEndOfFile())
-            done.signal()
+        let deadline = ProcessInfo.processInfo.systemUptime + timeout
+        while process.isRunning {
+            if ProcessInfo.processInfo.systemUptime >= deadline {
+                kill(process.processIdentifier, SIGKILL)
+                process.waitUntilExit()
+                return nil
+            }
+            Thread.sleep(forTimeInterval: 0.02)
         }
-        if done.wait(timeout: deadline) == .timedOut { process.terminate(); return nil }
         process.waitUntilExit()
-        let text = String(decoding: output.value, as: UTF8.self)
+        guard let reader = try? FileHandle(forReadingFrom: temporary) else { return nil }
+        defer { try? reader.close() }
+        let text = String(decoding: (try? reader.read(upToCount: 1_048_576)) ?? Data(), as: UTF8.self)
         let parts = text.components(separatedBy: "__NOSY_PATH__")
         return parts.count >= 3 ? parts[1] : nil
     }
@@ -505,7 +516,7 @@ enum SummaryRunner {
         let provider = request.provider
         // An empty scratch folder: the CLI has no project files to read or change.
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-summary-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         defer { try? FileManager.default.removeItem(at: scratch) }
         let lastMessage = scratch.appendingPathComponent("last-message.txt")
         let process = Process()
@@ -519,36 +530,44 @@ enum SummaryRunner {
             .filter { !$0.isEmpty }.joined(separator: ":")
         environment["NO_COLOR"] = "1"
         process.environment = environment
-        let input = Pipe(), output = Pipe(), errors = Pipe()
+        // Files avoid a blocked stdin writer or inherited pipe keeping quit alive after the CLI exits.
+        let inputURL = scratch.appendingPathComponent("prompt.txt")
+        let outputURL = scratch.appendingPathComponent("stdout.txt")
+        let errorURL = scratch.appendingPathComponent("stderr.txt")
+        for url in [inputURL, outputURL, errorURL] {
+            guard FileManager.default.createFile(atPath: url.path, contents: url == inputURL ? Data(prompt.utf8) : Data(),
+                                                attributes: [.posixPermissions: 0o600]) else {
+                throw LectureError.message("Could not prepare the summary request.")
+            }
+        }
+        let input = try FileHandle(forReadingFrom: inputURL)
+        let output = try FileHandle(forWritingTo: outputURL)
+        let errors = try FileHandle(forWritingTo: errorURL)
+        defer { try? input.close(); try? output.close(); try? errors.close() }
         process.standardInput = input
         process.standardOutput = output
         process.standardError = errors
-        let out = LockedData(), err = LockedData(), timedOut = LockedFlag()
-        let group = DispatchGroup()
+        let timedOut = LockedFlag()
         try job.launch(process)
-        group.enter()
-        DispatchQueue.global(qos: .utility).async { out.append(output.fileHandleForReading.readDataToEndOfFile()); group.leave() }
-        group.enter()
-        DispatchQueue.global(qos: .utility).async { err.append(errors.fileHandleForReading.readDataToEndOfFile()); group.leave() }
-        DispatchQueue.global(qos: .utility).async {
-            try? input.fileHandleForWriting.write(contentsOf: Data(prompt.utf8))
-            try? input.fileHandleForWriting.close()
-        }
         let timer = DispatchWorkItem { if process.isRunning { timedOut.set(); job.cancel() } }
         DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + request.timeout, execute: timer)
         process.waitUntilExit()
         timer.cancel()
-        group.wait()
         if timedOut.value { throw SummaryError.timedOut }
         try job.checkCancellation()
-        let stdout = String(decoding: out.value, as: UTF8.self)
+        func read(_ url: URL, limit: Int = 16_000_000) throws -> String {
+            let handle = try FileHandle(forReadingFrom: url)
+            defer { try? handle.close() }
+            return String(decoding: try handle.read(upToCount: limit) ?? Data(), as: UTF8.self)
+        }
+        let stdout = try read(outputURL)
         guard process.terminationStatus == 0 else {
-            let stderr = String(decoding: err.value, as: UTF8.self)
+            let stderr = try read(errorURL, limit: 8192)
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             let detail = trimmed.isEmpty ? stdout.trimmingCharacters(in: .whitespacesAndNewlines) : trimmed
             throw SummaryError.failed(provider.title, detail.isEmpty ? "exited with status \(process.terminationStatus)" : detail)
         }
-        let last = (try? String(contentsOf: lastMessage, encoding: .utf8)) ?? ""
+        let last = (try? read(lastMessage)) ?? ""
         let reply = SummaryFiles.clean(last.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? stdout : last)
         guard !reply.isEmpty else { throw SummaryError.empty }
         return reply
@@ -582,8 +601,12 @@ enum SummaryRunner {
             headers["x-api-key"] = key
             headers["anthropic-version"] = "2026-10-21"
         case .gemini:
-            let name = model.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? model
-            url = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(name):generateContent")!
+            let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._"))
+            guard let name = model.addingPercentEncoding(withAllowedCharacters: allowed),
+                  let endpoint = URL(string: "https://generativelanguage.googleapis.com/v1beta/models/\(name):generateContent") else {
+                throw SummaryError.noModel
+            }
+            url = endpoint
             body = ["contents": [["role": "user", "parts": [["text": prompt]]]]]
             headers["x-goog-api-key"] = key
         default:
@@ -626,9 +649,13 @@ enum SummaryRunner {
 
     private static func runHTTP(_ prompt: String, request: SummaryRequest) async throws -> String {
         let urlRequest = try httpRequest(prompt, request: request)
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForResource = request.timeout
+        let session = URLSession(configuration: configuration)
+        defer { session.invalidateAndCancel() }
         let data: Data, response: URLResponse
         do {
-            (data, response) = try await URLSession.shared.data(for: urlRequest)
+            (data, response) = try await session.data(for: urlRequest)
         } catch let error as URLError {
             switch error.code {
             case .cancelled: throw CancellationError()
@@ -641,11 +668,15 @@ enum SummaryRunner {
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let detail = parseError(data) ?? HTTPURLResponse.localizedString(forStatusCode: status)
+            let detail = redacted(parseError(data) ?? HTTPURLResponse.localizedString(forStatusCode: status), key: request.apiKey)
             throw SummaryError.failed(request.provider.title, detail)
         }
         guard let reply = parseReply(data, provider: request.provider).map(SummaryFiles.clean), !reply.isEmpty else { throw SummaryError.empty }
         return reply
+    }
+    static func redacted(_ text: String, key: String?) -> String {
+        guard let key = key?.trimmingCharacters(in: .whitespacesAndNewlines), !key.isEmpty else { return text }
+        return text.replacingOccurrences(of: key, with: "[key removed]")
     }
 }
 
@@ -669,8 +700,29 @@ enum Summarizer {
             partials.append(try await SummaryRunner.run(SummaryPrompt.build(transcript: part, sections: settings.sections, custom: settings.custom,
                                                                             part: (index + 1, parts.count)), request: request, job: job))
         }
+        // A long lecture can produce more partial summaries than one local context can hold.
+        // Reduce bounded groups before the final merge, and fail if a provider won't condense them.
+        let mergeLimit = max(4096, request.chunkLimit ?? request.provider.chunkLimit)
+        var step = parts.count
+        while partials.joined(separator: "\n\n").count > mergeLimit {
+            let before = partials.joined(separator: "\n\n")
+            let groups = SummaryChunker.chunks(before, limit: mergeLimit)
+            var reduced: [String] = []
+            for group in groups {
+                try await beforeEachStep()
+                step += 1
+                progress(step, step + groups.count - reduced.count)
+                reduced.append(try await SummaryRunner.run(SummaryPrompt.merge(partials: [group], sections: settings.sections, custom: settings.custom),
+                                                          request: request, job: job))
+            }
+            guard reduced.joined(separator: "\n\n").count < before.count else {
+                throw SummaryError.failed(request.provider.title, "Part summaries are too long. Try a provider with a larger context.")
+            }
+            partials = reduced
+        }
         try await beforeEachStep()
-        progress(total, total)
+        step += 1
+        progress(step, step)
         return try await SummaryRunner.run(SummaryPrompt.merge(partials: partials, sections: settings.sections, custom: settings.custom),
                                            request: request, job: job)
     }
@@ -698,6 +750,7 @@ final class SummaryCenter: ObservableObject {
     private var queue: [URL] = []
     private var worker: Task<Void, Never>?
     private var job: TranscriptionJob?
+    var hasPendingWork: Bool { worker != nil || !queue.isEmpty }
 
     func refreshDetection() {
         guard !detecting else { return }
@@ -732,9 +785,14 @@ final class SummaryCenter: ObservableObject {
         pump()
     }
     func cancelAll() {
+        for transcript in queue { status[transcript.standardizedFileURL.path] = nil }
         queue.removeAll()
         job?.cancel()
         worker?.cancel()
+    }
+    func shutdown() async {
+        cancelAll()
+        await worker?.value
     }
 
     private func pump() {
@@ -773,7 +831,7 @@ final class SummaryCenter: ObservableObject {
         case .api:
             let keychain = keychain
             let account = settings.provider.rawValue
-            request.apiKey = await Task.detached { keychain.read(account: account) }.value
+            request.apiKey = try await Task.detached { try keychain.read(account: account) }.value
             guard request.apiKey != nil else { throw SummaryError.noKey(settings.provider.title) }
         case .local:
             guard !settings.model.isEmpty else { throw SummaryError.noModel }
@@ -786,11 +844,14 @@ final class SummaryCenter: ObservableObject {
         let body = try await Summarizer.summarize(markdown, settings: settings, request: request, job: job,
             beforeEachStep: { [weak self] in try await self?.waitUntilReady(provider, key: key) },
             progress: { [weak self] step, total in
-                Task { @MainActor in self?.status[key] = .running(step: step, total: total) }
+                Task { @MainActor in
+                    guard let self, self.job === job, self.status[key] != nil else { return }
+                    self.status[key] = .running(step: step, total: total)
+                }
             })
         let document = SummaryFiles.document(body: body, transcript: transcript, provider: provider)
-        let target = SummaryFiles.url(for: transcript)
-        try await Task.detached(priority: .utility) { try Data(document.utf8).write(to: target, options: .atomic) }.value
+        try Task.checkCancellation()
+        try await Task.detached(priority: .utility) { try SummaryFiles.save(document, for: transcript, expectedText: markdown) }.value
         revision += 1
     }
 

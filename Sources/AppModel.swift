@@ -68,10 +68,13 @@ final class AppModel: ObservableObject {
     // Set by any open window so the model can open others (e.g. from a notification).
     var openWindow: OpenWindowAction?
     var finishLibraryEditing: (() -> Bool)?
+    var finishOnboardingWork: (() async -> Void)?
 
     private var recorder: Recorder?
     private var job: TranscriptionJob?
     private var worker: Task<Void, Never>?
+    private var importer: Task<Void, Never>?
+    private var importWork: Task<SessionRecord, Error>?
     private var activity: NSObjectProtocol?
     private var timer: Timer?
     private var powerTimer: Timer?
@@ -260,7 +263,7 @@ final class AppModel: ObservableObject {
     // MARK: Recording
 
     func start() {
-        guard !busy else { return }
+        guard !busy, !quitting else { return }
         guard !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             startValidationRequest += 1
             return
@@ -276,6 +279,7 @@ final class AppModel: ObservableObject {
                 let lecture = selectedLecture == "__new__" ? try resolvedNewLecture() : selectedLecture
                 let session = try Core.sanitize(session)
                 if recordingSource.usesMic { try await requestMicrophoneAccess() }
+                guard !quitting else { transitioning = false; return }
                 macAudioDenied = false
                 macAudioQuiet = false
                 microphoneDenied = false
@@ -460,7 +464,7 @@ final class AppModel: ObservableObject {
     // The live recording can't be transcribed until it stops (its file is still being written).
     func isLive(_ id: String) -> Bool { (recording || transitioning) && current?.id == id }
     func retry(_ record: SessionRecord? = nil) {
-        guard let record = record ?? current, !isQueued(record.id), !isLive(record.id) else { return }
+        guard !quitting, let record = record ?? current, !isQueued(record.id), !isLive(record.id) else { return }
         recovery.removeAll { $0.id == record.id }
         // During a Start or Stop the foreground belongs to that recording; just queue this one.
         if !recording, !transitioning {
@@ -478,8 +482,7 @@ final class AppModel: ObservableObject {
         pump()
     }
     private func refreshStress() {
-        let power = Core.powerState()
-        transcriptionPauseReason = Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent)
+        transcriptionPauseReason = stressReason()
         if transcriptionPauseReason != nil {
             job?.suspend()
             if let transcriptionStarted {
@@ -492,7 +495,7 @@ final class AppModel: ObservableObject {
         }
         updateActivity()
     }
-    private func updateStress() {
+    func updateStress() {
         refreshStress()
         if transcriptionPauseReason == nil { pump() }
     }
@@ -510,7 +513,7 @@ final class AppModel: ObservableObject {
         refreshDependencies()
         updateActivity()
         let paths = paths
-        worker = Task {
+        worker = Task { [self] in
             do {
                 let result = try await Transcriber.transcribe(record: record, paths: paths, job: job) { [weak self] value in
                     Task { @MainActor in
@@ -554,8 +557,7 @@ final class AppModel: ObservableObject {
 
     // Same back-off as transcription; a local model also waits for whisper to finish.
     private func summaryWaitReason(_ provider: SummaryProvider) -> String? {
-        let power = Core.powerState()
-        if let reason = Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent) {
+        if let reason = stressReason() {
             return reason.prefix(1).uppercased() + reason.dropFirst()
         }
         if provider.staysOnMac, job != nil { return "Waiting for transcription" }
@@ -606,7 +608,7 @@ final class AppModel: ObservableObject {
         importRecordings([url])
     }
     func importRecordings(_ urls: [URL], targetLecture: String? = nil) {
-        guard !busy, !urls.isEmpty else { return }
+        guard !busy, !quitting, !urls.isEmpty else { return }
         let supported = urls.filter(AudioImport.supports)
         let rejectedCount = urls.count - supported.count
         guard !supported.isEmpty else {
@@ -621,33 +623,42 @@ final class AppModel: ObservableObject {
         importsInProgress += supported.count
         transitioning = true
         let paths = paths
-        Task {
+        importer = Task {
             var failures: [String] = []
             for url in supported {
+                guard !quitting else { break }
                 do {
                     transitioning = true
                     let lecture = try Core.sanitize(lectureInput)
                     let session = try Core.sanitize(AudioImport.sessionName(for: url))
-                    let record = try await Task.detached {
+                    let work = Task.detached {
                         try AudioFiles.importRecording(from: url, lecture: lecture, session: session, paths: paths)
-                    }.value
+                    }
+                    importWork = work
+                    let record = try await work.value
+                    importWork = nil
                     transitioning = false
+                    guard !quitting else { break } // The imported audio and sidecar remain recoverable.
                     selectedLecture = lecture
                     newLecture = ""
                     refreshLectures()
                     retry(record)
                 } catch {
+                    importWork = nil
                     transitioning = false
                     failures.append(error.localizedDescription)
                 }
                 importsInProgress -= 1
             }
+            importsInProgress = 0
+            transitioning = false
             if rejectedCount > 0 {
                 showError("Some files were skipped because they are not audio or video.")
             } else if let failure = failures.first {
                 showError(failure)
             }
             updateActivity()
+            importer = nil
         }
     }
 
@@ -828,13 +839,17 @@ final class AppModel: ObservableObject {
         quitting = true
         summaries.cancelAll()
         job?.cancel()
+        importWork?.cancel()
+        await finishOnboardingWork?()
+        await importer?.value
         // Let the worker settle (cancelled, or finishing a save/compression) before touching sidecars.
         await worker?.value
+        await summaries.shutdown()
         if let recorder { _ = try? await recorder.stop(); self.recorder = nil }
         // Everything unfinished is kept and offered again on the next launch.
         var pending = queue
         if let active { pending.insert(active, at: 0) }
-        if recording, let current { pending.insert(current, at: 0) }
+        if let current, current.status == .recording { pending.insert(current, at: 0) }
         for pendingRecord in pending {
             // Re-read: a transcript may have been saved since this was queued.
             var record = (try? SessionRecord.read(paths.audioFile(pendingRecord.id, "json"))) ?? pendingRecord
@@ -847,6 +862,11 @@ final class AppModel: ObservableObject {
             _ = try? await Task.detached { [id = record.id, paths] in try Core.finalizeWAV(id: id, paths: paths) }.value
         }
         queue = []
+        active = nil
+        job = nil
+        worker = nil
+        phase = .idle
+        transitioning = false
         updateActivity()
     }
 }

@@ -33,6 +33,11 @@ final class TranscriptionJob: @unchecked Sendable {
             // A stopped child cannot handle termination until it is continued.
             kill(process.processIdentifier, SIGCONT)
             process.terminate()
+            // A CLI may ignore SIGTERM. Quit and timeout must still settle, even when paused.
+            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2) { [self, process] in
+                lock.lock(); defer { lock.unlock() }
+                if self.process === process, process.isRunning { kill(process.processIdentifier, SIGKILL) }
+            }
         }
     }
     func checkCancellation() throws {
@@ -114,6 +119,8 @@ enum Transcriber {
         let flags = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map { Set($0.split(separator: ",").map(String.init)) }
         do {
             try job.checkCancellation()
+            try paths.validateLectureFolder(record.lecture)
+            guard try Core.sanitize(record.session) == record.session else { throw LectureError.message("Invalid session name in recording.") }
             progress(0)
             record.status = .transcribing
             record.error = nil

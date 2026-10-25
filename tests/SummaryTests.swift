@@ -155,6 +155,9 @@ enum SummaryTests {
         let gemini = try SummaryRunner.httpRequest("hello", request: SummaryRequest(provider: .gemini, model: "gemini-2.5-flash", apiKey: "k3"))
         check(gemini.url?.absoluteString.hasSuffix("/models/gemini-2.5-flash:generateContent") == true
               && gemini.value(forHTTPHeaderField: "x-goog-api-key") == "k3" && gemini.url?.query == nil, "gemini key in a header, not the URL")
+        let oddModel = try SummaryRunner.httpRequest("x", request: SummaryRequest(provider: .gemini, model: "m?#/%", apiKey: "secret"))
+        check(oddModel.url?.query == nil && oddModel.url?.fragment == nil, "an edited model cannot inject URL delimiters")
+        check(SummaryRunner.redacted("Invalid key secret", key: "secret") == "Invalid key [key removed]", "provider errors cannot echo the API key")
         let ollama = try SummaryRunner.httpRequest("hello", request: SummaryRequest(provider: .ollama, model: "qwen3:8b"))
         check(ollama.url?.absoluteString == "http://localhost:11434/api/chat", "ollama native chat endpoint")
         let lm = try SummaryRunner.httpRequest("hello", request: SummaryRequest(provider: .lmStudio, model: "local"))
@@ -249,7 +252,7 @@ enum SummaryTests {
         check(failure == .failed("Gemini CLI", "quota exceeded"), "a failing CLI reports its error output")
 
         let slow = bin.appendingPathComponent("slow")
-        try script(slow, "cat > /dev/null; sleep 30")
+        try script(slow, "trap '' TERM; cat > /dev/null; while :; do sleep 1; done")
         failure = nil
         let started = Date()
         do {
