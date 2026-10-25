@@ -46,6 +46,24 @@ enum ConnectorTests {
         let batch = server.respond(to: "[" + rpc(7, "ping", [:]) + "," + #"{"jsonrpc":"2.0","method":"notifications/initialized"}"# + "]")
         check((batchReplies(batch)).count == 1, "a batch gets one reply per request")
         check(server.respond(to: "[]") != nil, "an empty batch is an invalid request")
+        var framing = MCPLineBuffer()
+        let utf8 = Data("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\",\"extra\":\"🧬\"}\n".utf8)
+        var framed: [String] = []
+        for byte in utf8 { framed += framing.append(Data([byte])) }
+        check(framed.count == 1 && object(server.respond(to: framed[0]))["result"] != nil, "UTF8 and JSON can span arbitrary input chunks")
+        let tooLarge = framing.append(Data(repeating: 120, count: MCPLineBuffer.maxBytes + 100))
+        check(tooLarge.isEmpty, "oversized frames are discarded before parsing")
+        let recoveredLines = framing.append(Data(("\n" + rpc(42, "ping", [:]) + "\n").utf8))
+        check(recoveredLines.count == 2 && dict(object(server.respond(to: recoveredLines[0]))["error"])["code"] as? Int == -32700
+              && object(server.respond(to: recoveredLines[1]))["id"] as? Int == 42, "oversized input gets an error and the next frame still works")
+        for id in ["true", "{}", "[]"] {
+            let bad = object(server.respond(to: "{\"jsonrpc\":\"2.0\",\"id\":\(id),\"method\":\"ping\"}"))
+            check(dict(bad["error"])["code"] as? Int == -32600 && bad["id"] is NSNull, "invalid request ids are rejected")
+        }
+        check(dict(object(server.respond(to: #"{"jsonrpc":"2.0","id":10,"method":"tools/list","params":3}"#))["error"])["code"] as? Int == -32602,
+              "scalar params are rejected")
+        check(dict(object(server.respond(to: rpc(11, "tools/call", ["name": "list_folders", "arguments": "wrong"])))["error"])["code"] as? Int == -32602,
+              "scalar tool arguments are rejected")
 
         // Tools
         let folders = call(server, "list_folders", [:])
@@ -155,15 +173,29 @@ enum ConnectorTests {
         check(backups.count == 1, "add backs up the original config first")
         let backupData = try Data(contentsOf: configURL.deletingLastPathComponent().appendingPathComponent(backups[0]))
         check(backupData == existing, "the backup holds the original bytes")
+        for url in [configURL, configURL.deletingLastPathComponent().appendingPathComponent(backups[0])] {
+            let mode = try manager.attributesOfItem(atPath: url.path)[.posixPermissions] as? Int
+            check(mode == 0o600, "config and backup are private to the owner")
+        }
         check(dict(dict(try parse(Data(contentsOf: configURL)))["mcpServers"])["other"] != nil, "the written config keeps other servers")
         try connector.remove()
         check(connector.status() == .notAdded, "remove reports not installed")
+        try Data(#"{"mcpServers":{"nosy":{"command":"/gone/Nosy/nosy-mcp"}}}"#.utf8).write(to: configURL)
+        check(connector.status() == .notAdded, "a stale helper path is not reported as connected")
+        try connector.add()
+        check(connector.status() == .added, "adding repairs a stale helper path")
         try Data("{broken".utf8).write(to: configURL)
         if case .unreadable = connector.status() {} else { fatalError("FAIL: broken config is reported, not overwritten") }
         var refusedWrite = false
         do { try connector.add() } catch { refusedWrite = true }
         let stillBroken = try Data(contentsOf: configURL)
         check(refusedWrite && stillBroken == Data("{broken".utf8), "add leaves a broken config untouched")
+        // A real session named like a summary remains independently readable.
+        let source = transcripts.appendingPathComponent("Rehearsal/2026-10-20.md")
+        let collision = transcripts.appendingPathComponent("Rehearsal/2026-10-20 summary.md")
+        try manager.copyItem(at: source, to: collision)
+        check(call(server, "list_transcripts", ["folder": "Rehearsal"]).text.contains("2026-10-20 summary"), "a transcript ending in summary is listed")
+        check(!call(server, "read_transcript", ["folder": "Rehearsal", "name": "2026-10-20"]).text.contains("Summary ("), "another transcript is not appended as a summary")
 
         print("CONNECTOR TESTS PASS: \(assertions) assertions")
     }
@@ -190,7 +222,7 @@ enum ConnectorTests {
         The Citric Acid cycle makes NADH.
         ATP synthase is key. A café example follows.
         """.write(to: mbb.appendingPathComponent("2026-10-23.md"), atomically: true, encoding: .utf8)
-        try "Summary text here.\n".write(to: mbb.appendingPathComponent("2026-10-23 summary.md"), atomically: true, encoding: .utf8)
+        try "# 2026 summary\n\n_Summarized with Ollama on Oct 23._\n\nSummary text here.\n".write(to: mbb.appendingPathComponent("2026-10-23 summary.md"), atomically: true, encoding: .utf8)
         try """
         # Rehearsal — 2026-10-20
 

@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 // Adds or removes Nosy's transcript server in Claude Desktop's config. Only the mcpServers.nosy
 // entry changes; every other key is kept. Nothing is written when the file is not valid JSON.
@@ -9,18 +10,22 @@ enum ClaudeDesktopConfig {
         case unreadable
         case serversNotObject
         case helperMissing
+        case changed
 
         var errorDescription: String? {
             switch self {
             case .unreadable: "Claude Desktop's settings file is not valid JSON, so Nosy left it unchanged. Fix the file, then try again."
             case .serversNotObject: "The mcpServers entry in Claude Desktop's settings is not an object, so Nosy left the file unchanged."
             case .helperMissing: "Nosy's connector is missing from this copy of the app. Reinstall Nosy, then try again."
+            case .changed: "Claude Desktop's settings changed during setup. Try again so Nosy can keep those changes."
             }
         }
     }
 
-    static func isAdded(_ data: Data?) throws -> Bool {
-        try servers(in: load(data))?[serverName] != nil
+    static func isAdded(_ data: Data?, command: String? = nil) throws -> Bool {
+        let entry = try servers(in: load(data))?[serverName]
+        guard let command else { return entry != nil }
+        return (entry as? [String: Any])?["command"] as? String == command
     }
 
     // The new file contents, or nil when the entry already points at this command.
@@ -109,7 +114,7 @@ struct ClaudeConnector: Sendable {
 
     func status() -> Status {
         do {
-            return try ClaudeDesktopConfig.isAdded(readConfig()) ? .added : .notAdded
+            return try ClaudeDesktopConfig.isAdded(readConfig(), command: helperPath) ? .added : .notAdded
         } catch {
             return .unreadable(error.localizedDescription)
         }
@@ -138,9 +143,23 @@ struct ClaudeConnector: Sendable {
         try FileManager.default.createDirectory(at: configURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         if let original {
             // Keep the settings as they were before this change. An existing backup is never overwritten.
-            try original.write(to: backupURL(), options: .withoutOverwriting)
+            try writePrivate(original, to: backupURL())
         }
-        try updated.write(to: configURL, options: .atomic)
+        let temporary = configURL.deletingLastPathComponent().appendingPathComponent(".nosy-config-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        try writePrivate(updated, to: temporary)
+        guard try readConfig() == original else { throw ClaudeDesktopConfig.Failure.changed }
+        let result = temporary.path.withCString { from in configURL.path.withCString { to in rename(from, to) } }
+        guard result == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+    }
+
+    private func writePrivate(_ data: Data, to url: URL) throws {
+        let descriptor = open(url.path, O_WRONLY | O_CREAT | O_EXCL, 0o600)
+        guard descriptor >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+        defer { try? handle.close() }
+        try handle.write(contentsOf: data)
+        try handle.synchronize()
     }
 
     private func backupURL() -> URL {

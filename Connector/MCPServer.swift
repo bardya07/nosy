@@ -1,5 +1,34 @@
 import Foundation
 
+// Bound a client's input before JSON parsing; resume at the next newline after a bad frame.
+struct MCPLineBuffer {
+    static let maxBytes = 1_048_576
+    private var pending = Data()
+    private var oversized = false
+    mutating func append(_ data: Data) -> [String] {
+        var lines: [String] = []
+        for byte in data {
+            if byte == 0x0A {
+                lines.append(finishLine())
+            } else if !oversized {
+                if pending.count < Self.maxBytes { pending.append(byte) }
+                else { pending.removeAll(keepingCapacity: true); oversized = true }
+            }
+        }
+        return lines
+    }
+    mutating func finish() -> String? {
+        guard oversized || !pending.isEmpty else { return nil }
+        return finishLine()
+    }
+    private mutating func finishLine() -> String {
+        let line = oversized ? "\u{0}" : String(data: pending, encoding: .utf8) ?? "\u{0}"
+        pending.removeAll(keepingCapacity: true)
+        oversized = false
+        return line
+    }
+}
+
 // A small Model Context Protocol server: JSON-RPC 2.0, one message per line, tools only, read only.
 // It never writes to the transcripts folder.
 struct MCPServer: Sendable {
@@ -35,11 +64,18 @@ struct MCPServer: Sendable {
             return Self.failure(id: NSNull(), code: -32600, message: "Invalid Request")
         }
         let id = request["id"]
+        if let id, !(id is NSNull), !(id is String),
+           (!(id is NSNumber) || CFGetTypeID(id as CFTypeRef) == CFBooleanGetTypeID()) {
+            return Self.failure(id: NSNull(), code: -32600, message: "Invalid Request")
+        }
         guard request["jsonrpc"] as? String == "2.0", let method = request["method"] as? String else {
             return Self.failure(id: id ?? NSNull(), code: -32600, message: "Invalid Request")
         }
         // Notifications carry no id and get no reply.
         guard let id else { return nil }
+        if let params = request["params"], !(params is [String: Any]) {
+            return Self.failure(id: id, code: -32602, message: "Parameters must be an object.")
+        }
         let params = request["params"] as? [String: Any] ?? [:]
         switch method {
         case "initialize":
@@ -73,6 +109,9 @@ struct MCPServer: Sendable {
         }
         guard Self.toolNames.contains(name) else {
             return Self.failure(id: id, code: -32602, message: "Unknown tool: \(name)")
+        }
+        if let arguments = params["arguments"], !(arguments is [String: Any]) {
+            return Self.failure(id: id, code: -32602, message: "Arguments must be an object.")
         }
         let arguments = params["arguments"] as? [String: Any] ?? [:]
         do {

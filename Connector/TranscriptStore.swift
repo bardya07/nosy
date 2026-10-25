@@ -50,7 +50,6 @@ struct TranscriptStore: Sendable {
 
     static let maxNameLength = 200
     static let maxSearchLength = 200
-    private static let summarySuffix = " summary"
 
     let root: URL
 
@@ -89,7 +88,7 @@ struct TranscriptStore: Sendable {
         }
         let summaryFile = folderURL.appendingPathComponent(stem + " summary.md")
         let text = try String(contentsOf: file, encoding: .utf8)
-        let summary = isFile(summaryFile) && isContained(summaryFile)
+        let summary = isFile(summaryFile) && isContained(summaryFile) && Self.isSummary(at: summaryFile)
             ? try? String(contentsOf: summaryFile, encoding: .utf8)
             : nil
         return Document(folder: folderURL.lastPathComponent, name: stem, text: text, summary: summary)
@@ -147,14 +146,7 @@ struct TranscriptStore: Sendable {
     private func transcriptFiles(in folder: URL) -> [URL] {
         let names = ((try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? [])
             .filter { !$0.hasPrefix(".") && $0.lowercased().hasSuffix(".md") }
-        let stems = Set(names.map { Self.stemOfFile($0) })
         return names
-            .filter { name in
-                // A "<session> summary.md" is read together with its transcript, not listed on its own.
-                let stem = Self.stemOfFile(name)
-                return !(stem.hasSuffix(Self.summarySuffix)
-                    && stems.contains(String(stem.dropLast(Self.summarySuffix.count))))
-            }
             .map { folder.appendingPathComponent($0) }
             .filter { isFile($0) && isContained($0) && Self.isTranscript(at: $0) }
     }
@@ -173,6 +165,12 @@ struct TranscriptStore: Sendable {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
         defer { try? handle.close() }
         return isTranscript(String(decoding: (try? handle.read(upToCount: 4096)) ?? Data(), as: UTF8.self))
+    }
+    private static func isSummary(at url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        let header = String(decoding: (try? handle.read(upToCount: 4096)) ?? Data(), as: UTF8.self)
+        return header.hasPrefix("# ") && header.contains("\n\n_Summarized with ") && !isTranscript(header)
     }
 
     private func isDirectory(_ url: URL) -> Bool {
