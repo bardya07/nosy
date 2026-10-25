@@ -334,6 +334,8 @@ enum Snapshot {
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-search.\(mode)"),
                   save(PreviewWindow { LibraryView(model: model(.idle)) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-reader.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: model(.idle), previewHoveredFolder: "MBB322") }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-folder-delete-hover.\(mode)"),
                   save(PreviewWindow { LibraryView(model: model(.idle), previewDropping: true) }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "drop-library.\(mode)") else { return 1 }
             setenv("NOSY_TRANSCRIPTS_DIR", emptyTranscripts.path, 1)

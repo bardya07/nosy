@@ -32,6 +32,10 @@ struct TranscriptFolders: Equatable {
         }
     }
     mutating func reveal(_ folder: String) { open.insert(folder) }
+    mutating func remove(_ folder: String) {
+        open.remove(folder)
+        closedWhileSearching.remove(folder)
+    }
     mutating func endSearch() { closedWhileSearching = [] }
 }
 
@@ -172,6 +176,7 @@ final class TranscriptLibrary: ObservableObject {
     // Rows on screen, top to bottom: a closed folder hides its sessions.
     var visibleRows: [TranscriptItem] { grouped.filter { isOpen($0.lecture) }.flatMap(\.items) }
     func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
+    func removeFolderState(_ lecture: String) { folders.remove(lecture) }
     // Previews show the tree with every folder closed.
     func collapseFolders() { folders = TranscriptFolders() }
     // Restores the saved open folders. Pass nil to keep them for this window only.
@@ -225,6 +230,55 @@ final class TranscriptLibrary: ObservableObject {
         }
         reload(paths: paths)
     }
+
+    // Moves a complete transcript folder to the Trash, then keeps the reader on a nearby session.
+    @discardableResult func trashFolder(_ lecture: String, paths: AppPaths,
+        moveToTrash: (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) -> Bool {
+        let folder = paths.lectureFolder(lecture)
+        let removed = items.filter { $0.lecture == lecture && Core.isContained($0.url, in: paths.transcripts) }
+        guard !removed.isEmpty, finishEditing() else { return false }
+        let list = ordered
+        let oldSelection = selection
+        let selectionIndex = list.firstIndex { $0.url == oldSelection }
+        do {
+            try Self.moveFolderToTrash(folder, in: paths.transcripts, moveToTrash: moveToTrash)
+        } catch {
+            let alert = NSAlert(error: error)
+            alert.messageText = "Couldn't move this folder to the Trash"
+            alert.runModal()
+            return false
+        }
+        for item in removed { didChange?(item.url, nil) }
+        removeFolderState(lecture)
+        let selectedFolderWasRemoved = selectedFolder == lecture
+        if selectedFolderWasRemoved { selectedFolder = nil }
+        reload(paths: paths)
+
+        let removedURLs = Set(removed.map(\.url))
+        if let oldSelection, removedURLs.contains(oldSelection) {
+            let remaining = list.filter { !removedURLs.contains($0.url) }
+            let next = selectionIndex.flatMap { index in
+                remaining.indices.contains(index) ? remaining[index].url : remaining.last?.url
+            } ?? remaining.first?.url
+            setSelection(next)
+        } else if selectedFolderWasRemoved, let selection {
+            setSelection(selection)
+        }
+        return true
+    }
+
+    static func moveFolderToTrash(_ folder: URL, in libraryRoot: URL,
+        moveToTrash: (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) throws {
+        let target = folder.standardizedFileURL
+        let root = libraryRoot.resolvingSymlinksInPath().standardizedFileURL
+        let parent = target.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL
+        guard parent == root, Core.isContained(target, in: libraryRoot),
+              (try? target.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+            throw LectureError.message("This folder is outside the transcript library.")
+        }
+        try moveToTrash(target)
+    }
+
     func rename(_ item: TranscriptItem, paths: AppPaths) {
         guard finishEditing() else { return }
         let alert = NSAlert()
@@ -304,17 +358,20 @@ struct LibraryView: View {
     var previewCollapsed: Bool
     var previewSummary: Bool
     var previewDropping: Bool
+    var previewHoveredFolder: String?
     private var editing: Bool { library.editing }
     private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
-    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false, previewDropping: Bool = false) {
+    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false,
+         previewDropping: Bool = false, previewHoveredFolder: String? = nil) {
         self.model = model
         _summaries = ObservedObject(wrappedValue: model.summaries)
         self.previewQuery = previewQuery
         self.previewCollapsed = previewCollapsed
         self.previewSummary = previewSummary
         self.previewDropping = previewDropping
+        self.previewHoveredFolder = previewHoveredFolder
     }
 
     var body: some View {
@@ -526,10 +583,13 @@ struct LibraryView: View {
     @ViewBuilder private func folderGroup(_ lecture: String, _ items: [TranscriptItem]) -> some View {
         let open = library.isOpen(lecture)
         VStack(alignment: .leading, spacing: 2) {
-            TranscriptFolderRow(lecture: lecture, count: items.count, open: open, selected: library.selectedFolder == lecture) {
-                library.selectFolder(lecture)
-                withAnimation(fold) { library.toggleFolder(lecture) }
-            }
+            TranscriptFolderRow(lecture: lecture, count: items.count, open: open, selected: library.selectedFolder == lecture,
+                previewHovered: previewHoveredFolder == lecture,
+                trashLocked: items.contains(where: { summaries.isBusy($0.url) }),
+                toggle: {
+                    library.selectFolder(lecture)
+                    withAnimation(fold) { library.toggleFolder(lecture) }
+                }, trash: { confirmTrashFolder(lecture) })
             if open {
                 VStack(alignment: .leading, spacing: 1) {
                     ForEach(items) { item in
@@ -548,6 +608,15 @@ struct LibraryView: View {
                 .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .top)))
             }
         }
+    }
+
+    private func confirmTrashFolder(_ lecture: String) {
+        let alert = NSAlert()
+        alert.messageText = "Move \"\(lecture)\" and its transcripts to the Trash?"
+        alert.addButton(withTitle: "Move to Trash")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        if library.trashFolder(lecture, paths: libraryPaths) { loadSummary() }
     }
 
     // Recordings without a transcript (failed, quit, or postponed) stay reachable here.
@@ -716,39 +785,57 @@ private struct TranscriptFolderRow: View {
     let count: Int
     let open: Bool
     let selected: Bool
+    let previewHovered: Bool
+    let trashLocked: Bool
     let toggle: () -> Void
+    let trash: () -> Void
+    @State private var hovering = false
+    private var showsTrash: Bool { hovering || previewHovered }
 
     var body: some View {
-        Button(action: toggle) {
-            HStack(spacing: 10) {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Theme.muted)
-                    .rotationEffect(.degrees(open ? 90 : 0))
-                    .frame(width: 12)
-                Image(systemName: open ? "folder.fill" : "folder")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Theme.navy)
-                    .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 18)
-                Text(lecture)
-                    .font(Theme.text(15, .semibold)).foregroundStyle(Theme.ink)
-                    .lineLimit(1)
-                Spacer(minLength: 6)
-                Text("\(count)")
-                    .font(Theme.text(11, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
-                    .padding(.horizontal, 7).padding(.vertical, 2)
-                    .background(Theme.surface, in: Capsule())
-                    .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+        HStack(spacing: 2) {
+            Button(action: toggle) {
+                HStack(spacing: 10) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.muted)
+                        .rotationEffect(.degrees(open ? 90 : 0))
+                        .frame(width: 12)
+                    Image(systemName: open ? "folder.fill" : "folder")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Theme.navy)
+                        .contentTransition(.symbolEffect(.replace))
+                        .frame(width: 18)
+                    Text(lecture)
+                        .font(Theme.text(15, .semibold)).foregroundStyle(Theme.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 6)
+                    Text("\(count)")
+                        .font(Theme.text(11, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Theme.surface, in: Capsule())
+                        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                }
+                .padding(.horizontal, 10).padding(.vertical, 11)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 10).padding(.vertical, 11)
-            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity)
+            .background(selected ? Theme.accent.opacity(0.09) : .clear,
+                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .buttonStyle(FolderRowStyle())
+            .accessibilityLabel("\(lecture), \(count) \(count == 1 ? "session" : "sessions")")
+            .accessibilityValue(open ? "Expanded" : "Collapsed")
+
+            Button(action: trash) { Image(systemName: "trash") }
+                .buttonStyle(IconButtonStyle(size: 23, destructive: true))
+                .tip("Delete folder")
+                .accessibilityLabel("Delete \(lecture)")
+                .opacity(showsTrash ? 1 : 0)
+                .disabled(!showsTrash || trashLocked)
+                .animation(Motion.hover, value: showsTrash)
         }
-        .background(selected ? Theme.accent.opacity(0.09) : .clear,
-                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .buttonStyle(FolderRowStyle())
-        .accessibilityLabel("\(lecture), \(count) \(count == 1 ? "session" : "sessions")")
-        .accessibilityValue(open ? "Expanded" : "Collapsed")
+        .frame(maxWidth: .infinity)
+        .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
     }
 }
 

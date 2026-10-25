@@ -2,18 +2,10 @@ import SwiftUI
 import AppKit
 import AVFoundation
 
-// First-run setup: microphone, save folder, speech engine + model, and a five-second
-// rehearsal that runs the real pipeline so the first lecture isn't the first test.
+// First-run setup: microphone, save folder, speech engine and model.
 @MainActor
 final class OnboardingModel: ObservableObject {
-    enum Step: Int, CaseIterable { case welcome, microphone, folder, engine, tryIt }
-    enum Rehearsal: Equatable {
-        case ready
-        case recording(remaining: Int)
-        case transcribing(Double)
-        case done(String)
-        case failed(String)
-    }
+    enum Step: Int, CaseIterable { case welcome, microphone, folder, engine }
     @Published var step: Step = .welcome
     @Published var micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
     @Published var downloading = false
@@ -21,14 +13,7 @@ final class OnboardingModel: ObservableObject {
     @Published var downloadFraction = 0.0
     @Published var downloadDetail = ""
     @Published var downloadError: String?
-    @Published var rehearsal: Rehearsal = .ready
-    @Published var rehearsalLevel = -160.0
     private var download: ModelDownload?
-    private var rehearsalTask: Task<Void, Never>?
-    private var rehearsalJob: TranscriptionJob?
-    var rehearsing: Bool {
-        switch rehearsal { case .recording, .transcribing: true; default: false }
-    }
 
     func requestMicrophone() async {
         if micStatus == .notDetermined { _ = await AVCaptureDevice.requestAccess(for: .audio) }
@@ -94,63 +79,7 @@ final class OnboardingModel: ObservableObject {
         }
     }
 
-    func startRehearsal(paths: AppPaths, inputUID: String?) {
-        guard rehearsalTask == nil, !AppModel.shared.busy else { return }
-        rehearsalTask = Task { await rehearse(paths: paths, inputUID: inputUID); rehearsalTask = nil }
-    }
-    func cancelRehearsal() {
-        rehearsalTask?.cancel()
-        rehearsalJob?.cancel()
-    }
-    func shutdown() async {
-        download?.cancel()
-        cancelRehearsal()
-        await rehearsalTask?.value
-    }
-    private func rehearse(paths: AppPaths, inputUID: String?) async {
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Nosy-rehearsal-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: folder) }
-        let practice = paths.rehearsal(in: folder)
-        // Holding the main window's lock keeps a real lecture from starting alongside.
-        AppModel.shared.transitioning = true
-        defer { AppModel.shared.transitioning = false }
-        var recorder: Recorder?
-        let job = TranscriptionJob()
-        rehearsalJob = job
-        defer { rehearsalJob = nil }
-        do {
-            await requestMicrophone()
-            guard micStatus == .authorized else { throw LectureError.message("Microphone access is off. Allow it in System Settings › Privacy & Security › Microphone.") }
-            try practice.prepareSupport()
-            try FileManager.default.createDirectory(at: practice.lectureFolder("Rehearsal"), withIntermediateDirectories: true)
-            var record = SessionRecord(id: Core.newID(in: practice), lecture: "Rehearsal", session: "Try it", startedAt: Date(), status: .recording)
-            try record.save(in: practice)
-            let live = Recorder(inputUID: inputUID) { [weak self] event in
-                if case .level(_, let db, _) = event { Task { @MainActor in self?.rehearsalLevel = db } }
-            }
-            recorder = live
-            try await live.start(at: practice.audioFile(record.id, "pcm"))
-            for remaining in stride(from: 5, through: 1, by: -1) {
-                rehearsal = .recording(remaining: remaining)
-                try await Task.sleep(for: .seconds(1))
-            }
-            _ = try await live.stop()
-            recorder = nil
-            record.endedAt = Date()
-            rehearsal = .transcribing(0)
-            let result = try await Transcriber.transcribe(record: record, paths: practice, job: job) { [weak self] value in
-                Task { @MainActor in
-                    if case .transcribing = self?.rehearsal { self?.rehearsal = .transcribing(value) }
-                }
-            }
-            let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) } ?? ""
-            let spoken = markdown.components(separatedBy: "## Transcript").last?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            rehearsal = .done(spoken.isEmpty || spoken.contains("No speech detected") ? "" : spoken)
-        } catch {
-            _ = try? await recorder?.stop()
-            rehearsal = Task.isCancelled || error is CancellationError ? .ready : .failed(Core.friendlyError(error.localizedDescription))
-        }
-    }
+    func shutdown() async { download?.cancel() }
 }
 
 struct OnboardingView: View {
@@ -183,7 +112,7 @@ struct OnboardingView: View {
             footer
         }
         .frame(width: 520, height: 470)
-        .onDisappear { setup.cancelRehearsal(); model.finishOnboardingWork = nil }
+        .onDisappear { model.finishOnboardingWork = nil }
         .onAppear {
             if !Snapshot.isRunning {
                 setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -196,7 +125,6 @@ struct OnboardingView: View {
         .background(WindowBackdrop())
         .tint(Theme.accentText)
         .animation(Motion.state(reduceMotion), value: setup.step)
-        .animation(Motion.state(reduceMotion), value: setup.rehearsal)
         .animation(Motion.state(reduceMotion), value: setup.downloading)
         .tipContainerBounds()
     }
@@ -273,52 +201,6 @@ struct OnboardingView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-        case .tryIt:
-            page(title: "Try it", body: "Say a sentence with a tricky word. Nosy records five seconds and writes it up.") {
-                rehearsal
-            }
-        }
-    }
-
-    @ViewBuilder private var rehearsal: some View {
-        switch setup.rehearsal {
-        case .ready:
-            Button { setup.startRehearsal(paths: model.paths, inputUID: model.inputUID) } label: {
-                Label("Record 5 seconds", systemImage: "record.circle")
-            }
-            .buttonStyle(PillButtonStyle(kind: .primary, height: 40, fullWidth: false))
-            .tip("Record test clip")
-            .disabled(model.busy || model.setupMessage != nil)
-            if model.setupMessage != nil {
-                Text("Finish the speech engine step first.").font(Theme.text(12)).foregroundStyle(Theme.muted)
-            }
-        case .recording(let remaining):
-            VStack(spacing: 10) {
-                Text("\(remaining)").font(Theme.text(44)).monospacedDigit().foregroundStyle(Theme.ink)
-                    .contentTransition(.numericText(countsDown: true))
-                Text("Listening…").font(Theme.text(12.5, .medium)).foregroundStyle(Theme.muted)
-                Circle().fill(Theme.coral).frame(width: 10, height: 10)
-                    .scaleEffect(reduceMotion ? 1 : 1 + CGFloat(max(0, (setup.rehearsalLevel + 50) / 50)))
-                    .animation(.easeOut(duration: 0.1), value: setup.rehearsalLevel)
-            }
-        case .transcribing(let value):
-            VStack(spacing: 8) {
-                Text("Writing it up…").font(Theme.text(13, .semibold)).foregroundStyle(Theme.ink)
-                ProgressTrack(value: value, tint: Theme.stop).frame(width: 280)
-            }
-        case .done(let text):
-            VStack(spacing: 10) {
-                status(text.isEmpty ? "Nosy didn't catch any words" : "It works", ok: !text.isEmpty)
-                Text(text.isEmpty ? "Check that the right mic is selected and try again, a little louder." : "“\(text)”")
-                    .font(Theme.text(14)).foregroundStyle(text.isEmpty ? Theme.muted : Theme.ink)
-                    .multilineTextAlignment(.center).lineLimit(4)
-                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle()).tip("Retry rehearsal")
-            }
-        case .failed(let message):
-            VStack(spacing: 10) {
-                status(message, ok: false)
-                Button("Try again") { setup.rehearsal = .ready }.buttonStyle(LinkButtonStyle()).tip("Retry rehearsal")
-            }
         }
     }
 
@@ -329,13 +211,13 @@ struct OnboardingView: View {
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
                     .tip("Previous step")
                     .keyboardShortcut(.cancelAction)
-                    .disabled(setup.rehearsing)
             }
             Spacer()
             if setup.step == .engine, model.setupMessage != nil {
-                Button("Skip for now") { setup.step = .tryIt }.buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Skip setup step")
+                Button("Skip for now") { model.finishOnboarding(); dismiss() }
+                    .buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Skip setup step")
             }
-            Button(setup.step == .tryIt ? "Start using Nosy" : "Continue") {
+            Button(setup.step == .engine ? "Start using Nosy" : "Continue") {
                 if let next = OnboardingModel.Step(rawValue: setup.step.rawValue + 1) {
                     setup.step = next
                     if next == .engine { model.refreshDependencies() }
@@ -345,7 +227,7 @@ struct OnboardingView: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
-            .tip(setup.step == .tryIt ? "Finish setup" : "Continue setup")
+            .tip(setup.step == .engine ? "Finish setup" : "Continue setup")
             .keyboardShortcut(.defaultAction)
             .disabled(continueDisabled)
         }
@@ -354,7 +236,6 @@ struct OnboardingView: View {
     private var continueDisabled: Bool {
         switch setup.step {
         case .engine: model.setupMessage != nil
-        case .tryIt: setup.rehearsing
         default: false
         }
     }
