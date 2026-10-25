@@ -56,15 +56,43 @@ enum LibraryTests {
         let newest = mbb.appendingPathComponent("2026-10-23.md")
         let older = mbb.appendingPathComponent("2026-10-20.md")
         let chemistry = chem.appendingPathComponent("2026-10-21.md")
-        try "# MBB322\n\n## Transcript\n\nATP drives work.\n".write(to: newest, atomically: true, encoding: .utf8)
-        try "# MBB322\n\n## Transcript\n\nEnzymes lower activation energy.\n".write(to: older, atomically: true, encoding: .utf8)
-        try "# CHEM281\n\n## Transcript\n\nTitration endpoints.\n".write(to: chemistry, atomically: true, encoding: .utf8)
+        try "# MBB322\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nATP drives work.\n".write(to: newest, atomically: true, encoding: .utf8)
+        try "# MBB322\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nEnzymes lower activation energy.\n".write(to: older, atomically: true, encoding: .utf8)
+        try "# CHEM281\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nTitration endpoints.\n".write(to: chemistry, atomically: true, encoding: .utf8)
         for (url, age) in [(newest, 0.0), (older, -172_800), (chemistry, -86_400)] {
             try FileManager.default.setAttributes([.creationDate: now.addingTimeInterval(age)], ofItemAtPath: url.path)
         }
 
+        // Unrelated markdown beside transcripts (a destination like ~/Downloads) is never listed.
+        let random = paths.transcripts.appendingPathComponent("Hamstr stuff")
+        try FileManager.default.createDirectory(at: random, withIntermediateDirectories: true)
+        try "# MB v1.22\n\nRelease notes.\n".write(to: random.appendingPathComponent("MB-v1.22.md"), atomically: true, encoding: .utf8)
+        try "# HANDOFF\n\n## Transcript\n\nNot a Nosy file.\n".write(to: mbb.appendingPathComponent("HANDOFF.md"), atomically: true, encoding: .utf8)
+        try "# STATUS\n".write(to: paths.transcripts.appendingPathComponent("STATUS.md"), atomically: true, encoding: .utf8)
+
         let library = TranscriptLibrary()
         library.reload(paths: paths)
+        check(Set(library.items.map(\.url)) == [newest, older, chemistry], "only Nosy transcripts are listed, never other markdown")
+        check(!library.grouped.map(\.lecture).contains("Hamstr stuff"), "a folder without transcripts gets no group")
+        check(Core.isTranscript("# MBB322 — 2026-10-23\r\n\r\n- Date: 2026-10-23\r\n- Started: 16:13\r\n- Length: 52 min\r\n\r\n## Transcript\r\n\r\nText"),
+              "a real header with CRLF line endings is a transcript")
+        check(!Core.isTranscript("Notes\n# Heading\n- Date: x\n- Length: y\n## Transcript"), "the title must come first")
+
+        // A chosen destination gets its own "Nosy Transcripts" folder; Nosy libraries stay as they are.
+        let home = root.appendingPathComponent("home", isDirectory: true)
+        let downloads = home.appendingPathComponent("Downloads", isDirectory: true)
+        try FileManager.default.createDirectory(at: downloads.appendingPathComponent("MB"), withIntermediateDirectories: true)
+        try "# STATUS\n".write(to: downloads.appendingPathComponent("MB/STATUS.md"), atomically: true, encoding: .utf8)
+        check(AppPaths.dedicatedTranscripts(for: downloads, home: home).path == downloads.standardizedFileURL.appendingPathComponent("Nosy Transcripts").path,
+              "choosing Downloads stores transcripts in Downloads/Nosy Transcripts")
+        let dedicated = downloads.appendingPathComponent("Nosy Transcripts", isDirectory: true)
+        check(AppPaths.dedicatedTranscripts(for: dedicated, home: home).path == dedicated.standardizedFileURL.path, "choosing the dedicated folder keeps it")
+        let legacy = home.appendingPathComponent("Desktop/Lecture Transcripts", isDirectory: true)
+        check(AppPaths.dedicatedTranscripts(for: legacy, home: home).path == legacy.standardizedFileURL.path, "the old Lecture Transcripts folder keeps working")
+        check(AppPaths.dedicatedTranscripts(for: paths.transcripts, home: home).path == paths.transcripts.standardizedFileURL.path,
+              "a folder that already holds Nosy transcripts is used as is")
+        let downloadsNames = try FileManager.default.contentsOfDirectory(atPath: downloads.path).sorted()
+        check(downloadsNames == ["MB"], "choosing a folder moves or creates nothing by itself")
         check(library.selection == newest, "the newest transcript opens selected")
         check(library.importTargetLecture == "MBB322", "the selected transcript sets the import folder")
         check(library.isOpen("MBB322") && !library.isOpen("CHEM281"), "the selected folder starts open and the others closed")
@@ -126,7 +154,7 @@ enum LibraryTests {
         check(unsaved.isOpen("MBB322") && !unsaved.isOpen("CHEM281"), "a window without storage keeps folder state in memory only")
 
         // Silent transcripts read as a clean line, not raw Markdown.
-        let silent = "# MBB322\n\n## Transcript\n\n_No speech detected._\n"
+        let silent = "# MBB322\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\n_No speech detected._\n"
         let paragraphs = TranscriptBlock.parse(silent).compactMap { block -> String? in
             if case .paragraph(let text) = block.content { return text }
             return nil

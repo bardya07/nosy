@@ -120,6 +120,16 @@ final class AppModel: ObservableObject {
            UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) == nil {
             UserDefaults.standard.set(paths.transcripts.path, forKey: AppPaths.transcriptsKey)
         }
+        // A folder chosen before dedicated folders (e.g. ~/Downloads itself) moves to its own
+        // "Nosy Transcripts" inside it. Nothing is moved; a folder that holds transcripts stays.
+        if ProcessInfo.processInfo.environment["NOSY_TRANSCRIPTS_DIR"] == nil,
+           let stored = UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) {
+            let dedicated = AppPaths.dedicatedTranscripts(for: URL(fileURLWithPath: stored, isDirectory: true))
+            if dedicated.path != URL(fileURLWithPath: stored).standardizedFileURL.path {
+                UserDefaults.standard.set(dedicated.path, forKey: AppPaths.transcriptsKey)
+                paths = AppPaths()
+            }
+        }
         summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
         refreshInputs()
@@ -769,7 +779,10 @@ final class AppModel: ObservableObject {
         panel.directoryURL = paths.transcripts
         guard panel.runModal() == .OK, let url = panel.url else { return false }
         guard finishLibraryEditing?() != false else { return false }
-        UserDefaults.standard.set(url.path, forKey: AppPaths.transcriptsKey)
+        let folder = AppPaths.dedicatedTranscripts(for: url)
+        do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
+        catch { showError("Couldn't create \(folder.lastPathComponent): \(error.localizedDescription)"); return false }
+        UserDefaults.standard.set(folder.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
         return true
     }

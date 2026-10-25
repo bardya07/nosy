@@ -70,6 +70,11 @@ enum ConnectorTests {
         check(call(server, "search_transcripts", ["query": "cafe"]).text.contains("café"), "search_transcripts ignores accents")
         check(call(server, "search_transcripts", ["query": "e", "limit": 2]).text.components(separatedBy: "\"line\"").count == 3,
               "search_transcripts honors limit")
+        check(!folders.text.contains("Random Documents") && !all.text.contains("HANDOFF") && !all.text.contains("codex_prompt"),
+              "only Nosy transcripts are listed, never other markdown in the folder")
+        check(call(server, "read_transcript", ["folder": "MBB322", "name": "HANDOFF"]).isError, "unrelated markdown cannot be read")
+        check(!call(server, "search_transcripts", ["query": "clinic"]).text.contains("HANDOFF")
+              && !call(server, "search_transcripts", ["query": "ATP"]).text.contains("codex"), "unrelated markdown is never searched")
         check(call(server, "search_transcripts", ["query": "qqxzzy"]).text == "[]", "search_transcripts returns an empty list when nothing matches")
         check(call(server, "search_transcripts", ["query": "   "]).isError, "an empty search is refused")
         check(call(server, "search_transcripts", ["query": String(repeating: "a", count: 201)]).isError, "an overlong search is refused")
@@ -199,6 +204,11 @@ enum ConnectorTests {
         """.write(to: rehearsal.appendingPathComponent("2026-10-20.md"), atomically: true, encoding: .utf8)
         try "hidden\n".write(to: mbb.appendingPathComponent(".2026-10-24.md.tmp"), atomically: true, encoding: .utf8)
         try "not a transcript\n".write(to: mbb.appendingPathComponent("notes.txt"), atomically: true, encoding: .utf8)
+        // A destination like ~/Downloads holds the owner's own markdown; it must never be exposed.
+        try "# HANDOFF\n\nATP plan for the clinic.\n".write(to: mbb.appendingPathComponent("HANDOFF.md"), atomically: true, encoding: .utf8)
+        let unrelated = transcripts.appendingPathComponent("Random Documents", isDirectory: true)
+        try manager.createDirectory(at: unrelated, withIntermediateDirectories: true)
+        try "# codex prompt\n\nATP.\n".write(to: unrelated.appendingPathComponent("codex_prompt.md"), atomically: true, encoding: .utf8)
         try "hidden folder\n".write(to: hidden.appendingPathComponent("x.md"), atomically: true, encoding: .utf8)
         let secret = outside.appendingPathComponent("secret.md")
         try "TOP SECRET\n".write(to: secret, atomically: true, encoding: .utf8)

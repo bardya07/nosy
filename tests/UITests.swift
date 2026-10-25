@@ -29,7 +29,7 @@ enum UITests {
         try FileManager.default.createDirectory(at: paths.lectureFolder("CHEM281"), withIntermediateDirectories: true)
         let first = folder.appendingPathComponent("First.md")
         let second = folder.appendingPathComponent("Second.md")
-        let speech = "# MBB322\n\n## Transcript\n\nATP helps cells.\n\n> [0:01] Exam hint\n"
+        let speech = "# MBB322\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\nATP helps cells.\n\n> [0:01] Exam hint\n"
         try speech.write(to: first, atomically: true, encoding: .utf8)
         try speech.write(to: second, atomically: true, encoding: .utf8)
         func check(_ condition: Bool, _ message: String) { expect(condition, message) }
@@ -56,14 +56,14 @@ enum UITests {
         library.select(first)
         check(try String(contentsOf: second, encoding: .utf8) == speech, "Discard does not write")
         library.beginEditing(paths: paths)
-        library.draft = "Keep this in the original folder"
+        library.draft = speech + "Keep this in the original folder"
         library.chooseDraftAction = { .cancel }
         let other = AppPaths(environment: ["NOSY_SUPPORT_DIR": paths.support.path, "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("other").path])
         library.reload(paths: other)
         check(library.selection == first && library.editing, "Folder changes must guard dirty edits")
         library.chooseDraftAction = { .save }
         library.reload(paths: other)
-        check(try String(contentsOf: first, encoding: .utf8) == "Keep this in the original folder", "Folder changes save to captured paths")
+        check(try String(contentsOf: first, encoding: .utf8) == speech + "Keep this in the original folder", "Folder changes save to captured paths")
         model.selectedLecture = "MBB322"
         check(model.vocabularySubject == "Biology", "Ready resolves the configured subject")
         let unopenedSettings = folder.appendingPathComponent("vocabulary.json")
@@ -135,7 +135,7 @@ enum UITests {
         check(AppDelegate().applicationShouldTerminate(NSApp) == .terminateCancel,
               "Quit asks about dirty transcript edits before terminating")
         let textAfterCancelledQuit = try String(contentsOf: first, encoding: .utf8)
-        check(library.editing && textAfterCancelledQuit == "Keep this in the original folder",
+        check(library.editing && textAfterCancelledQuit == speech + "Keep this in the original folder",
               "cancelled Quit retains the unsaved transcript draft")
         library.chooseDraftAction = { .save }
         check(AppDelegate().applicationShouldTerminate(NSApp) == .terminateNow,
@@ -152,7 +152,7 @@ enum UITests {
         let hiddenFolder = paths.transcripts.appendingPathComponent(".Private", isDirectory: true)
         try FileManager.default.createDirectory(at: hiddenFolder, withIntermediateDirectories: true)
         let hiddenTranscript = hiddenFolder.appendingPathComponent(".Session.md")
-        try "Hidden draft remains discoverable".write(to: hiddenTranscript, atomically: true, encoding: .utf8)
+        try (speech + "Hidden draft remains discoverable").write(to: hiddenTranscript, atomically: true, encoding: .utf8)
         check(paths.lectures().contains(".Private"), "existing hidden transcript folders remain in the save folder list")
         library.reload(paths: paths)
         check(library.items.contains(where: { $0.url == hiddenTranscript }), "existing hidden transcripts remain discoverable")
@@ -200,12 +200,12 @@ enum UITests {
         try FileManager.default.removeItem(at: renamed)
         model.transcriptChanged(from: renamed, to: nil)
         check(model.savedSummary.markdown == nil && model.current?.transcriptPath == nil, "Trash disables Saved actions and clears copy cache")
-        let empty = "# Empty\n\n## Transcript\n\n> [0:01] A marker\n\n_No speech detected._\n"
+        let empty = "# Empty\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\n> [0:01] A marker\n\n_No speech detected._\n"
         try empty.write(to: first, atomically: true, encoding: .utf8)
         record.transcriptPath = first.path
         model.current = record
         check(model.savedSummary.noSpeech && model.savedSummary.words == 0, "Silent recordings with markers are neutral no-speech outcomes")
-        check(Core.wordCount("# Empty\n\n## Transcript\n\n") == 0, "Empty transcript body has zero words")
+        check(Core.wordCount("# Empty\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\n") == 0, "Empty transcript body has zero words")
         check(Core.wordCount("An edited transcript without headings") == 5, "Removing a heading must not turn speech into a silent outcome")
         try record.save(in: paths)
         check(try SessionRecord.read(paths.audioFile(record.id, "json")).vocabularyTerms == ["ATP"], "Captured vocabulary survives sidecar roundtrip")

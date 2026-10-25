@@ -45,6 +45,18 @@ struct AppPaths: Sendable {
         usesDefaultSupport = environment["NOSY_SUPPORT_DIR"] == nil
     }
 
+    static let dedicatedFolderName = "Nosy Transcripts"
+    // A chosen location gets its own "Nosy Transcripts" folder, so picking ~/Downloads never mixes
+    // transcripts with the owner's files. A folder that already is a Nosy library is used as is.
+    static func dedicatedTranscripts(for chosen: URL, home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL {
+        let folder = chosen.standardizedFileURL
+        let known = [home.appendingPathComponent("Desktop/Lecture Transcripts"), home.appendingPathComponent("Documents/Nosy")]
+            .map { $0.standardizedFileURL.path }
+        if folder.lastPathComponent == dedicatedFolderName || known.contains(folder.path) || Core.containsTranscripts(folder) {
+            return folder
+        }
+        return folder.appendingPathComponent(dedicatedFolderName, isDirectory: true)
+    }
     // People who used Lecture Transcriber keep their Desktop folder; everyone else gets ~/Documents/Nosy.
     static func defaultTranscripts(home: URL) -> URL {
         let legacy = home.appendingPathComponent("Desktop/Lecture Transcripts", isDirectory: true)
@@ -526,6 +538,31 @@ enum Core {
         if tail != "_No speech detected._" { chunks.append(tail) }
         if paragraphs(text) == "_No speech detected._" { chunks.append("_No speech detected._") }
         return chunks.joined(separator: "\n\n")
+    }
+    // The header markdown(record:) writes. Only files that start with it are transcripts, so a
+    // transcripts folder that also holds other notes never lists them. Keep in sync with
+    // TranscriptStore.isTranscript in the connector.
+    static func isTranscript(_ text: String) -> Bool {
+        let lines = text.split(maxSplits: 16, omittingEmptySubsequences: true, whereSeparator: \.isNewline).prefix(16)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard let title = lines.first(where: { !$0.isEmpty }), title.hasPrefix("# ") else { return false }
+        return lines.contains { $0.hasPrefix("- Date: ") } && lines.contains { $0.hasPrefix("- Length: ") }
+            && lines.contains("## Transcript")
+    }
+    static func isTranscript(at url: URL) -> Bool {
+        guard url.pathExtension.lowercased() == "md", let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        return isTranscript(String(decoding: (try? handle.read(upToCount: 4096)) ?? Data(), as: UTF8.self))
+    }
+    // True when a subfolder of `folder` holds at least one Nosy transcript.
+    static func containsTranscripts(_ folder: URL) -> Bool {
+        let manager = FileManager.default
+        let subfolders = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles])) ?? []
+        return subfolders.contains { sub in
+            guard (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
+            let files = (try? manager.contentsOfDirectory(at: sub, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
+            return files.contains { isTranscript(at: $0) }
+        }
     }
     static func markdown(record: SessionRecord, duration: TimeInterval, text: String, body: String? = nil) -> String {
         """

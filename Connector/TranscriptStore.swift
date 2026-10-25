@@ -58,9 +58,11 @@ struct TranscriptStore: Sendable {
         self.root = root.resolvingSymlinksInPath().standardizedFileURL
     }
 
+    // Only folders that hold Nosy transcripts: the transcripts folder may sit beside other notes.
     func folders() -> [Folder] {
         subfolders()
             .map { Folder(name: $0.lastPathComponent, transcripts: transcriptFiles(in: $0).count) }
+            .filter { $0.transcripts > 0 }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
@@ -82,7 +84,7 @@ struct TranscriptStore: Sendable {
         let folderURL = try existingFolder(folder)
         let stem = try Self.stem(from: name)
         let file = folderURL.appendingPathComponent(stem + ".md")
-        guard isFile(file), isContained(file) else {
+        guard isFile(file), isContained(file), Self.isTranscript(at: file) else {
             throw Failure.notFound("transcript \"\(stem)\" in folder \"\(folderURL.lastPathComponent)\"")
         }
         let summaryFile = folderURL.appendingPathComponent(stem + " summary.md")
@@ -154,7 +156,23 @@ struct TranscriptStore: Sendable {
                     && stems.contains(String(stem.dropLast(Self.summarySuffix.count))))
             }
             .map { folder.appendingPathComponent($0) }
-            .filter { isFile($0) && isContained($0) }
+            .filter { isFile($0) && isContained($0) && Self.isTranscript(at: $0) }
+    }
+
+    // The header Nosy writes ("# Course — Session", "- Date:", "- Length:", "## Transcript").
+    // Arbitrary markdown that shares the folder is never listed, read or searched.
+    // Keep in sync with Core.isTranscript in the app.
+    static func isTranscript(_ text: String) -> Bool {
+        let lines = text.split(maxSplits: 16, omittingEmptySubsequences: true, whereSeparator: \.isNewline).prefix(16)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard let title = lines.first(where: { !$0.isEmpty }), title.hasPrefix("# ") else { return false }
+        return lines.contains { $0.hasPrefix("- Date: ") } && lines.contains { $0.hasPrefix("- Length: ") }
+            && lines.contains("## Transcript")
+    }
+    static func isTranscript(at url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        return isTranscript(String(decoding: (try? handle.read(upToCount: 4096)) ?? Data(), as: UTF8.self))
     }
 
     private func isDirectory(_ url: URL) -> Bool {

@@ -262,7 +262,7 @@ enum Snapshot {
             guard save(PreviewWindow { MainView(model: longFolder) }
                 .padding(36).background(PreviewBackdrop()), "dropdown-long-folder.\(mode)") else { return 1 }
             let emptyURL = course.appendingPathComponent("Silent.md")
-            try? Data("# MBB322\n\n## Transcript\n\n_No speech detected._\n".utf8).write(to: emptyURL)
+            try? Data("# MBB322\n\n- Date: 2026-10-23\n- Length: 1 min\n\n## Transcript\n\n_No speech detected._\n".utf8).write(to: emptyURL)
             let empty = model(.done)
             empty.duration = 4
             empty.current?.markers = []
