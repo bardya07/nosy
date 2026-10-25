@@ -196,6 +196,8 @@ enum Snapshot {
             }
             guard save(PreviewWindow { MainView(model: model(.transcribing)) }.padding(36).background(PreviewBackdrop()),
                        "transcribing.\(mode)") else { return 1 }
+            guard save(PreviewWindow { MainView(model: model(.idle), previewDropping: true) }
+                    .padding(36).background(PreviewBackdrop()), "drop-main.\(mode)") else { return 1 }
             let readyRoom = model(.idle, source: .mic)
             let readyMac = model(.idle, source: .both)
             guard save(PreviewWindow { MainView(model: readyRoom) }.padding(36).background(PreviewBackdrop()), "ready-room-audio.\(mode)"),
@@ -326,7 +328,9 @@ enum Snapshot {
             guard save(PreviewWindow { LibraryView(model: model(.idle), previewQuery: "ATP") }
                     .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-search.\(mode)"),
                   save(PreviewWindow { LibraryView(model: model(.idle)) }
-                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-reader.\(mode)") else { return 1 }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "library-reader.\(mode)"),
+                  save(PreviewWindow { LibraryView(model: model(.idle), previewDropping: true) }
+                    .frame(width: 1040, height: 720).padding(36).background(PreviewBackdrop()), "drop-library.\(mode)") else { return 1 }
             setenv("NOSY_TRANSCRIPTS_DIR", emptyTranscripts.path, 1)
             let emptyLibraryModel = AppModel()
             setenv("NOSY_TRANSCRIPTS_DIR", transcripts.path, 1)

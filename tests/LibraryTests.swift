@@ -66,9 +66,13 @@ enum LibraryTests {
         let library = TranscriptLibrary()
         library.reload(paths: paths)
         check(library.selection == newest, "the newest transcript opens selected")
+        check(library.importTargetLecture == "MBB322", "the selected transcript sets the import folder")
         check(library.isOpen("MBB322") && !library.isOpen("CHEM281"), "the selected folder starts open and the others closed")
         check(library.visibleRows.map(\.url) == [newest, older], "closed folders hide their sessions")
 
+        library.selectFolder("CHEM281")
+        check(library.importTargetLecture == "CHEM281", "the selected tree folder overrides the main folder")
+        library.selectFolder("MBB322")
         library.toggleFolder("CHEM281")
         check(library.visibleRows.map(\.url) == [chemistry, newest, older], "an opened folder shows its sessions in order")
         library.toggleFolder("MBB322")

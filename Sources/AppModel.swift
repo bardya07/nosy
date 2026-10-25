@@ -59,6 +59,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var savedSummary = SavedSummary()
     @Published private(set) var active: SessionRecord?
     @Published private(set) var queue: [SessionRecord] = []
+    @Published private(set) var importsInProgress = 0
     // A transcript the Transcripts window should select when it next appears or updates.
     @Published var libraryFocus: URL?
     // Summaries run after transcription, one at a time, and never hold up the queue.
@@ -564,37 +565,62 @@ final class AppModel: ObservableObject {
     // MARK: Import
 
     func importRecording() {
+        importRecordingPanel()
+    }
+    func importRecordingPanel(targetLecture: String? = nil) {
+        guard !busy else { return }
         let panel = NSOpenPanel()
         panel.title = "Import a recording"
         panel.prompt = "Import"
-        panel.allowedContentTypes = [.audio, .movie]
-        panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url else { return }
-        importRecording(url)
+        panel.allowedContentTypes = [.audio, .movie, .video]
+        panel.allowsMultipleSelection = true
+        guard panel.runModal() == .OK else { return }
+        importRecordings(panel.urls, targetLecture: targetLecture)
     }
     func importRecording(_ url: URL) {
-        guard !busy else { return }
+        importRecordings([url])
+    }
+    func importRecordings(_ urls: [URL], targetLecture: String? = nil) {
+        guard !busy, !urls.isEmpty else { return }
+        let supported = urls.filter(AudioImport.supports)
+        let rejectedCount = urls.count - supported.count
+        guard !supported.isEmpty else {
+            showError("Choose an audio or video file to import.")
+            return
+        }
         clearError()
-        let paths = paths
-        let lectureInput = selectedLecture == "__new__" ? newLecture : selectedLecture
-        let sessionInput = session
+        let currentLecture = selectedLecture == "__new__" ? newLecture : selectedLecture
+        let lectureInput = AudioImport.destinationLecture(selectedTreeLecture: targetLecture,
+                                                           currentLecture: currentLecture,
+                                                           availableLectures: lectures)
+        importsInProgress += supported.count
         transitioning = true
+        let paths = paths
         Task {
-            do {
-                let lecture = selectedLecture == "__new__" ? try resolvedNewLecture() : try Core.sanitize(lectureInput)
-                let session = try Core.sanitize(sessionInput)
-                let record = try await Task.detached {
-                    try AudioFiles.importRecording(from: url, lecture: lecture, session: session, paths: paths)
-                }.value
-                transitioning = false
-                selectedLecture = lecture
-                newLecture = ""
-                refreshLectures()
-                resetSession()
-                retry(record)
-            } catch {
-                transitioning = false
-                showError(error.localizedDescription)
+            var failures: [String] = []
+            for url in supported {
+                do {
+                    transitioning = true
+                    let lecture = try Core.sanitize(lectureInput)
+                    let session = try Core.sanitize(AudioImport.sessionName(for: url))
+                    let record = try await Task.detached {
+                        try AudioFiles.importRecording(from: url, lecture: lecture, session: session, paths: paths)
+                    }.value
+                    transitioning = false
+                    selectedLecture = lecture
+                    newLecture = ""
+                    refreshLectures()
+                    retry(record)
+                } catch {
+                    transitioning = false
+                    failures.append(error.localizedDescription)
+                }
+                importsInProgress -= 1
+            }
+            if rejectedCount > 0 {
+                showError("Some files were skipped because they are not audio or video.")
+            } else if let failure = failures.first {
+                showError(failure)
             }
             updateActivity()
         }

@@ -1,5 +1,35 @@
 import AVFoundation
 import Foundation
+import UniformTypeIdentifiers
+
+enum AudioImport {
+    static func supports(_ url: URL) -> Bool {
+        guard url.isFileURL else { return false }
+        let type = (try? url.resourceValues(forKeys: [.contentTypeKey]).contentType)
+            ?? UTType(filenameExtension: url.pathExtension)
+        return type?.conforms(to: .audio) == true
+            || type?.conforms(to: .movie) == true
+            || type?.conforms(to: .video) == true
+    }
+
+    static func sessionName(for url: URL) -> String {
+        let name = url.deletingPathExtension().lastPathComponent
+        return name.isEmpty ? "Imported audio" : name
+    }
+
+    static func destinationLecture(selectedTreeLecture: String?, currentLecture: String,
+                                   availableLectures: [String]) -> String {
+        if let selectedTreeLecture, !selectedTreeLecture.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return selectedTreeLecture
+        }
+        let current = currentLecture.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !current.isEmpty && current != "__new__" {
+            return availableLectures.first { $0.caseInsensitiveCompare(current) == .orderedSame } ?? current
+        }
+        if let first = availableLectures.first { return first }
+        return "Imported Audio"
+    }
+}
 
 enum AudioFiles {
     static func importRecording(from source: URL, lecture: String, session: String, paths: AppPaths) throws -> SessionRecord {

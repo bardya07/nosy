@@ -86,6 +86,30 @@ struct NosyApp: App {
     }
 }
 
+struct AudioDropOverlay: View {
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Theme.accent.opacity(0.12))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Theme.accentText, lineWidth: 2)
+                VStack(spacing: 8) {
+                    Image(systemName: "arrow.down.doc.fill")
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundStyle(Theme.accentText)
+                    Text("Drop to transcribe")
+                        .font(Theme.text(15, .semibold))
+                        .foregroundStyle(Theme.navy)
+                }
+                .padding(20)
+                .background(Theme.surface.opacity(0.92), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+    }
+}
+
 private struct FileCommands: View {
     @ObservedObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
@@ -124,6 +148,7 @@ struct MainView: View {
     var previewEnteringNewFolderName = false
     var previewSessionRequired = false
     var previewTranscribingHome = false
+    var previewDropping = false
     var onBrowse: (() -> Void)? = nil
     @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -165,11 +190,6 @@ struct MainView: View {
                 .scrollBounceBehavior(.basedOnSize)
                 .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 240))
                 .padding(.bottom, 12)
-                .dropDestination(for: URL.self) { urls, _ in
-                    guard let url = urls.first, !model.busy else { return false }
-                    model.importRecording(url)
-                    return true
-                } isTargeted: { dropping = $0 && !model.busy }
                 controls.padding(.horizontal, 20).padding(.bottom, 16)
             }
         }
@@ -190,6 +210,14 @@ struct MainView: View {
         }
         .frame(width: 400)
         .fixedSize(horizontal: true, vertical: true)
+        .dropDestination(for: URL.self) { urls, _ in
+            guard !model.busy else { return false }
+            model.importRecordings(urls)
+            return true
+        } isTargeted: { dropping = $0 && !model.busy }
+        .overlay {
+            if dropping { AudioDropOverlay().padding(10).allowsHitTesting(false) }
+        }
         .background(WindowBackdrop())
         .background(MainWindowChrome(titlebarInset: $titlebarInset).allowsHitTesting(false))
         .background {
@@ -210,6 +238,7 @@ struct MainView: View {
         .animation(Motion.state(reduceMotion), value: model.active?.id)
         .onAppear {
             model.openWindow = openWindow
+            if previewDropping { dropping = true }
             if previewTranscribingHome { model.homeFromTranscribing = true }
             if let previewDropdown { showDropdown(previewDropdown) }
             if previewSaveToExpanded { saveToExpanded = true }
@@ -253,7 +282,7 @@ struct MainView: View {
             banners
             if model.phase != .recording && model.phase != .done { fields }
             if model.phase != .idle || model.homeFromTranscribing {
-                StagePanel(model: model, dropping: dropping,
+                StagePanel(model: model,
                            showReady: model.homeFromTranscribing && model.phase == .transcribing,
                            onHome: {
                                model.homeFromTranscribing = true
