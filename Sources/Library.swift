@@ -55,6 +55,8 @@ final class TranscriptLibrary: ObservableObject {
     @Published private(set) var unfinished: [SessionRecord] = []
     @Published private(set) var selection: URL?
     @Published private(set) var selectedFolder: String?
+    // The folder row the keyboard acts on: Delete and ⌘Delete move it to the Trash. Choosing a transcript clears it.
+    @Published private(set) var focusedFolder: String?
     @Published var query = "" { didSet { folders.endSearch(); keepSelectionVisible() } }
     // Open folders in the tree. They are saved to `store` only when the Transcripts window restores them.
     @Published private(set) var folders = TranscriptFolders() {
@@ -111,8 +113,9 @@ final class TranscriptLibrary: ObservableObject {
         let target = url.map { requested in
             items.first { $0.url.resolvingSymlinksInPath() == requested.resolvingSymlinksInPath() }?.url ?? requested
         }
-        guard selection != target else { return true }
+        guard selection != target else { focusedFolder = nil; return true }
         guard finishEditing() else { return false }
+        focusedFolder = nil
         setSelection(target)
         return true
     }
@@ -150,6 +153,7 @@ final class TranscriptLibrary: ObservableObject {
                                       text: text)
             }
         }.sorted { $0.recorded > $1.recorded }
+        if let focusedFolder, !items.contains(where: { $0.lecture == focusedFolder }) { self.focusedFolder = nil }
         unfinished = Core.unfinished(paths: paths)
         keepSelectionVisible()
     }
@@ -173,6 +177,7 @@ final class TranscriptLibrary: ObservableObject {
     var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
     func isOpen(_ lecture: String) -> Bool { folders.isOpen(lecture, searching: searching) }
     func selectFolder(_ lecture: String) { selectedFolder = lecture }
+    func focusFolder(_ lecture: String) { focusedFolder = lecture }
     // Rows on screen, top to bottom: a closed folder hides its sessions.
     var visibleRows: [TranscriptItem] { grouped.filter { isOpen($0.lecture) }.flatMap(\.items) }
     func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
@@ -336,12 +341,13 @@ struct LibraryView: View {
     var previewSummary: Bool
     var previewDropping: Bool
     var previewHoveredFolder: String?
+    var previewFocusedFolder: String?
     private var editing: Bool { library.editing }
     private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
     init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false,
-         previewDropping: Bool = false, previewHoveredFolder: String? = nil) {
+         previewDropping: Bool = false, previewHoveredFolder: String? = nil, previewFocusedFolder: String? = nil) {
         self.model = model
         _summaries = ObservedObject(wrappedValue: model.summaries)
         self.previewQuery = previewQuery
@@ -349,6 +355,7 @@ struct LibraryView: View {
         self.previewSummary = previewSummary
         self.previewDropping = previewDropping
         self.previewHoveredFolder = previewHoveredFolder
+        self.previewFocusedFolder = previewFocusedFolder
     }
 
     var body: some View {
@@ -373,6 +380,7 @@ struct LibraryView: View {
             reload()
             applyFocus()
             if previewCollapsed { library.collapseFolders() }
+            if let previewFocusedFolder { library.focusFolder(previewFocusedFolder) }
             if let previewQuery { library.query = previewQuery }
             loadSummary()
             if previewSummary, summaryText != nil { showSummary = true }
@@ -507,6 +515,11 @@ struct LibraryView: View {
                 .focusEffectDisabled()
                 .onKeyPress(.downArrow) { library.move(1); return .handled }
                 .onKeyPress(.upArrow) { library.move(-1); return .handled }
+                // Delete and ⌘Delete trash the focused folder, with the same confirmation as its trash button.
+                .onKeyPress(.delete) {
+                    if let lecture = library.focusedFolder { confirmTrashFolder(lecture) }
+                    return .handled
+                }
                 .onChange(of: library.selection) { _, url in
                     if let url { withAnimation(Motion.hover) { proxy.scrollTo(url) } }
                 }
@@ -577,11 +590,14 @@ struct LibraryView: View {
     @ViewBuilder private func folderGroup(_ lecture: String, _ items: [TranscriptItem]) -> some View {
         let open = library.isOpen(lecture)
         VStack(alignment: .leading, spacing: 2) {
-            TranscriptFolderRow(lecture: lecture, count: items.count, open: open, selected: library.selectedFolder == lecture,
+            TranscriptFolderRow(lecture: lecture, count: items.count, open: open,
+                selected: (library.focusedFolder ?? library.selectedFolder) == lecture,
                 previewHovered: previewHoveredFolder == lecture,
                 trashLocked: items.contains(where: { summaries.isBusy($0.url) }),
                 toggle: {
                     library.selectFolder(lecture)
+                    library.focusFolder(lecture)
+                    focus = .list
                     withAnimation(fold) { library.toggleFolder(lecture) }
                 }, trash: { confirmTrashFolder(lecture) })
             if open {
@@ -605,6 +621,7 @@ struct LibraryView: View {
     }
 
     private func confirmTrashFolder(_ lecture: String) {
+        guard !library.items.contains(where: { $0.lecture == lecture && summaries.isBusy($0.url) }) else { return }
         guard model.finishLibraryEditing?() ?? true, LectureFolderTrash.confirm(lecture) else { return }
         if model.trashLecture(lecture, paths: libraryPaths) { loadSummary() }
     }
@@ -736,7 +753,7 @@ struct LibraryView: View {
                 OpenWithMenu(url: item.url)
                 Button { library.trash(item.url, paths: libraryPaths) } label: { Image(systemName: "trash") }
                     .buttonStyle(IconButtonStyle(size: 32, destructive: true))
-                    .keyboardShortcut(focus == .list ? KeyboardShortcut(.delete, modifiers: .command) : nil)
+                    .keyboardShortcut(focus == .list && library.focusedFolder == nil ? KeyboardShortcut(.delete, modifiers: .command) : nil)
                     .tip("Move to Trash")
                     .accessibilityLabel("Move transcript to Trash")
                     .disabled(summaries.isBusy(item.url))
@@ -825,6 +842,7 @@ private struct TranscriptFolderRow: View {
                 .disabled(!showsTrash || trashLocked)
                 .animation(Motion.hover, value: showsTrash)
         }
+        .padding(.trailing, 4)
         .frame(maxWidth: .infinity)
         .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
     }
@@ -910,8 +928,10 @@ private struct TranscriptSidebarRow: View {
             .buttonStyle(IconButtonStyle(size: 24, active: selected))
             .opacity(hovering || selected ? 1 : 0)
             .accessibilityLabel("Show \(item.session) in Finder")
-            .tip("Show in Finder")
+            .tip("Show in Finder", edge: .trailing)
         }
+        // Inset from the sidebar's right edge so the round button is never clipped.
+        .padding(.trailing, 6)
         .frame(maxWidth: .infinity)
         .onHover { hovering = $0 }
         .contextMenu {

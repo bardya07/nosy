@@ -85,7 +85,8 @@ final class AppModel: ObservableObject {
     private var sleptAt: Date?
     // Recorded length at the last "still recording" reminder; 0 means none sent yet.
     private var lastReminder: TimeInterval = 0
-    private var reminderHours: Int { UserDefaults.standard.object(forKey: "remindAfterHours") as? Int ?? 3 }
+    // Minutes between "still recording" reminders, read from Settings. Zero means never.
+    private var reminderMinutes: Int { ReminderInterval.stored() }
     private let notificationDelegate = NotificationDelegate()
     private var observers: [NSObjectProtocol] = []
     private var launched = false
@@ -98,7 +99,10 @@ final class AppModel: ObservableObject {
     init(stressReason: @escaping () -> String? = {
         let power = Core.powerState()
         return Core.stressReason(thermal: ProcessInfo.processInfo.thermalState, onBattery: power.onBattery, percent: power.percent)
-    }) { self.stressReason = stressReason }
+    }) {
+        self.stressReason = stressReason
+        if !Snapshot.isRunning { ReminderInterval.migrate() }
+    }
 
     var recording: Bool { phase == .recording }
     // Course/session fields lock while a recording starts, runs or stops.
@@ -250,9 +254,9 @@ final class AppModel: ObservableObject {
         // Duration comes from recorder level events; polling the recorder here could block on disk syncs.
         if recording {
             // The deadline is computed each tick, so changing the setting mid-lecture applies at once.
-            let hours = reminderHours
-            let due = lastReminder == 0 ? TimeInterval(hours * 3600) : lastReminder + 3600
-            if hours > 0, duration >= due {
+            let interval = TimeInterval(reminderMinutes * 60)
+            let due = lastReminder == 0 ? interval : lastReminder + interval
+            if reminderMinutes > 0, duration >= due {
                 notify("Still recording. \(Core.reminderTime(duration)). Forgot to stop?")
                 lastReminder = duration
             }

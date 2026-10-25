@@ -383,9 +383,13 @@ private let tipSpace = "nosyTips"
 
 // A tip reports where its control sits. One layer at the window root draws the bubble,
 // so no ScrollView or clip around a control can cut the bubble off.
+// Where a bubble sits beside its control: above, below, or to the side. Side tips suit controls at a panel's edge,
+// so the bubble covers the reader, not the row above or below.
+enum TipEdge: Equatable { case top, bottom, trailing }
+
 private struct TipAnchor: Equatable {
     var text: String
-    var edge: VerticalEdge
+    var edge: TipEdge
     var frame: CGRect
 }
 
@@ -431,7 +435,7 @@ enum TipPlacement {
             options: [.usesLineFragmentOrigin, .usesFontLeading], attributes: [.font: font]).height
     }
 
-    static func layout(text: String, edge: VerticalEdge, anchor: CGRect, container: CGSize) -> Layout {
+    static func layout(text: String, edge: TipEdge, anchor: CGRect, container: CGSize) -> Layout {
         let oneLineWidth = ceil((text as NSString).size(withAttributes: [.font: font]).width)
         let available = max(minWidth, min(maxWidth, container.width - 2 * margin))
         let width = min(max(minWidth, oneLineWidth + 2 * horizontalPadding), available)
@@ -441,6 +445,14 @@ enum TipPlacement {
         let height = max(24, textHeight + 2 * verticalPadding + 2)
         let halfWidth = width / 2
         let halfHeight = height / 2
+        if edge == .trailing {
+            // Beside the control, vertically centred on it. Flips to the leading side when the window has no room on the right.
+            var sideX = anchor.maxX + gap + halfWidth
+            if sideX + halfWidth > container.width - margin { sideX = anchor.minX - gap - halfWidth }
+            return Layout(size: CGSize(width: width, height: height),
+                          center: CGPoint(x: clamp(sideX, margin + halfWidth, container.width - margin - halfWidth),
+                                          y: clamp(anchor.midY, margin + halfHeight, container.height - margin - halfHeight)))
+        }
         let centerX = clamp(anchor.midX, margin + halfWidth, container.width - margin - halfWidth)
         var centerY = edge == .top ? anchor.minY - gap - halfHeight : anchor.maxY + gap + halfHeight
         // Flip to the other side of the control when the bubble would leave the window.
@@ -457,7 +469,7 @@ enum TipPlacement {
 
 private struct TipModifier: ViewModifier {
     let text: String
-    let edge: VerticalEdge
+    let edge: TipEdge
     @State private var visible = false
     @State private var hoverTask: Task<Void, Never>?
     @Environment(\.previewTipText) private var previewTipText
@@ -525,7 +537,7 @@ private struct TipLayer: View {
 }
 
 extension View {
-    func tip(_ text: String, edge: VerticalEdge = .top) -> some View {
+    func tip(_ text: String, edge: TipEdge = .top) -> some View {
         modifier(TipModifier(text: text, edge: edge))
     }
     // Attach once per window, inside the window's clip shape, so bubbles never leave the window.

@@ -4,12 +4,17 @@ import AppKit
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     var connector = ClaudeConnector.standard
-    @AppStorage("remindAfterHours") private var remindAfterHours = 3
+    @AppStorage(ReminderInterval.storageKey) private var reminderMinutes = ReminderInterval.defaultMinutes
+    @AppStorage(LectureFolderTrash.askKey) private var askBeforeDeleting = true
     @AppStorage("compressAudio") private var compressAudio = true
+    @State private var customReminder = false
     @State private var connection: ClaudeConnector.Status = .notAdded
+    @State private var desktop = ClaudeDesktopApp.Status(installed: false, running: false)
+    @State private var restartingDesktop = false
     @State private var connectionMessage: String?
     @State private var connectionFailed = false
     @State private var pane: Pane
+    private static let customReminderTag = -1
 
     init(model: AppModel, connector: ClaudeConnector = .standard, pane: Pane = .general) {
         self.model = model
@@ -111,6 +116,7 @@ struct SettingsView: View {
                         .tip("Show in Finder")
                 }
                 note("Folders group transcripts; vocab.txt adds course terms.", tip: "Add course vocabulary")
+                settingToggle("Ask before deleting folders", isOn: $askBeforeDeleting, tip: "Confirm before a folder moves to the Trash")
             }
         }
         section("Audio") {
@@ -135,17 +141,50 @@ struct SettingsView: View {
         }
         section("While recording") {
             VStack(alignment: .leading, spacing: 8) {
-                settingMenu("Remind me after", value: remindAfterHours == 0 ? "Never" : "\(remindAfterHours) hours") {
-                    Picker("Remind me after", selection: $remindAfterHours) {
-                        Text("2 hours").tag(2)
-                        Text("3 hours").tag(3)
-                        Text("4 hours").tag(4)
-                        Text("Never").tag(0)
+                settingMenu("Remind me", value: customReminder ? "Custom" : ReminderInterval.label(reminderMinutes)) {
+                    Picker("Remind me", selection: reminderChoice) {
+                        ForEach(ReminderInterval.presets, id: \.self) { minutes in
+                            Text(ReminderInterval.label(minutes)).tag(minutes)
+                        }
+                        Text(ReminderInterval.label(ReminderInterval.never)).tag(ReminderInterval.never)
+                        Text("Custom").tag(Self.customReminderTag)
                     }
                 }
-                note("Keep lid open; closed Macs sleep. Mic silence warns.", tip: "Mac sleep behavior")
+                if customReminder {
+                    HStack(spacing: 12) {
+                        Text(ReminderInterval.label(reminderMinutes))
+                            .font(Theme.text(13)).foregroundStyle(Theme.ink)
+                        Spacer(minLength: 0)
+                        Stepper("Custom reminder interval", value: $reminderMinutes,
+                                in: ReminderInterval.customRange, step: ReminderInterval.customStep)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 12).frame(height: 38)
+                    .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
+                }
+                Text("Keep your Mac open while recording. Nosy warns you if the mic goes silent.")
+                    .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .tip("Mac sleep behavior")
+            }
+            .onAppear {
+                customReminder = !ReminderInterval.presets.contains(reminderMinutes) && reminderMinutes != ReminderInterval.never
             }
         }
+    }
+
+    // Presets and Never are fixed choices; Custom opens the stepper. Choosing Custom from Never starts at the default hour.
+    private var reminderChoice: Binding<Int> {
+        Binding(get: { customReminder ? Self.customReminderTag : reminderMinutes },
+                set: { choice in
+                    if choice == Self.customReminderTag {
+                        customReminder = true
+                        if reminderMinutes == ReminderInterval.never { reminderMinutes = ReminderInterval.defaultMinutes }
+                    } else {
+                        customReminder = false
+                        reminderMinutes = choice
+                    }
+                })
     }
 
     private var summariesPane: some View {
@@ -156,73 +195,151 @@ struct SettingsView: View {
 
     private var connectPane: some View {
         section("Connect your AI") {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 10) {
-                    Image(systemName: connection == .added ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(connection == .added ? Theme.green : Theme.muted)
-                    Text(connectionTitle).font(Theme.text(12)).foregroundStyle(Theme.ink)
-                    Spacer(minLength: 0)
-                }
-                .fieldChrome()
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Claude Desktop connection")
-                .accessibilityValue(connectionTitle)
+            VStack(alignment: .leading, spacing: 12) {
+                connectionStatus
                 switch connection {
                 case .added:
-                    Button("Remove") { changeConnection(adding: false) }
-                        .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
-                        .tip("Remove Nosy from Claude Desktop")
+                    connectedSteps
                 case .notAdded:
-                    Button("Add to Claude Desktop") { changeConnection(adding: true) }
-                        .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
-                        .tip("Let Claude Desktop read your transcripts")
+                    if desktop.installed {
+                        Button("Add to Claude Desktop") { changeConnection(adding: true) }
+                            .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                            .tip("Let Claude Desktop read your transcripts")
+                    } else {
+                        Link(destination: ClaudeDesktopApp.downloadURL) {
+                            Label(ConnectionCopy.downloadLabel, systemImage: "arrow.up.right.square")
+                                .font(Theme.text(12, .semibold))
+                                .foregroundStyle(Theme.accentText)
+                        }
+                        .tip("Open the Claude Desktop download page")
+                    }
                 case .unreadable:
                     EmptyView()
                 }
                 Button("Copy setup for other apps") { copyConnectionSetup() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                     .tip("Copy the setup for Cursor and Claude Code")
-                Text(connectionNote)
-                    .font(Theme.text(10)).foregroundStyle(connectionIsProblem ? Theme.stop : Theme.muted)
-                    .fixedSize(horizontal: false, vertical: true)
+                if !connectionNote.isEmpty {
+                    Text(connectionNote)
+                        .font(Theme.text(10)).foregroundStyle(connectionIsProblem ? Theme.stop : Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .onAppear { connection = connector.status() }
+            .onAppear(perform: refreshConnection)
+        }
+    }
+
+    // The state line: a green check once Nosy is connected, otherwise what is missing.
+    private var connectionStatus: some View {
+        let connected = connection == .added
+        return HStack(spacing: 10) {
+            Image(systemName: connected ? "checkmark.circle.fill" : (connectionIsProblem ? "exclamationmark.triangle.fill" : "circle"))
+                .foregroundStyle(connected ? Theme.green : (connectionIsProblem ? Theme.stop : Theme.muted))
+                .accessibilityHidden(true)
+            Text(ConnectionCopy.title(connection, installed: desktop.installed))
+                .font(Theme.text(12, connected ? .semibold : .regular))
+                .foregroundStyle(connected ? Theme.savedText : Theme.ink)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+            if connected {
+                Button("Remove") { changeConnection(adding: false) }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+                    .tip("Remove Nosy from Claude Desktop")
+            }
+        }
+        .fieldChrome()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Claude Desktop connection")
+        .accessibilityValue(ConnectionCopy.title(connection, installed: desktop.installed))
+    }
+
+    // Shown once Nosy is connected: what to do in Claude Desktop, then the actions that make it happen.
+    private var connectedSteps: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
+                ForEach(Array(ConnectionCopy.steps.enumerated()), id: \.offset) { index, step in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text("\(index + 1).").font(Theme.text(12, .semibold)).foregroundStyle(Theme.muted).monospacedDigit()
+                        Text(step).font(Theme.text(12)).foregroundStyle(Theme.ink)
+                    }
+                }
+            }
+            .padding(.leading, 2)
+            HStack(spacing: 8) {
+                if desktop.running {
+                    Button(restartingDesktop ? "Restarting…" : "Restart Claude Desktop") { restartDesktop() }
+                        .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                        .disabled(restartingDesktop)
+                        .tip("Quit Claude Desktop and open it again")
+                }
+                Button("Copy example prompt") { copyExamplePrompt() }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                    .tip("Copy a question to try in Claude Desktop")
+            }
+            if !desktop.running {
+                Text(ConnectionCopy.closedNote)
+                    .font(Theme.text(10)).foregroundStyle(Theme.muted)
+            }
         }
     }
 
     static let sidebarWidth: CGFloat = 168
     static let columnWidth: CGFloat = 392
 
-    private var connectionTitle: String {
-        switch connection {
-        case .added: "Added"
-        case .notAdded: "Not installed"
-        case .unreadable: "Claude Desktop settings need fixing"
-        }
-    }
     private var connectionNote: String {
         if let connectionMessage { return connectionMessage }
-        switch connection {
-        case .added: return "Restart Claude Desktop to load Nosy."
-        case .notAdded: return "Restart Claude Desktop after adding."
-        case .unreadable(let message): return message
-        }
+        if case .unreadable(let message) = connection { return message }
+        if connection == .notAdded, !desktop.installed { return ConnectionCopy.installNote }
+        return ""
     }
     private var connectionIsProblem: Bool {
         if connectionMessage != nil { return connectionFailed }
         if case .unreadable = connection { return true }
         return false
     }
+    private func refreshConnection() {
+        connection = connector.status()
+        desktop = connector.desktop()
+    }
     private func changeConnection(adding: Bool) {
         do {
             if adding { try connector.add() } else { try connector.remove() }
-            connectionMessage = adding ? "Added. Restart Claude Desktop to use Nosy." : "Removed. Restart Claude Desktop to apply."
+            connectionMessage = adding ? nil : ConnectionCopy.removedNote
             connectionFailed = false
         } catch {
             connectionMessage = error.localizedDescription
             connectionFailed = true
         }
-        connection = connector.status()
+        refreshConnection()
+    }
+    private func restartDesktop() {
+        restartingDesktop = true
+        Task {
+            let outcome = await ClaudeDesktopApp.restart()
+            restartingDesktop = false
+            refreshConnection()
+            switch outcome {
+            case .restarted:
+                connectionMessage = "Claude Desktop restarted."
+                connectionFailed = false
+            case .notRunning:
+                connectionMessage = ConnectionCopy.closedNote
+                connectionFailed = false
+            case .stillRunning:
+                connectionMessage = "Claude Desktop is still open. Quit it there, then try again."
+                connectionFailed = true
+            case .failed:
+                connectionMessage = "Couldn't reopen Claude Desktop. Open it from your Applications folder."
+                connectionFailed = true
+            }
+        }
+    }
+    private func copyExamplePrompt() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(ConnectionCopy.examplePrompt, forType: .string)
+        connectionMessage = ConnectionCopy.copiedPrompt
+        connectionFailed = false
     }
     private func copyConnectionSetup() {
         let pasteboard = NSPasteboard.general
@@ -269,6 +386,17 @@ struct SettingsView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
+    }
+    // A setting with a switch, in the same field style as the menus above it.
+    private func settingToggle(_ label: String, isOn: Binding<Bool>, tip: String) -> some View {
+        HStack(spacing: 12) {
+            Text(label).font(Theme.text(13)).foregroundStyle(Theme.muted)
+            Spacer(minLength: 0)
+            Toggle(label, isOn: isOn).labelsHidden().toggleStyle(.switch).tint(Theme.accentText)
+        }
+        .padding(.horizontal, 12).frame(height: 38)
+        .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
+        .tip(tip)
     }
     private func note(_ text: String, tip: String) -> some View {
         Text(text).font(Theme.text(10)).foregroundStyle(Theme.muted).lineLimit(1).truncationMode(.tail)
