@@ -43,6 +43,10 @@ enum InputLevel {
     // tone, and it lands typical Mac microphones at speaking distance near the middle of the scale.
     static let estimateOffset = 94.0
     static let estimateRange = 20...110
+    // Guidance aims for 55 to 75 dB on the estimate scale, smoothed over about three seconds.
+    // RecordingLevelGuidance uses quiet entry at 57, quiet return below 53, loud entry above 77,
+    // and loud return at 73 so the displayed advice stays steady near the edges.
+    static let recommendedRange = RecordingLevelGuidance.recommendedRange
 
     // The estimated sound level in whole decibels. Silence and anything below the range read at the bottom.
     static func estimate(_ decibels: Double) -> Int {
@@ -66,8 +70,8 @@ enum InputLevel {
     }
     static func band(_ decibels: Double) -> Band {
         let level = estimate(decibels)
-        if level < 50 { return .quiet }
-        if level < 75 { return .good }
+        if level < recommendedRange.lowerBound { return .quiet }
+        if level <= recommendedRange.upperBound { return .good }
         return .loud
     }
 
@@ -83,6 +87,10 @@ enum InputLevel {
     static func fraction(_ decibels: Double) -> Double {
         guard decibels.isFinite else { return 0 }
         return min(1, max(0, (decibels + 60) / 60))
+    }
+
+    static func estimateFraction(_ estimate: Int) -> Double {
+        fraction(Double(estimate) - estimateOffset)
     }
 }
 

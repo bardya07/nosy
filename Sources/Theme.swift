@@ -207,6 +207,16 @@ struct PillButtonStyle: ButtonStyle {
     }
 }
 
+struct AnyButtonStyle: ButtonStyle {
+    private let buildBody: (Configuration) -> AnyView
+
+    init<Style: ButtonStyle>(_ style: Style) {
+        buildBody = { configuration in AnyView(style.makeBody(configuration: configuration)) }
+    }
+
+    func makeBody(configuration: Configuration) -> some View { buildBody(configuration) }
+}
+
 // Filled pills brighten and lift on hover; quiet ones only change fill (filters would clip their outline).
 private struct Lift: ViewModifier {
     let active: Bool

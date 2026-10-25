@@ -153,7 +153,6 @@ private struct FileCommands: View {
 
 struct MainView: View {
     @ObservedObject var model: AppModel
-    var bodyHeightLimit: CGFloat?
     var previewDropdown: Dropdown?
     var previewVocabularyExpanded = false
     var previewSaveToExpanded = false
@@ -202,10 +201,7 @@ struct MainView: View {
                 if model.phase == .idle || model.homeFromTranscribing { captureMode }
                 // One instance of the details: duplicate alternatives (ViewThatFits)
                 // reset panel state and fight over text focus when they swap.
-                ScrollView { details }
-                .scrollBounceBehavior(.basedOnSize)
-                .frame(maxHeight: bodyHeightLimit ?? max(180, (NSScreen.main?.visibleFrame.height ?? 800) - 240))
-                .padding(.bottom, 12)
+                details.padding(.bottom, 12)
                 controls.padding(.horizontal, 20).padding(.bottom, 16)
             }
         }
@@ -252,6 +248,9 @@ struct MainView: View {
         .animation(Motion.state(reduceMotion), value: model.phase)
         .animation(Motion.state(reduceMotion), value: model.paused)
         .animation(Motion.state(reduceMotion), value: model.active?.id)
+        .animation(Motion.state(reduceMotion), value: openDropdown)
+        .animation(Motion.state(reduceMotion), value: saveToExpanded)
+        .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
         .onAppear {
             model.openWindow = openWindow
             if previewDropping { dropping = true }
@@ -680,6 +679,7 @@ struct MainView: View {
                             }
                         }
                     }
+                    .scrollIndicators(.hidden)
                     .scrollBounceBehavior(.basedOnSize)
                     .frame(height: min(CGFloat(model.lectures.count) * 30 - 2, 128))
                     Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 3)
@@ -919,8 +919,7 @@ struct MainView: View {
                 }
             }
         }
-        .buttonStyle(PillButtonStyle(kind: model.recording ? .dark : .primary, height: 46,
-                                     horizontalPadding: model.recording ? 14 : 16))
+        .buttonStyle(primaryButtonStyle)
         .overlay {
             if sessionGate.required && !model.recording && !showsHomeAction {
                 RoundedRectangle(cornerRadius: 23, style: .circular)
@@ -978,6 +977,7 @@ struct MainView: View {
                 LiveLevelReadout(model: model)
             }
             .padding(.horizontal, 8)
+            RecordingLevelGuidanceView(model: model)
             Text("The level reads live while you record.")
                 .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
                 .padding(.horizontal, 8).padding(.top, 2)
@@ -1038,6 +1038,15 @@ struct MainView: View {
         else { model.start() }
     }
     private var showsHomeAction: Bool { model.phase == .done || model.phase == .failed }
+    private var primaryButtonStyle: AnyButtonStyle {
+        if model.recording {
+            return AnyButtonStyle(PillButtonStyle(kind: .dark, height: 46, horizontalPadding: 14))
+        }
+        if showsHomeAction {
+            return AnyButtonStyle(PillButtonStyle(kind: .primary, height: 46, horizontalPadding: 16))
+        }
+        return AnyButtonStyle(GlossyStartButtonStyle())
+    }
     private var showsCommandR: Bool { model.phase == .idle || model.homeFromTranscribing }
     private var primaryTitle: String {
         if model.recording { return "Stop & transcribe" }
@@ -1259,6 +1268,59 @@ private struct LibraryPillStyle: ButtonStyle {
     }
 }
 
+private struct GlossyStartButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        GlossyStartBody(configuration: configuration)
+    }
+
+    private struct GlossyStartBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
+        @State private var hovering = false
+
+        var body: some View {
+            let pressed = configuration.isPressed && enabled && !reduceMotion
+            let lifted = hovering && enabled && !configuration.isPressed && !reduceMotion
+            configuration.label
+                .font(Theme.text(13, .semibold))
+                .foregroundStyle(.white)
+                .shadow(color: Color(hex: 0x145A25).opacity(0.42), radius: 1, y: 1)
+                .padding(.horizontal, 17)
+                .frame(height: 46)
+                .background(Capsule().fill(LinearGradient(
+                    colors: [Color(hex: 0x78E889), Color(hex: 0x42CF5C), Color(hex: 0x258E3D)],
+                    startPoint: .top, endPoint: .bottom)))
+                .overlay {
+                    GeometryReader { geometry in
+                        Capsule()
+                            .fill(LinearGradient(colors: [.white.opacity(0.42), .white.opacity(0.14), .clear],
+                                                 startPoint: .top, endPoint: .bottom))
+                            .frame(height: geometry.size.height * 0.52)
+                            .padding(.horizontal, 1).padding(.top, 1)
+                    }
+                    .clipShape(Capsule())
+                    .allowsHitTesting(false)
+                }
+                .overlay(Capsule().strokeBorder(.white.opacity(0.38), lineWidth: 1))
+                .shadow(color: Color(hex: 0x258E3D).opacity(enabled ? (lifted ? 0.42 : 0.26) : 0),
+                        radius: lifted ? 11 : 7, y: lifted ? 6 : 4)
+                .scaleEffect(x: pressed ? 1.025 : (lifted ? 1.025 : 1), y: pressed ? 0.94 : (lifted ? 1.025 : 1))
+                .opacity(enabled ? 1 : 0.45)
+                .contentShape(Capsule())
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
+                .onHover { inside in
+                    withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 0.62)) {
+                        hovering = inside
+                    }
+                }
+                .animation(reduceMotion ? .easeOut(duration: 0.12) : .spring(response: 0.25, dampingFraction: 0.55),
+                           value: configuration.isPressed)
+        }
+    }
+}
+
 // Samples the recorder's level about ten times a second, so the readout moves smoothly instead of flickering.
 // Tapping it switches between the estimated sound level and the technical value. The choice is remembered.
 struct LiveLevelReadout: View {
@@ -1306,6 +1368,59 @@ struct LiveLevelReadout: View {
     }
 }
 
+private struct RecordingLevelGuidanceView: View {
+    @ObservedObject var model: AppModel
+    @State private var guidance = RecordingLevelGuidance()
+
+    var body: some View {
+        Group {
+            if model.recording {
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Recommended 55 to 75 dB")
+                        .font(Theme.text(9.5)).foregroundStyle(Theme.muted)
+                    Text(advice)
+                        .font(Theme.text(10.5, .medium)).foregroundStyle(tint)
+                        .lineLimit(1).minimumScaleFactor(0.85)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.horizontal, 8)
+                .padding(.top, 1)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(advice)
+                .accessibilityValue("Recommended 55 to 75 decibels")
+            }
+        }
+        .onAppear {
+            guidance.reset()
+            if model.recording { _ = guidance.add(InputLevel.estimate(model.level)) }
+        }
+        .onChange(of: model.recording) { _, recording in
+            guidance.reset()
+            if recording { _ = guidance.add(InputLevel.estimate(model.level)) }
+        }
+        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
+            guard model.recording else { return }
+            _ = guidance.add(InputLevel.estimate(model.level))
+        }
+    }
+
+    private var advice: String {
+        switch guidance.band {
+        case .quiet: "Too quiet. Move closer to the speaker."
+        case .good: "Good level"
+        case .loud: "Too loud. Move back a little."
+        }
+    }
+
+    private var tint: Color {
+        switch guidance.band {
+        case .quiet: Theme.accentText
+        case .good: Theme.savedText
+        case .loud: Theme.amber
+        }
+    }
+}
+
 private extension InputLevel.Band {
     var tint: Color {
         switch self {
@@ -1321,10 +1436,16 @@ private struct LevelBar: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         GeometryReader { geometry in
+            let range = RecordingLevelGuidance.recommendedRange
+            let start = geometry.size.width * InputLevel.estimateFraction(range.lowerBound)
+            let end = geometry.size.width * InputLevel.estimateFraction(range.upperBound)
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.line)
                 Capsule().fill(Theme.accentText)
                     .frame(width: geometry.size.width * InputLevel.fraction(decibels))
+                Capsule().fill(Theme.savedText.opacity(0.36))
+                    .frame(width: max(0, end - start))
+                    .offset(x: start)
             }
         }
         .frame(height: 6)
@@ -1602,6 +1723,7 @@ private struct RecordingMarkers: View {
                             }
                         }
                     }
+                    .scrollIndicators(.hidden)
                     .frame(height: CGFloat(min(markers.count, 3) * 25 - 5))
                     .onChange(of: markers.count) { old, count in
                         if count > old {

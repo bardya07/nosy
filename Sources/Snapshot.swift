@@ -207,12 +207,14 @@ enum Snapshot {
         // Summary settings fixtures write to their own throwaway suites.
         let apiDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-api")!
         let localDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-local")!
+        let disabledSummaryDefaults = UserDefaults(suiteName: "com.bardya.nosy.preview.summaries-off")!
         // Live level and reminder choices get their own throwaway suites as well.
         let technicalLevel = UserDefaults(suiteName: "com.bardya.nosy.preview.level-technical")!
         let customReminder = UserDefaults(suiteName: "com.bardya.nosy.preview.custom-reminder")!
         defer {
             apiDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-api")
             localDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-local")
+            disabledSummaryDefaults.removePersistentDomain(forName: "com.bardya.nosy.preview.summaries-off")
             technicalLevel.removePersistentDomain(forName: "com.bardya.nosy.preview.level-technical")
             customReminder.removePersistentDomain(forName: "com.bardya.nosy.preview.custom-reminder")
         }
@@ -232,10 +234,14 @@ enum Snapshot {
         }
         apiDefaults.set(SummaryProvider.anthropic.rawValue, forKey: SummarySettings.providerKey)
         apiDefaults.set(true, forKey: SummarySettings.automaticKey)
+        apiDefaults.set(true, forKey: AIFeatures.storageKey)
         apiDefaults.set(true, forKey: SummarySection.questions.storageKey)
         apiDefaults.set("Use British spelling.", forKey: SummarySettings.customKey)
         localDefaults.set(SummaryProvider.ollama.rawValue, forKey: SummarySettings.providerKey)
+        localDefaults.set(true, forKey: AIFeatures.storageKey)
         localDefaults.set("qwen3:8b", forKey: SummaryProvider.ollama.modelKey)
+        previewDefaults.set(true, forKey: AIFeatures.storageKey)
+        disabledSummaryDefaults.set(false, forKey: AIFeatures.storageKey)
         let summaryDetection = SummaryDetection(executables: [.claudeCode: URL(fileURLWithPath: "/opt/homebrew/bin/claude")],
                                                 localModels: [.ollama: ["llama3.2:3b", "qwen3:8b"]], checked: true)
         // A suite separate from the user's settings; the previews do not change preferences.
@@ -302,7 +308,7 @@ enum Snapshot {
             guard save(PreviewWindow {
                 MainView(model: folderList, previewSaveToExpanded: true, previewFolderListOpen: true)
             }.padding(36).background(PreviewBackdrop()), "dropdown-folder-list.\(mode)") else { return 1 }
-            // Tips inside the scrolling details must still draw whole, not cut off at the scroll edge.
+            // Tips beside expanded details must still draw whole inside the window.
             let destinationTip = "Change where transcripts are saved"
             guard save(PreviewWindow {
                 MainView(model: model(.idle), previewSaveToExpanded: true).environment(\.previewTipText, destinationTip)
@@ -401,8 +407,8 @@ enum Snapshot {
                                     ("long-saved", longSaved), ("recovery", recovery)] {
                 guard save(PreviewWindow { MainView(model: fixture) }.padding(36).background(PreviewBackdrop()), "\(name).\(mode)") else { return 1 }
             }
-            guard save(PreviewWindow { MainView(model: warnings, bodyHeightLimit: 320) }
-                .padding(36).background(PreviewBackdrop()), "small-screen.\(mode)") else { return 1 }
+            guard save(PreviewWindow { MainView(model: warnings) }
+                .padding(36).background(PreviewBackdrop()), "content-fit-recording.\(mode)") else { return 1 }
             for step in OnboardingModel.Step.allCases {
                 let setup = OnboardingModel()
                 setup.step = step
@@ -480,6 +486,8 @@ enum Snapshot {
                     .padding(36).background(PreviewBackdrop()), "settings-summaries.\(mode)"),
                   save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(localDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-summaries-local.\(mode)"),
+                  save(SettingsView(model: summaryModel, pane: .summaries).defaultAppStorage(disabledSummaryDefaults).clipShape(RoundedRectangle(cornerRadius: 18))
+                    .padding(36).background(PreviewBackdrop()), "settings-summaries-off.\(mode)"),
                   save(SettingsView(model: model(.idle), connector: desktopConnector(config: absentConfig, installed: true, running: false))
                     .defaultAppStorage(customReminder).clipShape(RoundedRectangle(cornerRadius: 18))
                     .padding(36).background(PreviewBackdrop()), "settings-reminder-custom.\(mode)"),
