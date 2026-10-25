@@ -339,6 +339,8 @@ struct LibraryView: View {
     // AI markers beside the selected transcript, and the lecture length they are placed by.
     @State private var aiMarkers: [AIMarker] = []
     @State private var markerDuration: TimeInterval = 0
+    @State private var momentTarget: String?
+    @StateObject private var audioPlayer = StripPlayer()
     @State private var requestedSummary: URL?
     @State private var browsingRoot: URL?
     private var libraryPaths: AppPaths { model.paths.browsingLibrary(at: browsingRoot ?? model.paths.transcripts) }
@@ -436,6 +438,40 @@ struct LibraryView: View {
         } catch { NSAlert(error: error).runModal() }
     }
     private var showingSummary: Bool { showSummary && summaryText != nil && !editing }
+    private var readerKeyMoments: [ReaderKeyMoment] {
+        let markdown = library.selected?.text ?? ""
+        var moments = aiMarkers.enumerated().map { index, marker in
+            ReaderKeyMoment(id: "ai-\(index)", target: "moment-ai-\(index)", time: marker.t,
+                            label: marker.label, source: .ai)
+        }
+        for block in TranscriptBlock.parse(markdown) {
+            guard case .marker(let timestamp, let label) = block.content,
+                  let time = markerSeconds(timestamp) else { continue }
+            moments.append(ReaderKeyMoment(id: "manual-\(block.offset)", target: "moment-manual-\(block.offset)",
+                                           time: time, label: label, source: .user))
+        }
+        return moments.sorted { $0.time == $1.time ? $0.id < $1.id : $0.time < $1.time }
+    }
+
+    private func markerSeconds(_ timestamp: String) -> TimeInterval? {
+        let values = timestamp.split(separator: ":").compactMap { Int($0) }
+        guard values.count == timestamp.split(separator: ":").count else { return nil }
+        switch values.count {
+        case 2: return TimeInterval(values[0] * 60 + values[1])
+        case 3: return TimeInterval(values[0] * 3600 + values[1] * 60 + values[2])
+        default: return nil
+        }
+    }
+
+    private func selectMoment(_ moment: ReaderKeyMoment) {
+        audioPlayer.seek(moment.time)
+        momentTarget = nil
+        if showingSummary { withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) { showSummary = false } }
+        Task { @MainActor in
+            await Task.yield()
+            momentTarget = moment.target
+        }
+    }
     private func applyFocus() {
         guard let url = model.libraryFocus else { return }
         guard library.finishEditing() else { model.libraryFocus = nil; return }
@@ -671,7 +707,9 @@ struct LibraryView: View {
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if !editing {
                     SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: summaryText != nil,
-                               showSummary: $showSummary, paths: model.paths, aiMarkerCount: aiMarkers.count) { requestedSummary = item.url }
+                               showSummary: $showSummary, paths: model.paths, aiMarkerCount: aiMarkers.count,
+                               keyMoments: readerKeyMoments, requested: { requestedSummary = item.url },
+                               selectMoment: selectMoment)
                     Rectangle().fill(Theme.line).frame(height: 1)
                 }
                 if editing {
@@ -690,27 +728,36 @@ struct LibraryView: View {
                     .scrollIndicators(.automatic)
                     .textSelection(.enabled)
                 } else {
-                    ScrollView {
-                        TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: aiMarkers,
-                                       duration: markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
-                            guard !summaries.isBusy(item.url) else { return }
-                            let folder = item.url.deletingLastPathComponent()
-                            do {
-                                try Vocabulary.remember(replacement, folder: folder)
-                                let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
-                                _ = library.save(corrected, to: item.url, paths: libraryPaths, expectedText: item.text)
-                            } catch { NSAlert(error: error).runModal() }
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: aiMarkers,
+                                           duration: markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
+                                guard !summaries.isBusy(item.url) else { return }
+                                let folder = item.url.deletingLastPathComponent()
+                                do {
+                                    try Vocabulary.remember(replacement, folder: folder)
+                                    let corrected = (item.text as NSString).replacingCharacters(in: range, with: replacement)
+                                    _ = library.save(corrected, to: item.url, paths: libraryPaths, expectedText: item.text)
+                                } catch { NSAlert(error: error).runModal() }
+                            }
+                            .padding(.horizontal, 30).padding(.vertical, 24)
+                            .frame(maxWidth: 640, alignment: .leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .padding(.horizontal, 30).padding(.vertical, 24)
-                        .frame(maxWidth: 640, alignment: .leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .scrollIndicators(.automatic)
+                        .textSelection(.enabled)
+                        .onChange(of: momentTarget) { _, target in
+                            guard let target else { return }
+                            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
+                        }
                     }
-                    .scrollIndicators(.automatic)
-                    .textSelection(.enabled)
                 }
                 if let audio = audioURL(for: item) {
                     Rectangle().fill(Theme.line).frame(height: 1)
-                    AudioStrip(url: audio).id(audio)
+                    AudioStrip(url: audio, player: audioPlayer, moments: readerKeyMoments,
+                               selectMoment: selectMoment).id(audio)
                 }
             }
         } else {
@@ -737,28 +784,34 @@ struct LibraryView: View {
             if editing {
                 Button("Cancel") { library.cancelEdit() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+                    .readerHoverLift()
                     .tip("Discard changes")
                     .keyboardShortcut(.cancelAction)
                 Button("Save") { library.saveDraft() }
                     .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
+                    .readerHoverLift()
                     .tip("Save changes")
                     .keyboardShortcut("s", modifiers: .command)
             } else {
                 Button { showSummary = false; library.beginEditing(paths: libraryPaths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
+                    .readerHoverLift()
                     .tip("Edit").accessibilityLabel("Edit transcript")
                     .disabled(summaries.isBusy(item.url))
                 Button { copy(showingSummary ? summaryText ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
+                .readerHoverLift()
                 .tip(copied ? "Copied" : "Copy").accessibilityLabel(showingSummary ? "Copy summary" : "Copy transcript")
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
-                    .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
+                .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
+                    .readerHoverLift()
                 OpenWithMenu(url: item.url)
                 Button { library.trash(item.url, paths: libraryPaths) } label: { Image(systemName: "trash") }
-                    .buttonStyle(IconButtonStyle(size: 32, destructive: true))
+                .buttonStyle(IconButtonStyle(size: 32, destructive: true))
+                    .readerHoverLift()
                     .keyboardShortcut(focus == .list && library.focusedFolder == nil ? KeyboardShortcut(.delete, modifiers: .command) : nil)
                     .tip("Move to Trash")
                     .accessibilityLabel("Move transcript to Trash")
@@ -1134,18 +1187,52 @@ private struct RecentToggleStyle: ButtonStyle {
 // Play the lecture back while reading, at study speeds.
 private struct AudioStrip: View {
     let url: URL
-    @StateObject private var player = StripPlayer()
+    @StateObject private var retainedPlayer: StripPlayer
+    @ObservedObject private var player: StripPlayer
+    var moments: [ReaderKeyMoment] = []
+    var selectMoment: (ReaderKeyMoment) -> Void = { _ in }
+
+    init(url: URL, player: StripPlayer? = nil, moments: [ReaderKeyMoment] = [],
+         selectMoment: @escaping (ReaderKeyMoment) -> Void = { _ in }) {
+        self.url = url
+        let instance = player ?? StripPlayer()
+        _retainedPlayer = StateObject(wrappedValue: instance)
+        _player = ObservedObject(wrappedValue: instance)
+        self.moments = moments
+        self.selectMoment = selectMoment
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Button { player.toggle() } label: {
-                Image(systemName: player.playing ? "pause.fill" : "play.fill").contentTransition(.symbolEffect(.replace))
+                Image(systemName: player.playing ? "pause.fill" : "play.fill")
+                    .contentTransition(.symbolEffect(.replace))
+                    .symbolEffect(.bounce, value: player.playing)
             }
             .buttonStyle(RoundButtonStyle(size: 34))
+            .readerHoverLift()
             .tip(player.playing ? "Pause audio" : "Play audio")
             .accessibilityLabel(player.playing ? "Pause audio" : "Play audio")
             Text(Core.timer(player.time)).font(Theme.text(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
             Slider(value: Binding(get: { player.time }, set: { player.seek($0) }), in: 0...max(1, player.duration))
                 .controlSize(.small)
+                .overlay {
+                    GeometryReader { geometry in
+                        ForEach(moments) { moment in
+                            let fraction = min(1, max(0, moment.time / max(1, player.duration)))
+                            Button { selectMoment(moment) } label: {
+                                Capsule().fill(moment.source == .ai ? Theme.muted : Theme.accentText)
+                                    .frame(width: 2, height: 9)
+                                    .frame(width: 12, height: 18)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(ReaderPressStyle())
+                            .frame(width: 12, height: 18)
+                            .position(x: 6 + (geometry.size.width - 12) * fraction, y: geometry.size.height / 2)
+                            .accessibilityLabel("Seek to \(Core.timer(moment.time)): \(moment.label)")
+                        }
+                    }
+                }
                 .tip("Seek audio")
                 .accessibilityLabel("Playback position")
             Text(Core.timer(player.duration)).font(Theme.text(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
@@ -1158,6 +1245,7 @@ private struct AudioStrip: View {
                 Text(rateLabel(Double(player.rate))).font(Theme.text(12, .semibold))
             }
             .menuStyle(.button).font(Theme.text(10)).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+            .readerHoverLift()
             .menuIndicator(.hidden).fixedSize()
             .tip("Playback speed", edge: .top)
             .accessibilityLabel("Playback speed")
@@ -1222,6 +1310,7 @@ private struct ExportMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .tip("Share / Export")
+        .readerHoverLift()
         .accessibilityLabel("Export transcript")
     }
     private func savePanel(_ type: UTType) -> URL? {
@@ -1318,6 +1407,7 @@ private struct OpenWithMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .tip("Open with…")
+        .readerHoverLift()
         .accessibilityLabel("Open with another app")
     }
     private var apps: [URL] {
@@ -1356,6 +1446,7 @@ private struct TranscriptText: View {
                 switch row {
                 case .ai(let index, let marker):
                     AIMarkerRow(marker: marker) { removeAI(index) }
+                        .id("moment-ai-\(index)")
                 case .block(let block):
                     blockView(block)
                 }
@@ -1384,6 +1475,7 @@ private struct TranscriptText: View {
             .foregroundStyle(Theme.accentText)
             .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .id("moment-manual-\(block.offset)")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Marker at \(timestamp): \(label)")
         case .paragraph(let text) where TranscriptDisplay.isNoSpeech(text):
