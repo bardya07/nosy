@@ -68,6 +68,8 @@ final class AppModel: ObservableObject {
     // Set by any open window so the model can open others (e.g. from a notification).
     var openWindow: OpenWindowAction?
     var finishLibraryEditing: (() -> Bool)?
+    // The Transcripts window drops a trashed folder from its tree through this, whichever window trashed it.
+    var onFolderTrashed: ((String, AppPaths) -> Void)?
     var finishOnboardingWork: (() async -> Void)?
 
     private var recorder: Recorder?
@@ -827,21 +829,27 @@ final class AppModel: ObservableObject {
         refreshLectures()
         refreshDependencies()
     }
-    // Moves a folder and its transcripts to the Trash. Refused while any recording, transcription,
-    // import or summary is running, so no work lands in a folder that disappears underneath it.
-    func trashLecture(_ lecture: String) {
+    // Moves a folder and its transcripts to the Trash, for either window. Refused while any recording,
+    // transcription, import or summary is running, so no work lands in a folder that disappears underneath it.
+    @discardableResult func trashLecture(_ lecture: String, paths trashPaths: AppPaths) -> Bool {
         guard !working, !summaries.hasPendingWork else {
             showError("Finish the current recording, transcription or summary before deleting a folder.")
-            return
+            return false
         }
         do {
-            try LectureFolderTrash.move(lecture, paths: paths)
+            try LectureFolderTrash.move(lecture, paths: trashPaths)
         } catch {
             showError("Couldn't move \"\(lecture)\" to the Trash: \(error.localizedDescription)")
-            return
+            return false
+        }
+        // The last saved transcript may have lived in that folder; Saved actions must stop pointing at it.
+        if let path = current?.transcriptPath, Core.isContained(URL(fileURLWithPath: path), in: trashPaths.lectureFolder(lecture)) {
+            transcriptChanged(from: URL(fileURLWithPath: path), to: nil)
         }
         // refreshLectures picks another folder, or New folder, when the selected one is gone.
         refreshLectures()
+        onFolderTrashed?(lecture, trashPaths)
+        return true
     }
     func revealTranscriptsFolder() {
         try? FileManager.default.createDirectory(at: paths.transcripts, withIntermediateDirectories: true)

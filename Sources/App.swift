@@ -830,17 +830,9 @@ struct MainView: View {
     }
 
     private func confirmTrashFolder(_ lecture: String) {
-        guard model.finishLibraryEditing?() ?? true else { return }
-        let alert = NSAlert()
-        alert.messageText = "Move \"\(lecture)\" and its transcripts to the Trash?"
-        let trash = alert.addButton(withTitle: "Move to Trash")
-        trash.hasDestructiveAction = true
-        trash.keyEquivalent = ""
-        // Cancel is the default so a stray Return never moves a folder.
-        alert.addButton(withTitle: "Cancel").keyEquivalent = "\r"
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard model.finishLibraryEditing?() ?? true, LectureFolderTrash.confirm(lecture) else { return }
         if let url = model.vocabularyURL(for: lecture) { vocabularyDrafts[url] = nil }
-        model.trashLecture(lecture)
+        model.trashLecture(lecture, paths: model.paths)
         hoveredFolder = nil
     }
 

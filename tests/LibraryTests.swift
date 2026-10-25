@@ -220,9 +220,10 @@ enum LibraryTests {
         trashLibrary.reload(paths: trashPaths)
         check(trashLibrary.select(removedTranscript), "folder Trash fixture selects the folder being removed")
         let movedFolder = testTrash.appendingPathComponent("Remove", isDirectory: true)
-        check(trashLibrary.trashFolder("Remove", paths: trashPaths) { folder in
+        try LectureFolderTrash.move("Remove", paths: trashPaths) { folder in
             try FileManager.default.moveItem(at: folder, to: movedFolder)
-        }, "a folder inside the selected library can move to Trash")
+        }
+        trashLibrary.folderRemoved("Remove", paths: trashPaths)
         check(!FileManager.default.fileExists(atPath: removeFolder.path)
               && FileManager.default.fileExists(atPath: movedFolder.appendingPathComponent("2026-10-24.md").path)
               && FileManager.default.fileExists(atPath: keepFolder.path), "only the requested folder and its transcript moved")
@@ -234,7 +235,7 @@ enum LibraryTests {
         var outsideMoveCalled = false
         var refusedOutsideFolder = false
         do {
-            try TranscriptLibrary.moveFolderToTrash(outsideFolder, in: trashLibraryRoot) { _ in outsideMoveCalled = true }
+            try LectureFolderTrash.move("../outside-library", paths: trashPaths) { _ in outsideMoveCalled = true }
         } catch { refusedOutsideFolder = true }
         check(refusedOutsideFolder && !outsideMoveCalled && FileManager.default.fileExists(atPath: outsideFolder.path),
               "folder Trash refuses paths outside the selected library")

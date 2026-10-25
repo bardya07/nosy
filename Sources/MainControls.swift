@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 // Pure rules behind the main window's controls, so tests can check them without a window.
@@ -34,20 +35,39 @@ enum InputLevel {
     }
 }
 
-// Moving a folder to the Trash. Only a folder inside the transcript library can be moved,
-// and the move is the system Trash, so it stays recoverable.
+// Deleting a folder: the one path both the main window and the Transcripts window use. Only a folder
+// directly inside the transcript library can move, the move is the system Trash so it stays
+// recoverable, and the owner confirms first.
 enum LectureFolderTrash {
     typealias Mover = (URL) throws -> Void
 
-    static func move(_ lecture: String, paths: AppPaths,
-                     mover: Mover = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) throws {
+    static func systemTrash(_ url: URL) throws {
+        try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+    }
+
+    static func move(_ lecture: String, paths: AppPaths, mover: Mover = LectureFolderTrash.systemTrash) throws {
         try paths.validateLectureFolder(lecture)
         let folder = paths.lectureFolder(lecture)
+        // Compare normalized paths only; the mover gets the folder exactly as the library spells it.
+        let root = paths.transcripts.resolvingSymlinksInPath().standardizedFileURL
+        let parent = folder.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: folder.path, isDirectory: &isDirectory), isDirectory.boolValue,
-              Core.isContained(folder, in: paths.transcripts) else {
+        // A link that points outside the library fails the containment check, so its target is never moved.
+        guard parent == root, Core.isContained(folder, in: paths.transcripts),
+              FileManager.default.fileExists(atPath: folder.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             throw LectureError.message("That folder is no longer in your transcript library.")
         }
         try mover(folder)
+    }
+
+    // The one confirmation for deleting a folder. Cancel is the default so a stray Return never moves it.
+    @MainActor static func confirm(_ lecture: String) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Move \"\(lecture)\" and its transcripts to the Trash?"
+        let trash = alert.addButton(withTitle: "Move to Trash")
+        trash.hasDestructiveAction = true
+        trash.keyEquivalent = ""
+        alert.addButton(withTitle: "Cancel").keyEquivalent = "\r"
+        return alert.runModal() == .alertFirstButtonReturn
     }
 }

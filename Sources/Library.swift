@@ -231,30 +231,17 @@ final class TranscriptLibrary: ObservableObject {
         reload(paths: paths)
     }
 
-    // Moves a complete transcript folder to the Trash, then keeps the reader on a nearby session.
-    @discardableResult func trashFolder(_ lecture: String, paths: AppPaths,
-        moveToTrash: (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) -> Bool {
-        let folder = paths.lectureFolder(lecture)
-        let removed = items.filter { $0.lecture == lecture && Core.isContained($0.url, in: paths.transcripts) }
-        guard !removed.isEmpty, finishEditing() else { return false }
+    // A folder that the shared Trash path just moved: drop it from the tree and keep the reader on a nearby session.
+    func folderRemoved(_ lecture: String, paths: AppPaths) {
+        guard loadedRoot == paths.transcripts else { return }
         let list = ordered
         let oldSelection = selection
         let selectionIndex = list.firstIndex { $0.url == oldSelection }
-        do {
-            try Self.moveFolderToTrash(folder, in: paths.transcripts, moveToTrash: moveToTrash)
-        } catch {
-            let alert = NSAlert(error: error)
-            alert.messageText = "Couldn't move this folder to the Trash"
-            alert.runModal()
-            return false
-        }
-        for item in removed { didChange?(item.url, nil) }
+        let removedURLs = Set(items.filter { $0.lecture == lecture }.map(\.url))
         removeFolderState(lecture)
         let selectedFolderWasRemoved = selectedFolder == lecture
         if selectedFolderWasRemoved { selectedFolder = nil }
         reload(paths: paths)
-
-        let removedURLs = Set(removed.map(\.url))
         if let oldSelection, removedURLs.contains(oldSelection) {
             let remaining = list.filter { !removedURLs.contains($0.url) }
             let next = selectionIndex.flatMap { index in
@@ -264,19 +251,6 @@ final class TranscriptLibrary: ObservableObject {
         } else if selectedFolderWasRemoved, let selection {
             setSelection(selection)
         }
-        return true
-    }
-
-    static func moveFolderToTrash(_ folder: URL, in libraryRoot: URL,
-        moveToTrash: (URL) throws -> Void = { try FileManager.default.trashItem(at: $0, resultingItemURL: nil) }) throws {
-        let target = folder.standardizedFileURL
-        let root = libraryRoot.resolvingSymlinksInPath().standardizedFileURL
-        let parent = target.deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL
-        guard parent == root, Core.isContained(target, in: libraryRoot),
-              (try? target.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
-            throw LectureError.message("This folder is outside the transcript library.")
-        }
-        try moveToTrash(target)
     }
 
     func rename(_ item: TranscriptItem, paths: AppPaths) {
@@ -391,6 +365,7 @@ struct LibraryView: View {
             if previewDropping { dropping = true }
             library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
             model.finishLibraryEditing = { [weak library = library] in library?.finishEditing() ?? true }
+            model.onFolderTrashed = { [weak library = library] lecture, trashed in library?.folderRemoved(lecture, paths: trashed) }
             library.restoreFolders(from: Snapshot.isRunning ? nil : .standard)
             reload()
             applyFocus()
@@ -611,12 +586,8 @@ struct LibraryView: View {
     }
 
     private func confirmTrashFolder(_ lecture: String) {
-        let alert = NSAlert()
-        alert.messageText = "Move \"\(lecture)\" and its transcripts to the Trash?"
-        alert.addButton(withTitle: "Move to Trash")
-        alert.addButton(withTitle: "Cancel")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
-        if library.trashFolder(lecture, paths: libraryPaths) { loadSummary() }
+        guard model.finishLibraryEditing?() ?? true, LectureFolderTrash.confirm(lecture) else { return }
+        if model.trashLecture(lecture, paths: libraryPaths) { loadSummary() }
     }
 
     // Recordings without a transcript (failed, quit, or postponed) stay reachable here.
