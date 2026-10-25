@@ -2,7 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/paths.sh
+source scripts/audio-shim.sh
 mkdir -p "$BUILD_DIR/module-cache"
+clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
+"$BUILD_DIR/AudioExceptionsTests"
 BACKEND=(Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift)
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" tests/CoreTests.swift -o "$BUILD_DIR/CoreTests"
@@ -21,7 +24,7 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
 "$BUILD_DIR/VocabularyTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/AudioInputs.swift Sources/RecordingSource.swift \
-    Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
+    "${AUDIO_SHIM[@]}" Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
 "$BUILD_DIR/AudioCaptureTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" tests/AudioImportTests.swift -o "$BUILD_DIR/AudioImportTests"
@@ -31,8 +34,8 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
     Sources/ClaudeConnector.swift tests/ConnectorTests.swift -o "$BUILD_DIR/ConnectorTests"
 "$BUILD_DIR/ConnectorTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" Sources/*.swift tests/LibraryTests.swift -o "$BUILD_DIR/LibraryTests"
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/LibraryTests.swift -o "$BUILD_DIR/LibraryTests"
 "$BUILD_DIR/LibraryTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" Sources/*.swift tests/UITests.swift tests/MainWindowInteraction.swift -o "$BUILD_DIR/UITests"
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/UITests.swift tests/MainWindowInteraction.swift -o "$BUILD_DIR/UITests"
 "$BUILD_DIR/UITests"

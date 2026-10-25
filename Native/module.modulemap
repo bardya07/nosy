@@ -1,0 +1,4 @@
+module NosyAudioBridge {
+    header "AudioExceptions.h"
+    export *
+}

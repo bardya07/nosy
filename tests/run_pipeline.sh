@@ -2,12 +2,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/paths.sh
+source scripts/audio-shim.sh
 # Use the current backend even when another engineer's UI rewrite is incomplete.
 if [[ -z "${NOSY_TEST_APP:-}" ]]; then
     mkdir -p "$BUILD_DIR/module-cache"
     swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
         -module-cache-path "$BUILD_DIR/module-cache" \
-        Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/AudioInputs.swift \
+        "${AUDIO_SHIM[@]}" Sources/Core.swift Sources/AudioFiles.swift Sources/Models.swift Sources/AudioInputs.swift \
         Sources/RecordingSource.swift Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift Sources/Vocabulary*.swift Sources/SubjectCatalog.swift Sources/Transcriber.swift Sources/Headless.swift tests/HeadlessMain.swift \
         -o "$BUILD_DIR/NosyHeadless"
     export NOSY_TEST_APP="$BUILD_DIR/NosyHeadless"

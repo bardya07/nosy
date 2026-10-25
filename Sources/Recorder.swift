@@ -1,5 +1,8 @@
 import AVFoundation
 import Foundation
+#if canImport(NosyAudioBridge)
+import NosyAudioBridge
+#endif
 
 enum RecorderEvent: Sendable {
     case level(bytes: Int64, db: Double, silent: Bool)
@@ -113,7 +116,7 @@ final class Recorder: @unchecked Sendable {
         if source.usesMic {
             // Never leave a previous engine's tap behind: a second tap on a bus is an uncaught exception.
             if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
-            if let old = engine { old.stop(); old.inputNode.removeTap(onBus: 0); self.engine = nil }
+            if let old = engine { Self.stopEngine(old); self.engine = nil }
             let engine = AVAudioEngine()
             self.engine = engine
             observer = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
@@ -135,7 +138,7 @@ final class Recorder: @unchecked Sendable {
     }
     private func stopSources() {
         if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
-        if let engine { engine.stop(); engine.inputNode.removeTap(onBus: 0); self.engine = nil }
+        if let engine { Self.stopEngine(engine); self.engine = nil }
         macCapture?.stop(); macCapture = nil
         lock.lock()
         micConverter = nil; macConverter = nil; converter = nil
@@ -237,24 +240,36 @@ final class Recorder: @unchecked Sendable {
     // Swift cannot catch and which aborted a real recording. So: never tap with a stale format,
     // retry a start that loses the race once, and let consume() follow each buffer's real format.
     private func startTap(on engine: AVAudioEngine, attempt: Int = 0) throws {
-        let input = engine.inputNode
-        input.removeTap(onBus: 0) // Only one tap per bus; a no-op when none is installed.
-        let plan = try Self.tapPlan(output: input.outputFormat(forBus: 0), hardware: input.inputFormat(forBus: 0))
-        lock.lock()
-        do { try configureMicLocked(plan.expected) } catch { lock.unlock(); throw error }
-        lastBuffer = Date.timeIntervalSinceReferenceDate
-        lock.unlock()
-        input.installTap(onBus: 0, bufferSize: 4096, format: plan.tap) { [weak self] buffer, time in self?.consume(buffer, time: time) }
-        engine.prepare()
-        do { try engine.start() } catch {
-            engine.stop()
-            input.removeTap(onBus: 0)
-            guard attempt == 0 else {
-                throw LectureError.message("The microphone couldn't start (\(error.localizedDescription)). Check your input device, then try again.")
+        do {
+            #if canImport(NosyAudioBridge)
+            var error: NSError?
+            guard let formats = NosyAudioFormats(engine, &error), formats.count == 2 else {
+                throw error ?? LectureError.message("The microphone has no usable input format.")
             }
-            Thread.sleep(forTimeInterval: 0.3) // Let a Bluetooth profile switch settle, then read formats again.
+            let plan = try Self.tapPlan(output: formats[0], hardware: formats[1])
+            lock.lock()
+            do { try configureMicLocked(plan.expected) } catch { lock.unlock(); throw error }
+            lastBuffer = Date.timeIntervalSinceReferenceDate
+            lock.unlock()
+            guard NosyAudioStart(engine, plan.tap, { [weak self] buffer, time in self?.consume(buffer, time: time) }, &error) else {
+                throw error ?? LectureError.message("The microphone could not start.")
+            }
+            #else
+            // Standalone typechecks need no Clang flags. Executable builds must link the bridge.
+            throw LectureError.message("Nosy's audio support is missing. Reinstall Nosy, then try again.")
+            #endif
+        } catch {
+            Self.stopEngine(engine)
+            guard attempt == 0 else { throw error }
+            Thread.sleep(forTimeInterval: 0.3)
             try startTap(on: engine, attempt: 1)
         }
+    }
+    private static func stopEngine(_ engine: AVAudioEngine) {
+        #if canImport(NosyAudioBridge)
+        var error: NSError?
+        _ = NosyAudioStop(engine, &error)
+        #endif
     }
     // tap == nil follows the node, which survives a profile switch during installTap. When the node's
     // client format disagrees with the hardware it is stale, and only the hardware format starts.
@@ -423,8 +438,7 @@ final class Recorder: @unchecked Sendable {
         guard let engine else { return }
         lock.lock(); let active = accepting && !failed; lock.unlock()
         guard active else { return }
-        engine.stop()
-        engine.inputNode.removeTap(onBus: 0)
+        Self.stopEngine(engine)
         do { try installTapAndStart(engine) }
         catch { scheduleFailure("Microphone changed and could not restart: \(error.localizedDescription)") }
     }
@@ -487,15 +501,13 @@ final class Recorder: @unchecked Sendable {
                 let previous = self.pinnedUID
                 do {
                     let pinned = try self.resolvedUID(uid)
-                    engine.stop()
-                    engine.inputNode.removeTap(onBus: 0)
+                    Self.stopEngine(engine)
                     self.pinnedUID = pinned
                     try self.installTapAndStart(engine)
                     continuation.resume()
                 } catch {
                     // Keep the lecture going on the mic that worked.
-                    engine.stop()
-                    engine.inputNode.removeTap(onBus: 0)
+                    Self.stopEngine(engine)
                     self.pinnedUID = previous
                     do {
                         try self.installTapAndStart(engine)

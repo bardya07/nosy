@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 source scripts/paths.sh
+source scripts/audio-shim.sh
 APP="$BUILD_DIR/Nosy.app"
 WHISPER="$PWD/vendor/whisper/whisper-cli"
 [[ -x "$WHISPER" ]] || { printf 'Build the bundled speech engine first: ./scripts/build-whisper.sh\n' >&2; exit 1; }
@@ -14,7 +15,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources"
 swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
-    Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
+    "${AUDIO_SHIM[@]}" Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
 # The MCP server that lets Claude Desktop and other AI apps read transcripts. Standard library only.
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
