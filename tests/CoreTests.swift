@@ -137,6 +137,7 @@ enum CoreTests {
         let missingModel = "The speech model hasn't been downloaded yet. Your audio is safe. Try again once it's ready."
         let snag = "Transcription hit a snag. Your audio is safe. Try again."
         check(Core.friendlyError(Core.missingEngineMessage) == missingEngine, "missing CLI friendly error")
+        check(Core.friendlyError(Core.emptyRecordingMessage) == Core.emptyRecordingMessage, "empty recording keeps its honest message")
         check(Core.friendlyError("The file “whisper-cli” doesn’t exist.") == missingEngine, "missing CLI Cocoa error")
         check(Core.friendlyError("Model missing: /tmp/models/model.bin") == missingModel, "missing model friendly error")
         check(Core.friendlyError("whisper-cli exited 1: failed to open model '/tmp/ggml.bin'") == missingModel, "missing model takes priority over exit code")

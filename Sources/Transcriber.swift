@@ -120,6 +120,7 @@ enum Transcriber {
             record.endedAt = record.endedAt ?? Date()
             try record.save(in: paths)
             let wav = try AudioFiles.decodeToWAV(id: record.id, paths: paths)
+            guard Core.fileSize(wav) != 44 else { throw LectureError.message(Core.emptyRecordingMessage) } // Header only.
             if let warning = paths.dependencyWarning { throw LectureError.message(warning) }
             guard let executable = paths.whisper else { throw LectureError.message(Core.missingEngineMessage) }
             let base = paths.audio.appendingPathComponent(".whisper-\(record.id)-\(UUID().uuidString)")

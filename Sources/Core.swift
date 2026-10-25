@@ -206,6 +206,8 @@ enum Core {
         return speech == "_No speech detected._" ? 0 : speech.split(whereSeparator: { $0.isWhitespace }).count
     }
     static let bytesPerSecond: Int64 = 32_000
+    // A recording that ended (or crashed) before its first audio buffer leaves a header-only WAV.
+    static let emptyRecordingMessage = "This recording has no audio because it stopped before any sound was captured. Nothing to transcribe."
     static let missingEngineMessage = "Nosy's speech engine is missing. Reinstall Nosy, then try again. Your audio is safe."
 
     static func stressReason(thermal: ProcessInfo.ThermalState, onBattery: Bool, percent: Double?) -> String? {
@@ -299,6 +301,7 @@ enum Core {
             || (text.contains("model") && contains(["no such file", "does not exist", "not been downloaded"])) {
             return "The speech model hasn't been downloaded yet. Your audio is safe. Try again once it's ready."
         }
+        if trimmed == emptyRecordingMessage { return emptyRecordingMessage }
         if text.contains("whisper"), contains(["exited", "exit code", "exit status"]) {
             return "Transcription hit a snag. Your audio is safe. Try again."
         }

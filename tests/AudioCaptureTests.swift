@@ -34,6 +34,22 @@ enum AudioCaptureTests {
         do { try await idle.switchSource(.macAudio, inputUID: nil); preconditionFailure("Idle recorder cannot switch live hardware") }
         catch { check(error.localizedDescription.contains("Pause"), "Recorder enforces source rules") }
 
+        // Regression: AirPods crash (Nosy-2026-10-24-180124). The node reported 48 kHz while the
+        // headset's mic ran at 24 kHz HFP; tapping with the stale format raised an uncaught NSException.
+        let a2dp = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+        let hfp = AVAudioFormat(standardFormatWithSampleRate: 24_000, channels: 1)!
+        let stalePlan = try Recorder.tapPlan(output: a2dp, hardware: hfp)
+        check(stalePlan.tap?.sampleRate == 24_000 && stalePlan.expected.sampleRate == 24_000, "A stale node format never reaches installTap")
+        let matchingPlan = try Recorder.tapPlan(output: a2dp, hardware: a2dp)
+        check(matchingPlan.tap == nil && matchingPlan.expected.sampleRate == 48_000, "A matching device taps with nil so a mid-install profile switch cannot raise")
+        let stereo = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)!
+        check(try Recorder.tapPlan(output: a2dp, hardware: stereo).tap?.channelCount == 2, "Channel-count mismatch uses the hardware layout")
+        let empty = AVAudioFormat(standardFormatWithSampleRate: 0, channels: 1) ?? AVAudioFormat()
+        do { _ = try Recorder.tapPlan(output: empty, hardware: empty); preconditionFailure("No device must not install a tap") }
+        catch { check(error.localizedDescription.contains("microphone isn't available"), "Missing device fails with a visible error") }
+        check(Recorder.micFormatChanged(rate: 48_000, channels: 1, to: hfp), "A 48 to 24 kHz buffer rebuilds the converters")
+        check(!Recorder.micFormatChanged(rate: 24_000, channels: 1, to: hfp), "Same-format buffers keep the converter state")
+
         for interleaved in [false, true] {
             let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_DiscreteInOrder | 4)!
             let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 48_000, interleaved: interleaved, channelLayout: layout)

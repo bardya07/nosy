@@ -148,7 +148,14 @@ struct ClaudeConnector: Sendable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyyMMdd-HHmmss-SSS"
         let stamp = formatter.string(from: Date())
-        return configURL.deletingLastPathComponent()
-            .appendingPathComponent("claude_desktop_config.backup-\(stamp).json")
+        let folder = configURL.deletingLastPathComponent()
+        // Two changes in the same millisecond must not collide (the write never overwrites).
+        var candidate = folder.appendingPathComponent("claude_desktop_config.backup-\(stamp).json")
+        var index = 2
+        while FileManager.default.fileExists(atPath: candidate.path) {
+            candidate = folder.appendingPathComponent("claude_desktop_config.backup-\(stamp)-\(index).json")
+            index += 1
+        }
+        return candidate
     }
 }

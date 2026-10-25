@@ -39,6 +39,8 @@ final class Recorder: @unchecked Sendable {
     private var converter: AVAudioConverter?
     private var outputFormat: AVAudioFormat?
     private var monoFormat: AVAudioFormat?
+    private var micRate: Double = 0 // Format the mic converters were built for; protected by lock.
+    private var micChannels: AVAudioChannelCount = 0
     private var file: FileHandle?
     private var bytes: Int64 = 0
     private var accepting = false
@@ -109,6 +111,9 @@ final class Recorder: @unchecked Sendable {
             try startMacAudio()
         }
         if source.usesMic {
+            // Never leave a previous engine's tap behind: a second tap on a bus is an uncaught exception.
+            if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
+            if let old = engine { old.stop(); old.inputNode.removeTap(onBus: 0); self.engine = nil }
             let engine = AVAudioEngine()
             self.engine = engine
             observer = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
@@ -220,32 +225,72 @@ final class Recorder: @unchecked Sendable {
                 onEvent(.usingDefaultInput)
             }
         }
+        try startTap(on: engine)
+        guard let device = AudioInputs.current(on: engine) else {
+            throw LectureError.message("Could not identify the active microphone.")
+        }
+        onEvent(.input(name: device.name))
+    }
+    // Bluetooth headsets (AirPods) switch from 48 kHz A2DP to 24/16 kHz HFP when their mic opens,
+    // and a node whose device was just pinned can report the previous device's format. Installing
+    // a tap whose format no longer matches the hardware raises an uncaught NSException, which
+    // Swift cannot catch and which aborted a real recording. So: never tap with a stale format,
+    // retry a start that loses the race once, and let consume() follow each buffer's real format.
+    private func startTap(on engine: AVAudioEngine, attempt: Int = 0) throws {
         let input = engine.inputNode
-        let format = input.outputFormat(forBus: 0)
-        // Channels are averaged to mono by hand first: AVAudioConverter's downmix drops speech
-        // on discrete multichannel interfaces (e.g. a mic on input 2 of 4).
+        input.removeTap(onBus: 0) // Only one tap per bus; a no-op when none is installed.
+        let plan = try Self.tapPlan(output: input.outputFormat(forBus: 0), hardware: input.inputFormat(forBus: 0))
+        lock.lock()
+        do { try configureMicLocked(plan.expected) } catch { lock.unlock(); throw error }
+        lastBuffer = Date.timeIntervalSinceReferenceDate
+        lock.unlock()
+        input.installTap(onBus: 0, bufferSize: 4096, format: plan.tap) { [weak self] buffer, time in self?.consume(buffer, time: time) }
+        engine.prepare()
+        do { try engine.start() } catch {
+            engine.stop()
+            input.removeTap(onBus: 0)
+            guard attempt == 0 else {
+                throw LectureError.message("The microphone couldn't start (\(error.localizedDescription)). Check your input device, then try again.")
+            }
+            Thread.sleep(forTimeInterval: 0.3) // Let a Bluetooth profile switch settle, then read formats again.
+            try startTap(on: engine, attempt: 1)
+        }
+    }
+    // tap == nil follows the node, which survives a profile switch during installTap. When the node's
+    // client format disagrees with the hardware it is stale, and only the hardware format starts.
+    static func tapPlan(output: AVAudioFormat, hardware: AVAudioFormat) throws -> (tap: AVAudioFormat?, expected: AVAudioFormat) {
+        func usable(_ format: AVAudioFormat) -> Bool { format.sampleRate > 0 && format.channelCount > 0 }
+        guard usable(hardware) else {
+            if usable(output) { return (nil, output) }
+            throw LectureError.message("The microphone isn't available. Check that it's connected and that Nosy has microphone access in System Settings.")
+        }
+        if usable(output), output.sampleRate == hardware.sampleRate, output.channelCount == hardware.channelCount {
+            return (nil, output)
+        }
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: hardware.sampleRate, channels: hardware.channelCount) else {
+            throw LectureError.message("The selected microphone has no usable audio input.")
+        }
+        return (format, format)
+    }
+    static func micFormatChanged(rate: Double, channels: AVAudioChannelCount, to format: AVAudioFormat) -> Bool {
+        format.sampleRate != rate || format.channelCount != channels
+    }
+    // Caller holds lock. Channels are averaged to mono by hand first: AVAudioConverter's downmix
+    // drops speech on discrete multichannel interfaces (e.g. a mic on input 2 of 4).
+    private func configureMicLocked(_ format: AVAudioFormat) throws {
         guard format.sampleRate > 0, format.channelCount > 0, format.commonFormat == .pcmFormatFloat32,
               let mono = AVAudioFormat(standardFormatWithSampleRate: format.sampleRate, channels: 1),
               let output = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16_000, channels: 1, interleaved: true),
               let converter = AVAudioConverter(from: mono, to: output) else {
             throw LectureError.message("The selected microphone has no usable audio input.")
         }
-        let micConverter = source.usesMacAudio ? try CaptureConverter(format: format) : nil
-        self.lock.lock()
-        self.micConverter = micConverter
-        self.mixLatency = max(CaptureMixer.latency, 4096 / format.sampleRate + 0.1)
+        micConverter = source.usesMacAudio ? try CaptureConverter(format: format) : nil
+        mixLatency = max(CaptureMixer.latency, 4096 / format.sampleRate + 0.1)
         self.converter = converter
-        self.outputFormat = output
-        self.monoFormat = mono
-        self.lastBuffer = Date.timeIntervalSinceReferenceDate
-        self.lock.unlock()
-        input.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, time in self?.consume(buffer, time: time) }
-        engine.prepare()
-        try engine.start()
-        guard let device = AudioInputs.current(on: engine) else {
-            throw LectureError.message("Could not identify the active microphone.")
-        }
-        onEvent(.input(name: device.name))
+        outputFormat = output
+        monoFormat = mono
+        micRate = format.sampleRate
+        micChannels = format.channelCount
     }
     private func startStallTimer() {
         let timer = DispatchSource.makeTimerSource(queue: control)
@@ -292,7 +337,12 @@ final class Recorder: @unchecked Sendable {
         lock.lock()
         guard accepting, !failed else { lock.unlock(); return }
         lastBuffer = Date.timeIntervalSinceReferenceDate
-        guard !paused, let converter, let outputFormat, let monoFormat, file != nil else { lock.unlock(); return }
+        guard !paused, file != nil else { lock.unlock(); return }
+        if Self.micFormatChanged(rate: micRate, channels: micChannels, to: input.format) {
+            do { try configureMicLocked(input.format) }
+            catch { lock.unlock(); scheduleFailure(error.localizedDescription); return }
+        }
+        guard let converter, let outputFormat, let monoFormat else { lock.unlock(); return }
         if stalled {
             stalled = false
             if !tapStalled { control.async { self.onEvent(.flowing) } }

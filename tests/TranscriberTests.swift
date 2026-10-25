@@ -198,6 +198,11 @@ enum TranscriberTests {
         invalidAudio = try await Transcriber.transcribe(record: invalidAudio, paths: paths)
         check(invalidAudio.status == .done && invalidAudio.error == nil, "compression failure does not fail transcript")
         check(manager.fileExists(atPath: paths.audioFile(invalidAudio.id, "wav").path), "compression failure leaves WAV")
+        // A recording that crashed before its first buffer leaves 0 PCM bytes: say so instead of a whisper "snag".
+        let empty = try record("empty-crash")
+        try Data().write(to: paths.audioFile(empty.id, "pcm"))
+        do { _ = try await Transcriber.transcribe(record: empty, paths: paths); fatalError("empty audio transcribed") }
+        catch { check(error.localizedDescription == Core.emptyRecordingMessage, "empty recording gets an honest message") }
 
         // Marker sessions request timestamp JSON and keep the ordinary transcript header/body style.
         try installCLI(#"""
