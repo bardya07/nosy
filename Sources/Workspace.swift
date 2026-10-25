@@ -42,7 +42,7 @@ struct WorkspaceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            WorkspaceTitlebar(model: model)
+            WorkspaceTitlebar(model: model, titlebarInset: $titlebarInset)
             MainView(model: model, embedded: true)
                 .background(GeometryReader { geometry in
                     Color.clear.preference(key: HomeHeightKey.self, value: geometry.size.height)
@@ -75,7 +75,7 @@ struct WorkspaceView: View {
         .frame(width: previewSize?.width, height: previewSize?.height)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackdrop())
-        .background(MainWindowChrome(titlebarInset: $titlebarInset).allowsHitTesting(false))
+        .buttonStyle(GlossButtonStyle(tier: .secondary))
         .background {
             if previewSize == nil {
                 WorkspaceWindowFrame(mode: navigation.mode, panel: navigation.panel,
@@ -95,6 +95,14 @@ struct WorkspaceView: View {
                 else { NSApp.keyWindow?.performClose(nil) }
             }.keyboardShortcut("w", modifiers: .command)
                 .opacity(0).frame(width: 0, height: 0).allowsHitTesting(false).accessibilityHidden(true)
+            if navigation.panel != nil || navigation.mode == .library {
+                Button("Return to Home") {
+                    if navigation.panel != nil { navigation.dismissPanel() }
+                    else { model.showHome() }
+                }
+                .keyboardShortcut(.cancelAction)
+                .opacity(0).frame(width: 0, height: 0).allowsHitTesting(false).accessibilityHidden(true)
+            }
         }
         .onPreferenceChange(HomeHeightKey.self) { height in
             if height.isFinite, height > 0, abs(height - homeHeight) > 0.5 {
@@ -169,10 +177,12 @@ struct WorkspaceTitlebar: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var navigation: WorkspaceNavigation
     var onHome: (() -> Void)?
-    init(model: AppModel, onHome: (() -> Void)? = nil) {
+    private var titlebarInset: Binding<CGFloat>?
+    init(model: AppModel, onHome: (() -> Void)? = nil, titlebarInset: Binding<CGFloat>? = nil) {
         self.model = model
         _navigation = ObservedObject(wrappedValue: model.workspace)
         self.onHome = onHome
+        self.titlebarInset = titlebarInset
     }
     var body: some View {
         ZStack {
@@ -184,6 +194,7 @@ struct WorkspaceTitlebar: View {
                             .font(Theme.text(12, .semibold))
                     }
                     .buttonStyle(TitlebarBrandButtonStyle())
+                    .buttonGloss(.full, tint: Theme.accent)
                     .accessibilityLabel("Return to Nosy")
                     .interactionTarget("library-home")
                     .disabled(navigation.panel != nil)
@@ -215,10 +226,11 @@ struct WorkspaceTitlebar: View {
                 Button { if let onHome { onHome() } else { navigation.requestHome() } } label: {
                     HStack(spacing: 6) {
                         NosyMark(size: 18)
-                        Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.ink)
+                        Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.onAccent)
                     }
                 }
                 .buttonStyle(TitlebarBrandButtonStyle())
+                .buttonGloss(.full, tint: Theme.accent)
                 .tip("Home", edge: .bottom)
                 .accessibilityLabel("Home")
                 .accessibilityElement(children: .combine)
@@ -227,7 +239,11 @@ struct WorkspaceTitlebar: View {
         }
         .padding(.horizontal, 12).frame(height: 44)
         .background(WindowBackdrop())
+        .background {
+            if let titlebarInset { MainWindowChrome(titlebarInset: titlebarInset).allowsHitTesting(false) }
+        }
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
+        .interactionTarget("workspace-titlebar")
     }
 }
 
@@ -250,6 +266,7 @@ private struct LibraryRecordingBar: View {
                 .tip("Add marker (⌘M)")
                 .keyboardShortcut("m", modifiers: .command)
                 .buttonStyle(IconButtonStyle(size: 32))
+                .buttonGloss(.secondary, tint: Theme.accent)
                 .interactionTarget("library-marker")
             Button(model.paused ? "Resume" : "Pause") { model.togglePause() }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))

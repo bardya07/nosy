@@ -26,10 +26,15 @@ enum MainWindowInteraction {
         NSApp.activate(ignoringOtherApps: true)
         defer { window.close() }
         await settle(host, window)
+        guard let titlebar = targets(in: host).first(where: { $0.id == "workspace-titlebar" }) else {
+            fail("Missing workspace title bar measurement")
+        }
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             let button = window.standardWindowButton(kind)!
             let center = button.convert(NSPoint(x: button.bounds.midX, y: button.bounds.midY), to: nil)
-            expect(abs(center.y - (host.bounds.height - 22)) < 1, "Traffic lights center \(center.y), expected \(host.bounds.height - 22)")
+            let titlebarCenter = titlebar.convert(NSPoint(x: titlebar.bounds.midX, y: titlebar.bounds.midY), to: nil)
+            expect(abs(center.y - titlebarCenter.y) < 1,
+                   "Traffic lights center \(center.y), expected title bar center \(titlebarCenter.y)")
         }
 
         func target(_ id: String) -> NSView {
@@ -37,6 +42,15 @@ enum MainWindowInteraction {
                 fail("Missing visible interaction target: \(id), present: \(targets(in: host).map(\.id))")
             }
             return view
+        }
+        func expectTrafficLightsCentered(_ state: String) {
+            let bar = target("workspace-titlebar")
+            let expected = bar.convert(NSPoint(x: bar.bounds.midX, y: bar.bounds.midY), to: nil).y
+            for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+                let button = window.standardWindowButton(kind)!
+                let center = button.convert(NSPoint(x: button.bounds.midX, y: button.bounds.midY), to: nil).y
+                expect(abs(center - expected) < 1, "Traffic lights stay centered in the title bar during \(state)")
+            }
         }
         func click(_ id: String) async {
             // Posted events do not activate an app as a physical mouse click
@@ -122,9 +136,11 @@ enum MainWindowInteraction {
         await click("browse-transcripts")
         expect(model.workspace.mode == .library, "Browse activates Library in the same window")
         expect(window.frame.width >= 720, "Library expands the shared window")
+        expectTrafficLightsCentered("Library resize")
         expect(NSApp.windows.filter { $0.isVisible && $0.styleMask.contains(.titled) }.map(\.windowNumber) == [window.windowNumber], "Navigation retains one native window")
         await click("library-home")
         expect(model.workspace.mode == .home && abs(window.frame.width - 400) < 1, "The Nosy arrow returns and shrinks Home")
+        expectTrafficLightsCentered("Home resize")
         await waitForTarget("dropdown-panel", visible: false, "Browse closes the Session panel")
         let browse = target("browse-transcripts")
         expect(browse.bounds.width > 80 && browse.bounds.height < 50, "Library is a labeled pill in the window row")
@@ -143,6 +159,7 @@ enum MainWindowInteraction {
         let vocabBubble = target("wheel-vocabulary")
         expect(vocabBubble.convert(vocabBubble.bounds, to: host).maxX <= host.bounds.width - 20 + 1,
                "The open wheel row fits inside the window margins")
+        for _ in 0..<4 { await settle(host, window) }
         await click("wheel-session")
         await waitForTarget("save-to-group", visible: false, "The Session bubble rolls the wheel back")
         await panel(true, "The Session bubble opens the Session panel")
@@ -261,6 +278,7 @@ enum MainWindowInteraction {
         let homeFrame = window.frame
         await click("titlebar-settings")
         expect(model.workspace.panel == .settings, "The gear opens Settings inside Home")
+        expectTrafficLightsCentered("Settings over Home")
         expect(hasVisibleTarget("workspace-panel") && hasVisibleTarget("settings-pane-connect"), "The panel includes its sidebar")
         expect(window.frame.width >= 656, "Home expands to fit Settings")
         await click("settings-pane-summaries")
@@ -269,6 +287,7 @@ enum MainWindowInteraction {
         await click("panel-close")
         for _ in 0..<4 { await settle(host, window) }
         expect(model.workspace.panel == nil && abs(window.frame.width - 400) < 1, "Closing Settings restores compact Home")
+        expectTrafficLightsCentered("Settings close")
         expect(abs(window.frame.minX - homeFrame.minX) < 1 && abs(window.frame.maxY - homeFrame.maxY) < 1,
                "Home's position survives Settings expansion")
         sendKey(",", code: 43, modifiers: .command, window: window)
@@ -280,6 +299,7 @@ enum MainWindowInteraction {
         sendKey("l", code: 37, modifiers: .command, window: window)
         await settle(host, window)
         expect(model.workspace.mode == .library, "Command L opens Library")
+        expectTrafficLightsCentered("Command L resize")
         for _ in 0..<4 { await settle(host, window) }
         let libraryFrame = window.frame
         await click("titlebar-settings")

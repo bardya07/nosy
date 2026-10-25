@@ -10,29 +10,12 @@ struct ReaderKeyMoment: Identifiable, Equatable {
     let source: Source
 }
 
-private struct ReaderHoverLift: ViewModifier {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var hovering = false
-
-    func body(content: Content) -> some View {
-        content
-            .offset(y: hovering && !reduceMotion ? -1 : 0)
-            .shadow(color: Theme.accent.opacity(hovering && !reduceMotion ? 0.12 : 0), radius: 5, y: 3)
-            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-    }
-}
-
 struct ReaderPressStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
-            .animation(Motion.press, value: configuration.isPressed)
+            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                        pressed: configuration.isPressed, shape: .capsule))
     }
-}
-
-extension View {
-    func readerHoverLift() -> some View { modifier(ReaderHoverLift()) }
 }
 
 // The strip under the reader header: Transcript | Summary, the two AI tools (Find key moments and
@@ -80,11 +63,9 @@ struct SummaryBar: View {
                 HStack(spacing: 2) {
                     Button { showSummary = false } label: { Text("Transcript") }
                         .buttonStyle(ReaderToggleStyle(selected: !showSummary, namespace: toggleAnimation))
-                        .readerHoverLift()
                         .tip("Read transcript")
                     Button { showSummary = true } label: { Text("Summary") }
                         .buttonStyle(ReaderToggleStyle(selected: showSummary, namespace: toggleAnimation))
-                        .readerHoverLift()
                         .tip("Read summary")
                 }
                 .padding(2).background(Theme.surface.opacity(0.68), in: Capsule())
@@ -103,7 +84,6 @@ struct SummaryBar: View {
                         Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
                     }
                     .buttonStyle(IconButtonStyle(size: 28))
-                    .readerHoverLift()
                     .tip("Remove AI markers")
                     .accessibilityLabel("Remove AI markers")
                 }
@@ -135,7 +115,6 @@ struct SummaryBar: View {
                         .contentShape(Capsule())
                     }
                     .buttonStyle(ReaderPressStyle())
-                    .readerHoverLift()
                     .tip("Seek to \(Core.timer(moment.time))")
                     .accessibilityLabel("\(moment.source == .ai ? "AI key moment" : "Bookmark") at \(Core.timer(moment.time)): \(moment.label)")
                 }
@@ -190,7 +169,6 @@ struct SummaryBar: View {
                 }
             }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: 12))
-                .readerHoverLift()
                 .tip("Stop finding key moments")
                 .accessibilityLabel("Cancel finding key moments")
         } else {
@@ -201,7 +179,7 @@ struct SummaryBar: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
-            .readerHoverLift()
+            .buttonGloss(.full, tint: Theme.accent)
             .tip(findTip)
             .accessibilityLabel("Find key moments")
         }
@@ -220,7 +198,7 @@ struct SummaryBar: View {
             }
         }
         .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
-        .readerHoverLift()
+        .buttonGloss(.full, tint: Theme.accent)
         .disabled(status != nil)
         .tip(buttonTip)
         .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
@@ -283,7 +261,6 @@ struct ReaderToggleStyle: ButtonStyle {
         let namespace: Namespace.ID
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -298,13 +275,14 @@ struct ReaderToggleStyle: ButtonStyle {
                     }
                 }
                 .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.42)
                 .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Capsule())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
                 .accessibilityAddTraits(selected ? .isSelected : [])
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }

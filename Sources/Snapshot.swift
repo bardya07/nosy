@@ -602,8 +602,14 @@ private func render<V: View>(_ view: V, scheme: ColorScheme, to url: URL, native
             return view.subviews.lazy.compactMap { surface(in: $0) }.first
         }
         let chrome = surface(in: host)
-        print("NATIVE \(url.lastPathComponent): window=\(window.frame.size) content=\(host.bounds.size) fitted=\(host.fittingSize) surface=\(String(describing: chrome?.bounds.size)) regions=\(host.safeAreaRegions)")
-        guard let chrome, abs(chrome.bounds.height - host.bounds.height) < 1 else { print("Native surface mismatch"); return false }
+        let titlebarCenter = chrome?.convert(NSPoint(x: chrome?.bounds.midX ?? 0, y: chrome?.bounds.midY ?? 0), to: host).y
+        let expectedTitlebarCenter = host.isFlipped ? host.bounds.minY + 22 : host.bounds.maxY - 22
+        print("NATIVE \(url.lastPathComponent): window=\(window.frame.size) content=\(host.bounds.size) fitted=\(host.fittingSize) titlebar=\(String(describing: chrome?.bounds.size)) center=\(String(describing: titlebarCenter)) regions=\(host.safeAreaRegions)")
+        guard let chrome, abs(chrome.bounds.height - 44) < 1,
+              let titlebarCenter, abs(titlebarCenter - expectedTitlebarCenter) < 1 else {
+            print("Native title bar anchor mismatch")
+            return false
+        }
     }
     guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return false }
     host.cacheDisplay(in: host.bounds, to: rep)

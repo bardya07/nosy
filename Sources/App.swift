@@ -511,7 +511,7 @@ struct MainView: View {
             Button(action: finishNewFolderName) {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accentText)
             }
-            .buttonStyle(.plain).help("Done")
+            .buttonStyle(GlossButtonStyle(tier: .icon, tint: Theme.accentText)).help("Done")
             .accessibilityLabel("Done")
             .interactionTarget("new-folder-done")
         }
@@ -1143,18 +1143,12 @@ private extension View {
 }
 
 struct TitlebarBrandButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var hovering = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.965 : (hovering ? 1.08 : 1))
+            .foregroundStyle(Theme.onAccent)
             .contentShape(Rectangle())
-            .onHover { inside in
-                withAnimation(reduceMotion ? .easeOut(duration: 0.12) : .spring(response: 0.34, dampingFraction: 0.66)) {
-                    hovering = inside
-                }
-            }
-            .animation(reduceMotion ? .easeOut(duration: 0.1) : .spring(response: 0.2, dampingFraction: 0.58), value: configuration.isPressed)
+            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                        pressed: configuration.isPressed, shape: .capsule))
     }
 }
 
@@ -1165,7 +1159,7 @@ private struct StartShake: GeometryEffect {
     }
 }
 
-// Frutiger Aero, flat: the aqua-to-sky gradient with no glossy highlights. Hover lifts, press squishes.
+// Frutiger Aero: an aqua-to-sky gradient with a shared glossy finish.
 private struct LibraryPillStyle: ButtonStyle {
     // Icon only while recording: Pause, the microphone and Stop need the row's full width.
     var compact = false
@@ -1175,12 +1169,8 @@ private struct LibraryPillStyle: ButtonStyle {
     private struct LibraryPillBody: View {
         let configuration: ButtonStyleConfiguration
         let compact: Bool
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isFocused) private var focused
-        @State private var hovering = false
         var body: some View {
-            let squish = configuration.isPressed && !reduceMotion
-            let lift = hovering && !configuration.isPressed && !reduceMotion
             configuration.label
                 .font(Theme.text(13, .semibold))
                 .foregroundStyle(.white)
@@ -1191,17 +1181,10 @@ private struct LibraryPillStyle: ButtonStyle {
                 .background(Capsule().fill(LinearGradient(colors: [Theme.aeroTop, Theme.aeroMid, Theme.aeroBase],
                                                           startPoint: .top, endPoint: .bottom)))
                 .overlay(RoundedRectangle(cornerRadius: 23, style: .circular).strokeBorder(Theme.aeroEdge.opacity(0.4), lineWidth: 1))
-                .shadow(color: Theme.aeroGlow.opacity(lift ? 0.4 : 0.2), radius: lift ? 9 : 5, y: lift ? 5 : 3)
-                .scaleEffect(x: squish ? 1.03 : (lift ? 1.03 : 1), y: squish ? 0.94 : (lift ? 1.03 : 1))
                 .contentShape(Capsule())
                 .overlay(RoundedRectangle(cornerRadius: 25, style: .circular).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-                .onHover { inside in
-                    withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 0.62)) {
-                        hovering = inside
-                    }
-                }
-                .animation(reduceMotion ? .easeOut(duration: 0.12) : .spring(response: 0.26, dampingFraction: 0.5),
-                           value: configuration.isPressed)
+                .modifier(GlossButtonChrome(tier: .full, tint: Theme.aeroGlow,
+                                            pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }
@@ -1213,48 +1196,20 @@ private struct GlossyStartButtonStyle: ButtonStyle {
 
     private struct GlossyStartBody: View {
         let configuration: ButtonStyleConfiguration
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
-        @State private var hovering = false
 
         var body: some View {
-            let pressed = configuration.isPressed && enabled && !reduceMotion
-            let lifted = hovering && enabled && !configuration.isPressed && !reduceMotion
             configuration.label
                 .font(Theme.text(13, .semibold))
-                .foregroundStyle(.white)
-                .shadow(color: Color(hex: 0x145A25).opacity(0.42), radius: 1, y: 1)
+                .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 17)
                 .frame(height: 46)
-                .background(Capsule().fill(LinearGradient(
-                    colors: [Color(hex: 0x78E889), Color(hex: 0x42CF5C), Color(hex: 0x258E3D)],
-                    startPoint: .top, endPoint: .bottom)))
-                .overlay {
-                    GeometryReader { geometry in
-                        Capsule()
-                            .fill(LinearGradient(colors: [.white.opacity(0.42), .white.opacity(0.14), .clear],
-                                                 startPoint: .top, endPoint: .bottom))
-                            .frame(height: geometry.size.height * 0.52)
-                            .padding(.horizontal, 1).padding(.top, 1)
-                    }
-                    .clipShape(Capsule())
-                    .allowsHitTesting(false)
-                }
-                .overlay(Capsule().strokeBorder(.white.opacity(0.38), lineWidth: 1))
-                .shadow(color: Color(hex: 0x258E3D).opacity(enabled ? (lifted ? 0.42 : 0.26) : 0),
-                        radius: lifted ? 11 : 7, y: lifted ? 6 : 4)
-                .scaleEffect(x: pressed ? 1.025 : (lifted ? 1.025 : 1), y: pressed ? 0.94 : (lifted ? 1.025 : 1))
                 .opacity(enabled ? 1 : 0.45)
                 .contentShape(Capsule())
                 .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
-                .onHover { inside in
-                    withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 0.62)) {
-                        hovering = inside
-                    }
-                }
-                .animation(reduceMotion ? .easeOut(duration: 0.12) : .spring(response: 0.25, dampingFraction: 0.55),
-                           value: configuration.isPressed)
+                .modifier(GlossButtonChrome(tier: .full, tint: Theme.green,
+                                            pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }
@@ -1289,7 +1244,7 @@ struct LiveLevelReadout: View {
             .fixedSize()
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(GlossButtonStyle(tier: .secondary, tint: Theme.accentText))
         .tip(display == .estimate ? "Estimated sound level. Tap for the technical value." : "Level in dB below full scale. Tap for the estimate.")
         .onAppear { shown = model.level }
         .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
@@ -1400,12 +1355,11 @@ private struct DropdownRegionKey: PreferenceKey {
 }
 
 private struct ModePickerButtonStyle: ButtonStyle {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.965 : 1)
             .contentShape(Capsule())
-            .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(response: 0.2, dampingFraction: 0.72), value: configuration.isPressed)
+            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                        pressed: configuration.isPressed, shape: .capsule))
     }
 }
 
@@ -1421,11 +1375,11 @@ private struct CompactControlButtonStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .brightness(hovering && !configuration.isPressed ? 0.025 : 0)
-                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.975 : 1)
                 .contentShape(Capsule())
                 .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }

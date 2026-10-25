@@ -2,8 +2,8 @@ import Foundation
 
 // Find key moments: prompt and schema building, reply validation, label rules, spacing and duration ceilings,
 // approximate times for old transcripts, chunk overlap, the engine with scripted replies, placement in
-// the reader, and durable storage beside the transcript: retention, legacy migration and removal. NOSY_KEY_MOMENTS_TRANSCRIPT runs the real local model
-// once on one transcript and prints what it found; nothing is written anywhere.
+// the reader, and durable storage beside the transcript: retention, legacy migration and removal. Set
+// NOSY_KEY_MOMENTS_TRANSCRIPT to run the real local model; NOSY_KEY_MOMENTS_WRITE replaces only its AI markers.
 @main
 enum KeyMomentsTests {
     static func main() async {
@@ -60,7 +60,7 @@ enum KeyMomentsTests {
     static func schemaAndPrompts() {
         let chunk = try! JSONSerialization.jsonObject(with: Data(KeyMoments.schema(final: false).utf8)) as! [String: Any]
         let chunkMarkers = (chunk["properties"] as! [String: Any])["markers"] as! [String: Any]
-        check(chunkMarkers["maxItems"] as? Int == 3, "chunk schema caps picks at 3")
+        check(chunkMarkers["maxItems"] as? Int == 4, "chunk schema caps picks at 4")
         check((chunk["required"] as? [String]) == ["markers", "topic"], "chunk schema requires markers and topic")
         check(chunk["additionalProperties"] as? Bool == false, "chunk schema rejects extra keys")
         let items = chunkMarkers["items"] as! [String: Any]
@@ -73,16 +73,18 @@ enum KeyMomentsTests {
         check(finalMarkers["maxItems"] as? Int == 12, "final schema uses the hard ceiling when no duration is provided")
         check((final["properties"] as! [String: Any])["topic"] == nil, "final schema has no topic")
         check(KeyMoments.markerBudget(duration: 4 * 60) == 1, "a short recording gets a small ceiling")
-        check(KeyMoments.markerBudget(duration: 30 * 60) == 5, "a 30 minute recording gets a ceiling of 5")
-        check(KeyMoments.markerBudget(duration: 60 * 60) == 9, "a 60 minute recording gets a ceiling of 9")
-        check(KeyMoments.markerBudget(duration: 63 * 60) == 9, "a 63 minute recording gets a ceiling of 9")
-        check(KeyMoments.markerBudget(duration: 90 * 60) == 12, "very long recordings stop at the hard ceiling")
-        check(KeyMoments.chunkPickLimit(markerBudget: 9, chunkCount: 6) == 2, "chunk allowance scales with the duration ceiling")
+        check(KeyMoments.markerBudget(duration: 30 * 60) == 4, "a 30 minute recording gets a ceiling of 4")
+        check(KeyMoments.markerBudget(duration: 60 * 60) == 7, "a 60 minute recording gets a ceiling of 7")
+        check(KeyMoments.markerBudget(duration: 63 * 60) == 7, "a 63 minute recording gets a ceiling of 7")
+        check(KeyMoments.markerBudget(duration: 120 * 60) == 12, "very long recordings stop at the hard ceiling")
+        check(KeyMoments.chunkPickLimit(markerBudget: 7, chunkCount: 6) == 3, "each chunk gets room to nominate several moments")
 
         let prompt = KeyMoments.chunkPrompt(units(count: 2), title: "MBB322 · 2026-10-23", topics: [])
         check(prompt.contains("[0] Steady speech about"), "chunk prompt lists segments with their IDs")
         check(prompt.contains("[1] Steady speech about"), "every segment appears in the chunk prompt")
-        check(prompt.contains("at most 3 moments"), "chunk prompt asks for at most 3")
+        check(prompt.contains("up to 4 moments"), "chunk prompt asks for up to 4")
+        check(prompt.contains("every real topic shift or new section"), "chunk prompt asks for each genuine section")
+        check(prompt.contains("return fewer only when the content truly does not change"), "chunks do not veto moments without a content reason")
         check(prompt.contains("never write a time"), "chunk prompt forbids model timestamps")
         check(prompt.contains("with no dashes"), "chunk prompt forbids dashes in labels")
         check(prompt.contains("Reply with only a JSON object"), "chunk prompt asks for JSON only")
@@ -95,15 +97,17 @@ enum KeyMomentsTests {
         let candidates = [KeyMomentCandidate(unit: units(count: 1, every: 1)[0], label: "Enzymes lower energy")]
         let final0 = KeyMoments.finalPrompt(candidates, title: "MBB322", topics: ["Enzymes"], duration: 60 * 60)
         check(final0.contains("[0] at 0:00 Enzymes lower energy"), "final prompt shows candidate IDs, time and label")
-        check(final0.contains("Choose at most 9 candidates; fewer is better if the content doesn't change"), "final prompt uses the duration based ceiling as guidance")
-        check(final0.contains("Never add markers to fill time or even out spacing"), "final prompt forbids quota and spacing markers")
-        check(final0.contains("Zero is fine for a short or single topic recording"), "final prompt allows no markers")
+        check(final0.contains("Choose at most 7 candidates"), "final prompt uses the duration based ceiling")
+        check(final0.contains("usually has four to seven moments"), "an hour long lecture gets a sensible density guide")
+        check(final0.contains("Never add markers just to fill time or even out spacing"), "final prompt forbids quota and spacing markers")
+        check(KeyMoments.finalPrompt(candidates, title: "short", topics: [], duration: 60)
+                  .contains("usually has zero to two moments"), "short lectures stay sparse")
         check(!final0.contains("spread the choices across the whole talk"), "final prompt does not demand spacing across the talk")
-        let finalSchema = try! JSONSerialization.jsonObject(with: Data(KeyMoments.schema(final: true, limit: 9).utf8)) as! [String: Any]
-        check(((finalSchema["properties"] as! [String: Any])["markers"] as! [String: Any])["maxItems"] as? Int == 9,
+        let finalSchema = try! JSONSerialization.jsonObject(with: Data(KeyMoments.schema(final: true, limit: 7).utf8)) as! [String: Any]
+        check(((finalSchema["properties"] as! [String: Any])["markers"] as! [String: Any])["maxItems"] as? Int == 7,
               "final schema matches the duration ceiling")
         check(final0.contains("Use only the candidate numbers"), "final prompt forbids invented numbers")
-        check(final0.contains(KeyMoments.schema(final: true, limit: 9)), "final prompt includes its duration based schema")
+        check(final0.contains(KeyMoments.schema(final: true, limit: 7)), "final prompt includes its duration based schema")
     }
 
     static func validation() {
@@ -161,12 +165,13 @@ enum KeyMomentsTests {
                                        manualTimes: [200], duration: 3600)
         check(manual.map(\.label) == ["Clear of manual"], "AI markers within a minute of a manual marker are suppressed")
 
-        // Six picks for a 30 minute lecture: trim to five, dropping the later member of the closest pair.
+        // Six picks for a 30 minute lecture: trim to four, dropping the later pick in each closest pair.
         let times: [Double] = [0, 200, 330, 500, 700, 900]
         let crowded = KeyMoments.finish(times.enumerated().map { candidate($0.offset, $0.element, "Label number \($0.offset)") },
                                         manualTimes: [], duration: 30 * 60)
-        check(crowded.count == 5, "the duration ceiling trims excess markers")
-        check(!crowded.map(\.t).contains(330) && crowded.map(\.t).contains(200), "the cap drops the later member of the closest pair")
+        check(crowded.count == 4, "the duration ceiling trims excess markers")
+        check(!crowded.map(\.t).contains(330) && !crowded.map(\.t).contains(200) && crowded.map(\.t).contains(500),
+              "the cap drops later members of the closest pairs")
         check(zip(crowded, crowded.dropFirst()).allSatisfy { $1.t - $0.t >= KeyMoments.minimumSpacing }, "kept markers stay 120 seconds apart")
         check(KeyMoments.finish([], manualTimes: [], duration: 3600).isEmpty, "validation never pads an empty result")
         let one = KeyMoments.finish([candidate(1, 10, "One clear moment")], manualTimes: [], duration: 3600)
@@ -451,22 +456,23 @@ enum KeyMomentsTests {
         check(KeyMomentStore.markers(for: orphan, paths: paths).map(\.label) == ["Without a recording"], "a transcript without a recording stores its markers")
     }
 
-    // Uses the installed Qwen3 4B through the bundled helper. Prints timings and the markers; writes nothing.
+    // Uses the downloaded Qwen3 4B through the bundled helper. It only writes when explicitly requested.
     static func realRun(_ path: String) async throws {
         let environment = ProcessInfo.processInfo.environment
         let model = environment["NOSY_QWEN_MODEL"] ?? "\(NSHomeDirectory())/Library/Application Support/Nosy/models/llm/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
         let helper = environment["NOSY_LLAMA_HELPER"] ?? "vendor/llama/nosy-llama"
-        let markdown = try String(contentsOfFile: path, encoding: .utf8)
-        let duration = KeyMoments.headerLength(markdown) ?? 3600
-        let units = KeyMoments.approximateUnits(markdown: markdown, duration: duration)
+        let transcript = URL(fileURLWithPath: path)
+        let paths = AppPaths(environment: ["NOSY_TRANSCRIPTS_DIR": transcript.deletingLastPathComponent().path])
+        let plan = try KeyMoments.plan(transcript: transcript, paths: paths)
+        let units = plan.units
         let parts = KeyMoments.chunks(units).count
-        print("REAL RUN: \(units.count) units in \(parts) parts; lecture \(Int(duration / 60)) min; approximate times")
+        print("REAL RUN: \(units.count) units in \(parts) parts; lecture \(Int((plan.duration ?? 0) / 60)) min; approximate times \(units.allSatisfy(\.approximate))")
         var configured = SummaryRequest(provider: .qwen, model: model, executable: URL(fileURLWithPath: helper))
         configured.outputTokens = KeyMoments.outputTokens
         let request = configured
         let job = TranscriptionJob()
         let started = Date()
-        let markers = try await KeyMoments.find(units: units, duration: duration, manualTimes: [], title: "real run",
+        let markers = try await KeyMoments.find(units: units, duration: plan.duration, manualTimes: plan.manualTimes, title: plan.title,
             report: { current, total in print("  step \(current) of \(total) at \(String(format: "%.1f", Date().timeIntervalSince(started)))s") },
             complete: { prompt in
                 let callStart = Date()
@@ -477,6 +483,10 @@ enum KeyMomentsTests {
         print("REAL RUN TOTAL: \(String(format: "%.1f", Date().timeIntervalSince(started)))s, \(markers.count) markers")
         for marker in markers {
             print("  \(Core.timer(marker.t))  \(marker.label)   [anchor: \(marker.anchor)]")
+        }
+        if environment["NOSY_KEY_MOMENTS_WRITE"] == "1" {
+            try KeyMomentStore.replace(markers, transcript: transcript, paths: paths)
+            print("REAL RUN SAVED: replaced only AI markers beside the transcript")
         }
     }
 }

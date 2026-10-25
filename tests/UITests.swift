@@ -258,10 +258,24 @@ enum UITests {
         model.workspace.dismissPanel()
         check(model.workspace.mode == .library, "Closing a panel retains Library")
         model.workspace.showHome()
+        try await singleTooltipLayer(model: model)
         try await workspaceFrames(model: model)
         try await MainWindowInteraction.run(model: model)
         try await AppLifecycleTests.run()
         print("UI REGRESSION PASS: dirty navigation, folder changes, Saved invalidation, silence, subjects, mic labels and historical vocabulary")
+    }
+    static func singleTooltipLayer(model: AppModel) async throws {
+        TipLayerDiagnostics.reset()
+        let host = NSHostingView(rootView: WorkspaceView(model: model)
+            .environment(\.previewTipText, "All your transcripts"))
+        let window = NSWindow(contentRect: NSRect(x: 240, y: 240, width: 400, height: 300),
+                              styleMask: [.titled, .closable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        window.contentView = host
+        window.orderFrontRegardless()
+        await MainWindowInteraction.settle(host, window)
+        expect(TipLayerDiagnostics.activeBubbles == 1, "One hovered control produces one tooltip bubble in the workspace")
+        window.close()
     }
     // Frame and retained-state integration needs no posted input, so it also runs
     // when macOS locks the screen and the native click test must report SKIPPED.

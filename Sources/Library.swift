@@ -503,6 +503,7 @@ struct LibraryView: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
+            .buttonGloss(.full, tint: Theme.accent)
             .tip("Transcribe an audio or video file")
             .accessibilityLabel("Import audio")
             .disabled(model.busy)
@@ -763,34 +764,28 @@ struct LibraryView: View {
             if editing {
                 Button("Cancel") { library.cancelEdit() }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
-                    .readerHoverLift()
                     .tip("Discard changes")
                     .keyboardShortcut(.cancelAction)
                 Button("Save") { library.saveDraft() }
                     .buttonStyle(PillButtonStyle(kind: .primary, height: 30, fullWidth: false))
-                    .readerHoverLift()
                     .tip("Save changes")
                     .keyboardShortcut("s", modifiers: .command)
             } else {
                 Button { showSummary = false; library.beginEditing(paths: libraryPaths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
-                    .readerHoverLift()
                     .tip("Edit").accessibilityLabel("Edit transcript")
                     .disabled(summaries.isBusy(item.url))
                 Button { copy(showingSummary ? summaryText ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
-                .readerHoverLift()
                 .tip(copied ? "Copied" : "Copy").accessibilityLabel(showingSummary ? "Copy summary" : "Copy transcript")
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                 .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
-                    .readerHoverLift()
                 OpenWithMenu(url: item.url)
                 Button { library.trash(item.url, paths: libraryPaths) } label: { Image(systemName: "trash") }
                 .buttonStyle(IconButtonStyle(size: 32, destructive: true))
-                    .readerHoverLift()
                     .keyboardShortcut(focus == .list && library.focusedFolder == nil ? KeyboardShortcut(.delete, modifiers: .command) : nil)
                     .tip("Move to Trash")
                     .accessibilityLabel("Move transcript to Trash")
@@ -891,14 +886,13 @@ private struct FolderRowStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View { FolderRowBody(configuration: configuration) }
     private struct FolderRowBody: View {
         let configuration: ButtonStyleConfiguration
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @State private var hovering = false
         var body: some View {
             configuration.label
                 .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .rounded(10)))
         }
     }
 }
@@ -920,11 +914,12 @@ private struct SessionRowStyle: ButtonStyle {
                 .overlay(alignment: .leading) {
                     Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 14 : 0)
                 }
-                .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
                 .animation(Motion.state(reduceMotion), value: selected)
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .rounded(8)))
         }
         private var fill: Color {
             selected ? Theme.accent.opacity(0.12) : (hovering ? Theme.surface : .clear)
@@ -1143,7 +1138,6 @@ private struct RecentToggleStyle: ButtonStyle {
         let selected: Bool
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -1152,12 +1146,13 @@ private struct RecentToggleStyle: ButtonStyle {
                 .padding(.horizontal, 8).frame(height: 23)
                 .background(selected ? Theme.raised : (hovering && enabled ? Theme.surface : .clear), in: Capsule())
                 .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.42)
                 .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Capsule())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .animation(Motion.press, value: configuration.isPressed)
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }
@@ -1188,7 +1183,6 @@ private struct AudioStrip: View {
                     .symbolEffect(.bounce, value: player.playing)
             }
             .buttonStyle(RoundButtonStyle(size: 34))
-            .readerHoverLift()
             .tip(player.playing ? "Pause audio" : "Play audio")
             .accessibilityLabel(player.playing ? "Pause audio" : "Play audio")
             Text(Core.timer(player.time)).font(Theme.text(11.5)).monospacedDigit().foregroundStyle(Theme.muted)
@@ -1223,7 +1217,6 @@ private struct AudioStrip: View {
                 Text(rateLabel(Double(player.rate))).font(Theme.text(12, .semibold))
             }
             .menuStyle(.button).font(Theme.text(10)).buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
-            .readerHoverLift()
             .menuIndicator(.hidden).fixedSize()
             .tip("Playback speed", edge: .top)
             .accessibilityLabel("Playback speed")
@@ -1288,7 +1281,6 @@ private struct ExportMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .tip("Share / Export")
-        .readerHoverLift()
         .accessibilityLabel("Export transcript")
     }
     private func savePanel(_ type: UTType) -> URL? {
@@ -1385,7 +1377,6 @@ private struct OpenWithMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .tip("Open with…")
-        .readerHoverLift()
         .accessibilityLabel("Open with another app")
     }
     private var apps: [URL] {
@@ -1554,11 +1545,12 @@ struct RowButtonStyle: ButtonStyle {
                 .overlay(alignment: .leading) {
                     Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 18 : 0).offset(x: 1)
                 }
-                .scaleEffect(configuration.isPressed && enabled && !reduceMotion ? 0.97 : 1)
                 .opacity(enabled ? 1 : 0.42)
                 .contentShape(Rectangle())
                 .animation(Motion.press, value: configuration.isPressed)
                 .animation(Motion.state(reduceMotion), value: selected)
+                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                                            pressed: configuration.isPressed, shape: .rounded(10)))
         }
         private var fill: Color {
             selected ? Theme.accent.opacity(0.10) : .clear
