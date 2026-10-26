@@ -1228,8 +1228,6 @@ private struct RecordingLevelGuidanceView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var telemetry: RecordingTelemetry
     @State private var guidance = RecordingLevelGuidance()
-    // The recorded length guidance has counted up to, so its window is measured in time, not deliveries.
-    @State private var countedThrough: TimeInterval?
 
     var body: some View {
         Group {
@@ -1251,23 +1249,16 @@ private struct RecordingLevelGuidanceView: View {
         }
         .onAppear {
             guidance.reset()
-            countedThrough = nil
-            if model.recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level)) }
+            if model.recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level), at: telemetry.duration) }
         }
         .onChange(of: model.recording) { _, recording in
             guidance.reset()
-            countedThrough = nil
-            if recording { _ = guidance.add(InputLevel.estimate(telemetry.level)) }
+            if recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level), at: telemetry.duration) }
         }
         // Each sample counts the recorded time since the previous one, so the three-second window holds at any delivery rate.
         .onChange(of: telemetry.sample) { _, sample in
             guard model.recording, !model.paused else { return }
-            let seconds = countedThrough.map { sample.duration - $0 } ?? 0
-            let slots = min(RecordingLevelGuidance.sampleLimit,
-                            max(1, Int((seconds * Double(RecordingLevelGuidance.samplesPerSecond)).rounded())))
-            let level = InputLevel.estimate(sample.level)
-            for _ in 0..<slots { _ = guidance.add(level) }
-            countedThrough = sample.duration
+            _ = guidance.add(InputLevel.estimate(sample.level), at: sample.duration)
         }
     }
 

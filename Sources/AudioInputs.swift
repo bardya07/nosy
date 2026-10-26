@@ -171,7 +171,9 @@ enum AudioInputs {
         // `active` and `pending` are confined to `queue`; `listeners` is touched only by start and invalidate on the main actor.
         private let queue = DispatchQueue(label: "com.bardya.nosy.audio-inputs", qos: .utility)
         private let deliver: @MainActor (Reading) -> Void
-        private var listeners: [(AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
+        @MainActor private var listeners: [(AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
+        @MainActor private var observation = 0
+        private var generation = 0 // Queue-confined delivery token.
         private var active = false
         private var pending: DispatchWorkItem?
 
@@ -180,9 +182,11 @@ enum AudioInputs {
         }
 
         // Registers CoreAudio listeners for the device list and the default input. Nothing is read until a change or request.
-        func start() {
+        @MainActor func start() {
             guard listeners.isEmpty else { return }
-            queue.sync { active = true }
+            observation &+= 1
+            let token = observation
+            queue.async { self.active = true; self.generation = token }
             let system = AudioObjectID(kAudioObjectSystemObject)
             for selector in [kAudioHardwarePropertyDevices, kAudioHardwarePropertyDefaultInputDevice] {
                 var address = AudioInputs.address(selector)
@@ -202,11 +206,12 @@ enum AudioInputs {
         }
 
         // Removes exactly the listeners that were added and drops any read that has not started.
-        func invalidate() {
-            queue.sync {
-                active = false
-                pending?.cancel()
-                pending = nil
+        @MainActor func invalidate() {
+            observation &+= 1
+            queue.async {
+                self.active = false
+                self.pending?.cancel()
+                self.pending = nil
             }
             let system = AudioObjectID(kAudioObjectSystemObject)
             for (address, listener) in listeners {
@@ -230,7 +235,11 @@ enum AudioInputs {
             guard active else { return }
             let reading = AudioInputs.reading()
             let deliver = deliver
-            Task { @MainActor in deliver(reading) }
+            let token = generation
+            Task { @MainActor [weak self] in
+                guard let self, self.observation == token else { return }
+                deliver(reading)
+            }
         }
     }
 }

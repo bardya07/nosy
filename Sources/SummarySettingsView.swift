@@ -229,7 +229,7 @@ private struct SummaryKeyField: View {
                 .tip(failure ?? "Key storage")
         }
         .task(id: provider) { await load() }
-        .onDisappear { operation?.cancel() }
+        .onDisappear { generation += 1; operation?.cancel() }
     }
     private func load() async {
         if Snapshot.isRunning { saved = summaries.previewKeyTail; return }
@@ -239,11 +239,10 @@ private struct SummaryKeyField: View {
         let result = await Task.detached(priority: .userInitiated) { () -> Result<String?, Error> in
             Result { try keychain.read(account: account) }
         }.value
-        guard token == generation else { return }
+        guard token == generation, !Task.isCancelled else { return }
         busy = false
-        guard !Task.isCancelled else { return }
         switch result {
-        case .success(let key): saved = key.map(SummaryKeychain.masked)
+        case .success(let key): saved = key.map(SummaryKeychain.masked); failure = nil
         case .failure(let error): failure = SummaryError.short(error.localizedDescription)
         }
     }
@@ -257,9 +256,8 @@ private struct SummaryKeyField: View {
             let result = await Task.detached(priority: .userInitiated) { () -> Result<Void, Error> in
                 Result { try keychain.save(key, account: account) }
             }.value
-            guard token == generation else { return }
+            guard token == generation, !Task.isCancelled else { return }
             busy = false
-            guard !Task.isCancelled else { return }
             switch result {
             case .success:
                 draft = ""
@@ -279,9 +277,8 @@ private struct SummaryKeyField: View {
             let result = await Task.detached(priority: .userInitiated) { () -> Result<Void, Error> in
                 Result { try keychain.delete(account: account) }
             }.value
-            guard token == generation else { return }
+            guard token == generation, !Task.isCancelled else { return }
             busy = false
-            guard !Task.isCancelled else { return }
             switch result {
             case .success:
                 saved = nil
