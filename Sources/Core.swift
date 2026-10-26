@@ -502,6 +502,7 @@ enum Core {
     }
     // checkCancellation runs between buffers and before publication and deletion; the default never cancels.
     @discardableResult static func finalizeWAV(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
+        try checkCancellation()
         let pcm = paths.audioFile(id, "pcm")
         let wav = paths.audioFile(id, "wav")
         guard FileManager.default.fileExists(atPath: pcm.path) else {
@@ -649,17 +650,25 @@ enum Core {
         return records.filter { $0.status == .done && ($0.transcribedAt ?? $0.startedAt) < now.addingTimeInterval(-Double(days) * 86_400) }
     }
     static func applyRetention(paths: AppPaths, now: Date = Date(), checkCancellation: () throws -> Void = {}) throws {
-        for record in retentionCandidates(records(in: paths), now: now, days: paths.retentionDays) {
+        try checkCancellation()
+        // Poll while reading sidecars too; a large library must not delay Quit before deletion starts.
+        let files = (try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)) ?? []
+        for sidecar in files where sidecar.pathExtension == "json" && !KeyMomentStore.isLegacySegmentsFile(sidecar) {
             try checkCancellation()
+            guard let record = try? SessionRecord.read(sidecar),
+                  !retentionCandidates([record], now: now, days: paths.retentionDays).isEmpty else { continue }
             // A lost or trashed transcript must never cost the owner the only remaining audio.
             guard let transcript = record.transcriptPath,
                   FileManager.default.isReadableFile(atPath: transcript) else { continue }
             // AI markers and timings from before KeyMomentStore move beside the transcript first. If that fails, keep the audio.
             do { try KeyMomentStore.preserveLegacy(record: record, transcript: URL(fileURLWithPath: transcript), paths: paths) }
             catch { continue }
-            let files = try FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
             let prefix = record.id + "."
-            let owned = files.filter { $0.lastPathComponent.hasPrefix(prefix) }
+            var owned: [URL] = []
+            for url in files {
+                try checkCancellation()
+                if url.lastPathComponent.hasPrefix(prefix) { owned.append(url) }
+            }
             // The sidecar goes last: an interrupted pass leaves the record discoverable for the next one.
             let audioFiles = owned.filter { $0.pathExtension != "json" }
             let sidecars = owned.filter { $0.pathExtension == "json" }

@@ -85,6 +85,7 @@ final class Recorder: @unchecked Sendable {
                     self.lock.lock()
                     self.bytes = 0
                     self.queuedBytes = 0
+                    self.pendingBytes = 0
                     self.failed = false
                     self.accepting = true
                     self.paused = false
@@ -440,15 +441,15 @@ final class Recorder: @unchecked Sendable {
     }
     // Writer queue only. Saved bytes and meter or silence events are published after each successful write.
     private func commitWrite(_ payload: Data, meterDB: Double?, silent: Bool, notifySilence: Bool) {
-        guard let file else {
+        // Release this payload exactly once, including an fsync failure after a successful write.
+        defer {
             lock.lock(); pendingBytes -= payload.count; lock.unlock()
-            return
         }
+        guard let file else { return }
         do {
             try file.write(contentsOf: payload)
             lock.lock()
             bytes += Int64(payload.count)
-            pendingBytes -= payload.count
             let count = bytes
             lock.unlock()
             let uptime = ProcessInfo.processInfo.systemUptime
@@ -456,7 +457,6 @@ final class Recorder: @unchecked Sendable {
             if let meterDB { onEvent(.level(bytes: count, db: meterDB, silent: silent)) }
             if notifySilence { onEvent(.silence) }
         } catch {
-            lock.lock(); pendingBytes -= payload.count; lock.unlock()
             scheduleFailure("Could not save recording audio: \(error.localizedDescription)")
         }
     }
@@ -478,8 +478,8 @@ final class Recorder: @unchecked Sendable {
         do { try installTapAndStart(engine) }
         catch { scheduleFailure("Microphone changed and could not restart: \(error.localizedDescription)") }
     }
-    // Waits for queued writes, so the count matches audio that is saved. Never called from the writer or the tap.
-    func byteCount() -> Int64 { writer.sync {}; lock.lock(); defer { lock.unlock() }; return bytes }
+    // A memory-only snapshot of successful writes. Only stop drains the writer, on control.
+    func byteCount() -> Int64 { lock.lock(); defer { lock.unlock() }; return bytes }
 
     func switchSource(_ source: RecordingSource, inputUID: String?) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in

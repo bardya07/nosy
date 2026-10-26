@@ -993,8 +993,8 @@ final class AppModel: ObservableObject {
             record.error = "Quit before transcription"
             record.endedAt = record.endedAt ?? Date()
             try? record.save(in: paths)
-            let paths = paths
-            _ = try? await Task.detached { [id = record.id, paths] in try Core.finalizeWAV(id: id, paths: paths) }.value
+            // Raw PCM and an interrupted WAV finalization are recoverable at launch. Quit must
+            // not restart the potentially long conversion that it just cancelled in the worker.
         }
         queue = []
         active = nil

@@ -57,6 +57,7 @@ enum AudioFiles {
 
     // checkCancellation runs between buffers and before publication and deletion; the default never cancels.
     static func compress(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws {
+        try checkCancellation()
         let wav = paths.audioFile(id, "wav")
         let m4a = paths.audioFile(id, "m4a")
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).m4a")
@@ -117,6 +118,7 @@ enum AudioFiles {
     }
 
     static func decodeToWAV(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
+        try checkCancellation()
         let wav = paths.audioFile(id, "wav")
         if FileManager.default.fileExists(atPath: wav.path) { return wav }
         if FileManager.default.fileExists(atPath: paths.audioFile(id, "pcm").path) {
@@ -132,6 +134,7 @@ enum AudioFiles {
     /// A louder copy of a quiet recording, or nil when it's already loud enough.
     /// Far-away lecture mics can sit near -50 dBFS, where whisper loops on one phrase.
     static func boosted(_ wav: URL, to target: URL, checkCancellation: () throws -> Void = {}) throws -> URL? {
+        try checkCancellation()
         let source = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: source.processingFormat, frameCapacity: 65_536) else { return nil }
         // Gain from the 99.95th-percentile level, so a single bump or clap can't block the boost.
@@ -171,6 +174,7 @@ enum AudioFiles {
             }
             try output.write(from: buffer)
         }
+        try checkCancellation()
         return target
     }
 
@@ -273,6 +277,7 @@ enum AudioFiles {
             var offset = 0
             let length = CMBlockBufferGetDataLength(block)
             while offset < length {
+                try checkCancellation()
                 var data = Data(count: min(65_536, length - offset))
                 let count = data.count
                 let status = data.withUnsafeMutableBytes {
