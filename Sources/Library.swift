@@ -450,14 +450,19 @@ struct LibraryView: View {
         return moments.sorted { $0.time == $1.time ? $0.id < $1.id : $0.time < $1.time }
     }
 
+    // Transcripts are editable, so an overflowing or negative component is not a time.
     private func markerSeconds(_ timestamp: String) -> TimeInterval? {
-        let values = timestamp.split(separator: ":").compactMap { Int($0) }
-        guard values.count == timestamp.split(separator: ":").count else { return nil }
-        switch values.count {
-        case 2: return TimeInterval(values[0] * 60 + values[1])
-        case 3: return TimeInterval(values[0] * 3600 + values[1] * 60 + values[2])
-        default: return nil
+        let parts = timestamp.split(separator: ":")
+        let values = parts.compactMap { Int($0) }
+        guard values.count == parts.count, (2...3).contains(values.count), values.allSatisfy({ $0 >= 0 }) else { return nil }
+        var seconds = 0
+        for value in values {
+            let scaled = seconds.multipliedReportingOverflow(by: 60)
+            let total = scaled.partialValue.addingReportingOverflow(value)
+            guard !scaled.overflow, !total.overflow else { return nil }
+            seconds = total.partialValue
         }
+        return TimeInterval(seconds)
     }
 
     private func selectMoment(_ moment: ReaderKeyMoment) {

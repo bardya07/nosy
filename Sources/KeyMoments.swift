@@ -177,8 +177,10 @@ enum KeyMoments {
 
     // JSON Schema for the model's reply. Chunks also return a topic note for the next chunks.
     static func markerBudget(duration: TimeInterval?) -> Int {
-        guard let duration, duration > 0 else { return hardMaxMarkers }
-        return min(hardMaxMarkers, max(1, Int(ceil(duration / markerBudgetInterval))))
+        guard let duration, duration.isFinite, duration > 0 else { return hardMaxMarkers }
+        // Clamp in floating point first: converting a huge length to Int before the cap would trap.
+        let budget = min(Double(hardMaxMarkers), max(1, ceil(duration / markerBudgetInterval)))
+        return Int(budget)
     }
 
     static func chunkPickLimit(markerBudget: Int, chunkCount: Int) -> Int {
@@ -404,7 +406,8 @@ enum KeyMoments {
     static func headerLength(_ markdown: String) -> TimeInterval? {
         guard let line = markdown.components(separatedBy: .newlines).first(where: { $0.hasPrefix("- Length:") }) else { return nil }
         let value = line.dropFirst("- Length:".count).trimmingCharacters(in: .whitespaces).split(separator: " ").first.map(String.init)
-        guard let minutes = value.flatMap(Double.init), minutes > 0 else { return nil }
+        // Edited headers can say "inf" or "1e300"; only a finite, positive length in seconds is usable.
+        guard let minutes = value.flatMap(Double.init), minutes.isFinite, minutes > 0, (minutes * 60).isFinite else { return nil }
         return minutes * 60
     }
 
