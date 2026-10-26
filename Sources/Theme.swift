@@ -116,9 +116,11 @@ struct ButtonChrome: ViewModifier {
 private final class NosyEffectView: NSVisualEffectView {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        window?.isOpaque = false
-        window?.backgroundColor = .clear
-        window?.titlebarAppearsTransparent = true
+        DispatchQueue.main.async { [weak self] in
+            guard let window = self?.window else { return }
+            if window.isOpaque { window.isOpaque = false }
+            if window.backgroundColor != .clear { window.backgroundColor = .clear }
+        }
     }
 }
 private struct WindowMaterial: NSViewRepresentable {
@@ -129,11 +131,7 @@ private struct WindowMaterial: NSViewRepresentable {
         view.state = .active
         return view
     }
-    func updateNSView(_ view: NSVisualEffectView, context: Context) {
-        view.window?.isOpaque = false
-        view.window?.backgroundColor = .clear
-        view.window?.titlebarAppearsTransparent = true
-    }
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 struct WindowBackdrop: View {
     var body: some View {
@@ -144,56 +142,62 @@ struct WindowBackdrop: View {
     }
 }
 
-// The custom titlebar already includes the native titlebar's safe area. Report
-// that inset so MainView subtracts it once from the hosting view's fitting height.
+// AppKit can lay out this anchor while laying out its own title bar. Only queue
+// work here; moving a native button in layout() re-invalidates the hosting view.
 struct MainWindowChrome: NSViewRepresentable {
-    @Binding var titlebarInset: CGFloat
     final class Anchor: NSView {
-        var reportInset: ((CGFloat) -> Void)?
+        private weak var configuredWindow: NSWindow?
+        private var scheduled = false
+        private var updating = false
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
         override func layout() {
             super.layout()
-            centerTrafficLights()
+            schedule()
         }
-        @objc private func windowResized(_ notification: Notification) {
-            DispatchQueue.main.async { [weak self] in self?.centerTrafficLights() }
+        @objc private func windowChanged(_ notification: Notification) { schedule() }
+        func schedule() {
+            guard !scheduled, !updating else { return }
+            scheduled = true
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                // Keep the coalescing guard set throughout geometry changes.
+                defer { self.scheduled = false }
+                self.apply()
+            }
         }
-        func centerTrafficLights() {
-            guard let window else { return }
+        private func apply() {
+            guard !updating, let window else { return }
+            updating = true
+            defer { updating = false }
+            if configuredWindow !== window {
+                if window.isOpaque { window.isOpaque = false }
+                if window.backgroundColor != .clear { window.backgroundColor = .clear }
+                if !window.titlebarAppearsTransparent { window.titlebarAppearsTransparent = true }
+                if window.hasShadow { window.hasShadow = false }
+                configuredWindow = window
+            }
             for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
                 guard let button = window.standardWindowButton(kind), let parent = button.superview else { continue }
-                // The full size content view extends beneath the native title bar.
-                // Center the lights 22 points below its top edge in window coordinates,
-                // then convert into their native parent so resizes cannot shift them.
-                let contentBounds = window.contentView?.bounds ?? bounds
-                let windowCenter = NSPoint(x: contentBounds.midX, y: contentBounds.maxY - 22)
-                let center = parent.convert(windowCenter, from: nil)
+                // Use the rendered custom title bar's center and convert between
+                // views so flipped coordinates and display changes stay aligned.
+                let center = parent.convert(NSPoint(x: bounds.midX, y: bounds.midY), from: self)
                 let y = center.y - button.frame.height / 2
                 if abs(button.frame.minY - y) > 0.1 { button.setFrameOrigin(NSPoint(x: button.frame.minX, y: y)) }
             }
         }
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
-            NotificationCenter.default.removeObserver(self, name: NSWindow.didResizeNotification, object: nil)
+            NotificationCenter.default.removeObserver(self)
+            configuredWindow = nil
             guard let window else { return }
-            NotificationCenter.default.addObserver(self, selector: #selector(windowResized), name: NSWindow.didResizeNotification, object: window)
-            window.isOpaque = false
-            window.backgroundColor = .clear
-            window.titlebarAppearsTransparent = true
-            window.hasShadow = false
-            let inset = window.contentView?.safeAreaInsets.top ?? 0
-            DispatchQueue.main.async { [weak self] in
-                self?.reportInset?(inset)
-                self?.centerTrafficLights()
+            for name in [NSWindow.didResizeNotification, NSWindow.didChangeScreenNotification, NSWindow.didChangeBackingPropertiesNotification] {
+                NotificationCenter.default.addObserver(self, selector: #selector(windowChanged), name: name, object: window)
             }
+            schedule()
         }
     }
-    func makeNSView(context: Context) -> NSView {
-        let view = Anchor()
-        view.reportInset = { titlebarInset = $0 }
-        return view
-    }
-    func updateNSView(_ view: NSView, context: Context) {}
+    func makeNSView(context: Context) -> Anchor { Anchor() }
+    func updateNSView(_ view: Anchor, context: Context) { view.schedule() }
 }
 
 enum Motion {

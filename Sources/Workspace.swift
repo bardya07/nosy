@@ -26,7 +26,6 @@ struct WorkspaceView: View {
     @ObservedObject private var navigation: WorkspaceNavigation
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var homeHeight: CGFloat = 256
-    @State private var titlebarInset: CGFloat = 0
     var previewSize: CGSize?
     var previewSettingsPane: SettingsView.Pane = .general
     var previewLibrary: LibraryView?
@@ -42,7 +41,7 @@ struct WorkspaceView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            WorkspaceTitlebar(model: model, titlebarInset: $titlebarInset)
+            WorkspaceTitlebar(model: model, managesWindowChrome: true)
             MainView(model: model, embedded: true)
                 .background(GeometryReader { geometry in
                     Color.clear.preference(key: HomeHeightKey.self, value: geometry.size.height)
@@ -71,7 +70,10 @@ struct WorkspaceView: View {
                 }
                 .clipped()
         }
-        .frame(idealWidth: 400, idealHeight: homeHeight + 44)
+        // The native frame controller consumes homeHeight. Never also publish it
+        // as an animated ideal size: NSHostingView can resize during windowDidLayout.
+        .frame(minWidth: 0, idealWidth: 400, maxWidth: .infinity,
+               minHeight: 0, idealHeight: 300, maxHeight: .infinity)
         .frame(width: previewSize?.width, height: previewSize?.height)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackdrop())
@@ -104,8 +106,14 @@ struct WorkspaceView: View {
             }
         }
         .onPreferenceChange(HomeHeightKey.self) { height in
-            if height.isFinite, height > 0, abs(height - homeHeight) > 0.5 {
-                homeHeight = height
+            if height.isFinite, height > 0 {
+                let measured = height.rounded(.up)
+                DispatchQueue.main.async {
+                    guard abs(measured - homeHeight) > 0.5 else { return }
+                    var transaction = Transaction(animation: nil)
+                    transaction.disablesAnimations = true
+                    withTransaction(transaction) { homeHeight = measured }
+                }
             }
         }
         .onExitCommand {
@@ -120,7 +128,9 @@ struct WorkspaceView: View {
         .tipContainerBounds()
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
-        .padding(.top, -titlebarInset)
+        // The custom 44-point title bar occupies the native title bar's area.
+        // Do not feed AppKit safe-area measurements back into the root's padding.
+        .ignoresSafeArea(.container, edges: .top)
     }
 
     private func panelOverlay(_ panel: WorkspaceNavigation.Panel) -> some View {
@@ -176,12 +186,12 @@ struct WorkspaceTitlebar: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var navigation: WorkspaceNavigation
     var onHome: (() -> Void)?
-    private var titlebarInset: Binding<CGFloat>?
-    init(model: AppModel, onHome: (() -> Void)? = nil, titlebarInset: Binding<CGFloat>? = nil) {
+    private var managesWindowChrome: Bool
+    init(model: AppModel, onHome: (() -> Void)? = nil, managesWindowChrome: Bool = false) {
         self.model = model
         _navigation = ObservedObject(wrappedValue: model.workspace)
         self.onHome = onHome
-        self.titlebarInset = titlebarInset
+        self.managesWindowChrome = managesWindowChrome
     }
     var body: some View {
         ZStack {
@@ -237,7 +247,7 @@ struct WorkspaceTitlebar: View {
         .padding(.horizontal, 12).frame(height: 44)
         .background(WindowBackdrop())
         .background {
-            if let titlebarInset { MainWindowChrome(titlebarInset: titlebarInset).allowsHitTesting(false) }
+            if managesWindowChrome { MainWindowChrome().allowsHitTesting(false) }
         }
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
         .interactionTarget("workspace-titlebar")
@@ -296,8 +306,16 @@ enum WorkspaceGeometry {
     }
 }
 
-// SwiftUI sizes content; AppKit animates and clamps the one native window. The
-// saved base frame never includes a panel's temporary expansion.
+// Type erase only the public sizing API of the containing NSHostingView. The
+// window belongs to SwiftUI's scene, but its frame belongs to the controller below.
+@MainActor
+private protocol WorkspaceHostingSizing: AnyObject {
+    var sizingOptions: NSHostingSizingOptions { get set }
+}
+extension NSHostingView: WorkspaceHostingSizing {}
+
+// SwiftUI measures Home; AppKit alone animates and clamps the native window.
+// The saved base frame never includes a panel's temporary expansion.
 struct WorkspaceWindowFrame: NSViewRepresentable {
     var mode: WorkspaceNavigation.Mode
     var panel: WorkspaceNavigation.Panel?
@@ -317,6 +335,8 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
         private var baseBeforePanel: NSRect?
         private var updating = false
         private var scheduled = false
+        private var needsScreenClamp = true
+        private var attachmentGeneration = 0
         // AppKit calls Objective C delegate discovery on the main thread, but
         // NSObject declares these forwarding methods nonisolated.
         nonisolated(unsafe) private weak var originalDelegate: (any NSWindowDelegate)?
@@ -326,7 +346,13 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             guard attachedWindow !== window else { return }
             if let attachedWindow, attachedWindow.delegate === self { attachedWindow.delegate = originalDelegate }
             NotificationCenter.default.removeObserver(self)
+            NSWorkspace.shared.notificationCenter.removeObserver(self)
             attachedWindow = window
+            attachmentGeneration &+= 1
+            previous = nil
+            baseBeforePanel = nil
+            updating = false
+            needsScreenClamp = true
             guard let window else { return }
             originalDelegate = window.delegate
             window.delegate = self
@@ -334,6 +360,8 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
                 NotificationCenter.default.addObserver(self, selector: #selector(frameChanged), name: name, object: window)
             }
             NotificationCenter.default.addObserver(self, selector: #selector(screensChanged), name: NSApplication.didChangeScreenParametersNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(screensChanged), name: NSWindow.didChangeScreenNotification, object: window)
+            NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(screensChanged), name: NSWorkspace.didWakeNotification, object: nil)
             schedule()
         }
         override func responds(to selector: Selector!) -> Bool {
@@ -349,9 +377,13 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             return originalDelegate?.windowShouldClose?(sender) ?? true
         }
         func schedule() {
-            guard !scheduled else { return }; scheduled = true
+            // Animation completion reschedules anything received while updating.
+            guard !scheduled, !updating else { return }
+            scheduled = true
             DispatchQueue.main.async { [weak self] in
-                guard let self else { return }; self.scheduled = false; self.apply()
+                guard let self else { return }
+                defer { self.scheduled = false }
+                self.apply()
             }
         }
         private var defaults: UserDefaults? { Snapshot.isRunning ? nil : .standard }
@@ -370,9 +402,8 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             if request.panel == nil, previous?.mode == request.mode, previous?.panel == nil { remember(window.frame, mode: request.mode) }
         }
         @objc private func screensChanged(_ note: Notification) {
-            guard let window else { return }
-            let visible = WorkspaceGeometry.screen(for: window.frame, screens: NSScreen.screens.map(\.visibleFrame))
-            if let visible { window.setFrame(WorkspaceGeometry.clamped(window.frame, to: visible), display: true) }
+            // These notifications can arrive inside AppKit's display/layout pass.
+            needsScreenClamp = true
             schedule()
         }
         private func apply() {
@@ -380,7 +411,8 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             let modeChanged = previous?.mode != request.mode
             let panelChanged = previous?.panel != request.panel
             let sizeChanged = previous?.homeSize != request.homeSize && request.mode == .home && request.panel == nil
-            guard modeChanged || panelChanged || sizeChanged else { return }
+            guard modeChanged || panelChanged || sizeChanged || needsScreenClamp else { return }
+            needsScreenClamp = false
             if let previous, previous.panel == nil { remember(window.frame, mode: previous.mode) }
             var frame = window.frame
             if modeChanged {
@@ -405,35 +437,53 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             let visible = WorkspaceGeometry.screen(for: frame, screens: NSScreen.screens.map(\.visibleFrame)) ?? NSScreen.main?.visibleFrame ?? frame
             frame = WorkspaceGeometry.clamped(frame, to: visible)
             updating = true
-            window.contentMinSize = .zero
-            window.contentMaxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-            let animated = (modeChanged || panelChanged) && previous != nil && !request.reduceMotion && window.isVisible
+            // Disable hosting-size propagation before touching native bounds. In
+            // particular, an animated SwiftUI ideal size must never setFrame from
+            // NSHostingView.windowDidLayout and invalidate the safe area again.
+            var ancestor = superview
+            while let view = ancestor {
+                if let host = view as? any WorkspaceHostingSizing, !host.sizingOptions.isEmpty {
+                    host.sizingOptions = []
+                }
+                ancestor = view.superview
+            }
+            let frameChanged = abs(frame.minX - window.frame.minX) > 0.5 || abs(frame.minY - window.frame.minY) > 0.5
+                || abs(frame.width - window.frame.width) > 0.5 || abs(frame.height - window.frame.height) > 0.5
+            if frameChanged {
+                if window.contentMinSize != .zero { window.contentMinSize = .zero }
+                let unlimited = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+                if window.contentMaxSize != unlimited { window.contentMaxSize = unlimited }
+            }
+            let animated = frameChanged && (modeChanged || panelChanged || sizeChanged) && previous != nil && !request.reduceMotion && window.isVisible
+            let generation = attachmentGeneration
             previous = request
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = animated ? 0.28 : 0
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-                if animated { window.animator().setFrame(frame, display: true) }
-                else { window.setFrame(frame, display: true) }
+                if frameChanged {
+                    if animated { window.animator().setFrame(frame, display: true) }
+                    else { window.setFrame(frame, display: true) }
+                }
             } completionHandler: { [weak self, weak window] in
-                // AppKit finishes on the main thread; the task satisfies Swift 6 isolation.
-                Task { @MainActor in
-                    guard let self, let window, let completed = self.previous else { return }
-                    self.updating = false
+                // Even a zero-duration completion must leave the layout stack
+                // before changing size limits (which can resize a window too).
+                DispatchQueue.main.async {
+                    guard let self, let window, self.attachedWindow === window,
+                          self.attachmentGeneration == generation, let completed = self.previous else { return }
+                    defer { self.updating = false; self.schedule() }
                     // Finish the frame that actually animated. A newer request must not
                     // save a temporary panel frame or discard the base we need to restore.
-                    guard self.request?.mode == completed.mode, self.request?.panel == completed.panel else {
-                        self.schedule()
-                        return
-                    }
+                    guard let latest = self.request, latest.mode == completed.mode, latest.panel == completed.panel,
+                          completed.mode != .home || completed.panel != nil || latest.homeSize == completed.homeSize else { return }
                     let screen = window.screen?.visibleFrame ?? visible
                     let minSize = completed.panel != nil ? CGSize(width: 680, height: 520)
                         : completed.mode == .home ? completed.homeSize : CGSize(width: 720, height: 566)
-                    window.contentMinSize = CGSize(width: min(minSize.width, screen.width), height: min(minSize.height, screen.height))
-                    if completed.mode == .home && completed.panel == nil {
-                        window.contentMaxSize = window.contentMinSize
-                    }
+                    let minimum = CGSize(width: min(minSize.width, screen.width), height: min(minSize.height, screen.height))
+                    let maximum = completed.mode == .home && completed.panel == nil ? minimum
+                        : NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+                    if window.contentMaxSize != maximum { window.contentMaxSize = maximum }
+                    if window.contentMinSize != minimum { window.contentMinSize = minimum }
                     if completed.panel == nil { self.remember(window.frame, mode: completed.mode); self.baseBeforePanel = nil }
-                    self.schedule()
                 }
             }
         }
