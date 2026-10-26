@@ -32,17 +32,37 @@ enum SpeechModel {
         try manager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
         let temporary = target.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).download")
         defer { try? manager.removeItem(at: temporary) }
-        if copy { try manager.copyItem(at: source, to: temporary) }
+        if copy { try copyInChunks(from: source, to: temporary) }
         else { try manager.moveItem(at: source, to: temporary) }
         if let minimumBytes, !validate(temporary, minimumBytes: minimumBytes) {
             throw LectureError.message("The downloaded speech model is invalid or incomplete. Please try again.")
         }
+        // A cancelled copy never reaches the final name; the defer above removes the temporary file.
+        try Task.checkCancellation()
         let file = try FileHandle(forReadingFrom: temporary)
         defer { try? file.close() }
         try file.synchronize()
         try file.close()
         let result = temporary.path.withCString { from in target.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+    }
+
+    // A bounded copy loop, so Cancel can stop a multi-gigabyte copy between chunks.
+    private static func copyInChunks(from source: URL, to destination: URL) throws {
+        guard FileManager.default.createFile(atPath: destination.path, contents: nil) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        let input = try FileHandle(forReadingFrom: source)
+        defer { try? input.close() }
+        let output = try FileHandle(forWritingTo: destination)
+        defer { try? output.close() }
+        while true {
+            try Task.checkCancellation()
+            let block = try input.read(upToCount: 1_048_576) ?? Data()
+            if block.isEmpty { break }
+            try output.write(contentsOf: block)
+        }
+        try output.synchronize()
     }
 }
 
@@ -58,6 +78,7 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     private var completion: (@Sendable (Result<Void, Error>) -> Void)?
     private var mainInstalled = false
     private var cancelling = false
+    private var waiters: [CheckedContinuation<Void, Never>] = []
 
     init(paths: AppPaths) {
         self.paths = paths
@@ -89,17 +110,33 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     }
 
     func cancel() {
-        control.async {
-            guard let task = self.task, !self.cancelling else { return }
-            self.cancelling = true
-            task.cancel { data in
-                self.control.async {
-                    guard self.task === task else { return }
-                    if !self.mainInstalled, let data { self.resumeData = data }
-                    // Wait for resume data before delivering completion so a start from
-                    // the completion callback can immediately resume the previous task.
-                    self.finish(self.mainInstalled ? .success(()) : .failure(CancellationError()))
+        control.async { self.beginCancel() }
+    }
+
+    // Returns once the active transfer has stopped and its session is gone. Idle downloads return at once.
+    func cancelAndWait() async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            control.async {
+                guard self.task != nil else {
+                    continuation.resume()
+                    return
                 }
+                self.waiters.append(continuation)
+                self.beginCancel()
+            }
+        }
+    }
+
+    private func beginCancel() {
+        guard let task = self.task, !self.cancelling else { return }
+        self.cancelling = true
+        task.cancel { data in
+            self.control.async {
+                guard self.task === task else { return }
+                if !self.mainInstalled, let data { self.resumeData = data }
+                // Wait for resume data before delivering completion so a start from
+                // the completion callback can immediately resume the previous task.
+                self.finish(self.mainInstalled ? .success(()) : .failure(CancellationError()))
             }
         }
     }
@@ -156,5 +193,9 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
         session?.finishTasksAndInvalidate()
         session = nil
         callback?(result)
+        // Cancel waiters resume only after the task and session above are gone.
+        let finished = waiters
+        waiters = []
+        finished.forEach { $0.resume() }
     }
 }
