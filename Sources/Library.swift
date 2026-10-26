@@ -1242,6 +1242,14 @@ private final class StripPlayer: ObservableObject {
     private var audio: AVAudioPlayer?
     private var timer: Timer?
     func load(_ url: URL) {
+        // The shared player keeps its identity across transcripts, so the previous track's state is cleared first.
+        audio?.stop()
+        timer?.invalidate()
+        timer = nil
+        audio = nil
+        playing = false
+        time = 0
+        duration = 0
         audio = try? AVAudioPlayer(contentsOf: url)
         audio?.enableRate = true
         audio?.prepareToPlay()
@@ -1263,7 +1271,12 @@ private final class StripPlayer: ObservableObject {
             }
         }
     }
-    func seek(_ value: TimeInterval) { audio?.currentTime = value; time = value }
+    func seek(_ value: TimeInterval) {
+        guard let audio else { return }
+        let target = min(max(0, value), audio.duration)
+        audio.currentTime = target
+        time = target
+    }
     func stop() { audio?.stop(); timer?.invalidate(); playing = false }
 }
 
