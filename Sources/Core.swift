@@ -500,7 +500,8 @@ enum Core {
         ascii("data"); u32(UInt32(pcmBytes))
         return data
     }
-    @discardableResult static func finalizeWAV(id: String, paths: AppPaths) throws -> URL {
+    // checkCancellation runs between buffers and before publication and deletion; the default never cancels.
+    @discardableResult static func finalizeWAV(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
         let pcm = paths.audioFile(id, "pcm")
         let wav = paths.audioFile(id, "wav")
         guard FileManager.default.fileExists(atPath: pcm.path) else {
@@ -519,6 +520,7 @@ enum Core {
             try output.seekToEnd()
             var remaining = size
             while remaining > 0 {
+                try checkCancellation()
                 let chunk = try source.read(upToCount: Int(min(remaining, 1_048_576))) ?? Data()
                 guard !chunk.isEmpty else { throw LectureError.message("PCM file ended unexpectedly; raw audio is kept.") }
                 try output.write(contentsOf: chunk)
@@ -527,9 +529,11 @@ enum Core {
             try output.synchronize()
             try output.close()
         } catch { try? output.close(); throw error }
+        try checkCancellation()
         // rename is atomic, including replacement of a WAV left by an interrupted finalization.
         let result = temporary.path.withCString { from in wav.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw LectureError.message("Could not finalize WAV (errno \(errno)); raw audio is kept.") }
+        try checkCancellation()
         try FileManager.default.removeItem(at: pcm)
         return wav
     }
@@ -644,8 +648,9 @@ enum Core {
         guard days > 0 else { return [] }
         return records.filter { $0.status == .done && ($0.transcribedAt ?? $0.startedAt) < now.addingTimeInterval(-Double(days) * 86_400) }
     }
-    static func applyRetention(paths: AppPaths, now: Date = Date()) throws {
+    static func applyRetention(paths: AppPaths, now: Date = Date(), checkCancellation: () throws -> Void = {}) throws {
         for record in retentionCandidates(records(in: paths), now: now, days: paths.retentionDays) {
+            try checkCancellation()
             // A lost or trashed transcript must never cost the owner the only remaining audio.
             guard let transcript = record.transcriptPath,
                   FileManager.default.isReadableFile(atPath: transcript) else { continue }
@@ -653,7 +658,13 @@ enum Core {
             do { try KeyMomentStore.preserveLegacy(record: record, transcript: URL(fileURLWithPath: transcript), paths: paths) }
             catch { continue }
             let files = try FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
-            for url in files where url.lastPathComponent.hasPrefix(record.id + ".") {
+            let prefix = record.id + "."
+            let owned = files.filter { $0.lastPathComponent.hasPrefix(prefix) }
+            // The sidecar goes last: an interrupted pass leaves the record discoverable for the next one.
+            let audioFiles = owned.filter { $0.pathExtension != "json" }
+            let sidecars = owned.filter { $0.pathExtension == "json" }
+            for url in audioFiles + sidecars {
+                try checkCancellation()
                 try FileManager.default.removeItem(at: url)
             }
         }

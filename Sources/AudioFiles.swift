@@ -55,7 +55,8 @@ enum AudioFiles {
         }
     }
 
-    static func compress(id: String, paths: AppPaths) throws {
+    // checkCancellation runs between buffers and before publication and deletion; the default never cancels.
+    static func compress(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws {
         let wav = paths.audioFile(id, "wav")
         let m4a = paths.audioFile(id, "m4a")
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).m4a")
@@ -78,6 +79,7 @@ enum AudioFiles {
             ])
             defer { if #available(macOS 15, *) { output.close() } }
             while input.framePosition < input.length {
+                try checkCancellation()
                 try input.read(into: buffer)
                 guard buffer.frameLength > 0 else { throw LectureError.message("Recorded audio ended unexpectedly.") }
                 try output.write(from: buffer)
@@ -103,7 +105,10 @@ enum AudioFiles {
         defer { try? durable.close() }
         try durable.synchronize()
         try durable.close()
+        try checkCancellation()
         try publish(temporary, to: m4a)
+        // The original WAV goes only after the verified m4a is published; cancellation may stop before that removal.
+        try checkCancellation()
         try FileManager.default.removeItem(at: wav)
     }
 
@@ -111,26 +116,29 @@ enum AudioFiles {
         ["m4a", "wav"].map { paths.audioFile(id, $0) }.first { FileManager.default.fileExists(atPath: $0.path) }
     }
 
-    static func decodeToWAV(id: String, paths: AppPaths) throws -> URL {
+    static func decodeToWAV(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
         let wav = paths.audioFile(id, "wav")
         if FileManager.default.fileExists(atPath: wav.path) { return wav }
         if FileManager.default.fileExists(atPath: paths.audioFile(id, "pcm").path) {
-            return try Core.finalizeWAV(id: id, paths: paths)
+            return try Core.finalizeWAV(id: id, paths: paths, checkCancellation: checkCancellation)
         }
         let m4a = paths.audioFile(id, "m4a")
-        if FileManager.default.fileExists(atPath: m4a.path) { return try decode(source: m4a, id: id, paths: paths) }
+        if FileManager.default.fileExists(atPath: m4a.path) {
+            return try decode(source: m4a, id: id, paths: paths, checkCancellation: checkCancellation)
+        }
         throw LectureError.message("Recorded audio is missing.")
     }
 
     /// A louder copy of a quiet recording, or nil when it's already loud enough.
     /// Far-away lecture mics can sit near -50 dBFS, where whisper loops on one phrase.
-    static func boosted(_ wav: URL, to target: URL) throws -> URL? {
+    static func boosted(_ wav: URL, to target: URL, checkCancellation: () throws -> Void = {}) throws -> URL? {
         let source = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: source.processingFormat, frameCapacity: 65_536) else { return nil }
         // Gain from the 99.95th-percentile level, so a single bump or clap can't block the boost.
         var histogram = [Int](repeating: 0, count: 32_769)
         var total = 0
         while source.framePosition < source.length {
+            try checkCancellation()
             try source.read(into: buffer)
             guard buffer.frameLength > 0, let samples = buffer.int16ChannelData?[0] else {
                 throw LectureError.message("Recorded audio ended unexpectedly.")
@@ -153,6 +161,7 @@ enum AudioFiles {
                                      commonFormat: .pcmFormatInt16, interleaved: true)
         defer { if #available(macOS 15, *) { output.close() } }
         while input.framePosition < input.length {
+            try checkCancellation()
             try input.read(into: buffer)
             guard buffer.frameLength > 0, let samples = buffer.int16ChannelData?[0] else {
                 throw LectureError.message("Recorded audio ended unexpectedly.")
@@ -173,7 +182,7 @@ enum AudioFiles {
         }
     }
 
-    private static func decode(source: URL, id: String, paths: AppPaths) throws -> URL {
+    private static func decode(source: URL, id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).pcm")
         defer { try? FileManager.default.removeItem(at: temporary) }
         guard FileManager.default.createFile(atPath: temporary.path, contents: nil) else {
@@ -182,18 +191,19 @@ enum AudioFiles {
         let file = try FileHandle(forWritingTo: temporary)
         defer { try? file.close() }
         if let audio = try? AVAudioFile(forReading: source) {
-            try decode(audio, to: file)
+            try decode(audio, to: file, checkCancellation: checkCancellation)
         } else {
-            try decodeAsset(source, to: file)
+            try decodeAsset(source, to: file, checkCancellation: checkCancellation)
         }
         guard Core.fileSize(temporary) > 0 else { throw LectureError.message("The audio track is empty.") }
         try file.synchronize()
         try file.close()
+        try checkCancellation()
         try publish(temporary, to: paths.audioFile(id, "pcm"))
-        return try Core.finalizeWAV(id: id, paths: paths)
+        return try Core.finalizeWAV(id: id, paths: paths, checkCancellation: checkCancellation)
     }
 
-    private static func decode(_ audio: AVAudioFile, to file: FileHandle) throws {
+    private static func decode(_ audio: AVAudioFile, to file: FileHandle, checkCancellation: () throws -> Void) throws {
         guard let format = AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16_000, channels: 1, interleaved: true),
               let converter = AVAudioConverter(from: audio.processingFormat, to: format),
               let input = AVAudioPCMBuffer(pcmFormat: audio.processingFormat, frameCapacity: 8192),
@@ -203,6 +213,7 @@ enum AudioFiles {
         var readError: Error?
         while true {
             try Task.checkCancellation()
+            try checkCancellation()
             var conversionError: NSError?
             let status = converter.convert(to: output, error: &conversionError) { requested, inputStatus in
                 guard audio.framePosition < audio.length else {
@@ -230,7 +241,7 @@ enum AudioFiles {
         }
     }
 
-    private static func decodeAsset(_ source: URL, to file: FileHandle) throws {
+    private static func decodeAsset(_ source: URL, to file: FileHandle, checkCancellation: () throws -> Void) throws {
         let asset = AVURLAsset(url: source)
         // This API is deliberately synchronous to preserve the throwing import API.
         // AVAssetReader decompresses/resamples in bounded sample buffers, including video containers.
@@ -254,6 +265,7 @@ enum AudioFiles {
         defer { reader.cancelReading() }
         while try autoreleasepool(invoking: { () throws -> Bool in
             try Task.checkCancellation()
+            try checkCancellation()
             guard let sample = output.copyNextSampleBuffer() else { return false }
             guard let block = CMSampleBufferGetDataBuffer(sample) else {
                 throw LectureError.message("Could not decode audio samples.")
