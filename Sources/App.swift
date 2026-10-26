@@ -1094,7 +1094,8 @@ private struct CaptureModePicker: View {
     }
 
     private func select(_ source: RecordingSource) {
-        guard selected != source else { return }
+        // Compare the real source: "Mac audio only" shows as the Mac audio category but still needs choosing.
+        guard model.recordingSource != source else { return }
         withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeInOut(duration: 0.22)) {
             model.selectSource(source)
         }
