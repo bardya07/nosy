@@ -294,11 +294,14 @@ final class AppModel: ObservableObject {
                     : AppPaths.libraryLocations(current: paths.transcripts, previous: previous))
             }.value
             lecturesRefreshing = false
-            if lectures != found.lectures { lectures = found.lectures }
-            if libraryLocations != found.locations { libraryLocations = found.locations }
-            if let rememberedLecture, lectures.contains(rememberedLecture) { selectedLecture = rememberedLecture }
-            rememberedLecture = nil
-            if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }
+            if self.paths.transcripts == paths.transcripts, !lecturesNeedRefresh {
+                if lectures != found.lectures { lectures = found.lectures }
+                if libraryLocations != found.locations { libraryLocations = found.locations }
+                if let rememberedLecture, selectedLecture == "__new__", newLecture.isEmpty,
+                   lectures.contains(rememberedLecture) { selectedLecture = rememberedLecture }
+                rememberedLecture = nil
+                if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }
+            }
             if lecturesNeedRefresh {
                 lecturesNeedRefresh = false
                 refreshLectures()
@@ -313,9 +316,9 @@ final class AppModel: ObservableObject {
         if let path { content.userInfo = ["transcriptPath": path] }
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) { _ in }
     }
-    // The clock runs only while something needs it: a recording (reminders are checked each tick) or a running transcription.
+    // Recording reminders use saved-audio samples; only transcription needs a separate clock.
     private func updateClock() {
-        let needed = recording || (active != nil && transcriptionStarted != nil)
+        let needed = active != nil && transcriptionStarted != nil
         if needed, timer == nil {
             timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
                 Task { @MainActor in self?.tick() }
@@ -343,7 +346,11 @@ final class AppModel: ObservableObject {
         }
     }
     private func tick() {
-        // Duration comes from recorder level events; polling the recorder here could block on disk syncs.
+        if active != nil, let transcriptionStarted {
+            transcriptionElapsed = Date().timeIntervalSince(transcriptionStarted)
+        }
+    }
+    private func checkRecordingReminder() {
         if recording {
             // The deadline is computed each tick, so changing the setting mid-lecture applies at once.
             let interval = TimeInterval(reminderMinutes * 60)
@@ -352,9 +359,6 @@ final class AppModel: ObservableObject {
                 notify("Still recording. \(Core.reminderTime(duration)). Forgot to stop?")
                 lastReminder = duration
             }
-        }
-        if active != nil, let transcriptionStarted {
-            transcriptionElapsed = Date().timeIntervalSince(transcriptionStarted)
         }
     }
 
@@ -450,6 +454,7 @@ final class AppModel: ObservableObject {
             guard recording else { return }
             telemetry.record(duration: Core.duration(pcmBytes: bytes), level: db)
             if silenceWarning != silent { silenceWarning = silent }
+            checkRecordingReminder()
         case .input(let name):
             activeInputName = name
         case .usingDefaultInput:
@@ -465,7 +470,7 @@ final class AppModel: ObservableObject {
             macAudioQuiet = quiet
         case .silence:
             guard recording else { return }
-            silenceWarning = true
+            if !silenceWarning { silenceWarning = true }
             notify("Mic hears nothing. Check your input.")
         case .failed(let message, let bytes):
             if message.contains("Mac audio access was denied") { macAudioDenied = true }
@@ -553,6 +558,7 @@ final class AppModel: ObservableObject {
                 phase = .transcribing
                 transitioning = false
                 resetSession()
+                libraryRevision += 1
                 enqueue(record)
             } catch { await failRecording(error.localizedDescription) }
         }
@@ -576,7 +582,6 @@ final class AppModel: ObservableObject {
     func isQueued(_ id: String) -> Bool { active?.id == id || queue.contains { $0.id == id } }
     private func enqueue(_ record: SessionRecord) {
         guard !isQueued(record.id) else { return }
-        libraryRevision += 1
         queue.append(record)
         updateActivity()
         pump()
@@ -685,6 +690,7 @@ final class AppModel: ObservableObject {
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         do {
             try AudioFiles.deleteAudio(id: record.id, paths: paths)
+            libraryRevision += 1
             recovery.removeAll { $0.id == record.id }
             if current?.id == record.id, phase == .failed { current = nil; phase = .idle; clearError() }
         } catch { showError(error.localizedDescription) }
@@ -809,6 +815,7 @@ final class AppModel: ObservableObject {
     }
     func refreshSavedTranscript() { savedSummary = SavedSummary(record: current, model: self) }
     func transcriptChanged(from old: URL, to new: URL?) {
+        libraryRevision += 1
         guard current?.transcriptPath == old.path else { return }
         current?.transcriptPath = new?.path
         refreshSavedTranscript()
