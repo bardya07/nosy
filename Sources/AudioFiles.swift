@@ -41,7 +41,7 @@ enum AudioFiles {
         try FileManager.default.createDirectory(at: paths.lectureFolder(lecture), withIntermediateDirectories: true)
         let id = Core.newID(in: paths)
         do {
-            let wav = try decode(source: source, id: id, paths: paths)
+            let wav = try decode(source: source, id: id, paths: paths, checkCancellation: { try Task.checkCancellation() })
             try Task.checkCancellation()
             let startedAt = (try? source.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date()
             let duration = Core.duration(pcmBytes: max(0, Core.fileSize(wav) - 44))

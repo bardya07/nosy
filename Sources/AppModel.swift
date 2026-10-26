@@ -452,6 +452,9 @@ final class AppModel: ObservableObject {
         switch event {
         case .level(let bytes, let db, let silent):
             guard recording else { return }
+            // Writes accepted before Pause may finish afterwards. Keep the saved duration,
+            // without reviving the paused waveform or its cleared silence warning.
+            if paused { telemetry.update { $0.duration = Core.duration(pcmBytes: bytes) }; return }
             telemetry.record(duration: Core.duration(pcmBytes: bytes), level: db)
             if silenceWarning != silent { silenceWarning = silent }
             checkRecordingReminder()
@@ -469,7 +472,7 @@ final class AppModel: ObservableObject {
             guard recording, recordingSource.usesMacAudio else { return }
             macAudioQuiet = quiet
         case .silence:
-            guard recording else { return }
+            guard recording, !paused, !completing else { return }
             if !silenceWarning { silenceWarning = true }
             notify("Mic hears nothing. Check your input.")
         case .failed(let message, let bytes):
