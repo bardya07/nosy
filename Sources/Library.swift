@@ -663,14 +663,14 @@ struct LibraryView: View {
             model.finishLibraryEditing = { [weak library = library] in library?.finishEditing() ?? true }
             model.onFolderTrashed = { [weak library = library] lecture, trashed in library?.folderRemoved(lecture, paths: trashed) }
             library.restoreFolders(from: Snapshot.isRunning ? nil : .standard)
-            library.setVisible(model.workspace.mode == .library)
+            // The workspace keeps this tree mounted under Home. Read and prepare its
+            // reader there too, so opening Library only reveals the cached content.
             if model.libraryFocus != nil { applyFocus() } else { reload() }
             if previewCollapsed { library.collapseFolders() }
             if let previewFocusedFolder { library.focusFolder(previewFocusedFolder) }
             if let previewQuery { library.query = previewQuery }
         }
         .onReceive(model.workspace.$mode) { mode in
-            library.setVisible(mode == .library)
             if mode != .library { audioPlayer.stop() }
         }
         .onChange(of: library.selection) { showSummary = false }
@@ -1687,21 +1687,34 @@ private struct TranscriptText: View {
     var removeAI: (Int) -> Void = { _ in }
     let correct: (NSRange, String) -> Void
 
-    private enum Row {
+    private enum Row: Identifiable {
         case block(TranscriptBlock)
         case ai(index: Int, marker: AIMarker)
+
+        // Put the scroll target on the lazy row itself, so a moment can be
+        // reached even before its paragraph has a native text view.
+        var id: String {
+            switch self {
+            case .ai(let index, _): return "moment-ai-\(index)"
+            case .block(let block):
+                if case .marker = block.content { return "moment-manual-\(block.offset)" }
+                return "block-\(block.offset)"
+            }
+        }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                switch row {
-                case .ai(let index, let marker):
-                    AIMarkerRow(marker: marker) { removeAI(index) }
-                        .id("moment-ai-\(index)")
-                case .block(let block):
-                    blockView(block)
+        LazyVStack(alignment: .leading, spacing: 14) {
+            ForEach(rows) { row in
+                Group {
+                    switch row {
+                    case .ai(let index, let marker):
+                        AIMarkerRow(marker: marker) { removeAI(index) }
+                    case .block(let block):
+                        blockView(block)
+                    }
                 }
+                .id(row.id)
             }
         }
         .textSelection(.enabled)
@@ -1727,7 +1740,6 @@ private struct TranscriptText: View {
             .foregroundStyle(Theme.accentText)
             .padding(.vertical, 2)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .id("moment-manual-\(block.offset)")
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Marker at \(timestamp): \(label)")
         case .paragraph(let text) where TranscriptDisplay.isNoSpeech(text):

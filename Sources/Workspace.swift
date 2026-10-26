@@ -127,7 +127,6 @@ struct WorkspaceView: View {
         .onAppear {
             if model.needsOnboarding && !Snapshot.isRunning { navigation.showSetup() }
         }
-        .animation(.easeInOut(duration: 0.18), value: navigation.mode)
         .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(duration: 0.32, bounce: 0), value: navigation.panel)
         .tipContainerBounds()
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -497,7 +496,10 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
                 let unlimited = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
                 if window.contentMaxSize != unlimited { window.contentMaxSize = unlimited }
             }
-            let animated = frameChanged && (modeChanged || panelChanged || sizeChanged) && previous != nil && !request.reduceMotion && window.isVisible
+            // A mode switch changes the reader's width and lays out its native text
+            // views. Go straight to the saved frame instead of repeating that work
+            // at every intermediate width of a window animation.
+            let animated = frameChanged && !modeChanged && (panelChanged || sizeChanged) && previous != nil && !request.reduceMotion && window.isVisible
             let generation = attachmentGeneration
             previous = request
             NSAnimationContext.runAnimationGroup { context in
