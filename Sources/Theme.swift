@@ -104,8 +104,10 @@ struct ButtonChrome: ViewModifier {
                 }
             }
             .scaleEffect(!reduceMotion && enabled && pressed ? (tier == .secondary ? 0.99 : 0.985) : 1)
-            .onHover { inside in
-                if enabled { hovering = inside }
+            // An exit always clears the highlight, even while disabled, so re-enabling cannot revive it.
+            .onHover { inside in hovering = inside && enabled }
+            .onChange(of: enabled) { _, isEnabled in
+                if !isEnabled { hovering = false }
             }
             .animation(reduceMotion ? nil : Motion.hover, value: hovering)
             .animation(reduceMotion ? nil : Motion.press, value: pressed)
