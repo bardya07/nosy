@@ -3,7 +3,7 @@ import AppKit
 import AVFoundation
 import UniformTypeIdentifiers
 
-struct TranscriptItem: Identifiable, Hashable {
+struct TranscriptItem: Identifiable, Hashable, Sendable {
     let url: URL
     let lecture: String
     let session: String
@@ -47,17 +47,154 @@ enum TranscriptDisplay {
     }
 }
 
-// Reads the transcripts folder (one subfolder per lecture, one .md per session) once per
-// reload and keeps the text in memory, so search never touches the disk while typing.
+// Folder rows: the transcripts in one lecture folder, newest first.
+struct TranscriptGroup: Sendable {
+    let lecture: String
+    let items: [TranscriptItem]
+}
+
+// What the sidebar shows for one search: the hits, their folder rows, and the rows top to bottom.
+struct TranscriptResults: Sendable {
+    let matches: [TranscriptItem]
+    let groups: [TranscriptGroup]
+    let ordered: [TranscriptItem]
+
+    init(_ items: [TranscriptItem], needle: String) {
+        let hits = needle.isEmpty ? items : items.filter {
+            $0.lecture.localizedCaseInsensitiveContains(needle) || $0.session.localizedCaseInsensitiveContains(needle)
+                || $0.text.localizedCaseInsensitiveContains(needle)
+        }
+        let byFolder = Dictionary(grouping: hits, by: \.lecture)
+        let groups = byFolder.keys.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
+            .map { folder in TranscriptGroup(lecture: folder, items: byFolder[folder]!.sorted { $0.recorded > $1.recorded }) }
+        matches = hits
+        self.groups = groups
+        ordered = groups.flatMap(\.items)
+    }
+}
+
+// One recording as the reader needs it: its record, playable audio, and length.
+struct ReaderRecord: Sendable {
+    let record: SessionRecord
+    let audio: URL?
+    let duration: TimeInterval
+}
+
+// One read of the transcripts folder and of the recordings it refers to. Built off the main actor and never changed.
+struct LibrarySnapshot: Sendable {
+    let paths: AppPaths
+    let items: [TranscriptItem]
+    let unfiltered: TranscriptResults
+    let unfinished: [SessionRecord]
+    // Keyed by standardized transcript path. The first recording for a transcript (newest first) wins, as Core.record(forTranscript:) does.
+    let readers: [String: ReaderRecord]
+    let recordingLengths: [String: TimeInterval]
+
+    static func load(paths: AppPaths) -> LibrarySnapshot {
+        let manager = FileManager.default
+        let keys: [URLResourceKey] = [.isDirectoryKey, .creationDateKey]
+        let root = paths.transcripts
+        let lectures = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys, options: [])) ?? []
+        // The recordings are listed once; everything that needs them is derived from this one list.
+        let records = Core.records(in: paths)
+        // Transcripts Nosy wrote stay listed even if their header was edited away.
+        let written = Set(records.compactMap(\.transcriptPath).map { URL(fileURLWithPath: $0).standardizedFileURL.path })
+        let items = lectures.flatMap { folder -> [TranscriptItem] in
+            guard Core.isContained(folder, in: root),
+                  (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
+            let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [])) ?? []
+            let markdown = files.filter { $0.pathExtension.lowercased() == "md" }
+            // A summary sits next to its transcript; it is read from the transcript, not listed.
+            let names = Set(markdown.map(\.lastPathComponent))
+            return markdown.filter { Core.isContained($0, in: root)
+                && (written.contains($0.standardizedFileURL.path) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
+                // Only files Nosy wrote: never the owner's other notes that share the folder.
+                guard let text = try? String(contentsOf: url, encoding: .utf8),
+                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) else { return nil }
+                // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
+                return TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
+                                      recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
+                                      text: text)
+            }
+        }.sorted { $0.recorded > $1.recorded }
+        var readers: [String: ReaderRecord] = [:]
+        var lengths: [String: TimeInterval] = [:]
+        for record in records {
+            let length = Core.audioDuration(id: record.id, paths: paths)
+            lengths[record.id] = length
+            guard let path = record.transcriptPath else { continue }
+            let key = URL(fileURLWithPath: path).standardizedFileURL.path
+            if readers[key] == nil {
+                readers[key] = ReaderRecord(record: record, audio: AudioFiles.playable(id: record.id, paths: paths), duration: length)
+            }
+        }
+        let unfinished = records.filter { record in
+            record.status != .done && ["pcm", "wav", "m4a"].contains { manager.fileExists(atPath: paths.audioFile(record.id, $0).path) }
+        }
+        return LibrarySnapshot(paths: paths, items: items, unfiltered: TranscriptResults(items, needle: ""), unfinished: unfinished,
+                               readers: readers, recordingLengths: lengths)
+    }
+}
+
+// What the reader shows beside one transcript. It is read off the main actor for the selection it names.
+struct ReaderDetails: Equatable, Sendable {
+    var transcript: URL?
+    var summary: String?
+    var aiMarkers: [AIMarker] = []
+    var markerDuration: TimeInterval = 0
+    var keyMoments: [ReaderKeyMoment] = []
+
+    static func load(transcript: URL, markdown: String, paths: AppPaths) -> ReaderDetails {
+        let markers = KeyMomentStore.markers(for: transcript, paths: paths)
+        var moments = markers.enumerated().map { index, marker in
+            ReaderKeyMoment(id: "ai-\(index)", target: "moment-ai-\(index)", time: marker.t, label: marker.label, source: .ai)
+        }
+        for block in TranscriptBlock.parse(markdown) {
+            guard case .marker(let timestamp, let label) = block.content,
+                  let time = markerSeconds(timestamp) else { continue }
+            moments.append(ReaderKeyMoment(id: "manual-\(block.offset)", target: "moment-manual-\(block.offset)",
+                                           time: time, label: label, source: .user))
+        }
+        return ReaderDetails(transcript: transcript,
+                             summary: SummaryFiles.existing(for: transcript).flatMap { try? String(contentsOf: $0, encoding: .utf8) },
+                             aiMarkers: markers,
+                             markerDuration: KeyMoments.lectureDuration(transcript: transcript, markdown: markdown, paths: paths) ?? 0,
+                             keyMoments: moments.sorted { $0.time == $1.time ? $0.id < $1.id : $0.time < $1.time })
+    }
+
+    // Transcripts are editable, so an overflowing or negative component is not a time.
+    static func markerSeconds(_ timestamp: String) -> TimeInterval? {
+        let parts = timestamp.split(separator: ":")
+        let values = parts.compactMap { Int($0) }
+        guard values.count == parts.count, (2...3).contains(values.count), values.allSatisfy({ $0 >= 0 }) else { return nil }
+        var seconds = 0
+        for value in values {
+            let scaled = seconds.multipliedReportingOverflow(by: 60)
+            let total = scaled.partialValue.addingReportingOverflow(value)
+            guard !scaled.overflow, !total.overflow else { return nil }
+            seconds = total.partialValue
+        }
+        return TimeInterval(seconds)
+    }
+}
+
+// Keeps the transcripts folder in memory. Reads run off the main actor: requests within 150 ms share one read, one read
+// runs at a time, and a read is published only if nothing newer was requested while it ran. Search and the reader use
+// the results and never touch the disk while typing or drawing.
 @MainActor
 final class TranscriptLibrary: ObservableObject {
     @Published private(set) var items: [TranscriptItem] = []
     @Published private(set) var unfinished: [SessionRecord] = []
+    @Published private(set) var readers: [String: ReaderRecord] = [:]
+    @Published private(set) var recordingLengths: [String: TimeInterval] = [:]
+    @Published private(set) var results = TranscriptResults([], needle: "")
+    @Published private(set) var details = ReaderDetails()
     @Published private(set) var selection: URL?
     @Published private(set) var selectedFolder: String?
     // The folder row the keyboard acts on: Delete and ⌘Delete move it to the Trash. Choosing a transcript clears it.
     @Published private(set) var focusedFolder: String?
-    @Published var query = "" { didSet { folders.endSearch(); keepSelectionVisible() } }
+    // The text is recorded at once; matching follows shortly after, off the main actor.
+    @Published var query = "" { didSet { folders.endSearch(); refreshResults(debounce: !searchNeedle.isEmpty) } }
     // Open folders in the tree. They are saved to `store` only when the Transcripts window restores them.
     @Published private(set) var folders = TranscriptFolders() {
         didSet {
@@ -71,6 +208,19 @@ final class TranscriptLibrary: ObservableObject {
     private var editingItem: TranscriptItem?
     private var editingPaths: AppPaths?
     private var loadedRoot: URL?
+    private var loadedPaths: AppPaths?
+    // A read is tagged with the version it was requested under; a newer request or change makes it stale.
+    private var loadPaths: AppPaths?
+    private var loadVersion = 0
+    private var loadTask: Task<Void, Never>?
+    private var loadScheduled = false
+    // Advances with each adopted read. Search results started under an older one are dropped.
+    private var generation = 0
+    private var matchTask: Task<Void, Never>?
+    private var detailsGeneration = 0
+    private var detailsTask: Task<Void, Never>?
+    // The unfiltered rows for the current items, so clearing a search publishes without sorting again.
+    private var unfiltered = TranscriptResults([], needle: "")
     var didChange: ((URL, URL?) -> Void)?
     enum DraftChoice { case save, discard, cancel }
     var chooseDraftAction: () -> DraftChoice = {
@@ -119,67 +269,128 @@ final class TranscriptLibrary: ObservableObject {
         setSelection(target)
         return true
     }
-    func open(_ url: URL, paths: AppPaths) {
+    // Opens a transcript requested by another window or by Home. Its folder is read once, then the transcript is selected.
+    func open(_ url: URL, paths: AppPaths) async {
         guard (selection == url && loadedRoot == paths.transcripts) || finishEditing() else { return }
         query = ""
-        reload(paths: paths)
+        loadPaths = paths
+        loadVersion &+= 1
+        let version = loadVersion
+        let loaded = await Task.detached(priority: .utility) { LibrarySnapshot.load(paths: paths) }.value
+        if version == loadVersion { adopt(loaded) }
         _ = select(url)
     }
 
+    // Asks for a fresh read of the folder. The read happens off the main actor, and requests made together share it.
     func reload(paths: AppPaths) {
         if loadedRoot != paths.transcripts, !finishEditing() { return }
-        loadedRoot = paths.transcripts
-        let manager = FileManager.default
-        let keys: [URLResourceKey] = [.isDirectoryKey, .creationDateKey]
-        let root = paths.transcripts
-        let lectures = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys, options: [])) ?? []
-        // Transcripts Nosy wrote stay listed even if their header was edited away.
-        let written = Set(Core.records(in: paths).compactMap(\.transcriptPath).map { URL(fileURLWithPath: $0).standardizedFileURL.path })
-        items = lectures.flatMap { folder -> [TranscriptItem] in
-            guard Core.isContained(folder, in: root),
-                  (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
-            let files = (try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: keys, options: [])) ?? []
-            let markdown = files.filter { $0.pathExtension.lowercased() == "md" }
-            // A summary sits next to its transcript; it is read from the transcript, not listed.
-            let names = Set(markdown.map(\.lastPathComponent))
-            return markdown.filter { Core.isContained($0, in: root)
-                && (written.contains($0.standardizedFileURL.path) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
-                // Only files Nosy wrote: never the owner's other notes that share the folder.
-                guard let text = try? String(contentsOf: url, encoding: .utf8),
-                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) else { return nil }
-                // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
-                return TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
-                                      recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
-                                      text: text)
-            }
-        }.sorted { $0.recorded > $1.recorded }
-        if let focusedFolder, !items.contains(where: { $0.lecture == focusedFolder }) { self.focusedFolder = nil }
-        unfinished = Core.unfinished(paths: paths)
-        keepSelectionVisible()
+        loadPaths = paths
+        loadVersion &+= 1
+        scheduleLoad()
     }
-    var selected: TranscriptItem? { editing ? editingItem : items.first { $0.url == selection } }
-    var importTargetLecture: String? { selectedFolder ?? selected?.lecture }
-    var filtered: [TranscriptItem] {
-        let needle = query.trimmingCharacters(in: .whitespaces)
-        guard !needle.isEmpty else { return items }
-        return items.filter {
-            $0.lecture.localizedCaseInsensitiveContains(needle) || $0.session.localizedCaseInsensitiveContains(needle)
-                || $0.text.localizedCaseInsensitiveContains(needle)
+    private func scheduleLoad() {
+        guard !loadScheduled else { return }
+        loadScheduled = true
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(150))
+            guard let self else { return }
+            self.loadScheduled = false
+            self.startLoad()
         }
     }
-    // The order rows appear in the sidebar, for arrow-key navigation.
-    var ordered: [TranscriptItem] { grouped.flatMap(\.items) }
-    var grouped: [(lecture: String, items: [TranscriptItem])] {
-        let groups = Dictionary(grouping: filtered, by: \.lecture)
-        return groups.keys.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-            .map { ($0, groups[$0]!.sorted { $0.recorded > $1.recorded }) }
+    // A request that arrives while a read is running schedules the next read when that one ends.
+    private func startLoad() {
+        guard loadTask == nil, let paths = loadPaths else { return }
+        let version = loadVersion
+        loadTask = Task { [weak self] in
+            let loaded = await Task.detached(priority: .utility) { LibrarySnapshot.load(paths: paths) }.value
+            guard let self else { return }
+            self.loadTask = nil
+            if version == self.loadVersion { self.adopt(loaded) } else { self.scheduleLoad() }
+        }
     }
-    var searching: Bool { !query.trimmingCharacters(in: .whitespaces).isEmpty }
+    private func adopt(_ loaded: LibrarySnapshot) {
+        generation &+= 1
+        loadedRoot = loaded.paths.transcripts
+        loadedPaths = loaded.paths
+        items = loaded.items
+        unfinished = loaded.unfinished
+        readers = loaded.readers
+        recordingLengths = loaded.recordingLengths
+        unfiltered = loaded.unfiltered
+        if let focusedFolder, !items.contains(where: { $0.lecture == focusedFolder }) { self.focusedFolder = nil }
+        refreshResults(debounce: false)
+        refreshDetails()
+    }
+
+    // Applies a change the library made itself, so the list is right at once. The next read confirms it.
+    private func changeItems(_ change: (inout [TranscriptItem]) -> Void) {
+        var next = items
+        change(&next)
+        items = next
+        unfiltered = TranscriptResults(next, needle: "")
+        if let focusedFolder, !next.contains(where: { $0.lecture == focusedFolder }) { self.focusedFolder = nil }
+        refreshResults(debounce: false)
+        refreshDetails()
+    }
+
+    // An empty search publishes at once. Any other search matches off the main actor, and only the newest search publishes.
+    private func refreshResults(debounce: Bool) {
+        matchTask?.cancel()
+        let needle = searchNeedle
+        guard !needle.isEmpty else {
+            publish(unfiltered)
+            return
+        }
+        let source = items
+        let current = generation
+        matchTask = Task { [weak self] in
+            if debounce { try? await Task.sleep(for: .milliseconds(150)) }
+            guard !Task.isCancelled else { return }
+            let matched = await Task.detached(priority: .utility) { TranscriptResults(source, needle: needle) }.value
+            guard !Task.isCancelled, let self, self.generation == current, self.searchNeedle == needle else { return }
+            self.publish(matched)
+        }
+    }
+    private func publish(_ new: TranscriptResults) {
+        results = new
+        keepSelectionVisible()
+    }
+
+    // Reads the selected transcript's summary, AI markers and key moments off the main actor. Only the answer for
+    // the selection that is still current is published.
+    func refreshDetails() {
+        detailsGeneration &+= 1
+        let current = detailsGeneration
+        guard let url = selection, let paths = loadedPaths, let text = items.first(where: { $0.url == url })?.text else {
+            detailsTask?.cancel()
+            details = ReaderDetails()
+            return
+        }
+        // Nothing from the previous transcript stays on screen while this one is read.
+        if details.transcript != url { details = ReaderDetails(transcript: url) }
+        detailsTask?.cancel()
+        detailsTask = Task { [weak self] in
+            let loaded = await Task.detached(priority: .utility) {
+                ReaderDetails.load(transcript: url, markdown: text, paths: paths)
+            }.value
+            guard !Task.isCancelled, let self, self.detailsGeneration == current, self.selection == url else { return }
+            if self.details != loaded { self.details = loaded }
+        }
+    }
+
+    var selected: TranscriptItem? { editing ? editingItem : items.first { $0.url == selection } }
+    var importTargetLecture: String? { selectedFolder ?? selected?.lecture }
+    var groups: [TranscriptGroup] { results.groups }
+    // The order rows appear in the sidebar, for arrow-key navigation.
+    var ordered: [TranscriptItem] { results.ordered }
+    private var searchNeedle: String { query.trimmingCharacters(in: .whitespaces) }
+    var searching: Bool { !searchNeedle.isEmpty }
     func isOpen(_ lecture: String) -> Bool { folders.isOpen(lecture, searching: searching) }
     func selectFolder(_ lecture: String) { selectedFolder = lecture }
     func focusFolder(_ lecture: String) { focusedFolder = lecture }
     // Rows on screen, top to bottom: a closed folder hides its sessions.
-    var visibleRows: [TranscriptItem] { grouped.filter { isOpen($0.lecture) }.flatMap(\.items) }
+    var visibleRows: [TranscriptItem] { groups.filter { isOpen($0.lecture) }.flatMap(\.items) }
     func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
     func removeFolderState(_ lecture: String) { folders.remove(lecture) }
     // Previews show the tree with every folder closed.
@@ -189,16 +400,19 @@ final class TranscriptLibrary: ObservableObject {
         store = defaults
         folders = TranscriptFolders(open: Set(defaults?.stringArray(forKey: TranscriptFolders.storageKey) ?? []))
     }
+    // The recording behind a transcript, read with the library rather than in a view body.
+    func reader(for url: URL) -> ReaderRecord? { readers[url.standardizedFileURL.path] }
 
     // Searching never leaves a hidden transcript open (where Trash would still act on it).
     private func keepSelectionVisible() {
         guard !editing else { return }
         if let selection, ordered.contains(where: { $0.url == selection }) { return }
-        setSelection(filtered.first?.url)
+        setSelection(results.matches.first?.url)
     }
     // Selecting a transcript opens its folder, so the one in the reader is always in the tree.
     private func setSelection(_ url: URL?) {
         selection = url
+        refreshDetails()
         guard let url, let lecture = items.first(where: { $0.url == url })?.lecture else {
             selectedFolder = nil
             return
@@ -235,6 +449,7 @@ final class TranscriptLibrary: ObservableObject {
         if selection == url {
             setSelection(index.flatMap { remaining.indices.contains($0) ? remaining[$0].url : remaining.last?.url })
         }
+        changeItems { $0.removeAll { $0.url == url } }
         reload(paths: paths)
     }
 
@@ -248,6 +463,7 @@ final class TranscriptLibrary: ObservableObject {
         removeFolderState(lecture)
         let selectedFolderWasRemoved = selectedFolder == lecture
         if selectedFolderWasRemoved { selectedFolder = nil }
+        changeItems { $0.removeAll { $0.lecture == lecture } }
         reload(paths: paths)
         if let oldSelection, removedURLs.contains(oldSelection) {
             let remaining = list.filter { !removedURLs.contains($0.url) }
@@ -303,6 +519,13 @@ final class TranscriptLibrary: ObservableObject {
             throw error
         }
         didChange?(item.url, target)
+        let renamed = TranscriptItem(url: target, lecture: item.lecture,
+                                     session: target.deletingPathExtension().lastPathComponent,
+                                     recorded: (try? target.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? item.recorded,
+                                     text: item.text)
+        changeItems { rows in
+            if let index = rows.firstIndex(where: { $0.url == item.url }) { rows[index] = renamed }
+        }
         reload(paths: paths)
         setSelection(target)
     }
@@ -314,6 +537,12 @@ final class TranscriptLibrary: ObservableObject {
             }
             try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             didChange?(url, url)
+            changeItems { rows in
+                if let index = rows.firstIndex(where: { $0.url == url }) {
+                    let row = rows[index]
+                    rows[index] = TranscriptItem(url: row.url, lecture: row.lecture, session: row.session, recorded: row.recorded, text: text)
+                }
+            }
             reload(paths: paths)
             return true
         } catch {
@@ -331,17 +560,18 @@ struct LibraryView: View {
     @FocusState private var focus: Focus?
     @State private var dropping = false
     @State private var copied = false
-    // Transcript | Summary in the reader, and the summary text for the selected transcript.
+    // Transcript | Summary in the reader.
     @State private var showSummary = false
-    @State private var summaryText: String?
-    // AI markers beside the selected transcript, and the lecture length they are placed by.
-    @State private var aiMarkers: [AIMarker] = []
-    @State private var markerDuration: TimeInterval = 0
     @State private var momentTarget: String?
     @StateObject private var audioPlayer = StripPlayer()
     @State private var requestedSummary: URL?
     @State private var browsingRoot: URL?
+    // The Library reads its folder only while it is on screen. Home keeps its state and reads when it opens.
+    @State private var libraryShowing = false
+    @State private var reloadWhenShown = false
     private var libraryPaths: AppPaths { model.paths.browsingLibrary(at: browsingRoot ?? model.paths.transcripts) }
+    // The reader's summary, AI markers and key moments, once they are for the selected transcript.
+    private var details: ReaderDetails { library.details.transcript == library.selection ? library.details : ReaderDetails() }
     var previewQuery: String?
     var previewCollapsed: Bool
     var previewSummary: Bool
@@ -386,22 +616,28 @@ struct LibraryView: View {
             if previewCollapsed { library.collapseFolders() }
             if let previewFocusedFolder { library.focusFolder(previewFocusedFolder) }
             if let previewQuery { library.query = previewQuery }
-            loadSummary()
-            if previewSummary, summaryText != nil { showSummary = true }
         }
-        .onReceive(model.workspace.$mode) { if $0 != .library { audioPlayer.stop() } }
-        .onChange(of: library.selection) { loadSummary(); showSummary = previewSummary && summaryText != nil }
-        .onReceive(model.summaries.$revision.dropFirst()) { _ in
-            loadSummary()
-            if let requestedSummary, requestedSummary == library.selection, summaryText != nil {
+        .onReceive(model.workspace.$mode) { mode in
+            libraryShowing = mode == .library
+            if mode != .library { audioPlayer.stop() }
+            else if reloadWhenShown { reloadWhenShown = false; reload() }
+        }
+        .onChange(of: library.selection) { showSummary = false }
+        // The summary arrives from a background read. It opens here when the reader asked for it or a preview wants it.
+        .onReceive(library.$details) { loaded in
+            guard loaded.transcript == library.selection else { return }
+            guard loaded.summary != nil else { showSummary = false; return }
+            if previewSummary { showSummary = true }
+            if let requestedSummary, requestedSummary == loaded.transcript {
                 showSummary = true
                 self.requestedSummary = nil
             }
         }
+        .onReceive(model.summaries.$revision.dropFirst()) { _ in library.refreshDetails() }
         .onChange(of: model.paths.transcripts) { browsingRoot = nil; reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
-        .onChange(of: model.active?.id) { reload() }
-        .onChange(of: model.libraryFocus) { reload(); applyFocus() }
+        .onChange(of: model.libraryRevision) { reload() }
+        .onChange(of: model.libraryFocus) { applyFocus() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
         .tipContainerBounds()
         .dropDestination(for: URL.self) { urls, _ in
@@ -413,20 +649,9 @@ struct LibraryView: View {
             if dropping { AudioDropOverlay().padding(10).allowsHitTesting(false) }
         }
     }
-    private func reload() { library.reload(paths: libraryPaths); loadSummary() }
-    private func loadSummary() {
-        summaryText = library.selection.flatMap(SummaryFiles.existing(for:)).flatMap { try? String(contentsOf: $0, encoding: .utf8) }
-        if summaryText == nil { showSummary = false }
-        loadMarkers()
-    }
-    private func loadMarkers() {
-        guard let url = library.selection else {
-            aiMarkers = []
-            markerDuration = 0
-            return
-        }
-        aiMarkers = KeyMomentStore.markers(for: url, paths: model.paths)
-        markerDuration = KeyMoments.lectureDuration(transcript: url, markdown: library.selected?.text ?? "", paths: model.paths) ?? 0
+    private func reload() {
+        guard libraryShowing else { reloadWhenShown = true; return }
+        library.reload(paths: libraryPaths)
     }
     private func removeAIMarker(at index: Int, transcript: URL) {
         do {
@@ -434,36 +659,7 @@ struct LibraryView: View {
             model.summaries.markersChanged()
         } catch { NSAlert(error: error).runModal() }
     }
-    private var showingSummary: Bool { showSummary && summaryText != nil && !editing }
-    private var readerKeyMoments: [ReaderKeyMoment] {
-        let markdown = library.selected?.text ?? ""
-        var moments = aiMarkers.enumerated().map { index, marker in
-            ReaderKeyMoment(id: "ai-\(index)", target: "moment-ai-\(index)", time: marker.t,
-                            label: marker.label, source: .ai)
-        }
-        for block in TranscriptBlock.parse(markdown) {
-            guard case .marker(let timestamp, let label) = block.content,
-                  let time = markerSeconds(timestamp) else { continue }
-            moments.append(ReaderKeyMoment(id: "manual-\(block.offset)", target: "moment-manual-\(block.offset)",
-                                           time: time, label: label, source: .user))
-        }
-        return moments.sorted { $0.time == $1.time ? $0.id < $1.id : $0.time < $1.time }
-    }
-
-    // Transcripts are editable, so an overflowing or negative component is not a time.
-    private func markerSeconds(_ timestamp: String) -> TimeInterval? {
-        let parts = timestamp.split(separator: ":")
-        let values = parts.compactMap { Int($0) }
-        guard values.count == parts.count, (2...3).contains(values.count), values.allSatisfy({ $0 >= 0 }) else { return nil }
-        var seconds = 0
-        for value in values {
-            let scaled = seconds.multipliedReportingOverflow(by: 60)
-            let total = scaled.partialValue.addingReportingOverflow(value)
-            guard !scaled.overflow, !total.overflow else { return nil }
-            seconds = total.partialValue
-        }
-        return TimeInterval(seconds)
-    }
+    private var showingSummary: Bool { showSummary && details.summary != nil && !editing }
 
     private func selectMoment(_ moment: ReaderKeyMoment) {
         audioPlayer.seek(moment.time)
@@ -480,8 +676,12 @@ struct LibraryView: View {
         if let root = model.libraryLocations.first(where: { Core.isContained(url, in: $0) }) {
             browsingRoot = root
         }
-        library.open(url, paths: libraryPaths)
-        model.libraryFocus = nil
+        // The request stays in place until its folder is read, then clears without triggering another read.
+        let paths = libraryPaths
+        Task {
+            await library.open(url, paths: paths)
+            if model.libraryFocus == url { model.libraryFocus = nil }
+        }
     }
     private func closeAndShowMain() { model.showHome() }
 
@@ -525,10 +725,10 @@ struct LibraryView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
                         if library.unfinished.contains(where: { !model.isLive($0.id) }), library.query.isEmpty { unfinishedSection }
-                        ForEach(library.grouped, id: \.lecture) { group in
+                        ForEach(library.groups, id: \.lecture) { group in
                             folderGroup(group.lecture, group.items)
                         }
-                        if library.grouped.isEmpty {
+                        if library.groups.isEmpty {
                             Text(library.query.isEmpty ? "No transcripts yet.\nRecord a session in a folder and it shows up here." : "Nothing matches “\(library.query)”.")
                                 .font(Theme.text(12.5)).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity).padding(.top, 40)
@@ -644,7 +844,7 @@ struct LibraryView: View {
     private func confirmTrashFolder(_ lecture: String) {
         guard !library.items.contains(where: { $0.lecture == lecture && summaries.isBusy($0.url) }) else { return }
         guard model.finishLibraryEditing?() ?? true, LectureFolderTrash.confirm(lecture) else { return }
-        if model.trashLecture(lecture, paths: libraryPaths) { loadSummary() }
+        model.trashLecture(lecture, paths: libraryPaths)
     }
 
     // Recordings without a transcript (failed, quit, or postponed) stay reachable here.
@@ -657,7 +857,7 @@ struct LibraryView: View {
                 HStack(spacing: 6) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(record.lecture) · \(record.session)").font(Theme.text(12.5, .semibold)).foregroundStyle(Theme.ink).lineLimit(1)
-                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused. \($0)" } ?? (model.active?.id == record.id ? "Transcribing…" : "Queued")) : "\(Core.minutes(Core.audioDuration(id: record.id, paths: model.paths))) min · not transcribed")
+                        Text(model.isQueued(record.id) ? (model.transcriptionPauseReason.map { "Paused. \($0)" } ?? (model.active?.id == record.id ? "Transcribing…" : "Queued")) : "\(Core.minutes(library.recordingLengths[record.id] ?? 0)) min · not transcribed")
                             .font(Theme.text(11)).monospacedDigit().foregroundStyle(Theme.muted)
                     }
                     Spacer(minLength: 0)
@@ -685,9 +885,9 @@ struct LibraryView: View {
                 readerHeader(item).zIndex(1)
                 Rectangle().fill(Theme.line).frame(height: 1)
                 if !editing {
-                    SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: summaryText != nil,
-                               showSummary: $showSummary, paths: model.paths, aiMarkerCount: aiMarkers.count,
-                               keyMoments: readerKeyMoments, requested: { requestedSummary = item.url },
+                    SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: details.summary != nil,
+                               showSummary: $showSummary, paths: model.paths, aiMarkerCount: details.aiMarkers.count,
+                               keyMoments: details.keyMoments, requested: { requestedSummary = item.url },
                                selectMoment: selectMoment, openSettings: { model.workspace.showSettings(pane: .summaries) })
                     Rectangle().fill(Theme.line).frame(height: 1)
                 }
@@ -697,7 +897,7 @@ struct LibraryView: View {
                         .scrollContentBackground(.hidden)
                         .padding(.horizontal, 22).padding(.vertical, 16)
                         .accessibilityLabel("Transcript text")
-                } else if showingSummary, let summaryText {
+                } else if showingSummary, let summaryText = details.summary {
                     ScrollView {
                         SummaryText(markdown: summaryText)
                             .padding(.horizontal, 30).padding(.vertical, 24)
@@ -709,8 +909,8 @@ struct LibraryView: View {
                 } else {
                     ScrollViewReader { proxy in
                         ScrollView {
-                            TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: aiMarkers,
-                                           duration: markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
+                            TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: details.aiMarkers,
+                                           duration: details.markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
                                 guard !summaries.isBusy(item.url) else { return }
                                 let folder = item.url.deletingLastPathComponent()
                                 do {
@@ -735,7 +935,7 @@ struct LibraryView: View {
                 }
                 if let audio = audioURL(for: item) {
                     Rectangle().fill(Theme.line).frame(height: 1)
-                    AudioStrip(url: audio, player: audioPlayer, moments: readerKeyMoments,
+                    AudioStrip(url: audio, player: audioPlayer, moments: details.keyMoments,
                                selectMoment: selectMoment).id(audio)
                 }
             }
@@ -748,9 +948,7 @@ struct LibraryView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
-    private func audioURL(for item: TranscriptItem) -> URL? {
-        Core.record(forTranscript: item.url, paths: model.paths).flatMap { AudioFiles.playable(id: $0.id, paths: model.paths) }
-    }
+    private func audioURL(for item: TranscriptItem) -> URL? { library.reader(for: item.url)?.audio }
 
     private func readerHeader(_ item: TranscriptItem) -> some View {
         HStack(spacing: 4) {
@@ -774,7 +972,7 @@ struct LibraryView: View {
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
                     .tip("Edit").accessibilityLabel("Edit transcript")
                     .disabled(summaries.isBusy(item.url))
-                Button { copy(showingSummary ? summaryText ?? item.text : item.text) } label: {
+                Button { copy(showingSummary ? details.summary ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
@@ -795,13 +993,13 @@ struct LibraryView: View {
     }
 
     private func readerMetadata(_ item: TranscriptItem) -> String {
-        let record = Core.record(forTranscript: item.url, paths: model.paths)
-        let start = record?.startedAt ?? item.recorded
+        let reader = library.reader(for: item.url)
+        let start = reader?.record.startedAt ?? item.recorded
         let date = Core.dateString(start, format: "MMM d, yyyy")
         let time = Core.dateString(start, format: "HH:mm")
         let duration: TimeInterval
-        if let record, Core.audioDuration(id: record.id, paths: model.paths) > 0 {
-            duration = Core.audioDuration(id: record.id, paths: model.paths)
+        if let reader, reader.duration > 0 {
+            duration = reader.duration
         } else if let line = item.text.components(separatedBy: .newlines).first(where: { $0.hasPrefix("- Length:") }),
                   let minutes = line.dropFirst("- Length:".count).trimmingCharacters(in: .whitespaces).split(separator: " ").first.flatMap({ Double($0) }) {
             duration = minutes * 60
@@ -1016,8 +1214,7 @@ struct RecentView: View {
     }
     private var selectedAudio: URL? {
         guard let selected else { return nil }
-        return Core.record(forTranscript: selected.url, paths: model.paths)
-            .flatMap { AudioFiles.playable(id: $0.id, paths: model.paths) }
+        return library.reader(for: selected.url)?.audio
     }
 
     var body: some View {
@@ -1033,7 +1230,8 @@ struct RecentView: View {
         .onAppear { reload() }
         .onChange(of: model.paths.transcripts) { reload() }
         .onChange(of: model.current?.transcriptPath) { reload() }
-        .onChange(of: model.active?.id) { reload() }
+        .onChange(of: model.libraryRevision) { reload() }
+        .onChange(of: library.items) { _, _ in dropMissingSelection() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in reload() }
     }
 
@@ -1133,6 +1331,9 @@ struct RecentView: View {
 
     private func reload() {
         library.reload(paths: model.paths)
+    }
+    // Runs when a fresh list arrives: a transcript that left the library is no longer selected.
+    private func dropMissingSelection() {
         if let selection, !library.items.contains(where: { $0.url.standardizedFileURL.path == selection.standardizedFileURL.path }) {
             self.selection = nil
             showingAudio = false
@@ -1384,14 +1585,15 @@ enum TranscriptExport {
 // "Open with…": the system default for .md is often Xcode, so offer the choice, TextEdit first.
 private struct OpenWithMenu: View {
     let url: URL
+    // Applications and icons are looked up when the transcript changes, never while the menu redraws.
+    @State private var apps: [OpenApp] = []
     var body: some View {
         Menu {
-            ForEach(apps, id: \.self) { app in
+            ForEach(apps, id: \.url) { app in
                 Button {
-                    NSWorkspace.shared.open([url], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
+                    NSWorkspace.shared.open([url], withApplicationAt: app.url, configuration: NSWorkspace.OpenConfiguration())
                 } label: {
-                    Label { Text(FileManager.default.displayName(atPath: app.path).replacingOccurrences(of: ".app", with: "")) }
-                        icon: { Image(nsImage: icon(app)) }
+                    Label { Text(app.name) } icon: { Image(nsImage: app.icon) }
                 }
             }
         } label: {
@@ -1404,19 +1606,29 @@ private struct OpenWithMenu: View {
         .fixedSize()
         .tip("Open with…")
         .accessibilityLabel("Open with another app")
+        .onAppear { apps = OpenApp.handlers(for: url) }
+        .onChange(of: url) { _, changed in apps = OpenApp.handlers(for: changed) }
     }
-    private var apps: [URL] {
-        let all = NSWorkspace.shared.urlsForApplications(toOpen: url)
+}
+
+// An application that can open a transcript, with the name and icon the menu shows.
+private struct OpenApp {
+    let url: URL
+    let name: String
+    let icon: NSImage
+
+    static func handlers(for transcript: URL) -> [OpenApp] {
+        let all = NSWorkspace.shared.urlsForApplications(toOpen: transcript)
         let preferred = ["TextEdit", "Obsidian", "Typora", "MarkEdit", "Visual Studio Code", "Cursor", "BBEdit", "Sublime Text"]
         let rank = { (app: URL) in preferred.firstIndex(of: app.deletingPathExtension().lastPathComponent) ?? preferred.count }
         var seen = Set<String>()
         return all.filter { seen.insert($0.lastPathComponent).inserted }
             .sorted { (rank($0), $0.lastPathComponent) < (rank($1), $1.lastPathComponent) }
-    }
-    private func icon(_ app: URL) -> NSImage {
-        let image = NSWorkspace.shared.icon(forFile: app.path)
-        image.size = NSSize(width: 16, height: 16)
-        return image
+            .map { app in
+                let icon = NSWorkspace.shared.icon(forFile: app.path)
+                icon.size = NSSize(width: 16, height: 16)
+                return OpenApp(url: app, name: FileManager.default.displayName(atPath: app.path).replacingOccurrences(of: ".app", with: ""), icon: icon)
+            }
     }
 }
 

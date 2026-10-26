@@ -114,6 +114,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var active: SessionRecord?
     @Published private(set) var queue: [SessionRecord] = []
     @Published private(set) var importsInProgress = 0
+    // Bumped when a transcript or recording is written or queued, so the Library reads its folder again.
+    @Published private(set) var libraryRevision = 0
     // A transcript the Library should select when it next appears or updates.
     @Published var libraryFocus: URL?
     // Summaries run after transcription, one at a time, and never hold up the queue.
@@ -490,6 +492,7 @@ final class AppModel: ObservableObject {
             current = record
         }
         phase = .failed
+        libraryRevision += 1
         paused = false
         completing = false
         showError(current?.error ?? message)
@@ -573,6 +576,7 @@ final class AppModel: ObservableObject {
     func isQueued(_ id: String) -> Bool { active?.id == id || queue.contains { $0.id == id } }
     private func enqueue(_ record: SessionRecord) {
         guard !isQueued(record.id) else { return }
+        libraryRevision += 1
         queue.append(record)
         updateActivity()
         pump()
@@ -627,6 +631,7 @@ final class AppModel: ObservableObject {
         }
     }
     private func finished(_ record: SessionRecord, result: SessionRecord?, error: Error?) {
+        libraryRevision += 1
         transcriptionStarted = nil
         job = nil
         active = nil
@@ -735,6 +740,7 @@ final class AppModel: ObservableObject {
                     importWork = nil
                     transitioning = false
                     guard !quitting else { break } // The imported audio and sidecar remain recoverable.
+                    libraryRevision += 1
                     selectedLecture = lecture
                     newLecture = ""
                     refreshLectures()
