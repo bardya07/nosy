@@ -75,7 +75,6 @@ struct WorkspaceView: View {
         .frame(width: previewSize?.width, height: previewSize?.height)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WindowBackdrop())
-        .buttonStyle(GlossButtonStyle(tier: .secondary))
         .background {
             if previewSize == nil {
                 WorkspaceWindowFrame(mode: navigation.mode, panel: navigation.panel,
@@ -194,7 +193,6 @@ struct WorkspaceTitlebar: View {
                             .font(Theme.text(12, .semibold))
                     }
                     .buttonStyle(TitlebarBrandButtonStyle())
-                    .buttonGloss(.full, tint: Theme.accent)
                     .accessibilityLabel("Return to Nosy")
                     .interactionTarget("library-home")
                     .disabled(navigation.panel != nil)
@@ -230,7 +228,6 @@ struct WorkspaceTitlebar: View {
                     }
                 }
                 .buttonStyle(TitlebarBrandButtonStyle())
-                .buttonGloss(.full, tint: Theme.accent)
                 .tip("Home", edge: .bottom)
                 .accessibilityLabel("Home")
                 .accessibilityElement(children: .combine)
@@ -266,7 +263,6 @@ private struct LibraryRecordingBar: View {
                 .tip("Add marker (⌘M)")
                 .keyboardShortcut("m", modifiers: .command)
                 .buttonStyle(IconButtonStyle(size: 32))
-                .buttonGloss(.secondary, tint: Theme.accent)
                 .interactionTarget("library-marker")
             Button(model.paused ? "Resume" : "Pause") { model.togglePause() }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))

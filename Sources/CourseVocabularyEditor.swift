@@ -79,13 +79,9 @@ final class VocabularyDraft: ObservableObject, Identifiable {
 }
 
 private struct InfoButtonStyle: ButtonStyle {
-    @State private var hovering = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .brightness(hovering ? 0.04 : 0)
-            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-            .animation(Motion.press, value: configuration.isPressed)
-            .modifier(GlossButtonChrome(tier: .icon, tint: Theme.accentText,
+            .modifier(ButtonChrome(tier: .icon, tint: Theme.accentText,
                                         pressed: configuration.isPressed, shape: .circle))
     }
 }
@@ -95,15 +91,13 @@ private struct SubjectPickerButtonStyle: ButtonStyle {
     @State private var hovering = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .brightness(hovering && !configuration.isPressed ? 0.025 : 0)
             .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(focused ? Theme.accentText :
                               (hovering ? Theme.accentText.opacity(0.42) : .clear), lineWidth: focused ? 1.6 : 1)
                 .allowsHitTesting(false))
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-            .animation(Motion.press, value: configuration.isPressed)
-            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                         pressed: configuration.isPressed, shape: .rounded(10)))
     }
 }

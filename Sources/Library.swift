@@ -502,8 +502,7 @@ struct LibraryView: View {
                     Text("Import audio")
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: .quiet, height: 32, fullWidth: false))
-            .buttonGloss(.full, tint: Theme.accent)
+            .buttonStyle(PillButtonStyle(kind: .primary, height: 32, fullWidth: false))
             .tip("Transcribe an audio or video file")
             .accessibilityLabel("Import audio")
             .disabled(model.busy)
@@ -855,7 +854,7 @@ private struct TranscriptFolderRow: View {
                         .font(Theme.text(11, .semibold)).monospacedDigit().foregroundStyle(Theme.muted)
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(Theme.surface, in: Capsule())
-                        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
                 }
                 .padding(.horizontal, 10).padding(.vertical, 11)
                 .contentShape(Rectangle())
@@ -891,7 +890,7 @@ private struct FolderRowStyle: ButtonStyle {
             configuration.label
                 .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(10)))
         }
     }
@@ -916,9 +915,8 @@ private struct SessionRowStyle: ButtonStyle {
                 }
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
                 .animation(Motion.state(reduceMotion), value: selected)
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(8)))
         }
         private var fill: Color {
@@ -1091,7 +1089,7 @@ struct RecentView: View {
                         .tip(selectedAudio == nil ? "Audio unavailable" : "Play recording")
                 }
                 .padding(2).background(Theme.surface.opacity(0.68), in: Capsule())
-                .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 13.5, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 25))
                     .tip("Show in Finder")
@@ -1145,13 +1143,14 @@ private struct RecentToggleStyle: ButtonStyle {
                 .foregroundStyle(selected ? Theme.ink : Theme.muted)
                 .padding(.horizontal, 8).frame(height: 23)
                 .background(selected ? Theme.raised : (hovering && enabled ? Theme.surface : .clear), in: Capsule())
-                .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 11.5, style: .continuous)
+                    .strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
                 .opacity(enabled ? 1 : 0.42)
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .overlay(RoundedRectangle(cornerRadius: 13.5, style: .continuous)
+                    .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Capsule())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .capsule))
         }
     }
@@ -1547,9 +1546,8 @@ struct RowButtonStyle: ButtonStyle {
                 }
                 .opacity(enabled ? 1 : 0.42)
                 .contentShape(Rectangle())
-                .animation(Motion.press, value: configuration.isPressed)
                 .animation(Motion.state(reduceMotion), value: selected)
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(10)))
         }
         private var fill: Color {

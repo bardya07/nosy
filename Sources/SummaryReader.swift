@@ -13,7 +13,7 @@ struct ReaderKeyMoment: Identifiable, Equatable {
 struct ReaderPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                         pressed: configuration.isPressed, shape: .capsule))
     }
 }
@@ -69,7 +69,7 @@ struct SummaryBar: View {
                         .tip("Read summary")
                 }
                 .padding(2).background(Theme.surface.opacity(0.68), in: Capsule())
-                .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
                 .animation(.spring(response: 0.32, dampingFraction: 0.78), value: showSummary)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Show transcript or summary")
@@ -111,7 +111,7 @@ struct SummaryBar: View {
                         .foregroundStyle(moment.source == .ai ? Theme.muted : Theme.accentText)
                         .padding(.horizontal, 10).frame(height: 26)
                         .background(Theme.raised, in: Capsule())
-                        .overlay(Capsule().strokeBorder(Theme.line, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Theme.line, lineWidth: 1))
                         .contentShape(Capsule())
                     }
                     .buttonStyle(ReaderPressStyle())
@@ -178,8 +178,7 @@ struct SummaryBar: View {
                     if !compact { Text("Find key moments") }
                 }
             }
-            .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
-            .buttonGloss(.full, tint: Theme.accent)
+            .buttonStyle(PillButtonStyle(kind: .primary, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
             .tip(findTip)
             .accessibilityLabel("Find key moments")
         }
@@ -197,8 +196,7 @@ struct SummaryBar: View {
                 if !compact { Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize")) }
             }
         }
-        .buttonStyle(PillButtonStyle(kind: .quiet, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
-        .buttonGloss(.full, tint: Theme.accent)
+        .buttonStyle(PillButtonStyle(kind: .primary, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
         .disabled(status != nil)
         .tip(buttonTip)
         .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
@@ -274,14 +272,15 @@ struct ReaderToggleStyle: ButtonStyle {
                         Capsule().fill(hovering && enabled ? Theme.surface : .clear)
                     }
                 }
-                .overlay(Capsule().strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(selected ? Theme.line : .clear, lineWidth: 1))
                 .opacity(enabled ? 1 : 0.42)
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Capsule())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
                 .accessibilityAddTraits(selected ? .isSelected : [])
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .capsule))
         }
     }

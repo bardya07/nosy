@@ -511,7 +511,7 @@ struct MainView: View {
             Button(action: finishNewFolderName) {
                 Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accentText)
             }
-            .buttonStyle(GlossButtonStyle(tier: .icon, tint: Theme.accentText)).help("Done")
+            .buttonStyle(ButtonActionStyle(tier: .icon, tint: Theme.accentText)).help("Done")
             .accessibilityLabel("Done")
             .interactionTarget("new-folder-done")
         }
@@ -552,7 +552,8 @@ struct MainView: View {
         let warn = control == .session && sessionIsEmpty
         return Button { toggleDropdown(control) } label: {
             HStack(spacing: compact ? 0 : 5) {
-                Image(systemName: icon).font(.system(size: compact ? 11 : 10, weight: .medium)).foregroundStyle(Theme.muted)
+                Image(systemName: icon).font(.system(size: compact ? 11 : 10, weight: .medium))
+                    .foregroundStyle(warn ? Theme.validationText : Theme.muted)
                     .accessibilityHidden(true)
                 if !compact {
                     Text(value).font(Theme.text(10.5, .medium)).foregroundStyle(placeholder ? Theme.muted : Theme.ink)
@@ -983,7 +984,7 @@ struct MainView: View {
         if showsHomeAction {
             return AnyButtonStyle(PillButtonStyle(kind: .primary, height: 46, horizontalPadding: 16))
         }
-        return AnyButtonStyle(GlossyStartButtonStyle())
+        return AnyButtonStyle(StartButtonStyle())
     }
     private var showsCommandR: Bool { model.phase == .idle || model.homeFromTranscribing }
     private var primaryTitle: String {
@@ -1042,8 +1043,6 @@ private struct CaptureModePicker: View {
     @Namespace private var selectionNamespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tintedSelection: RecordingSource = .mic
-    @State private var roomPop = false
-    @State private var glimmerProgress = 1.0
     private var selected: RecordingSource? {
         model.recordingSource == .mic ? .mic : .both
     }
@@ -1077,23 +1076,9 @@ private struct CaptureModePicker: View {
                 if active {
                     Capsule()
                         .fill(tintedSelection == .mic ? Theme.roomModeTint : Theme.macModeTint)
-                        .overlay {
-                            if source == .both {
-                                GeometryReader { geometry in
-                                    LinearGradient(colors: [.clear, .white.opacity(0.55), .clear],
-                                                   startPoint: .leading, endPoint: .trailing)
-                                        .frame(width: max(32, geometry.size.width * 0.46))
-                                        .rotationEffect(.degrees(16))
-                                        .offset(x: -geometry.size.width * 0.55 + geometry.size.width * 1.55 * glimmerProgress)
-                                }
-                                .clipShape(Capsule())
-                                .allowsHitTesting(false)
-                            }
-                        }
                         .if(!reduceMotion) { highlight in
                             highlight
                                 .matchedGeometryEffect(id: "capture-mode-selection", in: selectionNamespace)
-                                .scaleEffect(source == .mic && roomPop ? 1.06 : 1)
                         }
                         .if(reduceMotion) { highlight in highlight.transition(.opacity) }
                 }
@@ -1110,27 +1095,8 @@ private struct CaptureModePicker: View {
 
     private func select(_ source: RecordingSource) {
         guard selected != source else { return }
-        guard !reduceMotion else {
-            withAnimation(.easeOut(duration: 0.18)) { model.selectSource(source) }
-            return
-        }
-        if source == .mic {
-            withAnimation(.spring(response: 0.34, dampingFraction: 0.56)) {
-                model.selectSource(source)
-                roomPop = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.58)) { roomPop = false }
-            }
-        } else {
-            glimmerProgress = 0
-            withAnimation(.easeInOut(duration: 0.28)) {
-                model.selectSource(source)
-                roomPop = false
-            }
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.42)) { glimmerProgress = 1 }
-            }
+        withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeInOut(duration: 0.22)) {
+            model.selectSource(source)
         }
     }
 }
@@ -1146,9 +1112,12 @@ struct TitlebarBrandButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(Theme.onAccent)
-            .contentShape(Rectangle())
-            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
-                                        pressed: configuration.isPressed, shape: .capsule))
+            .padding(.horizontal, 12)
+            .frame(height: 30)
+            .background(Theme.accent, in: Capsule())
+            .contentShape(Capsule())
+            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
+                                   pressed: configuration.isPressed, shape: .capsule))
     }
 }
 
@@ -1159,7 +1128,7 @@ private struct StartShake: GeometryEffect {
     }
 }
 
-// Frutiger Aero: an aqua-to-sky gradient with a shared glossy finish.
+// A solid blue action that keeps the established Library color.
 private struct LibraryPillStyle: ButtonStyle {
     // Icon only while recording: Pause, the microphone and Stop need the row's full width.
     var compact = false
@@ -1174,27 +1143,24 @@ private struct LibraryPillStyle: ButtonStyle {
             configuration.label
                 .font(Theme.text(13, .semibold))
                 .foregroundStyle(.white)
-                .shadow(color: Color(hex: 0x03365A).opacity(0.4), radius: 1, y: 1)
                 .padding(.horizontal, compact ? 0 : 14)
                 .frame(width: compact ? 46 : nil, height: 46)
                 .fixedSize()
-                .background(Capsule().fill(LinearGradient(colors: [Theme.aeroTop, Theme.aeroMid, Theme.aeroBase],
-                                                          startPoint: .top, endPoint: .bottom)))
-                .overlay(RoundedRectangle(cornerRadius: 23, style: .circular).strokeBorder(Theme.aeroEdge.opacity(0.4), lineWidth: 1))
+                .background(Capsule().fill(Theme.libraryBlue))
                 .contentShape(Capsule())
                 .overlay(RoundedRectangle(cornerRadius: 25, style: .circular).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-                .modifier(GlossButtonChrome(tier: .full, tint: Theme.aeroGlow,
-                                            pressed: configuration.isPressed, shape: .capsule))
+                .modifier(ButtonChrome(tier: .primary, tint: Theme.libraryBlue,
+                                       pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }
 
-private struct GlossyStartButtonStyle: ButtonStyle {
+private struct StartButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        GlossyStartBody(configuration: configuration)
+        StartButtonBody(configuration: configuration)
     }
 
-    private struct GlossyStartBody: View {
+    private struct StartButtonBody: View {
         let configuration: ButtonStyleConfiguration
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
@@ -1205,11 +1171,12 @@ private struct GlossyStartButtonStyle: ButtonStyle {
                 .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 17)
                 .frame(height: 46)
-                .opacity(enabled ? 1 : 0.45)
+                .background(Capsule().fill(Theme.green.opacity(enabled ? 1 : 0.58)))
                 .contentShape(Capsule())
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
-                .modifier(GlossButtonChrome(tier: .full, tint: Theme.green,
-                                            pressed: configuration.isPressed, shape: .capsule))
+                .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3))
+                .modifier(ButtonChrome(tier: .primary, tint: Theme.green,
+                                       pressed: configuration.isPressed, shape: .capsule))
         }
     }
 }
@@ -1244,7 +1211,7 @@ struct LiveLevelReadout: View {
             .fixedSize()
             .contentShape(Rectangle())
         }
-        .buttonStyle(GlossButtonStyle(tier: .secondary, tint: Theme.accentText))
+        .buttonStyle(ButtonActionStyle(tier: .secondary, tint: Theme.accentText))
         .tip(display == .estimate ? "Estimated sound level. Tap for the technical value." : "Level in dB below full scale. Tap for the estimate.")
         .onAppear { shown = model.level }
         .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
@@ -1358,7 +1325,7 @@ private struct ModePickerButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .contentShape(Capsule())
-            .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                         pressed: configuration.isPressed, shape: .capsule))
     }
 }
@@ -1369,16 +1336,15 @@ private struct CompactControlButtonStyle: ButtonStyle {
     }
     private struct CompactControlBody: View {
         let configuration: ButtonStyleConfiguration
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
         @Environment(\.isFocused) private var focused
         @State private var hovering = false
         var body: some View {
             configuration.label
-                .brightness(hovering && !configuration.isPressed ? 0.025 : 0)
                 .contentShape(Capsule())
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: 19, style: .continuous)
+                    .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .capsule))
         }
     }

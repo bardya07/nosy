@@ -1,7 +1,7 @@
 import SwiftUI
 import AppKit
 
-// Design E: native glass, navy type, green primary actions and a blue Stop.
+// Native materials, navy type and the established green, blue and amber palette.
 enum Theme {
     static let background = dynamic(light: 0xFFFFFF, dark: 0x0B1C2B, lightAlpha: 0.60, darkAlpha: 0.88)
     static let surface = dynamic(light: 0xFFFFFF, dark: 0x173449, lightAlpha: 0.60, darkAlpha: 0.78)
@@ -29,12 +29,7 @@ enum Theme {
     static let waveform = Color(hex: 0x0E4A70)
     static let wavePlayed = Color(hex: 0x7FE3FF)
     static let waveIdle = Color(hex: 0x2E6F96)
-    // Transcripts button gloss (Frutiger Aero): aqua at the top, sky blue at the base.
-    static let aeroTop = Color(hex: 0x0B7896)
-    static let aeroMid = Color(hex: 0x087EA3)
-    static let aeroBase = Color(hex: 0x1B5CA6)
-    static let aeroEdge = Color(hex: 0x0B4C86)
-    static let aeroGlow = Color(hex: 0x00B4F0)
+    static let libraryBlue = Color(hex: 0x087EA3)
     // Choose destination: warm amber that reads on the light and dark raised fills.
     static let warmText = dynamic(light: 0x8A4B00, dark: 0xFFC978)
     static let warmFill = dynamic(light: 0xFCE8C4, dark: 0x4E3714, lightAlpha: 0.92, darkAlpha: 0.92)
@@ -58,44 +53,20 @@ extension Color {
     init(hex: UInt32) { self.init(nsColor: Theme.rgb(hex)) }
 }
 
-enum ButtonGlossTier: Equatable { case full, secondary, icon }
+enum ButtonTier: Equatable { case primary, secondary, icon }
 
-private struct ButtonGlossOptions {
-    var tier: ButtonGlossTier
-    var tint: Color
-}
-
-private struct ButtonGlossEnvironmentKey: EnvironmentKey {
-    static let defaultValue: ButtonGlossOptions? = nil
-}
-
-extension EnvironmentValues {
-    fileprivate var buttonGlossOptions: ButtonGlossOptions? {
-        get { self[ButtonGlossEnvironmentKey.self] }
-        set { self[ButtonGlossEnvironmentKey.self] = newValue }
-    }
-}
-
-extension View {
-    func buttonGloss(_ tier: ButtonGlossTier, tint: Color = Theme.accent) -> some View {
-        environment(\.buttonGlossOptions, ButtonGlossOptions(tier: tier, tint: tint))
-    }
-}
-
-// Default style for buttons without a more specific layout. Custom button styles
-// use the same surface modifier below, keeping the gloss treatment consistent.
-struct GlossButtonStyle: ButtonStyle {
-    var tier: ButtonGlossTier = .secondary
+struct ButtonActionStyle: ButtonStyle {
+    var tier: ButtonTier = .secondary
     var tint: Color = Theme.accent
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .modifier(GlossButtonChrome(tier: tier, tint: tint, pressed: configuration.isPressed,
-                                        shape: .rounded(8), addsFeedback: true))
+            .modifier(ButtonChrome(tier: tier, tint: tint, pressed: configuration.isPressed,
+                                   shape: .rounded(8)))
     }
 }
 
-enum GlossButtonShape {
+enum ButtonShape {
     case capsule, circle, rounded(CGFloat), rectangle
 
     var shape: AnyShape {
@@ -106,67 +77,33 @@ enum GlossButtonShape {
         case .rectangle: AnyShape(Rectangle())
         }
     }
+
+    var isCircle: Bool {
+        if case .circle = self { return true }
+        return false
+    }
 }
 
-struct GlossButtonChrome: ViewModifier {
-    let tier: ButtonGlossTier
+struct ButtonChrome: ViewModifier {
+    let tier: ButtonTier
     let tint: Color
     var pressed = false
-    var shape: GlossButtonShape = .capsule
-    var addsFeedback = true
+    var shape: ButtonShape = .capsule
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.isEnabled) private var enabled
-    @Environment(\.buttonGlossOptions) private var options
     @State private var hovering = false
 
     func body(content: Content) -> some View {
-        let selectedTier = options?.tier ?? tier
-        let selectedTint = options?.tint ?? tint
-        let highlight = reduceTransparency ? 0.04 : (selectedTier == .full ? 0.30 : 0.15)
-        let visibleGloss = selectedTier != .icon || hovering
-        let lift = addsFeedback && enabled && hovering && !pressed && !reduceMotion
-        let squish = addsFeedback && enabled && pressed && !reduceMotion
         content
-            .background {
-                if selectedTier == .full {
-                    shape.shape.fill(LinearGradient(colors: [selectedTint.opacity(0.94), selectedTint, selectedTint.opacity(0.82)],
-                                                    startPoint: .top, endPoint: .bottom))
-                }
-            }
+            .contentShape(shape.shape)
+            .brightness(hovering && enabled ? 0.025 : 0)
             .overlay {
-                if visibleGloss && !reduceTransparency {
-                    shape.shape.fill(LinearGradient(stops: [
-                        .init(color: .white.opacity(highlight), location: 0),
-                        .init(color: .white.opacity(highlight * 0.42), location: 0.28),
-                        .init(color: .clear, location: 0.62),
-                        .init(color: .black.opacity(selectedTier == .full ? 0.12 : 0.035), location: 1)
-                    ], startPoint: .top, endPoint: .bottom))
+                if tier == .icon && shape.isCircle {
+                    shape.shape.stroke(hovering && enabled ? tint.opacity(0.28) : .clear, lineWidth: 1)
                         .allowsHitTesting(false)
                 }
             }
-            .overlay {
-                if visibleGloss && !reduceTransparency {
-                    GeometryReader { geometry in
-                        shape.shape.fill(LinearGradient(colors: [.white.opacity(highlight * 0.82), .white.opacity(highlight * 0.22), .clear],
-                                                        startPoint: .top, endPoint: .bottom))
-                            .frame(height: geometry.size.height * (selectedTier == .full ? 0.46 : 0.34))
-                            .frame(maxHeight: .infinity, alignment: .top)
-                            .padding(1)
-                    }
-                    .allowsHitTesting(false)
-                }
-            }
-            .overlay {
-                if selectedTier == .full {
-                    shape.shape.stroke(.white.opacity(reduceTransparency ? 0.55 : 0.32), lineWidth: 1)
-                        .allowsHitTesting(false)
-                }
-            }
-            .shadow(color: enabled && hovering ? selectedTint.opacity(reduceTransparency ? 0.12 : (selectedTier == .full ? 0.25 : 0.10)) : .clear,
-                    radius: hovering && selectedTier == .full ? 9 : 5, y: lift ? -1 : 2)
-            .offset(y: lift ? -1 : 0)
-            .scaleEffect(squish ? (selectedTier == .icon ? 0.985 : 0.97) : 1)
+            .scaleEffect(!reduceMotion && enabled && pressed ? (tier == .secondary ? 0.99 : 0.985) : 1)
             .onHover { inside in
                 if enabled { hovering = inside }
             }
@@ -267,7 +204,7 @@ enum Motion {
     static func state(_ reduce: Bool) -> Animation { reduce ? .easeOut(duration: 0.18) : state }
 }
 
-// Every pressable surface: lifts slightly on hover, presses to 0.97, shows a focus ring.
+// Pill controls share one surface and interaction treatment across the app.
 struct PillButtonStyle: ButtonStyle {
     enum Kind { case primary, dark, quiet }
     var kind: Kind = .primary
@@ -284,7 +221,6 @@ struct PillButtonStyle: ButtonStyle {
         let style: PillButtonStyle
         @Environment(\.isEnabled) private var enabled
         @Environment(\.isFocused) private var focused
-        @Environment(\.buttonGlossOptions) private var glossOptions
         @State private var hovering = false
         var body: some View {
             configuration.label
@@ -293,40 +229,29 @@ struct PillButtonStyle: ButtonStyle {
                 .padding(.horizontal, style.horizontalPadding ?? (style.height > 36 ? 20 : 14))
                 .frame(maxWidth: style.fullWidth ? .infinity : nil)
                 .frame(height: style.height)
-                .background {
-                    if effectiveGlossTier != .full {
-                        Capsule().fill(background)
-                        // A rounded rect, not Capsule: stroked capsules draw stray end caps on narrow pills.
-                        if style.kind == .quiet {
-                            RoundedRectangle(cornerRadius: style.height / 2, style: .circular).strokeBorder(Theme.line, lineWidth: 1)
-                        }
-                    }
-                }
-                .opacity(enabled ? 1 : 0.45)
+                .background(Capsule().fill(background))
+                .overlay(RoundedRectangle(cornerRadius: style.height / 2, style: .continuous)
+                    .strokeBorder(style.kind == .quiet ? Theme.line : .clear, lineWidth: 1))
                 .contentShape(Capsule())
-                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: style.height / 2 + 3, style: .continuous)
+                    .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
-                .modifier(GlossButtonChrome(tier: style.kind == .quiet ? .secondary : .full,
-                                            tint: style.kind == .dark ? Theme.stop : style.tint,
-                                            pressed: configuration.isPressed, shape: .capsule))
+                .modifier(ButtonChrome(tier: style.kind == .quiet ? .secondary : .primary,
+                                       tint: style.kind == .dark ? Theme.stop : style.tint,
+                                       pressed: configuration.isPressed, shape: .capsule))
         }
         private var background: Color {
-            if style.kind == .quiet, glossOptions?.tier == .full, let tint = glossOptions?.tint { return tint }
             return switch style.kind {
-            case .primary: style.tint
-            case .dark: Theme.stop
+            case .primary: enabled ? style.tint : style.tint.opacity(0.58)
+            case .dark: enabled ? Theme.stop : Theme.stop.opacity(0.58)
             case .quiet: hovering && enabled ? Theme.surface : Theme.raised
             }
-        }
-        private var effectiveGlossTier: ButtonGlossTier {
-            glossOptions?.tier ?? (style.kind == .quiet ? .secondary : .full)
         }
         private var foreground: Color {
             switch style.kind {
             case .primary: Theme.onAccent
             case .dark: .white
-            case .quiet: glossOptions?.tier == .full ? Theme.onAccent : Theme.navy
+            case .quiet: Theme.navy
             }
         }
     }
@@ -359,13 +284,11 @@ struct RoundButtonStyle: ButtonStyle {
                 .frame(width: size, height: size)
                 .background(hovering && enabled ? Theme.surface : Theme.raised, in: Circle())
                 .overlay(Circle().strokeBorder(Theme.line, lineWidth: 1))
-                .opacity(enabled ? 1 : 0.45)
                 .contentShape(Circle())
                 .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
-                .modifier(GlossButtonChrome(tier: .icon, tint: Theme.accentText,
-                                            pressed: configuration.isPressed, shape: .circle))
+                .modifier(ButtonChrome(tier: .icon, tint: Theme.accentText,
+                                       pressed: configuration.isPressed, shape: .circle))
         }
     }
 }
@@ -380,14 +303,11 @@ struct InsetButtonStyle: ButtonStyle {
         @State private var hovering = false
         var body: some View {
             configuration.label
-                .brightness(hovering && enabled ? 0.025 : 0)
-                .opacity(enabled ? 1 : 0.45)
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .contentShape(Rectangle())
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
-                .modifier(GlossButtonChrome(tier: .secondary, tint: Theme.accent,
-                                            pressed: configuration.isPressed, shape: .rounded(6)))
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
+                                       pressed: configuration.isPressed, shape: .rounded(6)))
         }
     }
 }
@@ -407,12 +327,11 @@ struct LinkButtonStyle: ButtonStyle {
                 .font(Theme.text(12.5, .semibold))
                 .foregroundStyle(enabled ? tint : Theme.muted)
                 .underline(hovering && enabled)
-                .opacity(enabled ? (configuration.isPressed ? 0.6 : 1) : 0.45)
                 .contentShape(Rectangle())
-                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
                 .onHover { hovering = $0 }
-                .modifier(GlossButtonChrome(tier: .icon, tint: tint,
-                                            pressed: configuration.isPressed, shape: .rounded(4)))
+                .modifier(ButtonChrome(tier: .icon, tint: tint,
+                                       pressed: configuration.isPressed, shape: .rounded(4)))
         }
     }
 }
@@ -468,13 +387,11 @@ struct IconButtonStyle: ButtonStyle {
                     (hovering && enabled ? (destructive ? Theme.coral.opacity(0.14) : Theme.surface) :
                         (filled ? Theme.raised : .clear)), in: Circle())
                 .overlay(Circle().strokeBorder(filled ? Theme.line : .clear).allowsHitTesting(false))
-                .opacity(enabled ? 1 : 0.4)
                 .contentShape(Circle())
                 .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
-                .animation(Motion.press, value: configuration.isPressed)
-                .modifier(GlossButtonChrome(tier: .icon, tint: destructive ? Theme.coral : Theme.accentText,
-                                            pressed: configuration.isPressed, shape: .circle))
+                .modifier(ButtonChrome(tier: .icon, tint: destructive ? Theme.coral : Theme.accentText,
+                                       pressed: configuration.isPressed, shape: .circle))
         }
     }
 }

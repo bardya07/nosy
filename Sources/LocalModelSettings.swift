@@ -38,8 +38,7 @@ struct LocalModelCard: View {
                         .tip("Keep downloaded bytes to resume later")
                 } else if state != .downloaded && state != .loaded {
                     Button(partialBytes > 0 ? "Resume download" : "Download") { if !Snapshot.isRunning { store.download(model) } }
-                        .buttonStyle(PillButtonStyle(kind: .quiet, height: 27, fullWidth: false))
-                        .buttonGloss(.full, tint: Theme.accent)
+                        .buttonStyle(PillButtonStyle(kind: .primary, height: 27, fullWidth: false))
                         .tip("Download \(model.sizeLabel) from Hugging Face and verify SHA256")
                 }
                 if canRemove && !state.busy {
