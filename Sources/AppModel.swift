@@ -6,6 +6,41 @@ import UserNotifications
 
 enum AppPhase { case idle, recording, transcribing, done, failed }
 
+// Recorder samples and transcription progress. Each recorder sample is one published change, and
+// only the views that draw these numbers observe this object.
+@MainActor
+final class RecordingTelemetry: ObservableObject {
+    struct Sample: Equatable {
+        var duration: TimeInterval
+        var level: Double
+        // Rolling level history (newest last) for the waveform.
+        var levels: [Double]
+    }
+    @Published private(set) var sample = Sample(duration: 0, level: -160, levels: Array(repeating: -160, count: AppModel.waveformLength))
+    @Published var transcriptionElapsed: TimeInterval = 0
+    @Published var transcriptionProgress = 0.0
+
+    var duration: TimeInterval { sample.duration }
+    var level: Double { sample.level }
+    var levels: [Double] { sample.levels }
+
+    // Publishes only when the change moves something.
+    func update(_ change: (inout Sample) -> Void) {
+        var next = sample
+        change(&next)
+        if next != sample { sample = next }
+    }
+    // One recorder sample is one change: the length, the level and the waveform move together.
+    func record(duration: TimeInterval, level: Double) {
+        update { sample in
+            sample.duration = duration
+            sample.level = level
+            sample.levels.removeFirst()
+            sample.levels.append(level)
+        }
+    }
+}
+
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound, .list]
@@ -32,11 +67,30 @@ final class AppModel: ObservableObject {
     @Published var newLecture = ""
     @Published var session = ""
     @Published private(set) var startValidationRequest = 0
-    @Published var duration: TimeInterval = 0
-    @Published var transcriptionElapsed: TimeInterval = 0
-    @Published var level = -160.0
+    // Recorder samples and transcription progress change several times a second, so they live in
+    // `telemetry`. Only the views that show them observe it; the accessors below keep callers unchanged.
+    let telemetry = RecordingTelemetry()
+    var duration: TimeInterval {
+        get { telemetry.sample.duration }
+        set { telemetry.update { $0.duration = newValue } }
+    }
+    var level: Double {
+        get { telemetry.sample.level }
+        set { telemetry.update { $0.level = newValue } }
+    }
     // Rolling level history (newest last) for the waveform.
-    @Published var levels = Array(repeating: -160.0, count: AppModel.waveformLength)
+    var levels: [Double] {
+        get { telemetry.sample.levels }
+        set { telemetry.update { $0.levels = newValue } }
+    }
+    var transcriptionElapsed: TimeInterval {
+        get { telemetry.transcriptionElapsed }
+        set { telemetry.transcriptionElapsed = newValue }
+    }
+    var transcriptionProgress: Double {
+        get { telemetry.transcriptionProgress }
+        set { telemetry.transcriptionProgress = newValue }
+    }
     @Published var paused = false
     @Published private(set) var inputs: [AudioInputs.Device] = []
     @Published private(set) var systemInput: AudioInputs.Device?
@@ -45,7 +99,6 @@ final class AppModel: ObservableObject {
     @Published private(set) var recordingSource = RecordingSource.restored(UserDefaults.standard.string(forKey: "recordingSource"))
     @Published private(set) var macAudioDenied = false
     @Published private(set) var macAudioQuiet = false
-    @Published var transcriptionProgress = 0.0
     @Published private(set) var transcriptionPauseReason: String?
     @Published var silenceWarning = false
     @Published var stalled = false
@@ -173,9 +226,6 @@ final class AppModel: ObservableObject {
             } catch { showError(error.localizedDescription) }
             transitioning = false
         }
-        timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.tick() }
-        }
     }
     var needsOnboarding: Bool { !UserDefaults.standard.bool(forKey: "onboarded") }
     func finishOnboarding() {
@@ -238,8 +288,21 @@ final class AppModel: ObservableObject {
         if let path { content.userInfo = ["transcriptPath": path] }
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) { _ in }
     }
+    // The clock runs only while something needs it: a recording (reminders are checked each tick) or a running transcription.
+    private func updateClock() {
+        let needed = recording || (active != nil && transcriptionStarted != nil)
+        if needed, timer == nil {
+            timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+                Task { @MainActor in self?.tick() }
+            }
+        } else if !needed, let timer {
+            timer.invalidate()
+            self.timer = nil
+        }
+    }
     // Keeps the Mac from idling to sleep while anything is recording or transcribing.
     private func updateActivity() {
+        updateClock()
         let needed = recording || transitioning || (transcriptionPauseReason == nil && (job != nil || !queue.isEmpty))
         let options: ProcessInfo.ActivityOptions = recording || transitioning ? [.idleSystemSleepDisabled, .userInitiated] : [.idleSystemSleepDisabled]
         if let activity, options != activityOptions {
@@ -360,8 +423,8 @@ final class AppModel: ObservableObject {
         switch event {
         case .level(let bytes, let db, let silent):
             guard recording else { return }
-            duration = Core.duration(pcmBytes: bytes); level = db; silenceWarning = silent
-            levels.removeFirst(); levels.append(db)
+            telemetry.record(duration: Core.duration(pcmBytes: bytes), level: db)
+            if silenceWarning != silent { silenceWarning = silent }
         case .input(let name):
             activeInputName = name
         case .usingDefaultInput:

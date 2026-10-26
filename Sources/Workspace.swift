@@ -258,6 +258,14 @@ struct WorkspaceTitlebar: View {
     }
 }
 
+// The bar's elapsed time. Only this text follows the recorder's length samples.
+private struct RecordingBarClock: View {
+    @ObservedObject var telemetry: RecordingTelemetry
+    var body: some View {
+        Text(Core.timer(telemetry.duration)).font(Theme.text(13, .semibold)).monospacedDigit()
+    }
+}
+
 private struct LibraryRecordingBar: View {
     @ObservedObject var model: AppModel
     var body: some View {
@@ -269,8 +277,8 @@ private struct LibraryRecordingBar: View {
                 Text(model.current?.lecture ?? model.lectureName)
                     .font(Theme.text(10)).foregroundStyle(Theme.muted).lineLimit(1)
             }
-            Text(Core.timer(model.duration)).font(Theme.text(13, .semibold)).monospacedDigit()
-            LiveLevelReadout(model: model)
+            RecordingBarClock(telemetry: model.telemetry)
+            LiveLevelReadout(telemetry: model.telemetry)
             Spacer(minLength: 0)
             Button { model.addMarker() } label: { Image(systemName: "bookmark") }
                 .accessibilityLabel("Add marker")

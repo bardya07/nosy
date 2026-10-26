@@ -912,11 +912,11 @@ struct MainView: View {
             Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
             HStack(spacing: 10) {
                 Text("Level").font(Theme.text(11)).foregroundStyle(Theme.muted)
-                LevelBar(decibels: model.level)
-                LiveLevelReadout(model: model)
+                LevelBar(telemetry: model.telemetry)
+                LiveLevelReadout(telemetry: model.telemetry)
             }
             .padding(.horizontal, 8)
-            RecordingLevelGuidanceView(model: model)
+            RecordingLevelGuidanceView(model: model, telemetry: model.telemetry)
             Text("The level reads live while you record.")
                 .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
                 .padding(.horizontal, 8).padding(.top, 2)
@@ -1182,12 +1182,11 @@ private struct StartButtonStyle: ButtonStyle {
     }
 }
 
-// Samples the recorder's level about ten times a second, so the readout moves smoothly instead of flickering.
+// Shows the recorder's latest level. It reads the shared telemetry, so it needs no timer of its own.
 // Tapping it switches between the estimated sound level and the technical value. The choice is remembered.
 struct LiveLevelReadout: View {
-    @ObservedObject var model: AppModel
+    @ObservedObject var telemetry: RecordingTelemetry
     @AppStorage(LevelDisplay.storageKey) private var savedDisplay = LevelDisplay.estimate.rawValue
-    @State private var shown = InputLevel.silent
 
     private var display: LevelDisplay { LevelDisplay.stored(savedDisplay) }
 
@@ -1196,11 +1195,11 @@ struct LiveLevelReadout: View {
             savedDisplay = display.toggled.rawValue
         } label: {
             HStack(spacing: 6) {
-                Text(InputLevel.primary(shown, display: display))
+                Text(InputLevel.primary(telemetry.level, display: display))
                     .font(Theme.text(12, .semibold)).monospacedDigit()
                     .foregroundStyle(Theme.muted)
                 if display == .estimate {
-                    let band = InputLevel.band(shown)
+                    let band = InputLevel.band(telemetry.level)
                     Text(band.label)
                         .font(Theme.text(9.5, .semibold))
                         .foregroundStyle(band.tint)
@@ -1214,24 +1213,23 @@ struct LiveLevelReadout: View {
         }
         .buttonStyle(ButtonActionStyle(tier: .secondary, tint: Theme.accentText))
         .tip(display == .estimate ? "Estimated sound level. Tap for the technical value." : "Level in dB below full scale. Tap for the estimate.")
-        .onAppear { shown = model.level }
-        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
-            if shown != model.level { shown = model.level }
-        }
         .accessibilityLabel("Input level")
         .accessibilityValue(spokenValue)
         .accessibilityHint("Switches between the estimated sound level and the technical value")
     }
 
     private var spokenValue: String {
-        guard display == .estimate else { return InputLevel.technical(shown) }
-        return "\(InputLevel.estimate(shown)) decibels, \(InputLevel.band(shown).label)"
+        guard display == .estimate else { return InputLevel.technical(telemetry.level) }
+        return "\(InputLevel.estimate(telemetry.level)) decibels, \(InputLevel.band(telemetry.level).label)"
     }
 }
 
 private struct RecordingLevelGuidanceView: View {
     @ObservedObject var model: AppModel
+    @ObservedObject var telemetry: RecordingTelemetry
     @State private var guidance = RecordingLevelGuidance()
+    // The recorded length guidance has counted up to, so its window is measured in time, not deliveries.
+    @State private var countedThrough: TimeInterval?
 
     var body: some View {
         Group {
@@ -1253,15 +1251,23 @@ private struct RecordingLevelGuidanceView: View {
         }
         .onAppear {
             guidance.reset()
-            if model.recording { _ = guidance.add(InputLevel.estimate(model.level)) }
+            countedThrough = nil
+            if model.recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level)) }
         }
         .onChange(of: model.recording) { _, recording in
             guidance.reset()
-            if recording { _ = guidance.add(InputLevel.estimate(model.level)) }
+            countedThrough = nil
+            if recording { _ = guidance.add(InputLevel.estimate(telemetry.level)) }
         }
-        .onReceive(Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()) { _ in
-            guard model.recording else { return }
-            _ = guidance.add(InputLevel.estimate(model.level))
+        // Each sample counts the recorded time since the previous one, so the three-second window holds at any delivery rate.
+        .onChange(of: telemetry.sample) { _, sample in
+            guard model.recording, !model.paused else { return }
+            let seconds = countedThrough.map { sample.duration - $0 } ?? 0
+            let slots = min(RecordingLevelGuidance.sampleLimit,
+                            max(1, Int((seconds * Double(RecordingLevelGuidance.samplesPerSecond)).rounded())))
+            let level = InputLevel.estimate(sample.level)
+            for _ in 0..<slots { _ = guidance.add(level) }
+            countedThrough = sample.duration
         }
     }
 
@@ -1293,9 +1299,10 @@ private extension InputLevel.Band {
 }
 
 private struct LevelBar: View {
-    let decibels: Double
+    @ObservedObject var telemetry: RecordingTelemetry
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
+        let decibels = telemetry.level
         GeometryReader { geometry in
             let range = RecordingLevelGuidance.recommendedRange
             let start = geometry.size.width * InputLevel.estimateFraction(range.lowerBound)
@@ -1351,6 +1358,16 @@ private struct CompactControlButtonStyle: ButtonStyle {
     }
 }
 
+// The dot dims while the input is quiet. Only this leaf follows the level samples.
+private struct RecordingDot: View {
+    @ObservedObject var telemetry: RecordingTelemetry
+    let paused: Bool
+    var body: some View {
+        Circle().fill(paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
+            .opacity(paused || telemetry.level > -50 ? 1 : 0.5)
+    }
+}
+
 struct StatusPill: View {
     @ObservedObject var model: AppModel
     @ViewBuilder
@@ -1358,8 +1375,7 @@ struct StatusPill: View {
         if let title {
             HStack(spacing: 6) {
                 if model.recording {
-                    Circle().fill(model.paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
-                        .opacity(model.paused || model.level > -50 ? 1 : 0.5)
+                    RecordingDot(telemetry: model.telemetry, paused: model.paused)
                 }
                 Text(title).font(Theme.text(10, .medium)).foregroundStyle(tint)
                     .contentTransition(.opacity)
@@ -1454,49 +1470,22 @@ struct StagePanel: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(Core.timer(model.duration))
-                        .font(Theme.text(44)).monospacedDigit().tracking(-1.32)
-                        .foregroundStyle(model.paused ? Theme.muted : Theme.navy)
-                        .contentTransition(.numericText())
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(model.duration))
-                        .accessibilityLabel("Recorded \(Core.timer(model.duration))")
+                    RecordingClock(telemetry: model.telemetry, paused: model.paused)
                 }
                 Spacer(minLength: 0)
-                LiveLevelReadout(model: model)
+                LiveLevelReadout(telemetry: model.telemetry)
             }
-            Waveform(levels: model.levels, tint: Theme.wavePlayed, active: !model.paused)
-                .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
-                .background(Theme.waveform, in: Capsule())
-                .accessibilityLabel("Live recording input").accessibilityValue(InputLevel.technical(model.level))
+            LiveWaveform(telemetry: model.telemetry, paused: model.paused)
             RecordingMarkers(model: model)
             if let active = model.active {
-                HStack(spacing: 6) {
-                    ProgressView().controlSize(.mini)
-                Text(model.transcriptionPauseReason.map { "Paused. \($0)" } ?? "Also transcribing \(active.lecture) · \(Int((model.transcriptionProgress * 100).rounded()))%")
-                        .font(Theme.text(11, .medium)).foregroundStyle(Theme.muted).lineLimit(2)
-                }
-                .padding(12).frame(maxWidth: .infinity, alignment: .leading).card()
+                BackgroundTranscriptionNote(telemetry: model.telemetry, lecture: active.lecture, pauseReason: model.transcriptionPauseReason)
             }
         }
     }
 
     private var transcribing: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if !model.waiting {
-                HStack(alignment: .firstTextBaseline) {
-                    Text("\(Int((model.transcriptionProgress * 100).rounded()))%")
-                        .font(Theme.text(13, .semibold)).monospacedDigit().foregroundStyle(Theme.ink)
-                        .contentTransition(.numericText())
-                    Spacer(minLength: 8)
-                    ProgressTrack(value: model.transcriptionProgress, tint: Theme.stop)
-                        .frame(width: 210)
-                }
-            } else {
-                ProgressView().progressViewStyle(.linear).tint(Theme.stop)
-            }
-            Text(remainingText).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
+            TranscriptionProgressBlock(model: model, telemetry: model.telemetry)
             HStack {
                 Text("This might take a minute.").font(Theme.text(11)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 4)
@@ -1507,17 +1496,6 @@ struct StagePanel: View {
             }
         }
     }
-    private var remainingText: String {
-        if let reason = model.transcriptionPauseReason { return "Paused. \(reason)" }
-        if model.waiting {
-            if let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
-            return "Waiting to start"
-        }
-        guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(model.transcriptionElapsed)) elapsed" }
-        let minutes = Int((remaining / 60).rounded(.up))
-        return remaining < 60 ? "Less than a minute left" : "About \(minutes) min left"
-    }
-
     private var done: some View {
         SavedPanel(model: model)
     }
@@ -1693,6 +1671,83 @@ struct SavedSummary {
             spoken.range(of: "(?<![\\p{L}\\p{N}])" + NSRegularExpression.escapedPattern(for: term) + "(?![\\p{L}\\p{N}])",
                          options: [.regularExpression, .caseInsensitive]) != nil
         }.count
+    }
+}
+
+// The large elapsed time. Only this text follows the recorder's length samples.
+private struct RecordingClock: View {
+    @ObservedObject var telemetry: RecordingTelemetry
+    let paused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View {
+        Text(Core.timer(telemetry.duration))
+            .font(Theme.text(44)).monospacedDigit().tracking(-1.32)
+            .foregroundStyle(paused ? Theme.muted : Theme.navy)
+            .contentTransition(.numericText())
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(telemetry.duration))
+            .accessibilityLabel("Recorded \(Core.timer(telemetry.duration))")
+    }
+}
+
+// The live input strip. Only this strip follows the level samples.
+private struct LiveWaveform: View {
+    @ObservedObject var telemetry: RecordingTelemetry
+    let paused: Bool
+    var body: some View {
+        Waveform(levels: telemetry.levels, tint: Theme.wavePlayed, active: !paused)
+            .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
+            .background(Theme.waveform, in: Capsule())
+            .accessibilityLabel("Live recording input").accessibilityValue(InputLevel.technical(telemetry.level))
+    }
+}
+
+// Background transcription beside a recording. Only its percentage follows the progress samples.
+private struct BackgroundTranscriptionNote: View {
+    @ObservedObject var telemetry: RecordingTelemetry
+    let lecture: String
+    let pauseReason: String?
+    var body: some View {
+        HStack(spacing: 6) {
+            ProgressView().controlSize(.mini)
+            Text(pauseReason.map { "Paused. \($0)" } ?? "Also transcribing \(lecture) · \(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+                .font(Theme.text(11, .medium)).foregroundStyle(Theme.muted).lineLimit(2)
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading).card()
+    }
+}
+
+// Progress and time left for the foreground transcription. Only this block follows the progress samples.
+private struct TranscriptionProgressBlock: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var telemetry: RecordingTelemetry
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if !model.waiting {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("\(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+                        .font(Theme.text(13, .semibold)).monospacedDigit().foregroundStyle(Theme.ink)
+                        .contentTransition(.numericText())
+                    Spacer(minLength: 8)
+                    ProgressTrack(value: telemetry.transcriptionProgress, tint: Theme.stop)
+                        .frame(width: 210)
+                }
+            } else {
+                ProgressView().progressViewStyle(.linear).tint(Theme.stop)
+            }
+            Text(remainingText).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+                .contentTransition(.opacity)
+        }
+    }
+    private var remainingText: String {
+        if let reason = model.transcriptionPauseReason { return "Paused. \(reason)" }
+        if model.waiting {
+            if let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
+            return "Waiting to start"
+        }
+        guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(telemetry.transcriptionElapsed)) elapsed" }
+        let minutes = Int((remaining / 60).rounded(.up))
+        return remaining < 60 ? "Less than a minute left" : "About \(minutes) min left"
     }
 }
 

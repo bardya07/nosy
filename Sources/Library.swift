@@ -595,14 +595,9 @@ struct LibraryView: View {
             .padding(.horizontal, 4)
             .accessibilityLabel("Importing audio, \(model.importsInProgress) left")
         } else if let active = model.active {
-            HStack(spacing: 7) {
-                ProgressView(value: model.transcriptionProgress).controlSize(.small).frame(width: 42)
-                Text(model.transcriptionPauseReason.map { "Paused · \($0)" }
-                     ?? "Transcribing audio · \(Int((model.transcriptionProgress * 100).rounded()))%")
-                    .font(Theme.text(11)).foregroundStyle(Theme.muted).lineLimit(1)
-            }
-            .padding(.horizontal, 4)
-            .accessibilityLabel("Transcribing \(active.lecture) \(active.session)")
+            TranscribingActivityRow(model: model, telemetry: model.telemetry)
+                .padding(.horizontal, 4)
+                .accessibilityLabel("Transcribing \(active.lecture) \(active.session)")
         } else if !model.queue.isEmpty {
             Text("Audio queued for transcription")
                 .font(Theme.text(11)).foregroundStyle(Theme.muted).padding(.horizontal, 4)
@@ -821,6 +816,20 @@ struct LibraryView: View {
         NSPasteboard.general.setString(text, forType: .string)
         withAnimation(Motion.press) { copied = true }
         Task { try? await Task.sleep(for: .seconds(1.4)); withAnimation(Motion.hover) { copied = false } }
+    }
+}
+
+// The sidebar's transcription progress. Only this row follows the progress samples.
+private struct TranscribingActivityRow: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var telemetry: RecordingTelemetry
+    var body: some View {
+        HStack(spacing: 7) {
+            ProgressView(value: telemetry.transcriptionProgress).controlSize(.small).frame(width: 42)
+            Text(model.transcriptionPauseReason.map { "Paused · \($0)" }
+                 ?? "Transcribing audio · \(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+                .font(Theme.text(11)).foregroundStyle(Theme.muted).lineLimit(1)
+        }
     }
 }
 
