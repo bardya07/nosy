@@ -154,4 +154,83 @@ enum AudioInputs {
         // Both the name and UID properties return CF objects owned by the caller.
         return value.takeRetainedValue() as String
     }
+
+    // The device list and the default input, read together.
+    struct Reading: Equatable, Sendable {
+        let devices: [Device]
+        let systemDefault: Device?
+    }
+    static func reading() -> Reading {
+        Reading(devices: list(), systemDefault: systemDefault())
+    }
+
+    // Watches the device list and the default input. Changes arrive in bursts (a cable pulled, a dock
+    // connected), so each burst is coalesced for 200 ms on a utility queue and read there. Nothing here
+    // selects a device: the recorder keeps the UID it was pinned to.
+    final class Watcher: @unchecked Sendable {
+        // `active` and `pending` are confined to `queue`; `listeners` is touched only by start and invalidate on the main actor.
+        private let queue = DispatchQueue(label: "com.bardya.nosy.audio-inputs", qos: .utility)
+        private let deliver: @MainActor (Reading) -> Void
+        private var listeners: [(AudioObjectPropertyAddress, AudioObjectPropertyListenerBlock)] = []
+        private var active = false
+        private var pending: DispatchWorkItem?
+
+        init(deliver: @escaping @MainActor (Reading) -> Void) {
+            self.deliver = deliver
+        }
+
+        // Registers CoreAudio listeners for the device list and the default input. Nothing is read until a change or request.
+        func start() {
+            guard listeners.isEmpty else { return }
+            queue.sync { active = true }
+            let system = AudioObjectID(kAudioObjectSystemObject)
+            for selector in [kAudioHardwarePropertyDevices, kAudioHardwarePropertyDefaultInputDevice] {
+                var address = AudioInputs.address(selector)
+                // CoreAudio runs this block on `queue`.
+                let listener: AudioObjectPropertyListenerBlock = { [weak self] _, _ in
+                    self?.schedule(after: 0.2)
+                }
+                if AudioObjectAddPropertyListenerBlock(system, &address, queue, listener) == noErr {
+                    listeners.append((address, listener))
+                }
+            }
+        }
+
+        // Explicit refreshes (hovering or opening the microphone menu) join the same pending read.
+        func request(after delay: TimeInterval = 0) {
+            queue.async { [self] in schedule(after: delay) }
+        }
+
+        // Removes exactly the listeners that were added and drops any read that has not started.
+        func invalidate() {
+            queue.sync {
+                active = false
+                pending?.cancel()
+                pending = nil
+            }
+            let system = AudioObjectID(kAudioObjectSystemObject)
+            for (address, listener) in listeners {
+                var address = address
+                _ = AudioObjectRemovePropertyListenerBlock(system, &address, queue, listener)
+            }
+            listeners = []
+        }
+
+        // Runs on `queue`. A request made while a read is pending shares that read.
+        private func schedule(after delay: TimeInterval) {
+            guard active, pending == nil else { return }
+            let work = DispatchWorkItem { [weak self] in self?.readAndDeliver() }
+            pending = work
+            queue.asyncAfter(deadline: .now() + delay, execute: work)
+        }
+
+        // Runs on `queue`: reads the system, then hands the immutable result to the main actor.
+        private func readAndDeliver() {
+            pending = nil
+            guard active else { return }
+            let reading = AudioInputs.reading()
+            let deliver = deliver
+            Task { @MainActor in deliver(reading) }
+        }
+    }
 }

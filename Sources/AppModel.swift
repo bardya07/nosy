@@ -72,6 +72,8 @@ final class AppModel: ObservableObject {
     var finishOnboardingWork: (() async -> Void)?
 
     private var recorder: Recorder?
+    // Owned once, from launch: CoreAudio notifications refresh the microphone list while the app runs.
+    private var inputWatcher: AudioInputs.Watcher?
     private var job: TranscriptionJob?
     private var worker: Task<Void, Never>?
     private var importer: Task<Void, Never>?
@@ -151,6 +153,9 @@ final class AppModel: ObservableObject {
         }
         summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
+        let watcher = AudioInputs.Watcher { [weak self] reading in self?.applyInputs(reading) }
+        watcher.start()
+        inputWatcher = watcher
         refreshInputs()
         refreshLectures()
         if let last = UserDefaults.standard.string(forKey: "lastLecture"), lectures.contains(last) { selectedLecture = last }
@@ -769,12 +774,14 @@ final class AppModel: ObservableObject {
         microphoneDenied = false
         clearError()
     }
+    // Asks for a fresh device list. The read happens off the main actor and shares a pass with other requests.
     func refreshInputs() {
-        let systemDefault = AudioInputs.systemDefault()
-        let available = AudioInputs.list()
+        inputWatcher?.request()
+    }
+    private func applyInputs(_ reading: AudioInputs.Reading) {
         // A hover must not rebuild a menu whose devices have not changed.
-        if inputs != available { inputs = available }
-        if systemInput != systemDefault { systemInput = systemDefault }
+        if inputs != reading.devices { inputs = reading.devices }
+        if systemInput != reading.systemDefault { systemInput = reading.systemDefault }
     }
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {
@@ -871,6 +878,8 @@ final class AppModel: ObservableObject {
     }
     func prepareToQuit() async {
         quitting = true
+        inputWatcher?.invalidate()
+        inputWatcher = nil
         summaries.cancelAll()
         job?.cancel()
         importWork?.cancel()
