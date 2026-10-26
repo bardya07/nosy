@@ -255,7 +255,7 @@ final class TranscriptLibrary: ObservableObject {
     }
 
     func beginEditing(paths: AppPaths) {
-        guard let selected else { return }
+        guard isShowing(paths: paths), let selected else { return }
         editingItem = selected
         editingPaths = paths
         draft = selected.text
@@ -448,6 +448,9 @@ final class TranscriptLibrary: ObservableObject {
     }
     // The recording behind a transcript, read with the library rather than in a view body.
     func reader(for url: URL) -> ReaderRecord? { readers[url.standardizedFileURL.path] }
+    func isShowing(paths: AppPaths) -> Bool {
+        loadedRoot == paths.transcripts && loadPaths?.transcripts == paths.transcripts
+    }
 
     // Searching never leaves a hidden transcript open (where Trash would still act on it).
     private func keepSelectionVisible() {
@@ -617,6 +620,7 @@ struct LibraryView: View {
     @State private var requestedSummary: URL?
     @State private var browsingRoot: URL?
     @State private var focusTask: Task<Void, Never>?
+    @State private var appliedInitialFolders = false
     private var libraryPaths: AppPaths { model.paths.browsingLibrary(at: browsingRoot ?? model.paths.transcripts) }
     // The reader's summary, AI markers and key moments, once they are for the selected transcript.
     private var details: ReaderDetails { library.details.transcript == library.selection ? library.details : ReaderDetails() }
@@ -670,6 +674,13 @@ struct LibraryView: View {
             if mode != .library { audioPlayer.stop() }
         }
         .onChange(of: library.selection) { showSummary = false }
+        .onChange(of: library.items) {
+            // These presentation choices follow the first async read, just as they followed
+            // the old synchronous reload. Selection may have revealed a folder during adoption.
+            guard !appliedInitialFolders else { return }
+            appliedInitialFolders = true
+            if previewCollapsed { library.collapseFolders() }
+        }
         // The summary arrives from a background read. It opens here when the reader asked for it or a preview wants it.
         .onReceive(library.$details) { loaded in
             guard loaded.transcript == library.selection else { return }
@@ -956,7 +967,7 @@ struct LibraryView: View {
                 } else {
                     ScrollViewReader { proxy in
                         ScrollView {
-                            TranscriptText(markdown: item.text, canCorrect: !summaries.isBusy(item.url), aiMarkers: details.aiMarkers,
+                            TranscriptText(markdown: item.text, canCorrect: library.isShowing(paths: libraryPaths) && !summaries.isBusy(item.url), aiMarkers: details.aiMarkers,
                                            duration: details.markerDuration, removeAI: { removeAIMarker(at: $0, transcript: item.url) }) { range, replacement in
                                 guard !summaries.isBusy(item.url) else { return }
                                 let folder = item.url.deletingLastPathComponent()
@@ -1018,7 +1029,7 @@ struct LibraryView: View {
                 Button { showSummary = false; library.beginEditing(paths: libraryPaths) } label: { Image(systemName: "pencil") }
                     .buttonStyle(IconButtonStyle(size: 32)).keyboardShortcut("e", modifiers: .command)
                     .tip("Edit").accessibilityLabel("Edit transcript")
-                    .disabled(summaries.isBusy(item.url))
+                    .disabled(summaries.isBusy(item.url) || !library.isShowing(paths: libraryPaths))
                 Button { copy(showingSummary ? details.summary ?? item.text : item.text) } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc").contentTransition(.symbolEffect(.replace))
                 }

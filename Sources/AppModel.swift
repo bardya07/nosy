@@ -452,10 +452,12 @@ final class AppModel: ObservableObject {
         switch event {
         case .level(let bytes, let db, let silent):
             guard recording else { return }
+            let savedDuration = Core.duration(pcmBytes: bytes)
+            guard savedDuration >= duration else { return }
             // Writes accepted before Pause may finish afterwards. Keep the saved duration,
             // without reviving the paused waveform or its cleared silence warning.
-            if paused { telemetry.update { $0.duration = Core.duration(pcmBytes: bytes) }; return }
-            telemetry.record(duration: Core.duration(pcmBytes: bytes), level: db)
+            if paused { telemetry.update { $0.duration = savedDuration }; return }
+            telemetry.record(duration: savedDuration, level: db)
             if silenceWarning != silent { silenceWarning = silent }
             checkRecordingReminder()
         case .input(let name):
