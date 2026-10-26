@@ -144,6 +144,11 @@ final class AppModel: ObservableObject {
     private let notificationDelegate = NotificationDelegate()
     private var observers: [NSObjectProtocol] = []
     private var launched = false
+    // Folder names and libraries are read off the main actor; requests made during a read run once it ends.
+    private var lecturesRefreshing = false
+    private var lecturesNeedRefresh = false
+    // The folder the last session used, selected once the first folder list arrives.
+    private var rememberedLecture: String?
     private var quitting = false
     // Claimed synchronously by Stop or a recorder failure, so only one of them finishes a recording.
     private var completing = false
@@ -206,12 +211,12 @@ final class AppModel: ObservableObject {
         }
         summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
+        rememberedLecture = UserDefaults.standard.string(forKey: "lastLecture")
         let watcher = AudioInputs.Watcher { [weak self] reading in self?.applyInputs(reading) }
         watcher.start()
         inputWatcher = watcher
         refreshInputs()
         refreshLectures()
-        if let last = UserDefaults.standard.string(forKey: "lastLecture"), lectures.contains(last) { selectedLecture = last }
         observeSystem()
         transitioning = true
         let paths = paths
@@ -274,11 +279,29 @@ final class AppModel: ObservableObject {
     }
     func clearError() { errorMessage = nil; errorDetail = nil }
     func refreshDependencies() { setupMessage = Core.setupMessage(paths: paths) }
+    // Folder names and historical libraries are read off the main actor. Only changed results are published.
     func refreshLectures() {
-        lectures = paths.lectures()
-        libraryLocations = Snapshot.isRunning ? [paths.transcripts] : AppPaths.libraryLocations(current: paths.transcripts,
-            previous: UserDefaults.standard.stringArray(forKey: "previousTranscriptLibraries") ?? [])
-        if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }
+        guard !lecturesRefreshing else { lecturesNeedRefresh = true; return }
+        lecturesRefreshing = true
+        let paths = paths
+        let previous = UserDefaults.standard.stringArray(forKey: "previousTranscriptLibraries") ?? []
+        let onlyCurrent = Snapshot.isRunning
+        Task {
+            let found = await Task.detached(priority: .utility) { () -> (lectures: [String], locations: [URL]) in
+                (paths.lectures(), onlyCurrent ? [paths.transcripts]
+                    : AppPaths.libraryLocations(current: paths.transcripts, previous: previous))
+            }.value
+            lecturesRefreshing = false
+            if lectures != found.lectures { lectures = found.lectures }
+            if libraryLocations != found.locations { libraryLocations = found.locations }
+            if let rememberedLecture, lectures.contains(rememberedLecture) { selectedLecture = rememberedLecture }
+            rememberedLecture = nil
+            if selectedLecture != "__new__", !lectures.contains(selectedLecture) { selectedLecture = lectures.first ?? "__new__" }
+            if lecturesNeedRefresh {
+                lecturesNeedRefresh = false
+                refreshLectures()
+            }
+        }
     }
     private func notify(_ title: String, path: String? = nil) {
         guard !Snapshot.isRunning else { return }
