@@ -337,6 +337,10 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
         private var scheduled = false
         private var needsScreenClamp = true
         private var attachmentGeneration = 0
+        // Base frames are kept in memory while they change and written once they settle.
+        private var unsavedMode: WorkspaceNavigation.Mode?
+        private var savedFrames: [WorkspaceNavigation.Mode: String] = [:]
+        private var saveTask: Task<Void, Never>?
         // AppKit calls Objective C delegate discovery on the main thread, but
         // NSObject declares these forwarding methods nonisolated.
         nonisolated(unsafe) private weak var originalDelegate: (any NSWindowDelegate)?
@@ -344,6 +348,7 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
         override func viewDidMoveToWindow() {
             super.viewDidMoveToWindow()
             guard attachedWindow !== window else { return }
+            flushFrame()
             if let attachedWindow, attachedWindow.delegate === self { attachedWindow.delegate = originalDelegate }
             NotificationCenter.default.removeObserver(self)
             NSWorkspace.shared.notificationCenter.removeObserver(self)
@@ -376,6 +381,10 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             guard request?.canClose() ?? true else { return false }
             return originalDelegate?.windowShouldClose?(sender) ?? true
         }
+        func windowWillClose(_ notification: Notification) {
+            flushFrame()
+            originalDelegate?.windowWillClose?(notification)
+        }
         func schedule() {
             // Animation completion reschedules anything received while updating.
             guard !scheduled, !updating else { return }
@@ -393,13 +402,35 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             let frame = NSRectFromString(value)
             return frame.width > 0 && frame.height > 0 ? frame : nil
         }
-        private func remember(_ frame: NSRect, mode: WorkspaceNavigation.Mode) {
+        // Updates the in-memory base frame. The preference is written after a quiet period, or at once when asked.
+        private func remember(_ frame: NSRect, mode: WorkspaceNavigation.Mode, immediately: Bool = false) {
             frames[mode] = frame
-            defaults?.set(NSStringFromRect(frame), forKey: "workspace.frame.\(mode.rawValue)")
+            unsavedMode = mode
+            saveTask?.cancel()
+            guard !immediately else { flushFrame(); return }
+            saveTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                self?.flushFrame()
+            }
+        }
+        // Writes the pending base frame, skipping the write when UserDefaults already holds that value.
+        private func flushFrame() {
+            saveTask?.cancel()
+            saveTask = nil
+            guard let mode = unsavedMode, let frame = frames[mode] else { return }
+            unsavedMode = nil
+            let key = "workspace.frame.\(mode.rawValue)"
+            let value = NSStringFromRect(frame)
+            guard (savedFrames[mode] ?? defaults?.string(forKey: key)) != value else { return }
+            savedFrames[mode] = value
+            defaults?.set(value, forKey: key)
         }
         @objc private func frameChanged(_ note: Notification) {
             guard !updating, let window, let request, previous != nil else { return }
-            if request.panel == nil, previous?.mode == request.mode, previous?.panel == nil { remember(window.frame, mode: request.mode) }
+            if request.panel == nil, previous?.mode == request.mode, previous?.panel == nil {
+                remember(window.frame, mode: request.mode, immediately: note.name == NSWindow.didEndLiveResizeNotification)
+            }
         }
         @objc private func screensChanged(_ note: Notification) {
             // These notifications can arrive inside AppKit's display/layout pass.
@@ -413,7 +444,7 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             let sizeChanged = previous?.homeSize != request.homeSize && request.mode == .home && request.panel == nil
             guard modeChanged || panelChanged || sizeChanged || needsScreenClamp else { return }
             needsScreenClamp = false
-            if let previous, previous.panel == nil { remember(window.frame, mode: previous.mode) }
+            if let previous, previous.panel == nil { remember(window.frame, mode: previous.mode, immediately: true) }
             var frame = window.frame
             if modeChanged {
                 frame = saved(request.mode) ?? window.frame
@@ -483,7 +514,7 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
                         : NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
                     if window.contentMaxSize != maximum { window.contentMaxSize = maximum }
                     if window.contentMinSize != minimum { window.contentMinSize = minimum }
-                    if completed.panel == nil { self.remember(window.frame, mode: completed.mode); self.baseBeforePanel = nil }
+                    if completed.panel == nil { self.remember(window.frame, mode: completed.mode, immediately: true); self.baseBeforePanel = nil }
                 }
             }
         }
