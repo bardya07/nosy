@@ -5,6 +5,9 @@ import AVFoundation
 // First-run setup: microphone, save folder, speech engine and model.
 @MainActor
 final class OnboardingModel: ObservableObject {
+    // Production setup shares this owner, so a transfer or copy keeps its handles when the overlay closes.
+    static let shared = OnboardingModel()
+
     enum Step: Int, CaseIterable { case welcome, microphone, folder, engine }
     @Published var step: Step = .welcome
     @Published var micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
@@ -14,6 +17,8 @@ final class OnboardingModel: ObservableObject {
     @Published var downloadDetail = ""
     @Published var downloadError: String?
     private var download: ModelDownload?
+    // The detached "Use downloaded model" copy. Only one operation runs at a time, so this and `download` never overlap.
+    private var installation: Task<Void, Error>?
 
     func requestMicrophone() async {
         if micStatus == .notDetermined { _ = await AVCaptureDevice.requestAccess(for: .audio) }
@@ -50,13 +55,17 @@ final class OnboardingModel: ObservableObject {
             }
         })
     }
-    // `downloading` clears when the completion arrives, after resume data is saved.
+    // Stops whichever operation is running. `downloading` clears when its cleanup completes,
+    // after resume data is saved or the partial copy is removed.
     func cancelDownload() {
+        guard downloading else { return }
         cancelling = true
         download?.cancel()
+        installation?.cancel()
     }
     // For networks that block the download: pick a ggml-large-v3-turbo.bin fetched elsewhere.
     func useDownloadedModel(paths: AppPaths) {
+        guard !downloading else { return }
         let panel = NSOpenPanel()
         panel.title = "Choose speech model file"
         panel.prompt = "Use This File"
@@ -65,57 +74,77 @@ final class OnboardingModel: ObservableObject {
         guard panel.runModal() == .OK, let url = panel.url else { return }
         downloading = true
         downloadDetail = "Copying model…"
+        let copy = Task.detached {
+            try paths.prepareSupport()
+            try SpeechModel.install(from: url, paths: paths)
+        }
+        installation = copy
         Task {
             do {
-                try await Task.detached {
-                    try paths.prepareSupport()
-                    try SpeechModel.install(from: url, paths: paths)
-                }.value
+                try await copy.value
                 downloadError = nil
+            } catch is CancellationError {
+                // Cancelled by the user or by leaving setup: nothing to report.
             } catch { downloadError = Core.friendlyError(error.localizedDescription) }
+            installation = nil
+            cancelling = false
             downloading = false
             downloadDetail = ""
             AppModel.shared.refreshDependencies()
         }
     }
 
-    func shutdown() async { download?.cancel() }
+    // Quit cancels both operations and waits until each one has cleaned up.
+    func shutdown() async {
+        installation?.cancel()
+        await download?.cancelAndWait()
+        _ = try? await installation?.value
+    }
 }
 
 struct OnboardingView: View {
     @ObservedObject var model: AppModel
-    @StateObject private var setup = OnboardingModel()
+    @ObservedObject private var setup: OnboardingModel
+    // Which page is showing belongs to this presentation, so each opening starts at the first page.
+    @State private var step: OnboardingModel.Step
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    init(model: AppModel, setup: OnboardingModel = OnboardingModel()) {
+    init(model: AppModel, setup: OnboardingModel = .shared) {
         self.model = model
-        _setup = StateObject(wrappedValue: setup)
+        _setup = ObservedObject(wrappedValue: setup)
+        // Previews pass their own owner with a step already chosen; the shared owner stays on the first page.
+        _step = State(initialValue: setup.step)
     }
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
-                ForEach(OnboardingModel.Step.allCases, id: \.self) { step in
-                    Capsule().fill(step.rawValue <= setup.step.rawValue ? Theme.accent : Theme.line)
-                        .frame(width: step == setup.step ? 22 : 8, height: 8)
+                ForEach(OnboardingModel.Step.allCases, id: \.self) { item in
+                    Capsule().fill(item.rawValue <= step.rawValue ? Theme.accent : Theme.line)
+                        .frame(width: item == step ? 22 : 8, height: 8)
                 }
             }
             .padding(.top, 34)
             .accessibilityElement()
-            .accessibilityLabel("Step \(setup.step.rawValue + 1) of \(OnboardingModel.Step.allCases.count)")
+            .accessibilityLabel("Step \(step.rawValue + 1) of \(OnboardingModel.Step.allCases.count)")
             ZStack {
-                content.id(setup.step).transition(.soft(reduceMotion))
+                content.id(step).transition(.soft(reduceMotion))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.horizontal, 36)
             footer
         }
         .frame(width: 520, height: 470)
-        .onDisappear { model.finishOnboardingWork = nil }
+        .onDisappear {
+            // Leaving setup stops a live download or copy. Partial bytes stay for the next visit.
+            setup.cancelDownload()
+            // Quit keeps awaiting the owner while that stop is still cleaning up.
+            if !setup.downloading { model.finishOnboardingWork = nil }
+        }
         .onAppear {
             if !Snapshot.isRunning {
                 setup.micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
-                model.finishOnboardingWork = { [weak setup = setup] in await setup?.shutdown() }
+                model.finishOnboardingWork = { [setup] in await setup.shutdown() }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
@@ -123,13 +152,13 @@ struct OnboardingView: View {
         }
         .background(WindowBackdrop())
         .tint(Theme.accentText)
-        .animation(Motion.state(reduceMotion), value: setup.step)
+        .animation(Motion.state(reduceMotion), value: step)
         .animation(Motion.state(reduceMotion), value: setup.downloading)
         .tipContainerBounds()
     }
 
     @ViewBuilder private var content: some View {
-        switch setup.step {
+        switch step {
         case .welcome:
             page(title: "Meet Nosy", body: "Recording and transcription stay on your Mac. Optional summaries use the provider you choose.") {
                 NosyMark(size: 72)
@@ -205,20 +234,20 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack {
-            if setup.step != .welcome {
-                Button("Back") { setup.step = OnboardingModel.Step(rawValue: setup.step.rawValue - 1) ?? .welcome }
+            if step != .welcome {
+                Button("Back") { step = OnboardingModel.Step(rawValue: step.rawValue - 1) ?? .welcome }
                     .buttonStyle(PillButtonStyle(kind: .quiet, height: 38, fullWidth: false))
                     .tip("Previous step")
                     .keyboardShortcut(.cancelAction)
             }
             Spacer()
-            if setup.step == .engine, model.setupMessage != nil {
+            if step == .engine, model.setupMessage != nil {
                 Button("Skip for now") { model.finishOnboarding(); model.workspace.dismissPanel() }
                     .buttonStyle(LinkButtonStyle(tint: Theme.muted)).tip("Skip setup step")
             }
-            Button(setup.step == .engine ? "Start using Nosy" : "Continue") {
-                if let next = OnboardingModel.Step(rawValue: setup.step.rawValue + 1) {
-                    setup.step = next
+            Button(step == .engine ? "Start using Nosy" : "Continue") {
+                if let next = OnboardingModel.Step(rawValue: step.rawValue + 1) {
+                    step = next
                     if next == .engine { model.refreshDependencies() }
                 } else {
                     model.finishOnboarding()
@@ -226,14 +255,14 @@ struct OnboardingView: View {
                 }
             }
             .buttonStyle(PillButtonStyle(kind: .primary, height: 38, fullWidth: false))
-            .tip(setup.step == .engine ? "Finish setup" : "Continue setup")
+            .tip(step == .engine ? "Finish setup" : "Continue setup")
             .keyboardShortcut(.defaultAction)
             .disabled(continueDisabled)
         }
         .padding(.horizontal, 28).padding(.bottom, 24)
     }
     private var continueDisabled: Bool {
-        switch setup.step {
+        switch step {
         case .engine: model.setupMessage != nil
         default: false
         }
