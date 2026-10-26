@@ -187,12 +187,17 @@ private struct SummaryModelField: View {
 }
 
 // The pasted key goes straight to the Keychain; Settings only ever shows its last four characters.
+// Keychain calls run detached, so a slow Keychain never freezes the settings window.
 private struct SummaryKeyField: View {
     let provider: SummaryProvider
     @ObservedObject var summaries: SummaryCenter
     @State private var draft = ""
     @State private var saved: String?
     @State private var failure: String?
+    @State private var busy = false
+    // Every Keychain call takes a new generation. A result from an older call is never published.
+    @State private var generation = 0
+    @State private var operation: Task<Void, Never>?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -204,6 +209,7 @@ private struct SummaryKeyField: View {
                     Spacer(minLength: 0)
                     Button("Remove key") { remove() }
                         .buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+                        .disabled(busy)
                         .tip("Delete the key from Keychain")
                 } else {
                     SecureField("", text: $draft, prompt: Text("Paste your \(provider.title)").foregroundStyle(Theme.faint))
@@ -212,7 +218,7 @@ private struct SummaryKeyField: View {
                         .accessibilityLabel(provider.title)
                     Button("Save") { save() }
                         .buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
-                        .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(busy || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         .tip("Save to Keychain")
                 }
             }
@@ -222,29 +228,73 @@ private struct SummaryKeyField: View {
                 .lineLimit(1).truncationMode(.tail)
                 .tip(failure ?? "Key storage")
         }
-        .onAppear(perform: load)
+        .task(id: provider) { await load() }
+        .onDisappear { operation?.cancel() }
     }
-    private func load() {
+    private func load() async {
         if Snapshot.isRunning { saved = summaries.previewKeyTail; return }
-        do { saved = try summaries.keychain.read(account: provider.rawValue).map(SummaryKeychain.masked) }
-        catch { failure = SummaryError.short(error.localizedDescription) }
+        let keychain = summaries.keychain
+        let account = provider.rawValue
+        let token = begin()
+        let result = await Task.detached(priority: .userInitiated) { () -> Result<String?, Error> in
+            Result { try keychain.read(account: account) }
+        }.value
+        guard token == generation else { return }
+        busy = false
+        guard !Task.isCancelled else { return }
+        switch result {
+        case .success(let key): saved = key.map(SummaryKeychain.masked)
+        case .failure(let error): failure = SummaryError.short(error.localizedDescription)
+        }
     }
     private func save() {
         let key = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty, !Snapshot.isRunning else { return }
-        do {
-            try summaries.keychain.save(key, account: provider.rawValue)
-            draft = ""
-            failure = nil
-            saved = SummaryKeychain.masked(key)
-        } catch { failure = SummaryError.short(error.localizedDescription) }
+        guard !key.isEmpty, !busy, !Snapshot.isRunning else { return }
+        let keychain = summaries.keychain
+        let account = provider.rawValue
+        let token = begin()
+        operation = Task {
+            let result = await Task.detached(priority: .userInitiated) { () -> Result<Void, Error> in
+                Result { try keychain.save(key, account: account) }
+            }.value
+            guard token == generation else { return }
+            busy = false
+            guard !Task.isCancelled else { return }
+            switch result {
+            case .success:
+                draft = ""
+                failure = nil
+                saved = SummaryKeychain.masked(key)
+            case .failure(let error):
+                failure = SummaryError.short(error.localizedDescription)
+            }
+        }
     }
     private func remove() {
-        guard !Snapshot.isRunning else { return }
-        do {
-            try summaries.keychain.delete(account: provider.rawValue)
-            saved = nil
-            failure = nil
-        } catch { failure = SummaryError.short(error.localizedDescription) }
+        guard !busy, !Snapshot.isRunning else { return }
+        let keychain = summaries.keychain
+        let account = provider.rawValue
+        let token = begin()
+        operation = Task {
+            let result = await Task.detached(priority: .userInitiated) { () -> Result<Void, Error> in
+                Result { try keychain.delete(account: account) }
+            }.value
+            guard token == generation else { return }
+            busy = false
+            guard !Task.isCancelled else { return }
+            switch result {
+            case .success:
+                saved = nil
+                failure = nil
+            case .failure(let error):
+                failure = SummaryError.short(error.localizedDescription)
+            }
+        }
+    }
+    // Marks the field busy until the Keychain call started here returns.
+    private func begin() -> Int {
+        generation += 1
+        busy = true
+        return generation
     }
 }
