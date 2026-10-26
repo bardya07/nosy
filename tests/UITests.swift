@@ -35,19 +35,19 @@ enum UITests {
         func check(_ condition: Bool, _ message: String) { expect(condition, message) }
         let library = TranscriptLibrary()
         library.didChange = { old, new in model.transcriptChanged(from: old, to: new) }
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         library.select(first)
         check(library.selected != nil, "Selection must resolve before editing")
         library.beginEditing(paths: paths)
         check(library.editing, "Editing must begin")
         library.draft = speech + "Edited."
         library.chooseDraftAction = { .cancel }
-        library.open(second, paths: paths)
+        await library.open(second, paths: paths)
         check(library.selection == first && library.editing && library.draft.hasSuffix("Edited."), "External Open must retain a cancelled dirty draft")
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(library.editing && library.draft.hasSuffix("Edited."), "Activation reload must retain dirty text")
         library.chooseDraftAction = { .save }
-        library.open(second, paths: paths)
+        await library.open(second, paths: paths)
         check(library.selection == second && !library.editing, "Save then navigate")
         check(try String(contentsOf: first, encoding: .utf8) == speech + "Edited.", "Save targets the original draft file")
         library.beginEditing(paths: paths)
@@ -59,10 +59,10 @@ enum UITests {
         library.draft = speech + "Keep this in the original folder"
         library.chooseDraftAction = { .cancel }
         let other = AppPaths(environment: ["NOSY_SUPPORT_DIR": paths.support.path, "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("other").path])
-        library.reload(paths: other)
+        await library.reload(paths: other)
         check(library.selection == first && library.editing, "Folder changes must guard dirty edits")
         library.chooseDraftAction = { .save }
-        library.reload(paths: other)
+        await library.reload(paths: other)
         check(try String(contentsOf: first, encoding: .utf8) == speech + "Keep this in the original folder", "Folder changes save to captured paths")
         model.selectedLecture = "MBB322"
         check(model.vocabularySubject == "Biology", "Ready resolves the configured subject")
@@ -126,7 +126,7 @@ enum UITests {
         check(model.inputName == "MacBook Pro Microphone", "Idle mic has no routing or dB suffix")
 
         let sharedModel = AppModel.shared
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         _ = library.select(first)
         library.beginEditing(paths: paths)
         library.draft = speech + "Unsaved before quit."
@@ -154,7 +154,7 @@ enum UITests {
         let hiddenTranscript = hiddenFolder.appendingPathComponent(".Session.md")
         try (speech + "Hidden draft remains discoverable").write(to: hiddenTranscript, atomically: true, encoding: .utf8)
         check(paths.lectures().contains(".Private"), "existing hidden transcript folders remain in the save folder list")
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(library.items.contains(where: { $0.url == hiddenTranscript }), "existing hidden transcripts remain discoverable")
 
         check(!AudioInputs.isUserVisible(.init(id: "proxy", name: "CADefaultDeviceAggregate-45310-0")), "Hide the private CoreAudio proxy")
@@ -186,7 +186,7 @@ enum UITests {
         var record = SessionRecord(id: "test", lecture: "MBB322", session: "First", startedAt: Date(), status: .done,
                                    transcriptPath: first.path, vocabularyTerms: ["ATP"])
         model.current = record
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         library.select(first)
         _ = library.save(speech, to: first, paths: paths)
         check(model.savedSummary.words == 3 && model.savedSummary.vocabHits == 1, "Edits refresh Saved words, copy text and hits")

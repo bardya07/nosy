@@ -7,9 +7,9 @@ import Foundation
 @main
 @MainActor
 enum TranscriptsSettingsTests {
-    static func main() {
+    static func main() async {
         do {
-            try run()
+            try await run()
             print("TRANSCRIPTS SETTINGS TESTS PASS: folder Delete key and suppression, level estimate, reminder interval, connection copy")
         } catch {
             FileHandle.standardError.write(Data("TRANSCRIPTS SETTINGS TEST FAILED: \(error)\n".utf8))
@@ -38,7 +38,7 @@ enum TranscriptsSettingsTests {
         try text.write(to: folder.appendingPathComponent("\(name).md"), atomically: true, encoding: .utf8)
     }
 
-    static func run() throws {
+    static func run() async throws {
         let minus = "\u{2212}"
         let suite = "nosy-round8-tests-\(UUID().uuidString)"
         let defaults = try require(UserDefaults(suiteName: suite), "a throwaway defaults suite")
@@ -73,17 +73,17 @@ enum TranscriptsSettingsTests {
         let chemURL = chem.appendingPathComponent("2026-10-21.md")
 
         let library = TranscriptLibrary()
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(library.focusedFolder == nil, "no folder has keyboard focus when the library opens")
         library.focusFolder("MBB322")
         check(library.focusedFolder == "MBB322", "a folder row takes keyboard focus")
         check(library.select(chemURL), "choosing a transcript succeeds")
         check(library.focusedFolder == nil, "choosing a transcript hands the keys back to the transcript")
         library.focusFolder("MBB322")
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(library.focusedFolder == "MBB322", "a reload keeps the focused folder while it still has transcripts")
         try FileManager.default.removeItem(at: mbb)
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(library.focusedFolder == nil, "a folder that left the library loses its focus")
 
         // The live level: an everyday estimate with a band, or the technical dBFS value.

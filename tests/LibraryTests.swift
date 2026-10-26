@@ -5,9 +5,9 @@ import Foundation
 @main
 @MainActor
 enum LibraryTests {
-    static func main() {
+    static func main() async {
         do {
-            try run()
+            try await run()
             print("LIBRARY TESTS PASS: onboarding steps, folder tree and Trash, search, remembered folders, no-speech reader")
         } catch {
             FileHandle.standardError.write(Data("LIBRARY TEST FAILED: \(error)\n".utf8))
@@ -22,7 +22,7 @@ enum LibraryTests {
         }
     }
 
-    static func run() throws {
+    static func run() async throws {
         check(OnboardingModel.Step.allCases.count == 4 && OnboardingModel.Step.allCases.last == .engine,
               "onboarding has four steps and the speech engine is last")
 
@@ -74,15 +74,15 @@ enum LibraryTests {
         try "# STATUS\n".write(to: paths.transcripts.appendingPathComponent("STATUS.md"), atomically: true, encoding: .utf8)
 
         let library = TranscriptLibrary()
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(Set(library.items.map(\.url)) == [newest, older, chemistry], "only Nosy transcripts are listed, never other markdown")
-        check(!library.grouped.map(\.lecture).contains("Hamstr stuff"), "a folder without transcripts gets no group")
+        check(!library.groups.map(\.lecture).contains("Hamstr stuff"), "a folder without transcripts gets no group")
         let outside = root.appendingPathComponent("outside")
         try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
         try String(contentsOf: newest, encoding: .utf8).write(to: outside.appendingPathComponent("Owner.md"), atomically: true, encoding: .utf8)
         try FileManager.default.createSymbolicLink(at: paths.lectureFolder("Outside"), withDestinationURL: outside)
         try FileManager.default.createSymbolicLink(at: mbb.appendingPathComponent("Outside.md"), withDestinationURL: outside.appendingPathComponent("Owner.md"))
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         check(!library.items.contains { $0.session == "Owner" || $0.session == "Outside" }, "outside symlinks are not listed")
         check(!paths.lectures().contains("Outside"), "outside symlinks are not offered as save folders")
         var refused = false
@@ -148,7 +148,8 @@ enum LibraryTests {
         library.toggleFolder("CHEM281")
         check(!library.isOpen("MBB322") && library.isOpen("CHEM281"), "setup: MBB322 closed and CHEM281 open before searching")
         library.query = "ATP"
-        check(library.isOpen("MBB322") && library.grouped.map { $0.lecture } == ["MBB322"],
+        await library.waitForResults()
+        check(library.isOpen("MBB322") && library.groups.map { $0.lecture } == ["MBB322"],
               "search opens the folder with matches and hides folders without them")
         check(library.visibleRows.map(\.url) == [newest], "search shows only matching sessions")
         library.toggleFolder("MBB322")
@@ -163,14 +164,14 @@ enum LibraryTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let first = TranscriptLibrary()
         first.restoreFolders(from: defaults)
-        first.reload(paths: paths)
+        await first.reload(paths: paths)
         first.toggleFolder("CHEM281")
         let relaunched = TranscriptLibrary()
         relaunched.restoreFolders(from: defaults)
-        relaunched.reload(paths: paths)
+        await relaunched.reload(paths: paths)
         check(relaunched.isOpen("CHEM281") && relaunched.isOpen("MBB322"), "open folders are remembered across launches")
         let unsaved = TranscriptLibrary()
-        unsaved.reload(paths: paths)
+        await unsaved.reload(paths: paths)
         check(unsaved.isOpen("MBB322") && !unsaved.isOpen("CHEM281"), "a window without storage keeps folder state in memory only")
 
         // Silent transcripts read as a clean line, not raw Markdown.
@@ -185,7 +186,7 @@ enum LibraryTests {
         let onDisk = try String(contentsOf: newest, encoding: .utf8)
         check(onDisk.contains("ATP drives work."), "reading never rewrites transcripts")
         library.query = ""
-        library.reload(paths: paths)
+        await library.reload(paths: paths)
         let item = try require(library.items.first(where: { $0.url == newest }), "rename fixture")
         let summary = SummaryFiles.document(body: "## Notes\nUseful notes.", transcript: newest, provider: .ollama)
         try SummaryFiles.save(summary, for: newest, expectedText: onDisk)
@@ -217,7 +218,7 @@ enum LibraryTests {
             .write(to: keptTranscript, atomically: true, encoding: .utf8)
         let trashPaths = paths.browsingLibrary(at: trashLibraryRoot)
         let trashLibrary = TranscriptLibrary()
-        trashLibrary.reload(paths: trashPaths)
+        await trashLibrary.reload(paths: trashPaths)
         check(trashLibrary.select(removedTranscript), "folder Trash fixture selects the folder being removed")
         let movedFolder = testTrash.appendingPathComponent("Remove", isDirectory: true)
         try LectureFolderTrash.move("Remove", paths: trashPaths) { folder in
@@ -227,7 +228,7 @@ enum LibraryTests {
         check(!FileManager.default.fileExists(atPath: removeFolder.path)
               && FileManager.default.fileExists(atPath: movedFolder.appendingPathComponent("2026-10-24.md").path)
               && FileManager.default.fileExists(atPath: keepFolder.path), "only the requested folder and its transcript moved")
-        check(trashLibrary.grouped.map(\.lecture) == ["Keep"] && trashLibrary.selection == keptTranscript
+        check(trashLibrary.groups.map(\.lecture) == ["Keep"] && trashLibrary.selection == keptTranscript
               && trashLibrary.selectedFolder == "Keep", "folder removal refreshes the tree and selects a remaining transcript")
 
         let outsideFolder = root.appendingPathComponent("outside-library", isDirectory: true)
