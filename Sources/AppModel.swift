@@ -231,6 +231,8 @@ final class AppModel: ObservableObject {
                     return recovered
                 }.value
             } catch { showError(error.localizedDescription) }
+            // Recovery and retention can finalize or remove audio after Library's first read.
+            libraryRevision += 1
             transitioning = false
         }
     }
