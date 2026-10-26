@@ -117,6 +117,8 @@ enum Transcriber {
         record.vocabularyTerms = Array(Set(userTerms)).sorted()
         let smart = settings.isEnabled && resolvedSubjects.contains { $0 != "general" }
         let flags = ProcessInfo.processInfo.environment["NOSY_VOCAB_STAGES"].map { Set($0.split(separator: ",").map(String.init)) }
+        // Quit cancels the job, not this detached task, so every long audio pass polls the job itself.
+        let checkCancellation: () throws -> Void = { try job.checkCancellation() }
         do {
             try job.checkCancellation()
             try paths.validateLectureFolder(record.lecture)
@@ -126,7 +128,7 @@ enum Transcriber {
             record.error = nil
             record.endedAt = record.endedAt ?? Date()
             try record.save(in: paths)
-            let wav = try AudioFiles.decodeToWAV(id: record.id, paths: paths)
+            let wav = try AudioFiles.decodeToWAV(id: record.id, paths: paths, checkCancellation: checkCancellation)
             guard Core.fileSize(wav) != 44 else { throw LectureError.message(Core.emptyRecordingMessage) } // Header only.
             if let warning = paths.dependencyWarning { throw LectureError.message(warning) }
             guard let executable = paths.whisper else { throw LectureError.message(Core.missingEngineMessage) }
@@ -141,7 +143,10 @@ enum Transcriber {
                 try? FileManager.default.removeItem(at: jsonURL)
                 try? FileManager.default.removeItem(at: louderURL)
             }
-            let input = (try? AudioFiles.boosted(wav, to: louderURL)) ?? wav
+            let input: URL
+            do { input = try AudioFiles.boosted(wav, to: louderURL, checkCancellation: checkCancellation) ?? wav }
+            catch is CancellationError { throw CancellationError() }
+            catch { input = wav }
             guard FileManager.default.createFile(atPath: stderrURL.path, contents: nil) else {
                 throw LectureError.message("Could not create transcription log file.")
             }
@@ -209,10 +214,15 @@ enum Transcriber {
             record.status = .done
             record.transcribedAt = Date()
             try record.save(in: paths)
+            // The transcript is already committed: cancellation here leaves it .done and stops the optional work.
             if UserDefaults.standard.object(forKey: "compressAudio") as? Bool ?? true {
-                try? AudioFiles.compress(id: record.id, paths: paths)
+                do { try AudioFiles.compress(id: record.id, paths: paths, checkCancellation: checkCancellation) }
+                catch is CancellationError { throw CancellationError() }
+                catch { /* Compression is optional; the WAV is kept when it fails. */ }
             }
-            try? Core.applyRetention(paths: paths)
+            do { try Core.applyRetention(paths: paths, checkCancellation: checkCancellation) }
+            catch is CancellationError { throw CancellationError() }
+            catch { /* Retention is best effort; the next launch tries again. */ }
             progress(1)
             return record
         } catch {
