@@ -42,33 +42,37 @@ struct WorkspaceView: View {
     var body: some View {
         VStack(spacing: 0) {
             WorkspaceTitlebar(model: model, managesWindowChrome: true)
-            MainView(model: model, embedded: true)
-                .background(GeometryReader { geometry in
-                    Color.clear.preference(key: HomeHeightKey.self, value: geometry.size.height)
-                })
-                .opacity(navigation.mode == .home ? 1 : 0)
-                .allowsHitTesting(navigation.mode == .home && navigation.panel == nil)
-                .accessibilityHidden(navigation.mode != .home || navigation.panel != nil)
-                .disabled(navigation.mode != .home || navigation.panel != nil)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .overlay {
-                    VStack(spacing: 0) {
-                        (previewLibrary ?? LibraryView(model: model))
-                        if model.recording { LibraryRecordingBar(model: model) }
-                    }
-                    .opacity(navigation.mode == .library ? 1 : 0)
-                    .allowsHitTesting(navigation.mode == .library && navigation.panel == nil)
-                    .accessibilityHidden(navigation.mode != .library || navigation.panel != nil)
-                    .disabled(navigation.mode != .library || navigation.panel != nil)
+            // Home keeps its natural height for the window; a screen too short for it scrolls instead of clipping.
+            ScrollView {
+                MainView(model: model, embedded: true)
+                    .background(GeometryReader { geometry in
+                        Color.clear.preference(key: HomeHeightKey.self, value: geometry.size.height)
+                    })
+                    .opacity(navigation.mode == .home ? 1 : 0)
+                    .allowsHitTesting(navigation.mode == .home && navigation.panel == nil)
+                    .accessibilityHidden(navigation.mode != .home || navigation.panel != nil)
+                    .disabled(navigation.mode != .home || navigation.panel != nil)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .overlay {
+                VStack(spacing: 0) {
+                    (previewLibrary ?? LibraryView(model: model))
+                    if model.recording { LibraryRecordingBar(model: model) }
                 }
-                .overlay {
-                    if let panel = navigation.panel {
-                        panelOverlay(panel)
-                            .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
-                            .zIndex(10)
-                    }
+                .opacity(navigation.mode == .library ? 1 : 0)
+                .allowsHitTesting(navigation.mode == .library && navigation.panel == nil)
+                .accessibilityHidden(navigation.mode != .library || navigation.panel != nil)
+                .disabled(navigation.mode != .library || navigation.panel != nil)
+            }
+            .overlay {
+                if let panel = navigation.panel {
+                    panelOverlay(panel)
+                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
+                        .zIndex(10)
                 }
-                .clipped()
+            }
+            .clipped()
         }
         // The native frame controller consumes homeHeight. Never also publish it
         // as an animated ideal size: NSHostingView can resize during windowDidLayout.
