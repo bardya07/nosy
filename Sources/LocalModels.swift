@@ -111,13 +111,14 @@ final class LocalModelStore: ObservableObject {
     @Published private(set) var states: [String: State] = [:]
     @Published private(set) var diskBytes: Int64 = 0
     // Partial-download bytes per model. Kept current by the progress tick, so views never touch the disk.
-    private var partialSizes: [String: Int64] = [:]
+    @Published private var partialSizes: [String: Int64] = [:]
     private var tasks: [String: Task<Void, Never>] = [:]
     private var jobs: [String: TranscriptionJob] = [:]
     // Full scans: one in flight at a time, at most one start per second, and only the latest result publishes.
     private var diskScan: Task<Void, Never>?
     private var diskScanRequested = false
     private var diskScanGeneration = 0
+    private var nextDiskScan: ContinuousClock.Instant?
     var hasDownloads: Bool { !tasks.isEmpty }
 
     init(root: URL = AppPaths().support.appendingPathComponent("models/llm", isDirectory: true)) {
@@ -154,19 +155,29 @@ final class LocalModelStore: ObservableObject {
         let partialNames = Dictionary(uniqueKeysWithValues: LocalModel.all.map { (partial($0).lastPathComponent, $0.id) })
         diskScan = Task { [self] in
             while diskScanRequested {
+                if let nextDiskScan, ContinuousClock.now < nextDiskScan {
+                    try? await Task.sleep(until: nextDiskScan, clock: .continuous)
+                }
                 diskScanRequested = false
                 let generation = diskScanGeneration
-                let started = ContinuousClock.now
+                nextDiskScan = ContinuousClock.now.advanced(by: .seconds(1))
                 let root = self.root
                 let scan = await Task.detached(priority: .utility) {
                     LocalModelStore.scanDisk(root, partialNames: partialNames)
                 }.value
                 if generation == diskScanGeneration {
-                    partialSizes = scan.partials
-                    if scan.total != diskBytes { diskBytes = scan.total }
+                    var partials = scan.partials
+                    var total = scan.total
+                    // Progress can advance while the full scan runs. Keep its newest partial
+                    // readings and adjust the scan's total by the same delta.
+                    for id in tasks.keys {
+                        guard let latest = partialSizes[id] else { continue }
+                        total += latest - (partials[id] ?? 0)
+                        partials[id] = latest
+                    }
+                    if partialSizes != partials { partialSizes = partials }
+                    if total != diskBytes { diskBytes = max(0, total) }
                 }
-                let remaining = Duration.seconds(1) - started.duration(to: ContinuousClock.now)
-                if diskScanRequested, remaining > .zero { try? await Task.sleep(for: remaining) }
             }
             diskScan = nil
         }

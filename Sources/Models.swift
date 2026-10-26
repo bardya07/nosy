@@ -43,6 +43,7 @@ enum SpeechModel {
         defer { try? file.close() }
         try file.synchronize()
         try file.close()
+        try Task.checkCancellation()
         let result = temporary.path.withCString { from in target.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
     }
@@ -79,6 +80,7 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     private var mainInstalled = false
     private var cancelling = false
     private var waiters: [CheckedContinuation<Void, Never>] = []
+    private var finishing: Result<Void, Error>?
 
     init(paths: AppPaths) {
         self.paths = paths
@@ -88,7 +90,7 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     func start(progress: @escaping @Sendable (_ fraction: Double, _ received: Int64, _ total: Int64) -> Void,
                completion: @escaping @Sendable (Result<Void, Error>) -> Void) {
         control.async {
-            guard self.task == nil else {
+            guard self.session == nil else {
                 completion(.failure(LectureError.message("A speech model download is already running.")))
                 return
             }
@@ -117,7 +119,7 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     func cancelAndWait() async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             control.async {
-                guard self.task != nil else {
+                guard self.session != nil else {
                     continuation.resume()
                     return
                 }
@@ -186,14 +188,22 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
     }
 
     private func finish(_ result: Result<Void, Error>) {
-        let callback = completion
-        completion = nil
+        guard finishing == nil else { return }
+        finishing = result
         progress = nil
         task = nil
+        // URLSession retains its delegate until invalidation finishes. Quit and setup's busy state
+        // wait for that callback, rather than only for the request to invalidate the session.
         session?.finishTasksAndInvalidate()
-        session = nil
+    }
+
+    func urlSession(_ session: URLSession, didBecomeInvalidWithError error: Error?) {
+        guard self.session === session, let result = finishing else { return }
+        self.session = nil
+        finishing = nil
+        let callback = completion
+        completion = nil
         callback?(result)
-        // Cancel waiters resume only after the task and session above are gone.
         let finished = waiters
         waiters = []
         finished.forEach { $0.resume() }
