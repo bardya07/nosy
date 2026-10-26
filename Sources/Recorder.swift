@@ -15,10 +15,12 @@ enum RecorderEvent: Sendable {
     case failed(String, bytes: Int64)
 }
 
-// The control queue owns engine lifecycle. The lock protects converter/file state
-// shared with the real-time tap; no tap callback accesses UI or MainActor state.
+// The control queue owns engine lifecycle. The lock protects converter and counter state
+// shared with the real-time tap; the writer queue alone performs disk I/O. No tap callback
+// accesses UI or MainActor state, and no tap callback waits for the writer.
 final class Recorder: @unchecked Sendable {
     private let control = DispatchQueue(label: "com.bardya.nosy.recorder", qos: .userInitiated)
+    private let writer = DispatchQueue(label: "com.bardya.nosy.recorder.writer", qos: .userInitiated)
     private let lock = NSLock()
     private let inputUID: String?
     private var source: RecordingSource // Protected by lock when accessed by audio callbacks.
@@ -44,12 +46,15 @@ final class Recorder: @unchecked Sendable {
     private var monoFormat: AVAudioFormat?
     private var micRate: Double = 0 // Format the mic converters were built for; protected by lock.
     private var micChannels: AVAudioChannelCount = 0
-    private var file: FileHandle?
-    private var bytes: Int64 = 0
+    private var file: FileHandle? // Writer queue only.
+    private var lastSync: TimeInterval = 0 // Writer queue only.
+    private static let maxPendingBytes = 64_000 // Two seconds of 16 kHz mono PCM.
+    private var pendingBytes = 0 // Protected by lock; accepted PCM not yet written.
+    private var queuedBytes: Int64 = 0 // Protected by lock; accepted PCM, the clock for silence detection.
+    private var bytes: Int64 = 0 // Protected by lock; saved PCM, published by the writer after each write.
     private var accepting = false
     private var paused = false
     private var failed = false
-    private var lastSync: TimeInterval = 0
     private var lastMeter: TimeInterval = 0
     private var silenceStart: Int64?
     private var silenceWarned = false
@@ -65,7 +70,8 @@ final class Recorder: @unchecked Sendable {
     func start(at url: URL) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             control.async {
-                guard self.file == nil else {
+                self.lock.lock(); let running = self.accepting; self.lock.unlock()
+                guard !running else {
                     continuation.resume(throwing: LectureError.message("A recording is already running."))
                     return
                 }
@@ -77,18 +83,22 @@ final class Recorder: @unchecked Sendable {
                     }
                     let handle = try FileHandle(forWritingTo: url)
                     self.lock.lock()
-                    self.file = handle
                     self.bytes = 0
+                    self.queuedBytes = 0
                     self.failed = false
                     self.accepting = true
                     self.paused = false
-                    self.lastSync = ProcessInfo.processInfo.systemUptime
                     self.lastMeter = 0
                     self.silenceStart = nil
                     self.silenceWarned = false
                     self.lastBuffer = Date.timeIntervalSinceReferenceDate
                     self.stalled = false
                     self.lock.unlock()
+                    // The writer takes ownership before any source can deliver audio.
+                    self.writer.sync {
+                        self.file = handle
+                        self.lastSync = ProcessInfo.processInfo.systemUptime
+                    }
                     try self.startSources()
                     self.startStallTimer()
                     continuation.resume()
@@ -352,7 +362,7 @@ final class Recorder: @unchecked Sendable {
         lock.lock()
         guard accepting, !failed else { lock.unlock(); return }
         lastBuffer = Date.timeIntervalSinceReferenceDate
-        guard !paused, file != nil else { lock.unlock(); return }
+        guard !paused else { lock.unlock(); return }
         if Self.micFormatChanged(rate: micRate, channels: micChannels, to: input.format) {
             do { try configureMicLocked(input.format) }
             catch { lock.unlock(); scheduleFailure(error.localizedDescription); return }
@@ -395,33 +405,59 @@ final class Recorder: @unchecked Sendable {
         guard frameCount > 0, let samples = output.int16ChannelData?[0] else { lock.unlock(); return }
         writeLocked(samples, frameCount: frameCount)
     }
-    // Always releases lock, including failures. All sources use the existing PCM writer.
+    // Caller holds lock; always releases it, including failures. The tap never touches the file: it
+    // copies the samples, updates bounded counters and queues the copy for the writer. Queuing stays
+    // under the lock so writes keep capture order and stop's close follows every accepted buffer.
+    // dispatch_async never waits, so the tap still never waits on disk.
     private func writeLocked(_ samples: UnsafePointer<Int16>, frameCount: Int) {
-        guard let file else { lock.unlock(); return }
+        let payloadBytes = frameCount * 2
+        guard pendingBytes + payloadBytes <= Self.maxPendingBytes else {
+            lock.unlock(); scheduleFailure("Could not save recording audio: the disk fell too far behind."); return
+        }
         var sum = 0.0
         for index in 0..<frameCount { let value = Double(samples[index]) / 32768; sum += value * value }
         let db = max(-160, 20 * log10(max(1e-8, sqrt(sum / Double(frameCount)))))
+        queuedBytes += Int64(payloadBytes)
+        var notifySilence = false
+        if source == .mic && db < -50 {
+            if silenceStart == nil { silenceStart = queuedBytes - Int64(payloadBytes) }
+            if !silenceWarned, let start = silenceStart, Core.duration(pcmBytes: queuedBytes - start) >= 60 {
+                silenceWarned = true; notifySilence = true
+            }
+        } else { silenceStart = nil; silenceWarned = false }
+        let uptime = ProcessInfo.processInfo.systemUptime
+        let meter = uptime - lastMeter >= 0.1
+        if meter { lastMeter = uptime }
+        let silent = silenceWarned
+        pendingBytes += payloadBytes
+        let payload = Data(bytes: samples, count: payloadBytes)
+        let meterDB: Double? = meter ? db : nil
+        let silenceNotice = notifySilence
+        writer.async {
+            self.commitWrite(payload, meterDB: meterDB, silent: silent, notifySilence: silenceNotice)
+        }
+        lock.unlock()
+    }
+    // Writer queue only. Saved bytes and meter or silence events are published after each successful write.
+    private func commitWrite(_ payload: Data, meterDB: Double?, silent: Bool, notifySilence: Bool) {
+        guard let file else {
+            lock.lock(); pendingBytes -= payload.count; lock.unlock()
+            return
+        }
         do {
-            try file.write(contentsOf: Data(bytes: samples, count: frameCount * 2))
-            bytes += Int64(frameCount * 2)
+            try file.write(contentsOf: payload)
+            lock.lock()
+            bytes += Int64(payload.count)
+            pendingBytes -= payload.count
+            let count = bytes
+            lock.unlock()
             let uptime = ProcessInfo.processInfo.systemUptime
             if uptime - lastSync >= 5 { try file.synchronize(); lastSync = uptime }
-            var notifySilence = false
-            if source == .mic && db < -50 {
-                if silenceStart == nil { silenceStart = bytes - Int64(frameCount * 2) }
-                if !silenceWarned, let start = silenceStart, Core.duration(pcmBytes: bytes - start) >= 60 {
-                    silenceWarned = true; notifySilence = true
-                }
-            } else { silenceStart = nil; silenceWarned = false }
-            let meter = uptime - lastMeter >= 0.1
-            if meter { lastMeter = uptime }
-            let count = bytes
-            let silent = silenceWarned
-            lock.unlock()
-            if meter { onEvent(.level(bytes: count, db: db, silent: silent)) }
+            if let meterDB { onEvent(.level(bytes: count, db: meterDB, silent: silent)) }
             if notifySilence { onEvent(.silence) }
         } catch {
-            lock.unlock(); scheduleFailure("Could not save recording audio: \(error.localizedDescription)")
+            lock.lock(); pendingBytes -= payload.count; lock.unlock()
+            scheduleFailure("Could not save recording audio: \(error.localizedDescription)")
         }
     }
     private func scheduleFailure(_ message: String) {
@@ -442,7 +478,8 @@ final class Recorder: @unchecked Sendable {
         do { try installTapAndStart(engine) }
         catch { scheduleFailure("Microphone changed and could not restart: \(error.localizedDescription)") }
     }
-    func byteCount() -> Int64 { lock.lock(); defer { lock.unlock() }; return bytes }
+    // Waits for queued writes, so the count matches audio that is saved. Never called from the writer or the tap.
+    func byteCount() -> Int64 { writer.sync {}; lock.lock(); defer { lock.unlock() }; return bytes }
 
     func switchSource(_ source: RecordingSource, inputUID: String?) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
@@ -559,16 +596,19 @@ final class Recorder: @unchecked Sendable {
         stopSources()
         // Drain the 200 ms jitter window before closing; no recorded tail is lost.
         renderMacAudio(flush: true)
-        lock.lock(); defer { lock.unlock() }
+        lock.lock()
         accepting = false
         converter = nil
         mixer = nil
-        if let file {
-            self.file = nil
-            defer { try? file.close() }
-            try file.synchronize()
-            try file.close()
+        lock.unlock()
+        // The writer is serial, so this runs after every accepted buffer, then synchronizes and closes.
+        try writer.sync {
+            guard let handle = file else { return }
+            file = nil
+            defer { try? handle.close() }
+            try handle.synchronize()
+            try handle.close()
         }
-        return bytes
+        return byteCount()
     }
 }
