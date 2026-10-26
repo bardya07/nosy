@@ -110,8 +110,14 @@ final class LocalModelStore: ObservableObject {
     let root: URL
     @Published private(set) var states: [String: State] = [:]
     @Published private(set) var diskBytes: Int64 = 0
+    // Partial-download bytes per model. Kept current by the progress tick, so views never touch the disk.
+    private var partialSizes: [String: Int64] = [:]
     private var tasks: [String: Task<Void, Never>] = [:]
     private var jobs: [String: TranscriptionJob] = [:]
+    // Full scans: one in flight at a time, at most one start per second, and only the latest result publishes.
+    private var diskScan: Task<Void, Never>?
+    private var diskScanRequested = false
+    private var diskScanGeneration = 0
     var hasDownloads: Bool { !tasks.isEmpty }
 
     init(root: URL = AppPaths().support.appendingPathComponent("models/llm", isDirectory: true)) {
@@ -120,6 +126,7 @@ final class LocalModelStore: ObservableObject {
     }
     func file(_ model: LocalModel) -> URL { root.appendingPathComponent(model.fileName) }
     func partial(_ model: LocalModel) -> URL { file(model).appendingPathExtension("part") }
+    func partialBytes(_ model: LocalModel) -> Int64 { partialSizes[model.id] ?? 0 }
     private func receipt(_ model: LocalModel) -> URL { file(model).appendingPathExtension("verified.json") }
     func state(_ model: LocalModel) -> State { states[model.id] ?? .notDownloaded }
     func available(_ model: LocalModel) -> Bool {
@@ -134,29 +141,80 @@ final class LocalModelStore: ObservableObject {
         for model in LocalModel.all where tasks[model.id] == nil && state(model) != .loaded {
             states[model.id] = available(model) ? .downloaded : .notDownloaded
         }
-        updateDisk()
+        requestDiskScan()
     }
-    private func updateDisk() {
-        let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey])
-        diskBytes = 0
-        while let url = files?.nextObject() as? URL {
-            if (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true { diskBytes += Core.fileSize(url) }
+    // Scans the whole model folder off the main actor. Requests made while a scan runs queue one rerun.
+    private func requestDiskScan() {
+        // Snapshot previews set their own disk figures, which a real scan would overwrite.
+        guard !Snapshot.isRunning else { return }
+        diskScanGeneration += 1
+        diskScanRequested = true
+        guard diskScan == nil else { return }
+        // Partial files sit directly in the model folder, so their names identify each model.
+        let partialNames = Dictionary(uniqueKeysWithValues: LocalModel.all.map { (partial($0).lastPathComponent, $0.id) })
+        diskScan = Task { [self] in
+            while diskScanRequested {
+                diskScanRequested = false
+                let generation = diskScanGeneration
+                let started = ContinuousClock.now
+                let root = self.root
+                let scan = await Task.detached(priority: .utility) {
+                    LocalModelStore.scanDisk(root, partialNames: partialNames)
+                }.value
+                if generation == diskScanGeneration {
+                    partialSizes = scan.partials
+                    if scan.total != diskBytes { diskBytes = scan.total }
+                }
+                let remaining = Duration.seconds(1) - started.duration(to: ContinuousClock.now)
+                if diskScanRequested, remaining > .zero { try? await Task.sleep(for: remaining) }
+            }
+            diskScan = nil
         }
+    }
+    private struct DiskScan: Sendable {
+        let total: Int64
+        let partials: [String: Int64]
+    }
+    nonisolated private static func scanDisk(_ root: URL, partialNames: [String: String]) -> DiskScan {
+        var total: Int64 = 0
+        var partials: [String: Int64] = [:]
+        let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey])
+        while let url = files?.nextObject() as? URL {
+            guard (try? url.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true else { continue }
+            let size = Core.fileSize(url)
+            total += size
+            if let id = partialNames[url.lastPathComponent] { partials[id] = size }
+        }
+        return DiskScan(total: total, partials: partials)
+    }
+    // Applies one progress reading to the cached partial size and the disk total, without a rescan.
+    private func adjustPartial(_ model: LocalModel, to bytes: Int64) {
+        let previous = partialSizes[model.id] ?? 0
+        guard bytes != previous else { return }
+        partialSizes[model.id] = bytes
+        diskBytes += bytes - previous
     }
     func download(_ model: LocalModel, source: URL? = nil) {
         guard tasks[model.id] == nil, state(model) != .loaded else { return }
         let job = TranscriptionJob()
         jobs[model.id] = job
-        states[model.id] = .downloading(Core.fileSize(partial(model)))
+        let bytes = Core.fileSize(partial(model))
+        adjustPartial(model, to: bytes)
+        states[model.id] = .downloading(bytes)
         tasks[model.id] = Task { [self] in
             let ticker = Task { [weak self] in
                 while !Task.isCancelled {
                     try? await Task.sleep(for: .milliseconds(200))
                     guard !Task.isCancelled, let self else { return }
-                    if case .downloading = state(model) { states[model.id] = .downloading(Core.fileSize(partial(model))); updateDisk() }
+                    // Only the active partial file is measured, and off the main actor.
+                    let url = partial(model)
+                    let size = await Task.detached(priority: .utility) { Core.fileSize(url) }.value
+                    guard !Task.isCancelled, case .downloading = state(model) else { continue }
+                    adjustPartial(model, to: size)
+                    if state(model) != .downloading(size) { states[model.id] = .downloading(size) }
                 }
             }
-            defer { ticker.cancel(); tasks[model.id] = nil; jobs[model.id] = nil; updateDisk() }
+            defer { ticker.cancel(); tasks[model.id] = nil; jobs[model.id] = nil; requestDiskScan() }
             do {
                 try await LocalModelDownload.transfer(url: source ?? model.url, partial: partial(model), expectedBytes: model.bytes,
                     checksum: model.sha256, job: job, verifying: { [weak self] in
@@ -191,12 +249,13 @@ final class LocalModelStore: ObservableObject {
         }
         // Map notes are specific to this model. Removal frees those too.
         try? FileManager.default.removeItem(at: root.appendingPathComponent("notes/\(model.id)"))
+        adjustPartial(model, to: 0)
         states[model.id] = .notDownloaded
-        updateDisk()
+        requestDiskScan()
     }
     func setLoaded(_ model: LocalModel, _ loaded: Bool) {
         states[model.id] = loaded ? .loaded : (available(model) ? .downloaded : .notDownloaded)
-        if !loaded { updateDisk() }
+        if !loaded { requestDiskScan() }
     }
     func configurePreview(_ model: LocalModel, state: State, diskBytes: Int64) {
         states[model.id] = state; self.diskBytes = diskBytes

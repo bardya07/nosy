@@ -7,7 +7,7 @@ struct LocalModelCard: View {
     @State private var confirmRemoval = false
     @State private var removalError: String?
     private var state: LocalModelStore.State { store.state(model) }
-    private var partialBytes: Int64 { Core.fileSize(store.partial(model)) }
+    private var partialBytes: Int64 { store.partialBytes(model) }
     private var canRemove: Bool { state == .downloaded || partialBytes > 0 || state == .loaded }
 
     var body: some View {
