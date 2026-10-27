@@ -7,9 +7,34 @@ import NosyAudioBridge
 #endif
 
 enum AudioInputs {
+    enum Transport: String, Sendable {
+        case builtIn
+        case wired
+        case bluetooth
+        case other
+
+        static func classify(_ type: UInt32) -> Self {
+            switch type {
+            case kAudioDeviceTransportTypeBuiltIn: .builtIn
+            case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE: .bluetooth
+            case kAudioDeviceTransportTypeUSB, kAudioDeviceTransportTypeFireWire,
+                 kAudioDeviceTransportTypePCI, kAudioDeviceTransportTypeThunderbolt,
+                 kAudioDeviceTransportTypeAVB: .wired
+            default: .other
+            }
+        }
+    }
+
     struct Device: Identifiable, Hashable, Sendable {
         let id: String // CoreAudio device UID, stable across device-ID changes.
         let name: String
+        let transport: Transport
+
+        init(id: String, name: String, transport: Transport = .other) {
+            self.id = id
+            self.name = name
+            self.transport = transport
+        }
     }
 
     static func list() -> [Device] {
@@ -47,6 +72,8 @@ enum AudioInputs {
     static func deviceID(uid: String) -> AudioDeviceID? {
         deviceIDs().first { hasInput($0) && stringProperty(kAudioDevicePropertyDeviceUID, on: $0) == uid }
     }
+
+    static func device(uid: String) -> Device? { list().first { $0.id == uid } }
 
     // Call on the engine's control queue while stopped, before reading its input format.
     // nil preserves AVAudioEngine's automatic system-default routing.
@@ -142,7 +169,14 @@ enum AudioInputs {
     private static func description(_ id: AudioDeviceID) -> Device? {
         guard let uid = stringProperty(kAudioDevicePropertyDeviceUID, on: id),
               let name = stringProperty(kAudioObjectPropertyName, on: id) else { return nil }
-        return Device(id: uid, name: name)
+        return Device(id: uid, name: name, transport: Transport.classify(transportType(on: id)))
+    }
+
+    private static func transportType(on id: AudioDeviceID) -> UInt32 {
+        var property = address(kAudioDevicePropertyTransportType), value: UInt32 = 0
+        var size = UInt32(MemoryLayout<UInt32>.size)
+        guard AudioObjectGetPropertyData(id, &property, 0, nil, &size, &value) == noErr else { return 0 }
+        return value
     }
 
     private static func stringProperty(_ selector: AudioObjectPropertySelector, on id: AudioDeviceID) -> String? {

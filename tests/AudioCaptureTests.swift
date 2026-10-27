@@ -29,6 +29,63 @@ enum AudioCaptureTests {
         check(CaptureWatchdog.tapStalled(alive: true, formatMatches: true, readerAttached: false), "Lost IO reader is detected")
         check(CaptureWatchdog.shouldRearm(lastBuffer: 0, now: 10), "An unresponsive tap is rearmed without a false stall warning")
         check(!CaptureWatchdog.shouldRearm(lastBuffer: 9, now: 10), "Zero buffers count as heartbeats")
+        var restartLimiter = CaptureRestartLimiter()
+        check(restartLimiter.allowStart(at: 0) && restartLimiter.allowStart(at: 1)
+              && restartLimiter.allowStart(at: 2) && !restartLimiter.allowStart(at: 3), "Capture restart starts are capped at three per ten seconds")
+        check(restartLimiter.allowStart(at: 10), "The restart budget recovers after ten seconds")
+        check(CaptureCallbackGate.accepts(recording: true, failed: false, paused: true,
+                                          callbackGeneration: 7, currentGeneration: 7), "Paused sources accept no samples but may finish a heartbeat")
+        check(!CaptureCallbackGate.accepts(recording: true, failed: false, paused: false,
+                                           callbackGeneration: 6, currentGeneration: 7), "A stale source generation cannot resume capture")
+        check(!CaptureCallbackGate.accepts(recording: false, failed: false, paused: false,
+                                           callbackGeneration: 7, currentGeneration: 7), "Stop closes callback acceptance immediately")
+        check(!CaptureCallbackGate.acceptsConfiguration(generation: 6, currentGeneration: 7, sameEngine: true), "Queued configuration notices from an old generation are ignored")
+        check(!CaptureCallbackGate.acceptsConfiguration(generation: 7, currentGeneration: 7, sameEngine: false), "Configuration notices from a replaced engine are ignored")
+
+        let emptyResources = CaptureResourceHandles<Int>()
+        for partial in [CaptureResourceHandles<Int>(tap: 11),
+                        CaptureResourceHandles<Int>(tap: 11, aggregate: 22),
+                        CaptureResourceHandles<Int>(tap: 11, aggregate: 22, ioProc: 33)] {
+            var handles = partial
+            let fake = FakeCaptureResourceAdapter()
+            _ = handles.release(using: fake)
+            check(handles.count == 0, "Partial capture construction releases every acquired object")
+        }
+        var failedCleanup = CaptureResourceHandles<Int>(tap: 11, aggregate: 22, ioProc: 33)
+        let retryAdapter = FakeCaptureResourceAdapter()
+        retryAdapter.queue(["stop IO": [-1, noErr], "destroy IOProc": [-1, noErr],
+                            "destroy aggregate": [-1, noErr], "destroy tap": [-1, noErr]])
+        let firstCleanup = failedCleanup.release(using: retryAdapter)
+        check(firstCleanup.operations.count == 4 && firstCleanup.outstandingResources == 3,
+              "Cleanup continues after failures and retains live resource identities")
+        let secondCleanup = failedCleanup.release(using: retryAdapter)
+        check(secondCleanup.complete && failedCleanup.count == 0, "A bounded fake HAL retry releases remaining capture resources")
+        check(retryAdapter.calls == ["stop IO", "destroy IOProc", "destroy aggregate", "destroy tap",
+                                     "stop IO", "destroy IOProc", "destroy aggregate", "destroy tap"],
+              "Cleanup uses the required stop and destruction order")
+        var missingObjects = CaptureResourceHandles<Int>(tap: 11, aggregate: 22, ioProc: 33)
+        let missingAdapter = FakeCaptureResourceAdapter(defaultStatus: kAudioHardwareBadObjectError)
+        check(missingObjects.release(using: missingAdapter).complete, "Already missing HAL objects count as released")
+        _ = emptyResources
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let captureSource = try String(contentsOf: root.appendingPathComponent("Sources/MacAudioCapture.swift"), encoding: .utf8)
+        let inputSource = try String(contentsOf: root.appendingPathComponent("Sources/AudioInputs.swift"), encoding: .utf8)
+        check(!captureSource.contains("AudioObjectSetPropertyData"), "Process capture never writes global device defaults")
+        check(!captureSource.contains("kAudioDevicePropertyHogMode") && !captureSource.contains("setVoiceProcessingEnabled"), "Process capture never requests hog mode or voice processing")
+        check(!inputSource.contains("AudioObjectSetPropertyData") && inputSource.contains("AudioUnitSetProperty"), "Input selection only configures the recorder AudioUnit")
+        if #available(macOS 14.4, *) {
+            let tap = MacAudioCapture.tapDescription(excluding: 42)
+            check(tap.isPrivate && tap.muteBehavior == .unmuted, "The process tap stays private and unmuted")
+            let tapID = UUID()
+            let composition = MacAudioCapture.aggregateComposition(tapUUID: tapID)
+            let tapList = composition[kAudioAggregateDeviceTapListKey] as? [[String: Any]]
+            check(composition[kAudioAggregateDeviceIsPrivateKey] as? Bool == true
+                  && (composition[kAudioAggregateDeviceUIDKey] as? String)?.hasPrefix("com.bardya.nosy.tap.") == true,
+                  "The tap aggregate stays private and receives a unique Nosy identity")
+            check(tapList?.first?[kAudioSubTapUIDKey] as? String == tapID.uuidString,
+                  "The aggregate contains the process tap without physical subdevices")
+        }
         check(MacAudioError(operation: "start", status: kAudioHardwareIllegalOperationError).permissionDenied, "Permission error mapping")
         let idle = Recorder { _ in }
         do { try await idle.switchSource(.macAudio, inputUID: nil); preconditionFailure("Idle recorder cannot switch live hardware") }
@@ -147,5 +204,28 @@ enum AudioCaptureTests {
         track.push([0.5, 0.5], at: 2, cursor: 40_000)
         check(track.sample(at: 40_000) == 0, "Late buffers cannot replay after a gap")
         print("AUDIO CAPTURE UNIT PASS: source rules, channels, streaming resampling, silence, balance, limiter, drift and late buffers")
+    }
+}
+
+private final class FakeCaptureResourceAdapter: CaptureResourceAdapter {
+    typealias IOProc = Int
+    private(set) var calls: [String] = []
+    private var statusQueues: [String: [OSStatus]] = [:]
+    private let defaultStatus: OSStatus
+
+    init(defaultStatus: OSStatus = noErr) { self.defaultStatus = defaultStatus }
+
+    func queue(_ values: [String: [OSStatus]]) { statusQueues = values }
+    func stopIO(aggregate: AudioObjectID, ioProc: Int) -> OSStatus { result("stop IO") }
+    func destroyIOProc(aggregate: AudioObjectID, ioProc: Int) -> OSStatus { result("destroy IOProc") }
+    func destroyAggregate(_ aggregate: AudioObjectID) -> OSStatus { result("destroy aggregate") }
+    func destroyTap(_ tap: AudioObjectID) -> OSStatus { result("destroy tap") }
+
+    private func result(_ operation: String) -> OSStatus {
+        calls.append(operation)
+        guard var queue = statusQueues[operation], !queue.isEmpty else { return defaultStatus }
+        let value = queue.removeFirst()
+        statusQueues[operation] = queue
+        return value
     }
 }

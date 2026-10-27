@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import os
 #if canImport(NosyAudioBridge)
 import NosyAudioBridge
 #endif
@@ -15,12 +16,47 @@ enum RecorderEvent: Sendable {
     case failed(String, bytes: Int64)
 }
 
+struct MicrophoneConfiguration: Equatable, Sendable {
+    let deviceUID: String?
+    let sampleRate: Double
+    let channels: UInt32
+}
+
+struct CaptureRestartLimiter {
+    private(set) var starts: [TimeInterval] = []
+
+    mutating func allowStart(at time: TimeInterval) -> Bool {
+        starts.removeAll { time >= $0 && time - $0 >= 10 }
+        guard starts.count < 3 else { return false }
+        starts.append(time)
+        return true
+    }
+
+    mutating func reset() { starts.removeAll(keepingCapacity: true) }
+}
+
+enum CaptureCallbackGate {
+    static func accepts(recording: Bool, failed: Bool, paused: Bool,
+                        callbackGeneration: UInt64, currentGeneration: UInt64,
+                        allowPausedHeartbeat: Bool = true) -> Bool {
+        recording && !failed && callbackGeneration == currentGeneration
+            && (allowPausedHeartbeat || !paused)
+    }
+
+    static func acceptsConfiguration(generation: UInt64, currentGeneration: UInt64,
+                                     sameEngine: Bool) -> Bool {
+        generation == currentGeneration && sameEngine
+    }
+}
+
 // The control queue owns engine lifecycle. The lock protects converter and counter state
 // shared with the real-time tap; the writer queue alone performs disk I/O. No tap callback
 // accesses UI or MainActor state, and no tap callback waits for the writer.
 final class Recorder: @unchecked Sendable {
     private let control = DispatchQueue(label: "com.bardya.nosy.recorder", qos: .userInitiated)
     private let writer = DispatchQueue(label: "com.bardya.nosy.recorder.writer", qos: .userInitiated)
+    private let sessionID = UUID().uuidString
+    private let logger = Logger(subsystem: "com.bardya.nosy", category: "AudioCapture")
     private let lock = NSLock()
     private let inputUID: String?
     private var source: RecordingSource // Protected by lock when accessed by audio callbacks.
@@ -40,6 +76,15 @@ final class Recorder: @unchecked Sendable {
     private var defaultInputReported = false // Owned by the control queue; once per start.
     private var engine: AVAudioEngine?
     private var observer: NSObjectProtocol?
+    private var captureGeneration: UInt64 = 0 // Control queue only.
+    private var micCallbackGeneration: UInt64 = 0 // Protected by lock.
+    private var macCallbackGeneration: UInt64 = 0 // Protected by lock.
+    private var pauseGeneration: UInt64 = 0 // Protected by lock.
+    private var restartWork: DispatchWorkItem?
+    private var restartWorkToken: UUID?
+    private var restartLimiter = CaptureRestartLimiter()
+    private var activeMicConfiguration: MicrophoneConfiguration?
+    private var sourcesActive = false
     private var stallTimer: DispatchSourceTimer?
     private var converter: AVAudioConverter?
     private var outputFormat: AVAudioFormat?
@@ -78,6 +123,7 @@ final class Recorder: @unchecked Sendable {
                 do {
                     self.defaultInputReported = false
                     self.pinnedUID = self.source.usesMic ? try self.resolvedUID(self.inputUID) : nil
+                    self.restartLimiter.reset()
                     guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
                         throw LectureError.message("Could not create recording file.")
                     }
@@ -113,51 +159,93 @@ final class Recorder: @unchecked Sendable {
     private static var audioTime: TimeInterval { AVAudioTime.seconds(forHostTime: mach_absolute_time()) }
 
     private func startSources() throws {
-        if source.usesMacAudio {
-            lock.lock()
-            mixer = CaptureMixer(origin: Self.audioTime)
-            mixLatency = CaptureMixer.latency
-            lastRenderTime = Self.audioTime
-            tapStalled = false
-            lastMacSignal = Self.audioTime
-            macQuietReported = false
-            lock.unlock()
-            try startMacAudio()
-        }
-        if source.usesMic {
-            // Never leave a previous engine's tap behind: a second tap on a bus is an uncaught exception.
-            if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
-            if let old = engine { Self.stopEngine(old); self.engine = nil }
-            let engine = AVAudioEngine()
-            self.engine = engine
-            observer = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
-                guard let self else { return }
-                self.control.async { self.restartAfterDeviceChange() }
+        guard !sourcesActive else { return }
+        let generation = nextCaptureGeneration()
+        lock.lock()
+        if source.usesMic { micCallbackGeneration = generation }
+        if source.usesMacAudio { macCallbackGeneration = generation }
+        lock.unlock()
+        do {
+            if source.usesMacAudio {
+                lock.lock()
+                mixer = CaptureMixer(origin: Self.audioTime)
+                mixLatency = CaptureMixer.latency
+                lastRenderTime = Self.audioTime
+                tapStalled = false
+                lastMacSignal = Self.audioTime
+                macQuietReported = false
+                lock.unlock()
+                try startMacAudio(generation: generation)
             }
-            try installTapAndStart(engine)
+            if source.usesMic {
+                // Never leave a previous engine's tap behind: a second tap on a bus is an uncaught exception.
+                if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
+                if let old = engine {
+                    Self.stopEngine(old, sessionID: sessionID, generation: generation,
+                                    reason: "replace microphone engine", logger: logger)
+                    self.engine = nil
+                }
+                let engine = AVAudioEngine()
+                self.engine = engine
+                observeMicrophoneConfiguration(engine, generation: generation)
+                try installTapAndStart(engine, generation: generation)
+            }
+            sourcesActive = true
+        } catch {
+            stopSources()
+            throw error
         }
     }
-    private func startMacAudio() throws {
+    private func startMacAudio(generation: UInt64) throws {
         guard #available(macOS 14.4, *) else { throw LectureError.message("Mac audio requires macOS 14.4 or later.") }
-        let capture = MacAudioCapture()
+        let capture = MacAudioCapture(sessionID: sessionID, generation: generation)
         macCapture = capture
         lock.lock(); lastMacBuffer = Self.audioTime; lock.unlock()
-        try capture.start { [weak self] buffer, time in self?.consumeMacAudio(buffer, time: time) }
+        try capture.start { [weak self] buffer, time in self?.consumeMacAudio(buffer, time: time, generation: generation) }
         guard let format = capture.format else { throw LectureError.message("Mac audio has no input format.") }
         let converter = try CaptureConverter(format: format)
         lock.lock(); macConverter = converter; lock.unlock()
     }
-    private func stopSources() {
-        if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
-        if let engine { Self.stopEngine(engine); self.engine = nil }
-        macCapture?.stop(); macCapture = nil
-        lock.lock()
-        micConverter = nil; macConverter = nil; converter = nil
-        lock.unlock()
+    private func nextCaptureGeneration() -> UInt64 {
+        captureGeneration &+= 1
+        return captureGeneration
     }
-    private func consumeMacAudio(_ input: AVAudioPCMBuffer?, time: TimeInterval) {
+    private func cancelMicrophoneRestart() {
+        restartWork?.cancel()
+        restartWork = nil
+        restartWorkToken = nil
+    }
+    private func stopSources(clearConverters: Bool = true) {
+        cancelMicrophoneRestart()
+        let generation = nextCaptureGeneration()
         lock.lock()
-        guard accepting, !failed else { lock.unlock(); return }
+        micCallbackGeneration = generation
+        macCallbackGeneration = generation
+        lock.unlock()
+        if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
+        if let engine {
+            Self.stopEngine(engine, sessionID: sessionID, generation: generation, reason: "release sources", logger: logger)
+            self.engine = nil
+        }
+        if let capture = macCapture {
+            let report = capture.stop()
+            logCaptureCleanup(report, kind: "process tap cleanup", generation: generation)
+            macCapture = nil
+        }
+        activeMicConfiguration = nil
+        sourcesActive = false
+        if clearConverters {
+            lock.lock()
+            micConverter = nil; macConverter = nil; converter = nil
+            lock.unlock()
+        }
+    }
+    private func consumeMacAudio(_ input: AVAudioPCMBuffer?, time: TimeInterval, generation: UInt64) {
+        lock.lock()
+        guard CaptureCallbackGate.accepts(recording: accepting, failed: failed, paused: paused,
+                                          callbackGeneration: generation, currentGeneration: macCallbackGeneration) else {
+            lock.unlock(); return
+        }
         lastMacBuffer = Self.audioTime // Empty callbacks are also a heartbeat.
         if tapStalled {
             tapStalled = false
@@ -178,9 +266,11 @@ final class Recorder: @unchecked Sendable {
         catch { lock.unlock(); scheduleFailure(error.localizedDescription); return }
         lock.unlock()
     }
-    private func renderMacAudio(flush: Bool = false) {
+    private func renderMacAudio(flush: Bool = false, allowStopped: Bool = false) {
         lock.lock()
-        guard accepting, !failed, !paused, source.usesMacAudio else { lock.unlock(); return }
+        guard (accepting && !failed && !paused) || (flush && allowStopped), source.usesMacAudio else {
+            lock.unlock(); return
+        }
         let now = Self.audioTime
         // A suspended process/sleep is a gap, never minutes of synthetic silence.
         if now - lastRenderTime > 1 {
@@ -203,21 +293,15 @@ final class Recorder: @unchecked Sendable {
         control.async {
             self.lock.lock()
             let active = self.accepting && !self.failed
-            self.mixer = self.source.usesMacAudio ? CaptureMixer(origin: Self.audioTime) : nil
-            self.lastRenderTime = Self.audioTime
-            self.lastBuffer = Date.timeIntervalSinceReferenceDate
-            self.lastMacBuffer = Self.audioTime
-            self.lastMacSignal = Self.audioTime
-            self.macQuietReported = false
-            self.converter?.reset(); self.micConverter?.reset(); self.macConverter?.reset()
             self.lock.unlock()
             guard active else { return }
-            self.restartAfterDeviceChange()
-            if self.source.usesMacAudio {
-                self.macCapture?.stop(); self.macCapture = nil
-                do { try self.startMacAudio() }
-                catch { self.scheduleFailure(error.localizedDescription) }
-            }
+            self.stallTimer?.cancel()
+            self.stallTimer = nil
+            self.stopSources()
+            do {
+                try self.startSources()
+                self.startStallTimer()
+            } catch { self.scheduleFailure(error.localizedDescription) }
         }
     }
     private func resolvedUID(_ uid: String?) throws -> String {
@@ -227,7 +311,93 @@ final class Recorder: @unchecked Sendable {
         }
         return device.id
     }
-    private func installTapAndStart(_ engine: AVAudioEngine) throws {
+
+    private func validatedUID(_ uid: String?) throws -> String {
+        guard let uid else { return try resolvedUID(nil) }
+        guard AudioInputs.device(uid: uid) != nil else {
+            throw LectureError.message("The selected microphone is no longer available.")
+        }
+        return uid
+    }
+
+    private func observeMicrophoneConfiguration(_ engine: AVAudioEngine, generation: UInt64) {
+        let engineIdentity = ObjectIdentifier(engine)
+        observer = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange,
+                                                           object: engine, queue: nil) { [weak self] _ in
+            guard let self else { return }
+            self.control.async { [weak self] in
+                guard let self, let current = self.engine,
+                      CaptureCallbackGate.acceptsConfiguration(
+                        generation: generation, currentGeneration: self.captureGeneration,
+                        sameEngine: ObjectIdentifier(current) == engineIdentity) else { return }
+                self.scheduleMicrophoneRestart(reason: "engine configuration changed", generation: generation)
+            }
+        }
+    }
+
+    private func scheduleMicrophoneRestart(reason: String, generation: UInt64) {
+        guard captureGeneration == generation else { return }
+        restartWork?.cancel()
+        let token = UUID()
+        restartWorkToken = token
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.restartWorkToken == token,
+                  self.captureGeneration == generation else { return }
+            self.restartWork = nil
+            self.restartWorkToken = nil
+            self.restartMicrophone(reason: reason, generation: generation)
+        }
+        restartWork = work
+        control.asyncAfter(deadline: .now() + .milliseconds(200), execute: work)
+    }
+
+    private func restartMicrophone(reason: String, generation: UInt64) {
+        guard captureGeneration == generation, let engine else { return }
+        lock.lock()
+        let shouldRestart = accepting && !failed && !paused && source.usesMic
+        lock.unlock()
+        guard shouldRestart else { return }
+        let current = microphoneConfiguration(on: engine)
+        guard !engine.isRunning || current != activeMicConfiguration else {
+            logger.info("session=\(self.sessionID, privacy: .public) generation=\(generation, privacy: .public) restart=skipped reason=\(reason, privacy: .public) device_or_format_unchanged=true")
+            return
+        }
+        guard restartLimiter.allowStart(at: ProcessInfo.processInfo.systemUptime) else {
+            scheduleFailure("The microphone kept changing. The recording has been saved.")
+            return
+        }
+        logger.info("session=\(self.sessionID, privacy: .public) generation=\(generation, privacy: .public) restart=begin reason=\(reason, privacy: .public)")
+        if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
+        let next = nextCaptureGeneration()
+        lock.lock(); micCallbackGeneration = next; lock.unlock()
+        Self.stopEngine(engine, sessionID: sessionID, generation: next, reason: reason, logger: logger)
+        do {
+            try installTapAndStart(engine, generation: next)
+            activeMicConfiguration = microphoneConfiguration(on: engine)
+            observeMicrophoneConfiguration(engine, generation: next)
+            logger.info("session=\(self.sessionID, privacy: .public) generation=\(next, privacy: .public) restart=complete reason=\(reason, privacy: .public)")
+        } catch {
+            logger.error("session=\(self.sessionID, privacy: .public) generation=\(next, privacy: .public) restart=failed reason=\(reason, privacy: .public) error=\(error.localizedDescription, privacy: .public)")
+            scheduleMicrophoneRestart(reason: "microphone restart retry", generation: next)
+        }
+    }
+
+    private func microphoneConfiguration(on engine: AVAudioEngine) -> MicrophoneConfiguration? {
+        #if canImport(NosyAudioBridge)
+        var error: NSError?
+        guard let formats = NosyAudioFormats(engine, &error), formats.count == 2 else { return nil }
+        let hardware = formats[1]
+        return MicrophoneConfiguration(deviceUID: AudioInputs.current(on: engine)?.id,
+                                       sampleRate: hardware.sampleRate,
+                                       channels: hardware.channelCount)
+        #else
+        return nil
+        #endif
+    }
+
+    private func installTapAndStart(_ engine: AVAudioEngine, generation: UInt64) throws {
+        let defaultBefore = AudioInputs.systemDefault()?.id ?? "none"
+        let inputBefore = AudioInputs.current(on: engine)?.id ?? "none"
         if try !AudioInputs.apply(uid: pinnedUID, to: engine) {
             // Re-pin the fallback as well, so subsequent default changes cannot steal it.
             guard let device = AudioInputs.current(on: engine) else {
@@ -239,10 +409,14 @@ final class Recorder: @unchecked Sendable {
                 onEvent(.usingDefaultInput)
             }
         }
-        try startTap(on: engine)
+        let formatBefore = microphoneConfiguration(on: engine)
+        try startTap(on: engine, generation: generation)
         guard let device = AudioInputs.current(on: engine) else {
             throw LectureError.message("Could not identify the active microphone.")
         }
+        activeMicConfiguration = MicrophoneConfiguration(deviceUID: device.id, sampleRate: micRate, channels: micChannels)
+        let defaultAfter = AudioInputs.systemDefault()?.id ?? "none"
+        logger.info("session=\(self.sessionID, privacy: .public) source=\(self.source.rawValue, privacy: .public) generation=\(generation, privacy: .public) input_uid=\(device.id, privacy: .public) transport=\(device.transport.rawValue, privacy: .public) default_before=\(defaultBefore, privacy: .public) default_after=\(defaultAfter, privacy: .public) input_before=\(inputBefore, privacy: .public) rate_before=\(formatBefore?.sampleRate ?? 0, privacy: .public) channels_before=\(formatBefore?.channels ?? 0, privacy: .public) rate_after=\(self.micRate, privacy: .public) channels_after=\(self.micChannels, privacy: .public)")
         onEvent(.input(name: device.name))
     }
     // Bluetooth headsets (AirPods) switch from 48 kHz A2DP to 24/16 kHz HFP when their mic opens,
@@ -250,7 +424,7 @@ final class Recorder: @unchecked Sendable {
     // a tap whose format no longer matches the hardware raises an uncaught NSException, which
     // Swift cannot catch and which aborted a real recording. So: never tap with a stale format,
     // retry a start that loses the race once, and let consume() follow each buffer's real format.
-    private func startTap(on engine: AVAudioEngine, attempt: Int = 0) throws {
+    private func startTap(on engine: AVAudioEngine, generation: UInt64) throws {
         do {
             #if canImport(NosyAudioBridge)
             var error: NSError?
@@ -262,7 +436,9 @@ final class Recorder: @unchecked Sendable {
             do { try configureMicLocked(plan.expected) } catch { lock.unlock(); throw error }
             lastBuffer = Date.timeIntervalSinceReferenceDate
             lock.unlock()
-            guard NosyAudioStart(engine, plan.tap, { [weak self] buffer, time in self?.consume(buffer, time: time) }, &error) else {
+            guard NosyAudioStart(engine, plan.tap, { [weak self] buffer, time in
+                self?.consume(buffer, time: time, generation: generation)
+            }, &error) else {
                 throw error ?? LectureError.message("The microphone could not start.")
             }
             #else
@@ -270,16 +446,18 @@ final class Recorder: @unchecked Sendable {
             throw LectureError.message("Nosy's audio support is missing. Reinstall Nosy, then try again.")
             #endif
         } catch {
-            Self.stopEngine(engine)
-            guard attempt == 0 else { throw error }
-            Thread.sleep(forTimeInterval: 0.3)
-            try startTap(on: engine, attempt: 1)
+            Self.stopEngine(engine, sessionID: sessionID, generation: generation,
+                            reason: "microphone start failed", logger: logger)
+            throw error
         }
     }
-    private static func stopEngine(_ engine: AVAudioEngine) {
+    private static func stopEngine(_ engine: AVAudioEngine, sessionID: String, generation: UInt64,
+                                   reason: String, logger: Logger) {
         #if canImport(NosyAudioBridge)
         var error: NSError?
-        _ = NosyAudioStop(engine, &error)
+        let stopped = NosyAudioStop(engine, &error)
+        let status: OSStatus = stopped ? noErr : OSStatus(error?.code ?? -1)
+        logger.info("session=\(sessionID, privacy: .public) generation=\(generation, privacy: .public) operation=microphone engine stop status=\(status, privacy: .public) reason=\(reason, privacy: .public)")
         #endif
     }
     // tap == nil follows the node, which survives a profile switch during installTap. When the node's
@@ -349,19 +527,19 @@ final class Recorder: @unchecked Sendable {
                         self.lock.lock(); self.tapStalled = true; self.lock.unlock()
                         self.onEvent(.stalled)
                     }
-                    capture.stop(); self.macCapture = nil
-                    self.lock.lock(); self.macConverter = nil; self.lock.unlock()
-                    do { try self.startMacAudio() }
-                    catch { self.scheduleFailure(error.localizedDescription) }
+                    self.restartMacCapture(reason: broken ? "HAL unhealthy" : "reader quiet")
                 }
             }
         }
         stallTimer = timer
         timer.resume()
     }
-    private func consume(_ input: AVAudioPCMBuffer, time: AVAudioTime) {
+    private func consume(_ input: AVAudioPCMBuffer, time: AVAudioTime, generation: UInt64) {
         lock.lock()
-        guard accepting, !failed else { lock.unlock(); return }
+        guard CaptureCallbackGate.accepts(recording: accepting, failed: failed, paused: paused,
+                                          callbackGeneration: generation, currentGeneration: micCallbackGeneration) else {
+            lock.unlock(); return
+        }
         lastBuffer = Date.timeIntervalSinceReferenceDate
         guard !paused else { lock.unlock(); return }
         if Self.micFormatChanged(rate: micRate, channels: micChannels, to: input.format) {
@@ -464,19 +642,38 @@ final class Recorder: @unchecked Sendable {
         lock.lock()
         guard !failed, accepting else { lock.unlock(); return }
         failed = true
+        accepting = false
+        paused = true
+        pauseGeneration &+= 1
         lock.unlock()
         control.async {
             let count = (try? self.stopOnControlQueue()) ?? self.byteCount()
             self.onEvent(.failed(message, bytes: count))
         }
     }
-    private func restartAfterDeviceChange() {
-        guard let engine else { return }
-        lock.lock(); let active = accepting && !failed; lock.unlock()
+    private func restartMacCapture(reason: String) {
+        guard source.usesMacAudio, let capture = macCapture else { return }
+        lock.lock()
+        let active = accepting && !failed && !paused
+        lock.unlock()
         guard active else { return }
-        Self.stopEngine(engine)
-        do { try installTapAndStart(engine) }
-        catch { scheduleFailure("Microphone changed and could not restart: \(error.localizedDescription)") }
+        cancelMicrophoneRestart()
+        let generation = nextCaptureGeneration()
+        lock.lock(); macCallbackGeneration = generation; macConverter = nil; lock.unlock()
+        if let observer { NotificationCenter.default.removeObserver(observer); self.observer = nil }
+        if let engine { observeMicrophoneConfiguration(engine, generation: generation) }
+        let report = capture.stop()
+        logCaptureCleanup(report, kind: "process tap rearm \(reason)", generation: generation)
+        macCapture = nil
+        do { try startMacAudio(generation: generation) }
+        catch { scheduleFailure(error.localizedDescription) }
+    }
+
+    private func logCaptureCleanup(_ report: CaptureCleanupReport, kind: String, generation: UInt64) {
+        for operation in report.operations {
+            logger.info("session=\(self.sessionID, privacy: .public) generation=\(generation, privacy: .public) source=\(self.source.rawValue, privacy: .public) operation=\(kind, privacy: .public) detail=\(operation.operation, privacy: .public) status=\(operation.status, privacy: .public)")
+        }
+        logger.info("session=\(self.sessionID, privacy: .public) generation=\(generation, privacy: .public) source=\(self.source.rawValue, privacy: .public) operation=\(kind, privacy: .public) stop_complete=\(report.complete, privacy: .public) outstanding=\(report.outstandingResources, privacy: .public)")
     }
     // A memory-only snapshot of successful writes. Only stop drains the writer, on control.
     func byteCount() -> Int64 { lock.lock(); defer { lock.unlock() }; return bytes }
@@ -486,30 +683,22 @@ final class Recorder: @unchecked Sendable {
             control.async {
                 self.lock.lock()
                 let allowed = self.accepting && !self.failed && self.paused
-                let previous = self.source
+                let previousUID = self.pinnedUID
                 self.lock.unlock()
                 guard allowed, RecordingSource.available.contains(source) else {
                     continuation.resume(throwing: LectureError.message("Pause the recording before switching sources.")); return
                 }
-                let previousUID = self.pinnedUID
-                self.stopSources()
                 do {
-                    self.pinnedUID = source.usesMic ? try (previousUID ?? self.resolvedUID(inputUID)) : previousUID
-                    self.lock.lock(); self.source = source; self.mixer = nil; self.lock.unlock()
-                    try self.startSources()
-                    self.stallTimer?.cancel()
-                    self.startStallTimer()
+                    let pendingUID = source.usesMic ? try self.validatedUID(previousUID ?? inputUID) : previousUID
+                    self.pinnedUID = pendingUID
+                    self.activeMicConfiguration = nil
+                    self.lock.lock()
+                    self.source = source
+                    self.mixer = nil
+                    self.lock.unlock()
+                    self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pending_source=\(source.rawValue, privacy: .public) hardware_open=false")
                     continuation.resume()
                 } catch {
-                    self.stopSources()
-                    self.pinnedUID = previousUID
-                    self.lock.lock(); self.source = previous; self.mixer = nil; self.lock.unlock()
-                    do {
-                        try self.startSources()
-                        self.stallTimer?.cancel()
-                        self.startStallTimer()
-                    }
-                    catch { self.scheduleFailure("Could not restore the recording source: \(error.localizedDescription)") }
                     continuation.resume(throwing: error)
                 }
             }
@@ -526,33 +715,13 @@ final class Recorder: @unchecked Sendable {
                     continuation.resume(throwing: LectureError.message("Pause the recording before switching microphones."))
                     return
                 }
-                // A paused Mac-only recording can choose its mic for a later Both switch.
-                if !self.source.usesMic {
-                    do { self.pinnedUID = try self.resolvedUID(uid); continuation.resume() }
-                    catch { continuation.resume(throwing: error) }
-                    return
-                }
-                guard let engine = self.engine else {
-                    continuation.resume(throwing: LectureError.message("The microphone is unavailable.")); return
-                }
-                let previous = self.pinnedUID
                 do {
-                    let pinned = try self.resolvedUID(uid)
-                    Self.stopEngine(engine)
-                    self.pinnedUID = pinned
-                    try self.installTapAndStart(engine)
+                    self.pinnedUID = try self.validatedUID(uid)
+                    self.activeMicConfiguration = nil
+                    self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pending_input_uid=\(self.pinnedUID ?? "none", privacy: .public) hardware_open=false")
                     continuation.resume()
                 } catch {
-                    // Keep the lecture going on the mic that worked.
-                    Self.stopEngine(engine)
-                    self.pinnedUID = previous
-                    do {
-                        try self.installTapAndStart(engine)
-                        continuation.resume(throwing: LectureError.message("Couldn't switch to that microphone, so Nosy kept the previous one."))
-                    } catch let restartError {
-                        self.scheduleFailure("Could not switch microphone: \(restartError.localizedDescription)")
-                        continuation.resume(throwing: error)
-                    }
+                    continuation.resume(throwing: error)
                 }
             }
         }
@@ -560,8 +729,10 @@ final class Recorder: @unchecked Sendable {
 
     func setPaused(_ paused: Bool) {
         if paused { renderMacAudio(flush: true) }
-        lock.lock(); defer { lock.unlock() }
-        guard self.paused != paused else { return }
+        lock.lock()
+        guard accepting, !failed, self.paused != paused else { lock.unlock(); return }
+        pauseGeneration &+= 1
+        let token = pauseGeneration
         self.paused = paused
         mixer = source.usesMacAudio ? CaptureMixer(origin: Self.audioTime) : nil
         micConverter?.reset(); macConverter?.reset()
@@ -575,31 +746,58 @@ final class Recorder: @unchecked Sendable {
             silenceWarned = false
             lastMeter = 0
             lastBuffer = Date.timeIntervalSinceReferenceDate
-            // The app clears its warning on pause; start the watchdog fresh so it can warn again.
             stalled = false
-            // Discard any resampler history from before the pause.
             converter?.reset()
+        }
+        lock.unlock()
+
+        control.async {
+            self.lock.lock()
+            let current = self.accepting && !self.failed && self.pauseGeneration == token && self.paused == paused
+            self.lock.unlock()
+            guard current else { return }
+            if paused {
+                self.stallTimer?.cancel()
+                self.stallTimer = nil
+                self.stopSources()
+                self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pause=true sources_stopped=true")
+            } else {
+                do {
+                    try self.startSources()
+                    if self.stallTimer == nil { self.startStallTimer() }
+                    self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pause=false sources_started=true")
+                } catch { self.scheduleFailure(error.localizedDescription) }
+            }
         }
     }
 
     func stop() async throws -> Int64 {
-        try await withCheckedThrowingContinuation { continuation in
+        gateAcceptanceForStop()
+        return try await withCheckedThrowingContinuation { continuation in
             control.async {
                 do { continuation.resume(returning: try self.stopOnControlQueue()) }
                 catch { continuation.resume(throwing: error) }
             }
         }
     }
+    private func gateAcceptanceForStop() {
+        lock.lock()
+        if accepting { accepting = false; paused = true; pauseGeneration &+= 1 }
+        lock.unlock()
+    }
     private func stopOnControlQueue() throws -> Int64 {
         stallTimer?.cancel()
         stallTimer = nil
-        stopSources()
+        cancelMicrophoneRestart()
+        stopSources(clearConverters: false)
         // Drain the 200 ms jitter window before closing; no recorded tail is lost.
-        renderMacAudio(flush: true)
+        renderMacAudio(flush: true, allowStopped: true)
         lock.lock()
         accepting = false
-        converter = nil
+        paused = true
+        converter = nil; micConverter = nil; macConverter = nil
         mixer = nil
+        outputFormat = nil; monoFormat = nil
         lock.unlock()
         // The writer is serial, so this runs after every accepted buffer, then synchronizes and closes.
         try writer.sync {
