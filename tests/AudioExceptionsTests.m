@@ -28,6 +28,37 @@ int main(void) {
             else failed = !NosyAudioStart((id)fake, nil, ^(AVAudioPCMBuffer *b, AVAudioTime *t) {}, &error);
             if (!failed || ![error.domain isEqual:@"com.bardya.nosy.audio"]) return 1;
         }
+        // Synthetic memory only. The reader preserves a call's current 24 kHz
+        // rate, normalizes PCM in memory, and rejects a changed buffer layout.
+        for (NSNumber *common in @[@(AVAudioPCMFormatFloat32), @(AVAudioPCMFormatFloat64), @(AVAudioPCMFormatInt16), @(AVAudioPCMFormatInt32)]) {
+            for (NSNumber *interleaved in @[@NO, @YES]) {
+                AVAudioFormat *format = [[AVAudioFormat alloc] initWithCommonFormat:common.unsignedIntegerValue sampleRate:24000 channels:2 interleaved:interleaved.boolValue];
+                AVAudioPCMBuffer *input = [[AVAudioPCMBuffer alloc] initWithPCMFormat:format frameCapacity:240];
+                input.frameLength = 240;
+                for (UInt32 channel = 0; channel < 2; ++channel) {
+                    for (UInt32 frame = 0; frame < 240; ++frame) {
+                        UInt32 offset = interleaved.boolValue ? frame * 2 + channel : frame;
+                        UInt32 buffer = interleaved.boolValue ? 0 : channel;
+                        void *data = input.mutableAudioBufferList->mBuffers[buffer].mData;
+                        switch (format.commonFormat) {
+                            case AVAudioPCMFormatFloat32: ((float *)data)[offset] = 0.25; break;
+                            case AVAudioPCMFormatFloat64: ((double *)data)[offset] = 0.25; break;
+                            case AVAudioPCMFormatInt16: ((int16_t *)data)[offset] = 8192; break;
+                            case AVAudioPCMFormatInt32: ((int32_t *)data)[offset] = 536870912; break;
+                            default: return 2;
+                        }
+                    }
+                }
+                NSError *error = nil;
+                AVAudioPCMBuffer *copy = NosyMicrophoneCopyInput(@[format], input.audioBufferList, &error);
+                if (!copy || error || copy.format.sampleRate != 24000 || copy.frameLength != 240
+                    || copy.format.channelCount != 2 || copy.floatChannelData[1][239] != 0.25f) return 3;
+                AudioBufferList *changed = input.mutableAudioBufferList;
+                changed->mBuffers[0].mDataByteSize -= 1;
+                if (NosyMicrophoneCopyInput(@[format], changed, &error) || !error) return 4;
+            }
+        }
         puts("AUDIO EXCEPTION PASS: format, install, prepare, start, stop and removal exceptions become errors without hardware");
+        puts("FAKE INPUT PASS: current 24 kHz PCM formats, channels and stale buffer rejection without hardware");
     }
 }

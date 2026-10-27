@@ -1,10 +1,5 @@
-import AVFoundation
-import AudioToolbox
 import CoreAudio
 import Foundation
-#if canImport(NosyAudioBridge)
-import NosyAudioBridge
-#endif
 
 enum AudioInputs {
     enum Transport: String, Sendable {
@@ -60,65 +55,11 @@ enum AudioInputs {
         return description(id)
     }
 
-    static func current(on engine: AVAudioEngine) -> Device? {
-        guard let input = try? inputNode(on: engine), let unit = input.audioUnit else { return nil }
-        var id = AudioDeviceID(kAudioObjectUnknown)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        guard AudioUnitGetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
-                                   0, &id, &size) == noErr else { return nil }
-        return description(id)
-    }
-
     static func deviceID(uid: String) -> AudioDeviceID? {
         deviceIDs().first { hasInput($0) && stringProperty(kAudioDevicePropertyDeviceUID, on: $0) == uid }
     }
 
     static func device(uid: String) -> Device? { list().first { $0.id == uid } }
-
-    // Call on the engine's control queue while stopped, before reading its input format.
-    // nil preserves AVAudioEngine's automatic system-default routing.
-    // A missing UID restores the default even if this engine previously used that device.
-    static func apply(uid: String?, to engine: AVAudioEngine) throws -> Bool {
-        guard let uid else { return true }
-        if let id = deviceID(uid: uid) {
-            do {
-                try setDevice(id, on: engine)
-                return true
-            } catch {
-                // A device can disappear between enumeration and AudioUnitSetProperty.
-                guard deviceID(uid: uid) == nil else { throw error }
-            }
-        }
-        if let id = defaultDeviceID() { try setDevice(id, on: engine) }
-        return false
-    }
-
-    private static func setDevice(_ id: AudioDeviceID, on engine: AVAudioEngine) throws {
-        guard let unit = try inputNode(on: engine).audioUnit else {
-            throw LectureError.message("The microphone audio unit is unavailable.")
-        }
-        var current = AudioDeviceID(kAudioObjectUnknown)
-        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
-        // Avoid generating another configuration-change notification on each restart.
-        if AudioUnitGetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
-                                0, &current, &size) == noErr, current == id { return }
-        var device = id
-        let status = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global,
-                                         0, &device, UInt32(MemoryLayout<AudioDeviceID>.size))
-        guard status == noErr else {
-            throw NSError(domain: NSOSStatusErrorDomain, code: Int(status),
-                          userInfo: [NSLocalizedDescriptionKey: "Could not select the microphone (CoreAudio error \(status))."])
-        }
-    }
-    private static func inputNode(on engine: AVAudioEngine) throws -> AVAudioInputNode {
-        #if canImport(NosyAudioBridge)
-        var error: NSError?
-        if let input = NosyAudioInput(engine, &error) { return input }
-        throw error ?? LectureError.message("The microphone is unavailable.")
-        #else
-        throw LectureError.message("Nosy's audio support is missing. Reinstall Nosy, then try again.")
-        #endif
-    }
 
     private static func address(_ selector: AudioObjectPropertySelector,
                                 scope: AudioObjectPropertyScope = kAudioObjectPropertyScopeGlobal) -> AudioObjectPropertyAddress {
@@ -200,7 +141,7 @@ enum AudioInputs {
 
     // Watches the device list and the default input. Changes arrive in bursts (a cable pulled, a dock
     // connected), so each burst is coalesced for 200 ms on a utility queue and read there. Nothing here
-    // selects a device: the recorder keeps the UID it was pinned to.
+    // selects a device: the recorder observes routing independently while capturing.
     final class Watcher: @unchecked Sendable {
         // `active` and `pending` are confined to `queue`; `listeners` is touched only by start and invalidate on the main actor.
         private let queue = DispatchQueue(label: "com.bardya.nosy.audio-inputs", qos: .utility)

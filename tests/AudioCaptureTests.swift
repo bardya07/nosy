@@ -6,6 +6,12 @@ import Foundation
 enum AudioCaptureTests {
     static func main() async throws {
         func check(_ condition: Bool, _ message: String) { precondition(condition, message) }
+        if CommandLine.arguments.contains("--fake-capture-only") {
+            try await checkPausedCaptureLifecycle()
+            try await checkDefaultMicrophoneRouting()
+            print("FAKE CAPTURE PASS: default following, explicit selection, format changes, pause, wake, stale callbacks and cleanup")
+            return
+        }
         try await checkPausedCaptureLifecycle()
         for recording in [false, true] {
             for paused in [false, true] {
@@ -74,7 +80,7 @@ enum AudioCaptureTests {
         let inputSource = try String(contentsOf: root.appendingPathComponent("Sources/AudioInputs.swift"), encoding: .utf8)
         check(!captureSource.contains("AudioObjectSetPropertyData"), "Process capture never writes global device defaults")
         check(!captureSource.contains("kAudioDevicePropertyHogMode") && !captureSource.contains("setVoiceProcessingEnabled"), "Process capture never requests hog mode or voice processing")
-        check(!inputSource.contains("AudioObjectSetPropertyData") && inputSource.contains("AudioUnitSetProperty"), "Input selection only configures the recorder AudioUnit")
+        check(!inputSource.contains("AudioObjectSetPropertyData") && !inputSource.contains("AudioUnitSetProperty"), "Input enumeration never configures devices or audio units")
         if #available(macOS 14.4, *) {
             let tap = MacAudioCapture.tapDescription(excluding: 42)
             check(tap.isPrivate && tap.muteBehavior == .unmuted, "The process tap stays private and unmuted")
@@ -92,21 +98,10 @@ enum AudioCaptureTests {
         do { try await idle.switchSource(.macAudio, inputUID: nil); preconditionFailure("Idle recorder cannot switch live hardware") }
         catch { check(error.localizedDescription.contains("Pause"), "Recorder enforces source rules") }
 
-        // Regression: AirPods crash (Nosy-2026-10-24-180124). The node reported 48 kHz while the
-        // headset's mic ran at 24 kHz HFP; tapping with the stale format raised an uncaught NSException.
-        let a2dp = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1)!
+        // AirPods formats are consumed as delivered, with conversion inside Nosy.
         let hfp = AVAudioFormat(standardFormatWithSampleRate: 24_000, channels: 1)!
-        let stalePlan = try Recorder.tapPlan(output: a2dp, hardware: hfp)
-        check(stalePlan.tap?.sampleRate == 24_000 && stalePlan.expected.sampleRate == 24_000, "A stale node format never reaches installTap")
-        let matchingPlan = try Recorder.tapPlan(output: a2dp, hardware: a2dp)
-        check(matchingPlan.tap == nil && matchingPlan.expected.sampleRate == 48_000, "A matching device taps with nil so a mid-install profile switch cannot raise")
-        let stereo = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)!
-        check(try Recorder.tapPlan(output: a2dp, hardware: stereo).tap?.channelCount == 2, "Channel-count mismatch uses the hardware layout")
-        let empty = AVAudioFormat(standardFormatWithSampleRate: 0, channels: 1) ?? AVAudioFormat()
-        do { _ = try Recorder.tapPlan(output: empty, hardware: empty); preconditionFailure("No device must not install a tap") }
-        catch { check(error.localizedDescription.contains("microphone isn't available"), "Missing device fails with a visible error") }
         check(Recorder.micFormatChanged(rate: 48_000, channels: 1, to: hfp), "A 48 to 24 kHz buffer rebuilds the converters")
-        check(!Recorder.micFormatChanged(rate: 24_000, channels: 1, to: hfp), "Same-format buffers keep the converter state")
+        check(!Recorder.micFormatChanged(rate: 24_000, channels: 1, to: hfp), "Same format buffers keep the converter state")
 
         for interleaved in [false, true] {
             let layout = AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_DiscreteInOrder | 4)!
@@ -205,6 +200,49 @@ enum AudioCaptureTests {
         track.push([0.5, 0.5], at: 2, cursor: 40_000)
         check(track.sample(at: 40_000) == 0, "Late buffers cannot replay after a gap")
         print("AUDIO CAPTURE UNIT PASS: source rules, channels, streaming resampling, silence, balance, limiter, drift and late buffers")
+    }
+
+    // These factories never enumerate devices, create an engine or register real IO.
+    static func checkDefaultMicrophoneRouting() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Nosy-fake-mics-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        for source in [RecordingSource.mic, .both] {
+            let routing = FakeMicrophoneRouting()
+            let counts = FakeCaptureCounts()
+            let recorder = Recorder(source: source, microphoneFactory: { routing.make(inputUID: $0) },
+                                    macCaptureFactory: { _, _ in FakeSystemAudioCapture(counts: counts) }) { _ in }
+            try await recorder.start(at: directory.appendingPathComponent("\(source.rawValue).pcm"))
+            precondition(routing.started == ["default A:24000"], "Start uses the existing 24 kHz default in either mode")
+            routing.changeDefault(to: "default B", rate: 48_000)
+            try await Task.sleep(for: .milliseconds(300))
+            precondition(routing.started == ["default A:24000", "default B:48000"], "The running mic follows a new default")
+            routing.deliverObsoleteCallback()
+            recorder.setPaused(true)
+            try await Task.sleep(for: .milliseconds(60))
+            try await recorder.switchInput(uid: "chosen mic")
+            recorder.setPaused(false)
+            try await Task.sleep(for: .milliseconds(60))
+            precondition(routing.started.last == "chosen mic:24000", "An explicit choice opens at its current format")
+            let explicitCount = routing.started.count
+            routing.changeDefault(to: "default C", rate: 44_100)
+            try await Task.sleep(for: .milliseconds(300))
+            precondition(routing.started.count == explicitCount, "Default changes never replace an explicit mic")
+            recorder.setPaused(true)
+            try await Task.sleep(for: .milliseconds(60))
+            try await recorder.switchInput(uid: nil)
+            if RecordingSource.available.contains(.both) { try await recorder.switchSource(.both, inputUID: nil) }
+            recorder.setPaused(false)
+            try await Task.sleep(for: .milliseconds(60))
+            precondition(routing.started.last == "default C:44100", "Selecting system default restores following across mode changes")
+            routing.changeDefault(to: "default C", rate: 24_000)
+            try await Task.sleep(for: .milliseconds(300))
+            precondition(routing.started.last == "default C:24000", "A live format change rebuilds the reader at the new rate")
+            _ = try await recorder.stop()
+            precondition(routing.activeCount == 0, "Stop releases every fake mic")
+            let pcm = try Data(contentsOf: directory.appendingPathComponent("\(source.rawValue).pcm"))
+            precondition(pcm.allSatisfy { $0 == 0 }, "Old mic callbacks cannot append samples after a restart")
+        }
     }
 
     // Real Recorder control/writer queues, with no HAL tap, engine, or real audio.
@@ -333,5 +371,70 @@ private final class FakeCaptureResourceAdapter: CaptureResourceAdapter {
         let value = queue.removeFirst()
         statusQueues[operation] = queue
         return value
+    }
+}
+
+private final class FakeMicrophoneRouting: @unchecked Sendable {
+    private let lock = NSLock()
+    private var defaultUID = "default A"
+    private var rate = 24_000.0
+    private var readers: [FakeMicrophone] = []
+    private var history: [String] = []
+    var started: [String] { lock.lock(); defer { lock.unlock() }; return history }
+    var activeCount: Int { lock.lock(); defer { lock.unlock() }; return readers.filter { $0.active }.count }
+    func make(inputUID: String?) -> FakeMicrophone {
+        lock.lock(); defer { lock.unlock() }
+        let mic = FakeMicrophone(routing: self, requested: inputUID, uid: inputUID ?? defaultUID,
+                                 rate: inputUID == nil ? rate : 24_000)
+        readers.append(mic)
+        return mic
+    }
+    func recordStart(_ mic: FakeMicrophone) {
+        lock.lock(); defer { lock.unlock() }
+        history.append("\(mic.device!.id):\(Int(mic.format!.sampleRate))")
+    }
+    func matches(_ mic: FakeMicrophone) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        return mic.device?.id == (mic.requested ?? defaultUID) && mic.format?.sampleRate == (mic.requested == nil ? rate : 24_000)
+    }
+    func changeDefault(to uid: String, rate: Double) {
+        lock.lock()
+        defaultUID = uid; self.rate = rate
+        let callbacks = readers.filter { $0.active }.compactMap { $0.changed }
+        lock.unlock()
+        callbacks.forEach { $0() }
+    }
+    func deliverObsoleteCallback() {
+        lock.lock(); let receive = readers.first?.receive; lock.unlock()
+        let format = AVAudioFormat(standardFormatWithSampleRate: 24_000, channels: 1)!
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 240)!
+        buffer.frameLength = 240
+        buffer.floatChannelData![0].initialize(repeating: 0.5, count: 240)
+        receive?(buffer, AVAudioTime(hostTime: mach_absolute_time()))
+    }
+}
+
+private final class FakeMicrophone: MicrophoneCapturing {
+    private let routing: FakeMicrophoneRouting
+    let requested: String?
+    let device: AudioInputs.Device?
+    let format: AVAudioFormat?
+    var active = false
+    var receive: (@Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void)?
+    var changed: (@Sendable () -> Void)?
+    init(routing: FakeMicrophoneRouting, requested: String?, uid: String, rate: Double) {
+        self.routing = routing; self.requested = requested
+        device = .init(id: uid, name: uid)
+        format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 1)
+    }
+    func start(receive: @escaping @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void,
+               changed: @escaping @Sendable () -> Void) throws {
+        self.receive = receive; self.changed = changed; active = true
+        routing.recordStart(self)
+    }
+    func needsRestart() -> Bool { !routing.matches(self) }
+    func stop() -> CaptureCleanupReport {
+        active = false
+        return CaptureCleanupReport(operations: [], outstandingResources: 0)
     }
 }

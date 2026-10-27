@@ -117,7 +117,6 @@ final class AppModel: ObservableObject {
     @Published private(set) var inputs: [AudioInputs.Device] = []
     @Published private(set) var systemInput: AudioInputs.Device?
     @Published private(set) var inputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
-    @Published private(set) var bluetoothMicrophoneConfirmed = false
     @Published private(set) var activeInputName: String?
     @Published private(set) var recordingSource = RecordingSource.restored(UserDefaults.standard.string(forKey: "recordingSource"))
     @Published private(set) var macAudioDenied = false
@@ -200,7 +199,6 @@ final class AppModel: ObservableObject {
     var hasLecture: Bool { !lectureName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     var canStart: Bool {
         !busy && hasLecture && !session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !bluetoothChoiceRequired
     }
     // The foreground lecture is waiting behind another transcription.
     var waiting: Bool { phase == .transcribing && current != nil && current?.id != active?.id }
@@ -560,10 +558,6 @@ final class AppModel: ObservableObject {
     }
     func togglePause() {
         guard recording, !transitioning else { return }
-        if paused, bluetoothChoiceRequired {
-            showHome()
-            return
-        }
         guard let recorder else { return }
         paused.toggle()
         recorder.setPaused(paused)
@@ -875,25 +869,6 @@ final class AppModel: ObservableObject {
         (recording ? activeInputName : nil)
             ?? inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
     }
-    private var selectedBluetoothMicrophone: AudioInputs.Device? {
-        guard recordingSource == .both else { return nil }
-        let selected = inputUID.flatMap { uid in inputs.first { $0.id == uid } }
-            ?? (inputUID == nil ? systemInput : nil)
-        return selected?.transport == .bluetooth ? selected : nil
-    }
-    var bluetoothMicrophoneAlternative: AudioInputs.Device? {
-        inputs.first { $0.transport == .builtIn } ?? inputs.first { $0.transport == .wired }
-    }
-    var bluetoothChoiceRequired: Bool {
-        selectedBluetoothMicrophone != nil && !bluetoothMicrophoneConfirmed
-    }
-    var showBluetoothMicrophonePreflight: Bool {
-        bluetoothChoiceRequired && (!recording || paused)
-    }
-    func keepSelectedBluetoothMicrophone() {
-        guard bluetoothChoiceRequired else { return }
-        bluetoothMicrophoneConfirmed = true
-    }
     private func requestMicrophoneAccess() async throws {
         let permission: Bool
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -924,7 +899,6 @@ final class AppModel: ObservableObject {
     }
     private func commitSource(_ source: RecordingSource) {
         recordingSource = source
-        bluetoothMicrophoneConfirmed = false
         UserDefaults.standard.set(source.rawValue, forKey: "recordingSource")
         macAudioDenied = false
         macAudioQuiet = false
@@ -937,13 +911,8 @@ final class AppModel: ObservableObject {
     }
     private func applyInputs(_ reading: AudioInputs.Reading) {
         // A hover must not rebuild a menu whose devices have not changed.
-        let previousSelected = selectedBluetoothMicrophone
         if inputs != reading.devices { inputs = reading.devices }
         if systemInput != reading.systemDefault { systemInput = reading.systemDefault }
-        let currentSelected = selectedBluetoothMicrophone
-        if previousSelected?.id != currentSelected?.id || previousSelected?.transport != currentSelected?.transport {
-            bluetoothMicrophoneConfirmed = false
-        }
     }
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {
@@ -959,7 +928,6 @@ final class AppModel: ObservableObject {
         }
     }
     private func commitInput(_ uid: String?) {
-        if inputUID != uid { bluetoothMicrophoneConfirmed = false }
         inputUID = uid
         UserDefaults.standard.set(uid, forKey: "inputDeviceUID")
     }
@@ -974,7 +942,6 @@ final class AppModel: ObservableObject {
         queue = queued
         transcriptionPauseReason = pauseReason
         inputUID = selectedMicrophone
-        bluetoothMicrophoneConfirmed = false
         recordingSource = source
         systemInput = .init(id: "preview-mic", name: "MacBook Pro Microphone", transport: .builtIn)
         inputs = microphones

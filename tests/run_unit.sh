@@ -5,7 +5,7 @@ source scripts/paths.sh
 source scripts/audio-shim.sh
 python3 tests/InstallGuardTests.py
 mkdir -p "$BUILD_DIR/module-cache"
-clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
+clang -fobjc-arc -fmodules -target arm64-apple-macos14.0 tests/AudioExceptionsTests.m "$BUILD_DIR/AudioExceptions.o" -framework AVFoundation -framework CoreAudio -framework Foundation -o "$BUILD_DIR/AudioExceptionsTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" Sources/FeatureGates.swift tests/FeatureGatesTests.swift -o "$BUILD_DIR/FeatureGatesTests"
 "$BUILD_DIR/FeatureGatesTests"
@@ -43,7 +43,7 @@ swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target a
 "$BUILD_DIR/VocabularyTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" Sources/AudioInputs.swift Sources/RecordingSource.swift \
-    "${AUDIO_SHIM[@]}" Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
+    "${AUDIO_SHIM[@]}" Sources/CaptureMixer.swift Sources/MacAudioCapture.swift Sources/MicrophoneCapture.swift Sources/Recorder.swift tests/AudioCaptureTests.swift -o "$BUILD_DIR/AudioCaptureTests"
 "$BUILD_DIR/AudioCaptureTests"
 swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${BACKEND[@]}" tests/AudioImportTests.swift -o "$BUILD_DIR/AudioImportTests"

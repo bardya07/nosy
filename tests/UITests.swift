@@ -174,28 +174,6 @@ enum UITests {
                   && playbackPreparation.lowerBound < playbackPrepareCall.lowerBound,
                   "Browsing uses cached audio details and creates a player only on a playback request")
         } else { check(false, "Explicit playback preparation remains available") }
-        let previousInputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
-        defer { UserDefaults.standard.set(previousInputUID, forKey: "inputDeviceUID") }
-        let preflight = AppModel()
-        let builtInMic = AudioInputs.Device(id: "preview-built-in", name: "MacBook Pro Microphone", transport: .builtIn)
-        let headsetMic = AudioInputs.Device(id: "preview-headset", name: "AirPods Pro", transport: .bluetooth)
-        preflight.configurePreview(source: .both, microphones: [headsetMic, builtInMic], selectedMicrophone: headsetMic.id)
-        check(preflight.bluetoothChoiceRequired && preflight.bluetoothMicrophoneAlternative?.id == builtInMic.id,
-              "Mixed Mac audio capture asks before using a Bluetooth microphone")
-        preflight.keepSelectedBluetoothMicrophone()
-        check(!preflight.bluetoothChoiceRequired && preflight.inputUID == headsetMic.id,
-              "Keeping the selected headset never changes the selected device")
-        preflight.configurePreview(source: .both, microphones: [headsetMic, builtInMic], selectedMicrophone: headsetMic.id)
-        preflight.phase = .recording
-        preflight.paused = true
-        preflight.workspace.showLibrary()
-        preflight.togglePause()
-        check(preflight.paused && preflight.workspace.mode == .home
-              && preflight.showBluetoothMicrophonePreflight,
-              "Resume keeps capture paused and exposes the pending Bluetooth choice")
-        preflight.selectInput(builtInMic.id)
-        check(!preflight.bluetoothChoiceRequired && preflight.inputUID == builtInMic.id,
-              "Choosing the built in microphone changes the pending input explicitly")
         let previousSource = UserDefaults.standard.string(forKey: "recordingSource")
         defer { UserDefaults.standard.set(previousSource, forKey: "recordingSource") }
         if RecordingSource.macAudioAvailable {
