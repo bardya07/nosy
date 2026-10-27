@@ -11,20 +11,12 @@ final class WorkspaceNavigation: ObservableObject {
     @Published private(set) var settingsPane: SettingsView.Pane = .general
     @Published private(set) var panel: Panel?
 
-    static func immediately(_ changes: () -> Void) {
-        var transaction = Transaction(animation: nil)
-        transaction.disablesAnimations = true
-        withTransaction(transaction, changes)
-    }
-
-    func showLibrary() { Self.immediately { panel = nil; mode = .library } }
-    func showHome() { Self.immediately { panel = nil; mode = .home } }
+    func showLibrary() { panel = nil; mode = .library }
+    func showHome() { panel = nil; mode = .home }
     func requestHome() { homeRequest += 1 }
-    func showSettings(pane: SettingsView.Pane = .general) {
-        Self.immediately { settingsPane = pane; panel = .settings }
-    }
-    func showSetup() { Self.immediately { panel = .setup } }
-    func dismissPanel() { Self.immediately { panel = nil } }
+    func showSettings(pane: SettingsView.Pane = .general) { settingsPane = pane; panel = .settings }
+    func showSetup() { panel = .setup }
+    func dismissPanel() { panel = nil }
 }
 
 // One shell owns the title bar, presentation and native frame. Both content trees
@@ -32,6 +24,7 @@ final class WorkspaceNavigation: ObservableObject {
 struct WorkspaceView: View {
     @ObservedObject var model: AppModel
     @ObservedObject private var navigation: WorkspaceNavigation
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var homeHeight: CGFloat = 256
     var previewSize: CGSize?
     var previewSettingsPane: SettingsView.Pane = .general
@@ -79,6 +72,7 @@ struct WorkspaceView: View {
             .overlay {
                 if let panel = navigation.panel {
                     panelOverlay(panel)
+                        .transition(reduceMotion ? .opacity : .move(edge: .trailing).combined(with: .opacity))
                         .zIndex(10)
                 }
             }
@@ -94,7 +88,7 @@ struct WorkspaceView: View {
         .background {
             if previewSize == nil {
                 WorkspaceWindowFrame(mode: navigation.mode, panel: navigation.panel,
-                                     homeSize: CGSize(width: 400, height: homeHeight + 44),
+                                     homeSize: CGSize(width: 400, height: homeHeight + 44), reduceMotion: reduceMotion,
                                      canClose: { model.finishLibraryEditing?() ?? true })
             }
         }
@@ -137,6 +131,7 @@ struct WorkspaceView: View {
         .onAppear {
             if model.needsOnboarding && !Snapshot.isRunning { navigation.showSetup() }
         }
+        .animation(reduceMotion ? .easeOut(duration: 0.18) : .spring(duration: 0.32, bounce: 0), value: navigation.panel)
         .tipContainerBounds()
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(0.78)).allowsHitTesting(false))
@@ -346,6 +341,7 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
     var mode: WorkspaceNavigation.Mode
     var panel: WorkspaceNavigation.Panel?
     var homeSize: CGSize
+    var reduceMotion: Bool
     var canClose: () -> Bool
     func makeNSView(context: Context) -> Anchor { Anchor() }
     func updateNSView(_ view: Anchor, context: Context) {
@@ -513,11 +509,16 @@ struct WorkspaceWindowFrame: NSViewRepresentable {
             // A mode switch changes the reader's width and lays out its native text
             // views. Go straight to the saved frame instead of repeating that work
             // at every intermediate width of a window animation.
+            let animated = frameChanged && !modeChanged && (panelChanged || sizeChanged) && previous != nil && !request.reduceMotion && window.isVisible
             let generation = attachmentGeneration
             previous = request
             NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0
-                if frameChanged { window.setFrame(frame, display: true) }
+                context.duration = animated ? 0.28 : 0
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                if frameChanged {
+                    if animated { window.animator().setFrame(frame, display: true) }
+                    else { window.setFrame(frame, display: true) }
+                }
             } completionHandler: { [weak self, weak window] in
                 // Even a zero-duration completion must leave the layout stack
                 // before changing size limits (which can resize a window too).

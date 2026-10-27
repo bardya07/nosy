@@ -109,6 +109,8 @@ struct ButtonChrome: ViewModifier {
             .onChange(of: enabled) { _, isEnabled in
                 if !isEnabled { hovering = false }
             }
+            .animation(reduceMotion ? nil : Motion.hover, value: hovering)
+            .animation(reduceMotion ? nil : Motion.press, value: pressed)
     }
 }
 
@@ -239,7 +241,7 @@ struct PillButtonStyle: ButtonStyle {
                 .contentShape(Capsule())
                 .overlay(RoundedRectangle(cornerRadius: style.height / 2 + 3, style: .continuous)
                     .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-3).allowsHitTesting(false))
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: style.kind == .quiet ? .secondary : .primary,
                                        tint: style.kind == .dark ? Theme.stop : style.tint,
                                        pressed: configuration.isPressed, shape: .capsule))
@@ -290,7 +292,7 @@ struct RoundButtonStyle: ButtonStyle {
                 .overlay(Circle().strokeBorder(Theme.line, lineWidth: 1))
                 .contentShape(Circle())
                 .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: .icon, tint: Theme.accentText,
                                        pressed: configuration.isPressed, shape: .circle))
         }
@@ -309,7 +311,7 @@ struct InsetButtonStyle: ButtonStyle {
             configuration.label
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
                 .contentShape(Rectangle())
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                        pressed: configuration.isPressed, shape: .rounded(6)))
         }
@@ -355,7 +357,8 @@ struct FieldChrome: ViewModifier {
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(border, lineWidth: focused ? 1.5 : 1))
             .shadow(color: Theme.accent.opacity(focused ? 0.18 : 0), radius: 6)
-            .onHover { hovering = $0 }
+            .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+            .animation(Motion.hover, value: focused)
     }
     private var border: Color {
         if focused { return Theme.accent.opacity(0.85) }
@@ -392,7 +395,7 @@ struct IconButtonStyle: ButtonStyle {
                 .overlay(Circle().strokeBorder(filled ? Theme.line : .clear).allowsHitTesting(false))
                 .contentShape(Circle())
                 .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: .icon, tint: destructive ? Theme.coral : Theme.accentText,
                                        pressed: configuration.isPressed, shape: .circle))
         }
@@ -545,13 +548,13 @@ private struct TipModifier: ViewModifier {
     private func setHovering(_ inside: Bool) {
         hoverTask?.cancel()
         guard inside else {
-            visible = false
+            withAnimation(Motion.hover) { visible = false }
             return
         }
         hoverTask = Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(320))
             guard !Task.isCancelled else { return }
-            visible = true
+            withAnimation(Motion.hover) { visible = true }
         }
     }
 }

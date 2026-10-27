@@ -277,21 +277,14 @@ final class TranscriptLibrary: ObservableObject {
         case .cancel: return false
         }
     }
-    @discardableResult func select(_ url: URL?, revealFolder: Bool = true) -> Bool {
+    @discardableResult func select(_ url: URL?) -> Bool {
         let target = url.map { requested in
             items.first { $0.url.resolvingSymlinksInPath() == requested.resolvingSymlinksInPath() }?.url ?? requested
         }
-        guard selection != target else {
-            focusedFolder = nil
-            if revealFolder, let target,
-               let lecture = items.first(where: { $0.url == target })?.lecture {
-                WorkspaceNavigation.immediately { folders.reveal(lecture) }
-            }
-            return true
-        }
+        guard selection != target else { focusedFolder = nil; return true }
         guard finishEditing() else { return false }
         focusedFolder = nil
-        setSelection(target, revealFolder: revealFolder)
+        setSelection(target)
         return true
     }
     // Opens a transcript requested by another window or by Home. Its folder is read once, then the transcript is selected.
@@ -304,7 +297,7 @@ final class TranscriptLibrary: ObservableObject {
         await waitForLoad()
         guard !Task.isCancelled, request == openGeneration, loadedRoot == paths.transcripts,
               loadPaths?.transcripts == paths.transcripts else { return }
-        _ = select(url, revealFolder: true)
+        _ = select(url)
     }
 
     // Event handlers only invalidate. Async callers can await the same coalesced, serial loader.
@@ -444,9 +437,7 @@ final class TranscriptLibrary: ObservableObject {
     // Rows on screen, top to bottom: a closed folder hides its sessions.
     @Published private(set) var visibleRows: [TranscriptItem] = []
     private func refreshVisibleRows() { visibleRows = groups.filter { isOpen($0.lecture) }.flatMap(\.items) }
-    func toggleFolder(_ lecture: String) {
-        WorkspaceNavigation.immediately { folders.toggle(lecture, searching: searching) }
-    }
+    func toggleFolder(_ lecture: String) { folders.toggle(lecture, searching: searching) }
     func removeFolderState(_ lecture: String) { folders.remove(lecture) }
     // Previews show the tree with every folder closed.
     func collapseFolders() { folders = TranscriptFolders() }
@@ -467,24 +458,23 @@ final class TranscriptLibrary: ObservableObject {
         if let selection, ordered.contains(where: { $0.url == selection }) { return }
         setSelection(results.matches.first?.url)
     }
-    // Selection reveals folders only for keyboard navigation and explicit external focus.
-    private func setSelection(_ url: URL?, revealFolder: Bool = false) {
-        WorkspaceNavigation.immediately {
-            selection = url
-            refreshDetails()
-            guard let url, let lecture = items.first(where: { $0.url == url })?.lecture else {
-                selectedFolder = nil
-                return
-            }
-            selectedFolder = lecture
-            if revealFolder, !searching { folders.reveal(lecture) }
+    // Selecting a transcript opens its folder, so the one in the reader is always in the tree.
+    private func setSelection(_ url: URL?) {
+        selection = url
+        refreshDetails()
+        guard let url, let lecture = items.first(where: { $0.url == url })?.lecture else {
+            selectedFolder = nil
+            return
         }
+        selectedFolder = lecture
+        guard !searching else { return }
+        folders.reveal(lecture)
     }
     func move(_ step: Int) {
         let list = visibleRows
         guard !list.isEmpty else { return }
         let index = list.firstIndex { $0.url == selection } ?? (step > 0 ? -1 : list.count)
-        _ = select(list[min(list.count - 1, max(0, index + step))].url, revealFolder: true)
+        _ = select(list[min(list.count - 1, max(0, index + step))].url)
     }
 
     // Moves a transcript to the Trash (recoverable) and selects its neighbour.
@@ -820,7 +810,7 @@ struct LibraryView: View {
                     return .handled
                 }
                 .onChange(of: library.selection) { _, url in
-                    if let url { proxy.scrollTo(url) }
+                    if let url { withAnimation(Motion.hover) { proxy.scrollTo(url) } }
                 }
             }
         }
@@ -898,13 +888,13 @@ struct LibraryView: View {
                     library.selectFolder(lecture)
                     library.focusFolder(lecture)
                     focus = .list
-                    library.toggleFolder(lecture)
+                    withAnimation(fold) { library.toggleFolder(lecture) }
                 }, trash: { confirmTrashFolder(lecture) })
             if open {
                 VStack(alignment: .leading, spacing: 1) {
                     ForEach(items) { item in
                         TranscriptSidebarRow(item: item, selected: library.selection == item.url,
-                            open: { library.select(item.url, revealFolder: false); focus = .list },
+                            open: { library.select(item.url); focus = .list },
                             reveal: { NSWorkspace.shared.activateFileViewerSelecting([item.url]) },
                             rename: { library.rename(item, paths: libraryPaths) },
                             trash: { library.trash(item.url, paths: libraryPaths) }, mutationsLocked: summaries.isBusy(item.url))
@@ -1003,9 +993,12 @@ struct LibraryView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .scrollIndicators(.automatic)
+                        .textSelection(.enabled)
                         .onChange(of: momentTarget) { _, target in
                             guard let target else { return }
-                            proxy.scrollTo(target, anchor: .top)
+                            withAnimation(.spring(response: 0.34, dampingFraction: 0.8)) {
+                                proxy.scrollTo(target, anchor: .top)
+                            }
                         }
                     }
                 }
@@ -1156,10 +1149,11 @@ private struct TranscriptFolderRow: View {
                 .accessibilityLabel("Delete \(lecture)")
                 .opacity(showsTrash ? 1 : 0)
                 .disabled(!showsTrash || trashLocked)
+                .animation(Motion.hover, value: showsTrash)
         }
         .padding(.trailing, 4)
         .frame(maxWidth: .infinity)
-        .onHover { hovering = $0 }
+        .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
     }
 }
 
@@ -1172,7 +1166,7 @@ private struct FolderRowStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .background(hovering ? Theme.surface : .clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(10)))
         }
@@ -1194,10 +1188,11 @@ private struct SessionRowStyle: ButtonStyle {
             configuration.label
                 .background(fill, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(alignment: .leading) {
-                    Capsule().fill(Theme.accent).frame(width: 3, height: 14).opacity(selected ? 1 : 0)
+                    Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 14 : 0)
                 }
                 .contentShape(Rectangle())
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .animation(Motion.state(reduceMotion), value: selected)
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(8)))
         }
@@ -1438,7 +1433,7 @@ private struct RecentToggleStyle: ButtonStyle {
                 .overlay(RoundedRectangle(cornerRadius: 13.5, style: .continuous)
                     .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2))
                 .contentShape(Capsule())
-                .onHover { hovering = $0 }
+                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .capsule))
         }
@@ -1779,6 +1774,7 @@ private struct TranscriptText: View {
                 .id(row.id)
             }
         }
+        .textSelection(.enabled)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -1789,16 +1785,14 @@ private struct TranscriptText: View {
             Text(items.map { "• \($0)" }.joined(separator: "\n"))
                 .font(Theme.text(15))
                 .lineSpacing(5)
-                .textSelection(.enabled)
         case .heading(let text):
             Text(text).font(Theme.text(16, .semibold)).foregroundStyle(Theme.ink).padding(.top, 6)
-                .textSelection(.enabled)
                 .accessibilityAddTraits(.isHeader)
         case .marker(let timestamp, let label):
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Image(systemName: "bookmark.fill").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
-                Text(timestamp).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.accentText).textSelection(.enabled)
-                Text(label).font(Theme.text(15)).foregroundStyle(Theme.ink).textSelection(.enabled)
+                Text(timestamp).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.accentText)
+                Text(label).font(Theme.text(15)).foregroundStyle(Theme.ink)
             }
             .foregroundStyle(Theme.accentText)
             .padding(.vertical, 2)
@@ -1864,8 +1858,8 @@ private struct AIMarkerRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Image(systemName: "sparkles").font(.system(size: 10, weight: .semibold)).accessibilityHidden(true)
-            Text(Core.timer(marker.t)).font(Theme.text(12)).monospacedDigit().textSelection(.enabled)
-            Text(marker.label).font(Theme.text(14)).italic().textSelection(.enabled)
+            Text(Core.timer(marker.t)).font(Theme.text(12)).monospacedDigit()
+            Text(marker.label).font(Theme.text(14)).italic()
             Spacer(minLength: 8)
             Button(action: remove) {
                 Image(systemName: "xmark").font(.system(size: 9, weight: .semibold))
@@ -1901,10 +1895,11 @@ struct RowButtonStyle: ButtonStyle {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(fill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay(alignment: .leading) {
-                    Capsule().fill(Theme.accent).frame(width: 3, height: 18).opacity(selected ? 1 : 0).offset(x: 1)
+                    Capsule().fill(Theme.accent).frame(width: 3, height: selected ? 18 : 0).offset(x: 1)
                 }
                 .opacity(enabled ? 1 : 0.42)
                 .contentShape(Rectangle())
+                .animation(Motion.state(reduceMotion), value: selected)
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .rounded(10)))
         }
