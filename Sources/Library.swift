@@ -681,7 +681,10 @@ struct LibraryView: View {
             if let previewQuery { library.query = previewQuery }
         }
         .onReceive(model.workspace.$mode) { mode in
-            if mode != .library { audioPlayer.stop() }
+            if mode != .library { audioPlayer.deactivate() }
+        }
+        .onReceive(model.workspace.$panel) { panel in
+            if panel != nil { audioPlayer.deactivate() }
         }
         .onChange(of: library.selection) { showSummary = false }
         .onChange(of: library.items) {
@@ -1000,7 +1003,7 @@ struct LibraryView: View {
                 }
                 if let audio = audioURL(for: item) {
                     Rectangle().fill(Theme.line).frame(height: 1)
-                    AudioStrip(url: audio, player: audioPlayer, moments: details.keyMoments,
+                    AudioStrip(url: audio, duration: audioDuration(for: item), player: audioPlayer, moments: details.keyMoments,
                                selectMoment: selectMoment).id(audio)
                 }
             }
@@ -1014,6 +1017,7 @@ struct LibraryView: View {
         }
     }
     private func audioURL(for item: TranscriptItem) -> URL? { library.reader(for: item.url)?.audio }
+    private func audioDuration(for item: TranscriptItem) -> TimeInterval { library.reader(for: item.url)?.duration ?? 0 }
 
     private func readerHeader(_ item: TranscriptItem) -> some View {
         HStack(spacing: 4) {
@@ -1266,6 +1270,10 @@ struct RecentView: View {
         guard let selected else { return nil }
         return library.reader(for: selected.url)?.audio
     }
+    private var selectedAudioDuration: TimeInterval {
+        guard let selected else { return 0 }
+        return library.reader(for: selected.url)?.duration ?? 0
+    }
 
     var body: some View {
         Group {
@@ -1364,7 +1372,7 @@ struct RecentView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             Rectangle().fill(Theme.line).frame(height: 1)
             if showingAudio, let audio = selectedAudio {
-                AudioStrip(url: audio).id(audio)
+                AudioStrip(url: audio, duration: selectedAudioDuration).id(audio)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             } else {
                 ScrollView {
@@ -1424,14 +1432,16 @@ private struct RecentToggleStyle: ButtonStyle {
 // Play the lecture back while reading, at study speeds.
 private struct AudioStrip: View {
     let url: URL
+    let duration: TimeInterval
     @StateObject private var retainedPlayer: StripPlayer
     @ObservedObject private var player: StripPlayer
     var moments: [ReaderKeyMoment] = []
     var selectMoment: (ReaderKeyMoment) -> Void = { _ in }
 
-    init(url: URL, player: StripPlayer? = nil, moments: [ReaderKeyMoment] = [],
+    init(url: URL, duration: TimeInterval = 0, player: StripPlayer? = nil, moments: [ReaderKeyMoment] = [],
          selectMoment: @escaping (ReaderKeyMoment) -> Void = { _ in }) {
         self.url = url
+        self.duration = duration
         let instance = player ?? StripPlayer()
         _retainedPlayer = StateObject(wrappedValue: instance)
         _player = ObservedObject(wrappedValue: instance)
@@ -1487,8 +1497,8 @@ private struct AudioStrip: View {
         }
         .padding(.horizontal, 22).padding(.vertical, 10)
         .background(Theme.surface.opacity(0.6))
-        .onAppear { player.load(url) }
-        .onDisappear { player.stop() }
+        .onAppear { player.configure(url: url, duration: duration) }
+        .onDisappear { player.deactivate() }
     }
     private func rateLabel(_ rate: Double) -> String { rate == 1 ? "1×" : "\(rate.formatted(.number.precision(.fractionLength(0...2))))×" }
 }
@@ -1500,44 +1510,75 @@ private final class StripPlayer: ObservableObject {
     @Published var duration: TimeInterval = 0
     @Published var rate: Float = 1 { didSet { audio?.rate = rate } }
     private var audio: AVAudioPlayer?
+    private var url: URL?
     private var timer: Timer?
-    func load(_ url: URL) {
-        // The shared player keeps its identity across transcripts, so the previous track's state is cleared first.
-        audio?.stop()
-        timer?.invalidate()
-        timer = nil
-        audio = nil
-        playing = false
+    func configure(url: URL, duration: TimeInterval) {
+        guard self.url != url else {
+            if self.duration <= 0 { self.duration = max(0, duration) }
+            return
+        }
+        releaseAudio(preserveTime: false)
+        self.url = url
+        self.duration = max(0, duration)
         time = 0
-        duration = 0
-        audio = try? AVAudioPlayer(contentsOf: url)
-        audio?.enableRate = true
-        audio?.prepareToPlay()
-        duration = audio?.duration ?? 0
+        playing = false
+    }
+    private func prepareForPlayback() -> AVAudioPlayer? {
+        if let audio { return audio }
+        guard let url, let audio = try? AVAudioPlayer(contentsOf: url) else { return nil }
+        audio.enableRate = true
+        audio.prepareToPlay()
+        if audio.duration > 0 { duration = audio.duration }
+        audio.currentTime = min(max(0, time), audio.duration)
+        self.audio = audio
+        return audio
     }
     func toggle() {
-        guard let audio else { return }
-        if audio.isPlaying { audio.pause(); playing = false; timer?.invalidate() }
-        else {
-            audio.rate = rate
-            audio.play(); playing = true
+        if let audio, audio.isPlaying {
+            audio.pause()
+            playing = false
             timer?.invalidate()
-            timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
-                Task { @MainActor in
-                    guard let self, let audio = self.audio else { return }
-                    self.time = audio.currentTime
-                    if !audio.isPlaying { self.playing = false; self.timer?.invalidate() }
+            timer = nil
+            return
+        }
+        guard let audio = prepareForPlayback() else { return }
+        if audio.currentTime >= audio.duration {
+            audio.currentTime = 0
+            time = 0
+        }
+        audio.rate = rate
+        guard audio.play() else {
+            releaseAudio(preserveTime: true)
+            return
+        }
+        playing = true
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let audio = self.audio else { return }
+                self.time = min(audio.currentTime, self.duration)
+                if !audio.isPlaying {
+                    self.releaseAudio(preserveTime: true)
                 }
             }
         }
     }
     func seek(_ value: TimeInterval) {
-        guard let audio else { return }
-        let target = min(max(0, value), audio.duration)
-        audio.currentTime = target
+        let target = min(max(0, value), max(0, duration))
+        audio?.currentTime = target
         time = target
     }
-    func stop() { audio?.stop(); timer?.invalidate(); playing = false }
+    func deactivate() { releaseAudio(preserveTime: true) }
+    private func releaseAudio(preserveTime: Bool) {
+        timer?.invalidate()
+        timer = nil
+        if let audio {
+            if preserveTime { time = min(audio.currentTime, duration) }
+            audio.stop()
+            self.audio = nil
+        }
+        playing = false
+    }
 }
 
 // Plain text, PDF and Print, for sharing outside Nosy.

@@ -164,6 +164,15 @@ enum UITests {
               && AudioInputs.Transport.classify(kAudioDeviceTransportTypeBluetooth) == .bluetooth
               && AudioInputs.Transport.classify(kAudioDeviceTransportTypeUSB) == .wired,
               "Microphone transport metadata distinguishes headset and alternatives")
+        let librarySource = try String(contentsOf: root.appendingPathComponent("Sources/Library.swift"), encoding: .utf8)
+        if let playbackPreparation = librarySource.range(of: "private func prepareForPlayback()"),
+           let playerAllocation = librarySource.range(of: "AVAudioPlayer(contentsOf: url)"),
+           let playbackPrepareCall = librarySource.range(of: "audio.prepareToPlay()") {
+            check(librarySource.contains("player.configure(url: url, duration: duration)")
+                  && playbackPreparation.lowerBound < playerAllocation.lowerBound
+                  && playbackPreparation.lowerBound < playbackPrepareCall.lowerBound,
+                  "Browsing uses cached audio details and creates a player only on a playback request")
+        } else { check(false, "Explicit playback preparation remains available") }
         let previousInputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
         defer { UserDefaults.standard.set(previousInputUID, forKey: "inputDeviceUID") }
         let preflight = AppModel()
