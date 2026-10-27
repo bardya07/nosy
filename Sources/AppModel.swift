@@ -41,6 +41,27 @@ final class RecordingTelemetry: ObservableObject {
     }
 }
 
+// The recorder's samples are folded once here. Views only receive an update when advice changes.
+@MainActor
+final class RecordingGuidancePresentation: ObservableObject {
+    @Published private(set) var band: RecordingLevelGuidance.Band = .quiet
+    private var accumulator = RecordingLevelGuidance()
+
+    func reset() {
+        accumulator.reset()
+        publishBandIfChanged()
+    }
+
+    func record(level: Int, at time: TimeInterval) {
+        _ = accumulator.add(level, at: time)
+        publishBandIfChanged()
+    }
+
+    private func publishBandIfChanged() {
+        if band != accumulator.band { band = accumulator.band }
+    }
+}
+
 final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound, .list]
@@ -70,6 +91,7 @@ final class AppModel: ObservableObject {
     // Recorder samples and transcription progress change several times a second, so they live in
     // `telemetry`. Only the views that show them observe it; the accessors below keep callers unchanged.
     let telemetry = RecordingTelemetry()
+    let levelGuidance = RecordingGuidancePresentation()
     var duration: TimeInterval {
         get { telemetry.sample.duration }
         set { telemetry.update { $0.duration = newValue } }
@@ -419,6 +441,7 @@ final class AppModel: ObservableObject {
                 duration = 0
                 level = -160
                 levels = Array(repeating: -160, count: Self.waveformLength)
+                levelGuidance.reset()
                 paused = false
                 silenceWarning = false
                 stalled = false
@@ -460,6 +483,7 @@ final class AppModel: ObservableObject {
             // without reviving the paused waveform or its cleared silence warning.
             if paused { telemetry.update { $0.duration = savedDuration }; return }
             telemetry.record(duration: savedDuration, level: db)
+            levelGuidance.record(level: InputLevel.estimate(db), at: savedDuration)
             if silenceWarning != silent { silenceWarning = silent }
             checkRecordingReminder()
         case .input(let name):

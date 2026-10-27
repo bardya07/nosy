@@ -51,7 +51,8 @@ struct WorkspaceView: View {
             WorkspaceTitlebar(model: model, managesWindowChrome: true)
             // Home keeps its natural height for the window; a screen too short for it scrolls instead of clipping.
             ScrollView {
-                MainView(model: model, embedded: true)
+                MainView(model: model, embedded: true,
+                         telemetryVisible: navigation.mode == .home && navigation.panel == nil)
                     .background(GeometryReader { geometry in
                         Color.clear.preference(key: HomeHeightKey.self, value: geometry.size.height)
                     })
@@ -65,7 +66,7 @@ struct WorkspaceView: View {
             .overlay {
                 VStack(spacing: 0) {
                     (previewLibrary ?? LibraryView(model: model))
-                    if model.recording { LibraryRecordingBar(model: model) }
+                    if navigation.mode == .library && model.recording { LibraryRecordingBar(model: model) }
                 }
                 .opacity(navigation.mode == .library ? 1 : 0)
                 .allowsHitTesting(navigation.mode == .library && navigation.panel == nil)

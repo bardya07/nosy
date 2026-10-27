@@ -154,6 +154,7 @@ struct MainView: View {
     var previewHoveredFolder: String? = nil
     var onBrowse: (() -> Void)? = nil
     var embedded = false
+    var telemetryVisible = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focus: Field?
     @State private var dropping = false
@@ -184,7 +185,8 @@ struct MainView: View {
         VStack(spacing: 0) {
             if !embedded { WorkspaceTitlebar(model: model, onHome: goHome).zIndex(20) }
             if showsTranscribingScreen {
-                StagePanel(model: model, onHome: { model.homeFromTranscribing = true })
+                StagePanel(model: model, telemetryVisible: telemetryVisible,
+                           onHome: { model.homeFromTranscribing = true })
                     .padding(16).card().padding(.horizontal, 20).padding(.vertical, 16)
             } else {
                 if model.phase == .idle || model.homeFromTranscribing { captureMode }
@@ -275,6 +277,7 @@ struct MainView: View {
             if model.phase != .recording && model.phase != .done { fields }
             if model.phase != .idle || model.homeFromTranscribing {
                 StagePanel(model: model,
+                           telemetryVisible: telemetryVisible,
                            showReady: model.homeFromTranscribing && model.phase == .transcribing,
                            onHome: {
                                model.homeFromTranscribing = true
@@ -903,11 +906,16 @@ struct MainView: View {
             Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
             HStack(spacing: 10) {
                 Text("Level").font(Theme.text(11)).foregroundStyle(Theme.muted)
-                LevelBar(telemetry: model.telemetry)
-                LiveLevelReadout(telemetry: model.telemetry)
+                if telemetryVisible {
+                    LiveLevelBar(telemetry: model.telemetry)
+                    LiveLevelReadout(telemetry: model.telemetry)
+                } else {
+                    LevelBar(level: model.telemetry.level)
+                    FrozenLevelReadout(level: model.telemetry.level)
+                }
             }
             .padding(.horizontal, 8)
-            RecordingLevelGuidanceView(model: model, telemetry: model.telemetry)
+            RecordingLevelGuidanceView(recording: model.recording, guidance: model.levelGuidance)
             Text("The level reads live while you record.")
                 .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
                 .padding(.horizontal, 8).padding(.top, 2)
@@ -1173,6 +1181,16 @@ private struct StartButtonStyle: ButtonStyle {
 // Tapping it switches between the estimated sound level and the technical value. The choice is remembered.
 struct LiveLevelReadout: View {
     @ObservedObject var telemetry: RecordingTelemetry
+    var body: some View { LevelReadout(level: telemetry.level) }
+}
+
+private struct FrozenLevelReadout: View {
+    let level: Double
+    var body: some View { LevelReadout(level: level) }
+}
+
+private struct LevelReadout: View {
+    let level: Double
     @AppStorage(LevelDisplay.storageKey) private var savedDisplay = LevelDisplay.estimate.rawValue
 
     private var display: LevelDisplay { LevelDisplay.stored(savedDisplay) }
@@ -1182,11 +1200,11 @@ struct LiveLevelReadout: View {
             savedDisplay = display.toggled.rawValue
         } label: {
             HStack(spacing: 6) {
-                Text(InputLevel.primary(telemetry.level, display: display))
+                Text(InputLevel.primary(level, display: display))
                     .font(Theme.text(12, .semibold)).monospacedDigit()
                     .foregroundStyle(Theme.muted)
                 if display == .estimate {
-                    let band = InputLevel.band(telemetry.level)
+                    let band = InputLevel.band(level)
                     Text(band.label)
                         .font(Theme.text(9.5, .semibold))
                         .foregroundStyle(band.tint)
@@ -1206,46 +1224,30 @@ struct LiveLevelReadout: View {
     }
 
     private var spokenValue: String {
-        guard display == .estimate else { return InputLevel.technical(telemetry.level) }
-        return "\(InputLevel.estimate(telemetry.level)) decibels, \(InputLevel.band(telemetry.level).label)"
+        guard display == .estimate else { return InputLevel.technical(level) }
+        return "\(InputLevel.estimate(level)) decibels, \(InputLevel.band(level).label)"
     }
 }
 
 private struct RecordingLevelGuidanceView: View {
-    @ObservedObject var model: AppModel
-    @ObservedObject var telemetry: RecordingTelemetry
-    @State private var guidance = RecordingLevelGuidance()
+    let recording: Bool
+    @ObservedObject var guidance: RecordingGuidancePresentation
 
     var body: some View {
-        Group {
-            if model.recording {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("Recommended 55 to 75 dB")
-                        .font(Theme.text(9.5)).foregroundStyle(Theme.muted)
-                    Text(advice)
-                        .font(Theme.text(10.5, .medium)).foregroundStyle(tint)
-                        .lineLimit(1).minimumScaleFactor(0.85)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .padding(.horizontal, 8)
-                .padding(.top, 1)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel(advice)
-                .accessibilityValue("Recommended 55 to 75 decibels")
+        if recording {
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("Recommended 55 to 75 dB")
+                    .font(Theme.text(9.5)).foregroundStyle(Theme.muted)
+                Text(advice)
+                    .font(Theme.text(10.5, .medium)).foregroundStyle(guidance.band.tint)
+                    .lineLimit(1).minimumScaleFactor(0.85)
             }
-        }
-        .onAppear {
-            guidance.reset()
-            if model.recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level), at: telemetry.duration) }
-        }
-        .onChange(of: model.recording) { _, recording in
-            guidance.reset()
-            if recording, !model.paused { _ = guidance.add(InputLevel.estimate(telemetry.level), at: telemetry.duration) }
-        }
-        // Each sample counts the recorded time since the previous one, so the three-second window holds at any delivery rate.
-        .onChange(of: telemetry.sample) { _, sample in
-            guard model.recording, !model.paused else { return }
-            _ = guidance.add(InputLevel.estimate(sample.level), at: sample.duration)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.horizontal, 8)
+            .padding(.top, 1)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(advice)
+            .accessibilityValue("Recommended 55 to 75 decibels")
         }
     }
 
@@ -1257,13 +1259,6 @@ private struct RecordingLevelGuidanceView: View {
         }
     }
 
-    private var tint: Color {
-        switch guidance.band {
-        case .quiet: Theme.accentText
-        case .good: Theme.savedText
-        case .loud: Theme.amber
-        }
-    }
 }
 
 private extension InputLevel.Band {
@@ -1276,29 +1271,40 @@ private extension InputLevel.Band {
     }
 }
 
-private struct LevelBar: View {
+private extension RecordingLevelGuidance.Band {
+    var tint: Color {
+        switch self {
+        case .quiet: Theme.accentText
+        case .good: Theme.savedText
+        case .loud: Theme.amber
+        }
+    }
+}
+
+private struct LiveLevelBar: View {
     @ObservedObject var telemetry: RecordingTelemetry
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var body: some View { LevelBar(level: telemetry.level) }
+}
+
+private struct LevelBar: View {
+    let level: Double
     var body: some View {
-        let decibels = telemetry.level
-        GeometryReader { geometry in
+        Canvas { context, size in
             let range = RecordingLevelGuidance.recommendedRange
-            let start = geometry.size.width * InputLevel.estimateFraction(range.lowerBound)
-            let end = geometry.size.width * InputLevel.estimateFraction(range.upperBound)
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.line)
-                Capsule().fill(Theme.accentText)
-                    .frame(width: geometry.size.width * InputLevel.fraction(decibels))
-                Capsule().fill(Theme.savedText.opacity(0.36))
-                    .frame(width: max(0, end - start))
-                    .offset(x: start)
-            }
+            let start = size.width * CGFloat(InputLevel.estimateFraction(range.lowerBound))
+            let end = size.width * CGFloat(InputLevel.estimateFraction(range.upperBound))
+            let radius = size.height / 2
+            context.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: radius), with: .color(Theme.line))
+            let width = size.width * CGFloat(InputLevel.fraction(level))
+            context.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: width, height: size.height), cornerRadius: radius),
+                         with: .color(Theme.accentText))
+            context.fill(Path(roundedRect: CGRect(x: start, y: 0, width: max(0, end - start), height: size.height), cornerRadius: radius),
+                         with: .color(Theme.savedText.opacity(0.36)))
         }
         .frame(height: 6)
-        .animation(reduceMotion ? nil : .linear(duration: 0.1), value: decibels)
         .accessibilityElement()
         .accessibilityLabel("Input level meter")
-        .accessibilityValue(InputLevel.technical(decibels))
+        .accessibilityValue(InputLevel.technical(level))
     }
 }
 
@@ -1405,6 +1411,7 @@ struct Banner<Actions: View>: View {
 // The middle of the window: what Nosy is doing right now.
 struct StagePanel: View {
     @ObservedObject var model: AppModel
+    var telemetryVisible = true
     var dropping = false
     var showReady = false
     var onHome: () -> Void = {}
@@ -1448,12 +1455,28 @@ struct StagePanel: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
-                    RecordingClock(telemetry: model.telemetry, paused: model.paused)
+                    if telemetryVisible {
+                        RecordingClock(telemetry: model.telemetry, paused: model.paused)
+                    } else {
+                        RecordingClockText(duration: model.telemetry.duration, paused: model.paused)
+                    }
                 }
                 Spacer(minLength: 0)
-                LiveLevelReadout(telemetry: model.telemetry)
+                if telemetryVisible {
+                    LiveLevelReadout(telemetry: model.telemetry)
+                } else {
+                    FrozenLevelReadout(level: model.telemetry.level)
+                }
             }
-            LiveWaveform(telemetry: model.telemetry, paused: model.paused)
+            if telemetryVisible {
+                LiveWaveform(telemetry: model.telemetry, paused: model.paused)
+            } else {
+                Waveform(levels: model.telemetry.levels, tint: Theme.wavePlayed, active: !model.paused)
+                    .frame(height: 24).padding(.horizontal, 20).frame(height: 44)
+                    .background(Theme.waveform, in: Capsule())
+                    .accessibilityLabel("Live recording input")
+                    .accessibilityValue(InputLevel.technical(model.telemetry.level))
+            }
             RecordingMarkers(model: model)
             if let active = model.active {
                 BackgroundTranscriptionNote(telemetry: model.telemetry, lecture: active.lecture, pauseReason: model.transcriptionPauseReason)
@@ -1656,14 +1679,20 @@ struct SavedSummary {
 private struct RecordingClock: View {
     @ObservedObject var telemetry: RecordingTelemetry
     let paused: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        Text(Core.timer(telemetry.duration))
+        RecordingClockText(duration: telemetry.duration, paused: paused)
+    }
+}
+
+private struct RecordingClockText: View {
+    let duration: TimeInterval
+    let paused: Bool
+    var body: some View {
+        Text(Core.timer(duration))
             .font(Theme.text(44)).monospacedDigit().tracking(-1.32)
             .foregroundStyle(paused ? Theme.muted : Theme.navy)
             .contentTransition(.numericText())
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: Int(telemetry.duration))
-            .accessibilityLabel("Recorded \(Core.timer(telemetry.duration))")
+            .accessibilityLabel("Recorded \(Core.timer(duration))")
     }
 }
 
@@ -1734,7 +1763,6 @@ struct Waveform: View {
     let levels: [Double]
     let tint: Color
     let active: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
         Canvas { context, size in
             guard !levels.isEmpty else { return }
@@ -1747,7 +1775,6 @@ struct Waveform: View {
                 context.fill(Path(roundedRect: rect, cornerRadius: width / 2), with: .color(active && db > -55 ? tint : Theme.waveIdle))
             }
         }
-        .animation(reduceMotion ? nil : .linear(duration: 0.1), value: levels)
     }
 }
 
