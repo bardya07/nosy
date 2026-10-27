@@ -355,8 +355,8 @@ enum Snapshot {
                 MainView(model: model(.idle), previewSessionRequired: true)
             }.padding(36).background(PreviewBackdrop()), "session-required.\(mode)") else { return 1 }
             // Microphone panel: the device list with the current choice checked, and the meter while recording.
-            let microphones = [AudioInputs.Device(id: "preview-yeti", name: "Yeti Stereo Microphone"),
-                               AudioInputs.Device(id: "preview-airpods", name: "AirPods Pro")]
+            let microphones = [AudioInputs.Device(id: "preview-yeti", name: "Yeti Stereo Microphone", transport: .wired),
+                               AudioInputs.Device(id: "preview-airpods", name: "AirPods Pro", transport: .bluetooth)]
             let micIdle = model(.idle)
             micIdle.configurePreview(source: .mic, microphones: microphones, selectedMicrophone: "preview-yeti")
             let micRecording = model(.recording)

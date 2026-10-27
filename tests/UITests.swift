@@ -1,4 +1,5 @@
 import AppKit
+import CoreAudio
 import SwiftUI
 
 @main
@@ -159,6 +160,25 @@ enum UITests {
 
         check(!AudioInputs.isUserVisible(.init(id: "proxy", name: "CADefaultDeviceAggregate-45310-0")), "Hide the private CoreAudio proxy")
         check(AudioInputs.isUserVisible(.init(id: "user-aggregate", name: "My Studio Aggregate")), "Keep intentional aggregates")
+        check(AudioInputs.Transport.classify(kAudioDeviceTransportTypeBuiltIn) == .builtIn
+              && AudioInputs.Transport.classify(kAudioDeviceTransportTypeBluetooth) == .bluetooth
+              && AudioInputs.Transport.classify(kAudioDeviceTransportTypeUSB) == .wired,
+              "Microphone transport metadata distinguishes headset and alternatives")
+        let previousInputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
+        defer { UserDefaults.standard.set(previousInputUID, forKey: "inputDeviceUID") }
+        let preflight = AppModel()
+        let builtInMic = AudioInputs.Device(id: "preview-built-in", name: "MacBook Pro Microphone", transport: .builtIn)
+        let headsetMic = AudioInputs.Device(id: "preview-headset", name: "AirPods Pro", transport: .bluetooth)
+        preflight.configurePreview(source: .both, microphones: [headsetMic, builtInMic], selectedMicrophone: headsetMic.id)
+        check(preflight.bluetoothChoiceRequired && preflight.bluetoothMicrophoneAlternative?.id == builtInMic.id,
+              "Mixed Mac audio capture asks before using a Bluetooth microphone")
+        preflight.keepSelectedBluetoothMicrophone()
+        check(!preflight.bluetoothChoiceRequired && preflight.inputUID == headsetMic.id,
+              "Keeping the selected headset never changes the selected device")
+        preflight.configurePreview(source: .both, microphones: [headsetMic, builtInMic], selectedMicrophone: headsetMic.id)
+        preflight.selectInput(builtInMic.id)
+        check(!preflight.bluetoothChoiceRequired && preflight.inputUID == builtInMic.id,
+              "Choosing the built in microphone changes the pending input explicitly")
         let previousSource = UserDefaults.standard.string(forKey: "recordingSource")
         defer { UserDefaults.standard.set(previousSource, forKey: "recordingSource") }
         if RecordingSource.macAudioAvailable {

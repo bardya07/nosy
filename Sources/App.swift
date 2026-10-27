@@ -225,7 +225,7 @@ struct MainView: View {
         .background {
             Button("Start recording") { model.start() }
                 .keyboardShortcut("r", modifiers: .command)
-                .disabled((model.phase != .idle && !model.homeFromTranscribing) || model.busy || !model.hasLecture)
+                .disabled((model.phase != .idle && !model.homeFromTranscribing) || model.busy || !model.hasLecture || model.bluetoothChoiceRequired)
                 .opacity(0).frame(width: 0, height: 0)
                 .allowsHitTesting(false).accessibilityHidden(true)
         }
@@ -373,6 +373,10 @@ struct MainView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             if enteringNewFolderName {
                 newFolderNameEntry
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+            }
+            if model.bluetoothChoiceRequired && openDropdown != .microphone {
+                bluetoothMicrophonePreflight
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
             if let openDropdown, openDropdown != .microphone {
@@ -870,7 +874,7 @@ struct MainView: View {
         .interactionTarget("primary-action")
         .modifier(StartShake(animatableData: reduceMotion ? 0 : CGFloat(startShake)))
         .animation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.4), value: startShake)
-        .disabled(model.recording ? model.transitioning : (!showsHomeAction && !model.hasLecture))
+        .disabled(model.recording ? model.transitioning : (!showsHomeAction && (!model.hasLecture || model.bluetoothChoiceRequired)))
     }
 
     private var micButton: some View {
@@ -903,6 +907,9 @@ struct MainView: View {
                 micRow("Mac audio · Mac audio + mic", chosen: model.recordingSource == .both) { model.selectSource(.both) }
                 micRow("Mac audio only", chosen: model.recordingSource == .macAudio) { model.selectSource(.macAudio) }
             }
+            if model.showBluetoothMicrophonePreflight {
+                bluetoothMicrophonePreflight
+            }
             Rectangle().fill(Theme.line).frame(height: 1).padding(.vertical, 4)
             HStack(spacing: 10) {
                 Text("Level").font(Theme.text(11)).foregroundStyle(Theme.muted)
@@ -924,6 +931,35 @@ struct MainView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .card(Theme.surface, radius: 12)
         .interactionTarget("microphone-panel")
+    }
+
+    private var bluetoothMicrophonePreflight: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Text("Using this headset microphone can change the audio profile used by your call apps.")
+                .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 6) {
+                if let alternative = model.bluetoothMicrophoneAlternative {
+                    Button(alternative.transport == .builtIn ? "Use Mac microphone" : "Use wired microphone") {
+                        model.selectInput(alternative.id)
+                        closeDropdown()
+                    }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+                    .accessibilityHint("Selects an available microphone without opening it")
+                }
+                Button("Keep selected microphone") {
+                    model.keepSelectedBluetoothMicrophone()
+                    closeDropdown()
+                }
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 26, fullWidth: false))
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface.opacity(0.7), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("bluetooth-microphone-preflight")
     }
 
     // Changing the device or source is locked while a recording runs; the meter stays live.
