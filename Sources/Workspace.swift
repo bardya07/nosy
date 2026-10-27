@@ -65,8 +65,11 @@ struct WorkspaceView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .overlay {
                 VStack(spacing: 0) {
-                    (previewLibrary ?? LibraryView(model: model))
-                    if navigation.mode == .library && model.recording { LibraryRecordingBar(model: model) }
+                    (previewLibrary ?? LibraryView(model: model,
+                        telemetryVisible: navigation.mode == .library && navigation.panel == nil))
+                    if navigation.mode == .library && model.recording {
+                        LibraryRecordingBar(model: model, telemetryVisible: navigation.panel == nil)
+                    }
                 }
                 .opacity(navigation.mode == .library ? 1 : 0)
                 .allowsHitTesting(navigation.mode == .library && navigation.panel == nil)
@@ -273,6 +276,7 @@ private struct RecordingBarClock: View {
 
 private struct LibraryRecordingBar: View {
     @ObservedObject var model: AppModel
+    let telemetryVisible: Bool
     var body: some View {
         HStack(spacing: 12) {
             Circle().fill(model.paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
@@ -282,8 +286,13 @@ private struct LibraryRecordingBar: View {
                 Text(model.current?.lecture ?? model.lectureName)
                     .font(Theme.text(10)).foregroundStyle(Theme.muted).lineLimit(1)
             }
-            RecordingBarClock(telemetry: model.telemetry)
-            LiveLevelReadout(telemetry: model.telemetry)
+            if telemetryVisible {
+                RecordingBarClock(telemetry: model.telemetry)
+                LiveLevelReadout(telemetry: model.telemetry)
+            } else {
+                Text(Core.timer(model.duration)).font(Theme.text(13, .semibold)).monospacedDigit()
+                FrozenLevelReadout(level: model.level)
+            }
             Spacer(minLength: 0)
             Button { model.addMarker() } label: { Image(systemName: "bookmark") }
                 .accessibilityLabel("Add marker")

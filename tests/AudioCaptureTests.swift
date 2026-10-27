@@ -6,6 +6,7 @@ import Foundation
 enum AudioCaptureTests {
     static func main() async throws {
         func check(_ condition: Bool, _ message: String) { precondition(condition, message) }
+        try await checkPausedCaptureLifecycle()
         for recording in [false, true] {
             for paused in [false, true] {
                 for transitioning in [false, true] {
@@ -205,6 +206,111 @@ enum AudioCaptureTests {
         check(track.sample(at: 40_000) == 0, "Late buffers cannot replay after a gap")
         print("AUDIO CAPTURE UNIT PASS: source rules, channels, streaming resampling, silence, balance, limiter, drift and late buffers")
     }
+
+    // Real Recorder control/writer queues, with no HAL tap, engine, or real audio.
+    static func checkPausedCaptureLifecycle() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Nosy-fake-capture-\(UUID())")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let counts = FakeCaptureCounts()
+        let recorder = Recorder(source: .macAudio, macCaptureFactory: { _, _ in
+            FakeSystemAudioCapture(counts: counts)
+        }) { _ in }
+        try await recorder.start(at: directory.appendingPathComponent("paused.pcm"))
+        try await Task.sleep(for: .milliseconds(120))
+        recorder.setPaused(true)
+        try await Task.sleep(for: .milliseconds(80))
+        let pausedBytes = recorder.byteCount()
+        precondition(counts.snapshot == [1, 1, 0], "Pause releases the only fake capture")
+        recorder.recoverAfterWake()
+        try await Task.sleep(for: .milliseconds(120))
+        precondition(counts.snapshot == [1, 1, 0], "Wake never opens a paused capture")
+        let stoppedBytes = try await recorder.stop()
+        precondition(stoppedBytes == pausedBytes, "Stopping while paused never appends silent padding")
+
+        let resumed = Recorder(source: .macAudio, macCaptureFactory: { _, _ in
+            FakeSystemAudioCapture(counts: counts)
+        }) { _ in }
+        try await resumed.start(at: directory.appendingPathComponent("resumed.pcm"))
+        resumed.setPaused(true)
+        try await Task.sleep(for: .milliseconds(60))
+        resumed.setPaused(false)
+        try await Task.sleep(for: .milliseconds(60))
+        precondition(counts.snapshot == [3, 2, 1], "Resume creates exactly one fresh capture")
+        counts.deliver(to: 1) // The resumed recorder's obsolete source, before Pause.
+        try await Task.sleep(for: .milliseconds(30))
+        _ = try await resumed.stop()
+        precondition(counts.snapshot == [3, 3, 0], "Stop releases the resumed capture")
+        let resumedPCM = try Data(contentsOf: directory.appendingPathComponent("resumed.pcm"))
+        precondition(resumedPCM.allSatisfy { $0 == 0 }, "Obsolete source callbacks never enter the resumed timeline")
+
+        let delayed = Recorder(source: .macAudio, macCaptureFactory: { _, _ in
+            FakeSystemAudioCapture(counts: counts, stopDelay: 0.2)
+        }) { _ in }
+        let started = ProcessInfo.processInfo.systemUptime
+        try await delayed.start(at: directory.appendingPathComponent("slow-stop.pcm"))
+        try await Task.sleep(for: .milliseconds(100))
+        let requestedDuration = ProcessInfo.processInfo.systemUptime - started
+        let finalBytes = try await delayed.stop()
+        precondition(Core.duration(pcmBytes: finalBytes) <= requestedDuration + 0.05,
+                     "HAL teardown time never extends the saved timeline")
+        precondition(counts.snapshot == [4, 4, 0], "No fake source survives a terminal path")
+
+        let failed = Recorder(source: .macAudio, macCaptureFactory: { _, _ in
+            FakeSystemAudioCapture(counts: counts, failStart: true)
+        }) { _ in }
+        do {
+            try await failed.start(at: directory.appendingPathComponent("failed.pcm"))
+            preconditionFailure("The fake source must fail startup")
+        } catch {
+            precondition(counts.snapshot == [5, 5, 0], "A partially started source is released on failure")
+        }
+    }
+}
+
+private final class FakeCaptureCounts: @unchecked Sendable {
+    private let lock = NSLock()
+    private var starts = 0, stops = 0, active = 0
+    private var receivers: [@Sendable (AVAudioPCMBuffer?, TimeInterval) -> Void] = []
+    var snapshot: [Int] { lock.lock(); defer { lock.unlock() }; return [starts, stops, active] }
+    func start(_ receive: @escaping @Sendable (AVAudioPCMBuffer?, TimeInterval) -> Void) {
+        lock.lock(); defer { lock.unlock() }; starts += 1; active += 1; receivers.append(receive)
+    }
+    func stop() { lock.lock(); defer { lock.unlock() }; stops += 1; active -= 1 }
+    func deliver(to index: Int) {
+        lock.lock(); let receive = receivers[index]; lock.unlock()
+        let format = AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)!
+        let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 160)!
+        buffer.frameLength = 160
+        buffer.floatChannelData![0].initialize(repeating: 0.25, count: 160)
+        receive(buffer, AVAudioTime.seconds(forHostTime: mach_absolute_time()))
+    }
+}
+
+private final class FakeSystemAudioCapture: SystemAudioCapturing {
+    let format = AVAudioFormat(standardFormatWithSampleRate: 16_000, channels: 1)
+    private let counts: FakeCaptureCounts
+    private let stopDelay: TimeInterval
+    private let failStart: Bool
+    private var stopped = false
+    init(counts: FakeCaptureCounts, stopDelay: TimeInterval = 0, failStart: Bool = false) {
+        self.counts = counts
+        self.stopDelay = stopDelay
+        self.failStart = failStart
+    }
+    func start(receive: @escaping @Sendable (AVAudioPCMBuffer?, TimeInterval) -> Void) throws {
+        counts.start(receive)
+        if failStart { throw LectureError.message("Fake source startup failed.") }
+    }
+    func stop() -> CaptureCleanupReport {
+        if !stopped {
+            stopped = true
+            if stopDelay > 0 { Thread.sleep(forTimeInterval: stopDelay) }
+            counts.stop()
+        }
+        return CaptureCleanupReport(operations: [], outstandingResources: 0)
+    }
+    func isHealthy() -> Bool { !stopped }
 }
 
 private final class FakeCaptureResourceAdapter: CaptureResourceAdapter {

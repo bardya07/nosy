@@ -144,7 +144,7 @@ final class MacAudioCapture: SystemAudioCapturing {
     var aggregateIdentity: AudioObjectID? { resources.aggregate }
 
     deinit {
-        guard resources.count > 0, !stopAttempted else { return }
+        guard resources.count > 0 else { return }
         stopAttempted = true
         log(cleanup())
     }

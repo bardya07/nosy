@@ -640,13 +640,15 @@ struct LibraryView: View {
     var previewDropping: Bool
     var previewHoveredFolder: String?
     var previewFocusedFolder: String?
+    var telemetryVisible: Bool
     private var editing: Bool { library.editing }
     private var fold: Animation { reduceMotion ? .easeOut(duration: 0.12) : .easeInOut(duration: 0.24) }
     enum Focus { case search, list }
 
-    init(model: AppModel, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false,
+    init(model: AppModel, telemetryVisible: Bool = true, previewQuery: String? = nil, previewCollapsed: Bool = false, previewSummary: Bool = false,
          previewDropping: Bool = false, previewHoveredFolder: String? = nil, previewFocusedFolder: String? = nil) {
         self.model = model
+        self.telemetryVisible = telemetryVisible
         _summaries = ObservedObject(wrappedValue: model.summaries)
         self.previewQuery = previewQuery
         self.previewCollapsed = previewCollapsed
@@ -866,7 +868,13 @@ struct LibraryView: View {
             .padding(.horizontal, 4)
             .accessibilityLabel("Importing audio, \(model.importsInProgress) left")
         } else if let active = model.active {
-            TranscribingActivityRow(model: model, telemetry: model.telemetry)
+            Group {
+                if telemetryVisible {
+                    TranscribingActivityRow(model: model, telemetry: model.telemetry)
+                } else {
+                    TranscribingActivityText(progress: model.transcriptionProgress, pauseReason: model.transcriptionPauseReason)
+                }
+            }
                 .padding(.horizontal, 4)
                 .accessibilityLabel("Transcribing \(active.lecture) \(active.session)")
         } else if !model.queue.isEmpty {
@@ -1078,10 +1086,18 @@ private struct TranscribingActivityRow: View {
     @ObservedObject var model: AppModel
     @ObservedObject var telemetry: RecordingTelemetry
     var body: some View {
+        TranscribingActivityText(progress: telemetry.transcriptionProgress, pauseReason: model.transcriptionPauseReason)
+    }
+}
+
+private struct TranscribingActivityText: View {
+    let progress: Double
+    let pauseReason: String?
+    var body: some View {
         HStack(spacing: 7) {
-            ProgressView(value: telemetry.transcriptionProgress).controlSize(.small).frame(width: 42)
-            Text(model.transcriptionPauseReason.map { "Paused · \($0)" }
-                 ?? "Transcribing audio · \(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+            ProgressView(value: progress).controlSize(.small).frame(width: 42)
+            Text(pauseReason.map { "Paused · \($0)" }
+                 ?? "Transcribing audio · \(Int((progress * 100).rounded()))%")
                 .font(Theme.text(11)).foregroundStyle(Theme.muted).lineLimit(1)
         }
     }

@@ -59,6 +59,7 @@ final class Recorder: @unchecked Sendable {
     private let logger = Logger(subsystem: "com.bardya.nosy", category: "AudioCapture")
     private let lock = NSLock()
     private let inputUID: String?
+    private let macCaptureFactory: @Sendable (String, UInt64) throws -> any SystemAudioCapturing
     private var source: RecordingSource // Protected by lock when accessed by audio callbacks.
     private var macCapture: (any SystemAudioCapturing)? // Control queue owns lifecycle.
     private var micConverter: CaptureConverter?
@@ -100,15 +101,23 @@ final class Recorder: @unchecked Sendable {
     private var accepting = false
     private var paused = false
     private var failed = false
+    private var stoppedAt: TimeInterval? // Protected by lock; excludes HAL teardown time from the saved tail.
     private var lastMeter: TimeInterval = 0
     private var silenceStart: Int64?
     private var silenceWarned = false
     private var lastBuffer: TimeInterval = 0 // Wall-clock buffer arrival, protected by lock.
     private var stalled = false
 
-    init(inputUID: String? = nil, source: RecordingSource = .mic, onEvent: @escaping @Sendable (RecorderEvent) -> Void) {
+    init(inputUID: String? = nil, source: RecordingSource = .mic,
+         macCaptureFactory: @escaping @Sendable (String, UInt64) throws -> any SystemAudioCapturing = { session, generation in
+             guard #available(macOS 14.4, *) else {
+                 throw LectureError.message("Mac audio requires macOS 14.4 or later.")
+             }
+             return MacAudioCapture(sessionID: session, generation: generation)
+         }, onEvent: @escaping @Sendable (RecorderEvent) -> Void) {
         self.inputUID = inputUID
         self.source = source
+        self.macCaptureFactory = macCaptureFactory
         self.onEvent = onEvent
     }
 
@@ -133,6 +142,7 @@ final class Recorder: @unchecked Sendable {
                     self.queuedBytes = 0
                     self.pendingBytes = 0
                     self.failed = false
+                    self.stoppedAt = nil
                     self.accepting = true
                     self.paused = false
                     self.lastMeter = 0
@@ -159,6 +169,10 @@ final class Recorder: @unchecked Sendable {
     private static var audioTime: TimeInterval { AVAudioTime.seconds(forHostTime: mach_absolute_time()) }
 
     private func startSources() throws {
+        lock.lock()
+        let mayStart = accepting && !failed && !paused
+        lock.unlock()
+        guard mayStart else { return }
         guard !sourcesActive else { return }
         let generation = nextCaptureGeneration()
         lock.lock()
@@ -188,7 +202,19 @@ final class Recorder: @unchecked Sendable {
                 let engine = AVAudioEngine()
                 self.engine = engine
                 observeMicrophoneConfiguration(engine, generation: generation)
-                try installTapAndStart(engine, generation: generation)
+                do {
+                    try installTapAndStart(engine, generation: generation)
+                } catch {
+                    // A headset can change format during the first start. Preserve the
+                    // previous one retry, charged to the same bounded restart budget.
+                    guard restartLimiter.allowStart(at: ProcessInfo.processInfo.systemUptime) else { throw error }
+                    Thread.sleep(forTimeInterval: 0.3) // Control queue only.
+                    lock.lock()
+                    let retry = accepting && !failed && !paused
+                    lock.unlock()
+                    guard retry else { stopSources(); return }
+                    try installTapAndStart(engine, generation: generation)
+                }
             }
             sourcesActive = true
         } catch {
@@ -198,7 +224,7 @@ final class Recorder: @unchecked Sendable {
     }
     private func startMacAudio(generation: UInt64) throws {
         guard #available(macOS 14.4, *) else { throw LectureError.message("Mac audio requires macOS 14.4 or later.") }
-        let capture = MacAudioCapture(sessionID: sessionID, generation: generation)
+        let capture = try macCaptureFactory(sessionID, generation)
         macCapture = capture
         lock.lock(); lastMacBuffer = Self.audioTime; lock.unlock()
         try capture.start { [weak self] buffer, time in self?.consumeMacAudio(buffer, time: time, generation: generation) }
@@ -271,7 +297,7 @@ final class Recorder: @unchecked Sendable {
         guard (accepting && !failed && !paused) || (flush && allowStopped), source.usesMacAudio else {
             lock.unlock(); return
         }
-        let now = Self.audioTime
+        let now = allowStopped ? (stoppedAt ?? Self.audioTime) : Self.audioTime
         // A suspended process/sleep is a gap, never minutes of synthetic silence.
         if now - lastRenderTime > 1 {
             mixer = CaptureMixer(origin: now)
@@ -292,7 +318,7 @@ final class Recorder: @unchecked Sendable {
     func recoverAfterWake() {
         control.async {
             self.lock.lock()
-            let active = self.accepting && !self.failed
+            let active = self.accepting && !self.failed && !self.paused
             self.lock.unlock()
             guard active else { return }
             self.stallTimer?.cancel()
@@ -414,9 +440,13 @@ final class Recorder: @unchecked Sendable {
         guard let device = AudioInputs.current(on: engine) else {
             throw LectureError.message("Could not identify the active microphone.")
         }
-        activeMicConfiguration = MicrophoneConfiguration(deviceUID: device.id, sampleRate: micRate, channels: micChannels)
+        lock.lock()
+        let installedRate = micRate
+        let installedChannels = micChannels
+        lock.unlock()
+        activeMicConfiguration = MicrophoneConfiguration(deviceUID: device.id, sampleRate: installedRate, channels: installedChannels)
         let defaultAfter = AudioInputs.systemDefault()?.id ?? "none"
-        logger.info("session=\(self.sessionID, privacy: .public) source=\(self.source.rawValue, privacy: .public) generation=\(generation, privacy: .public) input_uid=\(device.id, privacy: .public) transport=\(device.transport.rawValue, privacy: .public) default_before=\(defaultBefore, privacy: .public) default_after=\(defaultAfter, privacy: .public) input_before=\(inputBefore, privacy: .public) rate_before=\(formatBefore?.sampleRate ?? 0, privacy: .public) channels_before=\(formatBefore?.channels ?? 0, privacy: .public) rate_after=\(self.micRate, privacy: .public) channels_after=\(self.micChannels, privacy: .public)")
+        logger.info("session=\(self.sessionID, privacy: .public) source=\(self.source.rawValue, privacy: .public) generation=\(generation, privacy: .public) input_uid=\(device.id, privacy: .public) transport=\(device.transport.rawValue, privacy: .public) default_before=\(defaultBefore, privacy: .public) default_after=\(defaultAfter, privacy: .public) input_before=\(inputBefore, privacy: .public) rate_before=\(formatBefore?.sampleRate ?? 0, privacy: .public) channels_before=\(formatBefore?.channels ?? 0, privacy: .public) rate_after=\(installedRate, privacy: .public) channels_after=\(installedChannels, privacy: .public)")
         onEvent(.input(name: device.name))
     }
     // Bluetooth headsets (AirPods) switch from 48 kHz A2DP to 24/16 kHz HFP when their mic opens,
@@ -642,6 +672,7 @@ final class Recorder: @unchecked Sendable {
         lock.lock()
         guard !failed, accepting else { lock.unlock(); return }
         failed = true
+        stoppedAt = Self.audioTime
         accepting = false
         paused = true
         pauseGeneration &+= 1
@@ -734,7 +765,8 @@ final class Recorder: @unchecked Sendable {
         pauseGeneration &+= 1
         let token = pauseGeneration
         self.paused = paused
-        mixer = source.usesMacAudio ? CaptureMixer(origin: Self.audioTime) : nil
+        // Pause already flushed its tail. Leave no empty timeline for Stop to pad with silence.
+        mixer = source.usesMacAudio && !paused ? CaptureMixer(origin: Self.audioTime) : nil
         micConverter?.reset(); macConverter?.reset()
         lastRenderTime = Self.audioTime
         lastMacBuffer = Self.audioTime
@@ -782,7 +814,10 @@ final class Recorder: @unchecked Sendable {
     }
     private func gateAcceptanceForStop() {
         lock.lock()
-        if accepting { accepting = false; paused = true; pauseGeneration &+= 1 }
+        if accepting {
+            stoppedAt = Self.audioTime
+            accepting = false; paused = true; pauseGeneration &+= 1
+        }
         lock.unlock()
     }
     private func stopOnControlQueue() throws -> Int64 {

@@ -164,7 +164,8 @@ enum UITests {
               && AudioInputs.Transport.classify(kAudioDeviceTransportTypeBluetooth) == .bluetooth
               && AudioInputs.Transport.classify(kAudioDeviceTransportTypeUSB) == .wired,
               "Microphone transport metadata distinguishes headset and alternatives")
-        let librarySource = try String(contentsOf: root.appendingPathComponent("Sources/Library.swift"), encoding: .utf8)
+        let sourceRoot = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let librarySource = try String(contentsOf: sourceRoot.appendingPathComponent("Sources/Library.swift"), encoding: .utf8)
         if let playbackPreparation = librarySource.range(of: "private func prepareForPlayback()"),
            let playerAllocation = librarySource.range(of: "AVAudioPlayer(contentsOf: url)"),
            let playbackPrepareCall = librarySource.range(of: "audio.prepareToPlay()") {
@@ -185,6 +186,13 @@ enum UITests {
         check(!preflight.bluetoothChoiceRequired && preflight.inputUID == headsetMic.id,
               "Keeping the selected headset never changes the selected device")
         preflight.configurePreview(source: .both, microphones: [headsetMic, builtInMic], selectedMicrophone: headsetMic.id)
+        preflight.phase = .recording
+        preflight.paused = true
+        preflight.workspace.showLibrary()
+        preflight.togglePause()
+        check(preflight.paused && preflight.workspace.mode == .home
+              && preflight.showBluetoothMicrophonePreflight,
+              "Resume keeps capture paused and exposes the pending Bluetooth choice")
         preflight.selectInput(builtInMic.id)
         check(!preflight.bluetoothChoiceRequired && preflight.inputUID == builtInMic.id,
               "Choosing the built in microphone changes the pending input explicitly")

@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 import UniformTypeIdentifiers
 
 @MainActor
@@ -813,6 +814,9 @@ struct MainView: View {
     // toggle its own panel without the outside-tap dismissal closing it first.
     @ViewBuilder private var controls: some View {
         VStack(spacing: 10) {
+            if model.recording && model.showBluetoothMicrophonePreflight && openDropdown != .microphone {
+                bluetoothMicrophonePreflight
+            }
             if openDropdown == .microphone {
                 microphonePanel
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
@@ -1220,7 +1224,7 @@ struct LiveLevelReadout: View {
     var body: some View { LevelReadout(level: telemetry.level) }
 }
 
-private struct FrozenLevelReadout: View {
+struct FrozenLevelReadout: View {
     let level: Double
     var body: some View { LevelReadout(level: level) }
 }
@@ -1380,11 +1384,20 @@ private struct CompactControlButtonStyle: ButtonStyle {
 
 // The dot dims while the input is quiet. Only this leaf follows the level samples.
 private struct RecordingDot: View {
-    @ObservedObject var telemetry: RecordingTelemetry
+    let telemetry: RecordingTelemetry
     let paused: Bool
+    @State private var audible: Bool
+
+    init(telemetry: RecordingTelemetry, paused: Bool) {
+        self.telemetry = telemetry
+        self.paused = paused
+        _audible = State(initialValue: telemetry.level > -50)
+    }
+
     var body: some View {
         Circle().fill(paused ? Theme.amber : Theme.coral).frame(width: 7, height: 7)
-            .opacity(paused || telemetry.level > -50 ? 1 : 0.5)
+            .opacity(paused || audible ? 1 : 0.5)
+            .onReceive(telemetry.$sample.map { $0.level > -50 }.removeDuplicates()) { audible = $0 }
     }
 }
 
@@ -1515,14 +1528,25 @@ struct StagePanel: View {
             }
             RecordingMarkers(model: model)
             if let active = model.active {
-                BackgroundTranscriptionNote(telemetry: model.telemetry, lecture: active.lecture, pauseReason: model.transcriptionPauseReason)
+                if telemetryVisible {
+                    BackgroundTranscriptionNote(telemetry: model.telemetry, lecture: active.lecture, pauseReason: model.transcriptionPauseReason)
+                } else {
+                    BackgroundTranscriptionText(progress: model.transcriptionProgress, lecture: active.lecture,
+                                                pauseReason: model.transcriptionPauseReason, live: false)
+                }
             }
         }
     }
 
     private var transcribing: some View {
         VStack(alignment: .leading, spacing: 12) {
-            TranscriptionProgressBlock(model: model, telemetry: model.telemetry)
+            if telemetryVisible {
+                TranscriptionProgressBlock(model: model, telemetry: model.telemetry)
+            } else {
+                TranscriptionProgressContent(progress: model.transcriptionProgress, elapsed: model.transcriptionElapsed,
+                                             waiting: model.waiting, pauseReason: model.transcriptionPauseReason,
+                                             active: model.active, live: false)
+            }
             HStack {
                 Text("This might take a minute.").font(Theme.text(11)).foregroundStyle(Theme.muted)
                 Spacer(minLength: 4)
@@ -1750,9 +1774,19 @@ private struct BackgroundTranscriptionNote: View {
     let lecture: String
     let pauseReason: String?
     var body: some View {
+        BackgroundTranscriptionText(progress: telemetry.transcriptionProgress, lecture: lecture, pauseReason: pauseReason)
+    }
+}
+
+private struct BackgroundTranscriptionText: View {
+    let progress: Double
+    let lecture: String
+    let pauseReason: String?
+    var live = true
+    var body: some View {
         HStack(spacing: 6) {
-            ProgressView().controlSize(.mini)
-            Text(pauseReason.map { "Paused. \($0)" } ?? "Also transcribing \(lecture) · \(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+            if live { ProgressView().controlSize(.mini) }
+            Text(pauseReason.map { "Paused. \($0)" } ?? "Also transcribing \(lecture) · \(Int((progress * 100).rounded()))%")
                 .font(Theme.text(11, .medium)).foregroundStyle(Theme.muted).lineLimit(2)
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading).card()
@@ -1764,18 +1798,33 @@ private struct TranscriptionProgressBlock: View {
     @ObservedObject var model: AppModel
     @ObservedObject var telemetry: RecordingTelemetry
     var body: some View {
+        TranscriptionProgressContent(progress: telemetry.transcriptionProgress, elapsed: telemetry.transcriptionElapsed,
+                                     waiting: model.waiting, pauseReason: model.transcriptionPauseReason, active: model.active)
+    }
+}
+
+private struct TranscriptionProgressContent: View {
+    let progress: Double
+    let elapsed: TimeInterval
+    let waiting: Bool
+    let pauseReason: String?
+    let active: SessionRecord?
+    var live = true
+    var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if !model.waiting {
+            if !waiting {
                 HStack(alignment: .firstTextBaseline) {
-                    Text("\(Int((telemetry.transcriptionProgress * 100).rounded()))%")
+                    Text("\(Int((progress * 100).rounded()))%")
                         .font(Theme.text(13, .semibold)).monospacedDigit().foregroundStyle(Theme.ink)
                         .contentTransition(.numericText())
                     Spacer(minLength: 8)
-                    ProgressTrack(value: telemetry.transcriptionProgress, tint: Theme.stop)
+                    ProgressTrack(value: progress, tint: Theme.stop)
                         .frame(width: 210)
                 }
-            } else {
+            } else if live {
                 ProgressView().progressViewStyle(.linear).tint(Theme.stop)
+            } else {
+                ProgressTrack(value: 0, tint: Theme.stop)
             }
             Text(remainingText).font(Theme.text(12)).monospacedDigit().foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1783,12 +1832,13 @@ private struct TranscriptionProgressBlock: View {
         }
     }
     private var remainingText: String {
-        if let reason = model.transcriptionPauseReason { return "Paused. \(reason)" }
-        if model.waiting {
-            if let active = model.active { return "Starts when \(active.lecture) · \(active.session) finishes" }
+        if let reason = pauseReason { return "Paused. \(reason)" }
+        if waiting {
+            if let active { return "Starts when \(active.lecture) · \(active.session) finishes" }
             return "Waiting to start"
         }
-        guard let remaining = model.transcriptionRemaining else { return "Getting started… \(Core.timer(telemetry.transcriptionElapsed)) elapsed" }
+        guard progress > 0.04, progress < 1 else { return "Getting started… \(Core.timer(elapsed)) elapsed" }
+        let remaining = elapsed / progress * (1 - progress)
         let minutes = Int((remaining / 60).rounded(.up))
         return remaining < 60 ? "Less than a minute left" : "About \(minutes) min left"
     }
@@ -1818,14 +1868,13 @@ struct ProgressTrack: View {
     let value: Double
     let tint: Color
     var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.line)
-                Capsule().fill(tint).frame(width: max(8, geometry.size.width * min(1, max(0, value))))
-            }
+        Canvas { context, size in
+            let bounds = CGRect(origin: .zero, size: size)
+            context.fill(Path(roundedRect: bounds, cornerRadius: size.height / 2), with: .color(Theme.line))
+            let fill = CGRect(x: 0, y: 0, width: max(8, size.width * min(1, max(0, value))), height: size.height)
+            context.fill(Path(roundedRect: fill, cornerRadius: size.height / 2), with: .color(tint))
         }
         .frame(height: 8)
-        .animation(.linear(duration: 0.3), value: value)
         .accessibilityElement()
         .accessibilityLabel("Progress")
         .accessibilityValue("\(Int((value * 100).rounded())) percent")

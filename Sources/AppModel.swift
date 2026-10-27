@@ -559,7 +559,12 @@ final class AppModel: ObservableObject {
         } catch { showError("Could not save marker: \(error.localizedDescription)") }
     }
     func togglePause() {
-        guard recording, !transitioning, let recorder else { return }
+        guard recording, !transitioning else { return }
+        if paused, bluetoothChoiceRequired {
+            showHome()
+            return
+        }
+        guard let recorder else { return }
         paused.toggle()
         recorder.setPaused(paused)
         if paused {
