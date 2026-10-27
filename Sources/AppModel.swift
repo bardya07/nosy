@@ -116,7 +116,7 @@ final class AppModel: ObservableObject {
     @Published var paused = false
     @Published private(set) var inputs: [AudioInputs.Device] = []
     @Published private(set) var systemInput: AudioInputs.Device?
-    @Published private(set) var inputUID = UserDefaults.standard.string(forKey: "inputDeviceUID")
+    @Published private(set) var inputUID: String?
     @Published private(set) var activeInputName: String?
     @Published private(set) var recordingSource = RecordingSource.restored(UserDefaults.standard.string(forKey: "recordingSource"))
     @Published private(set) var macAudioDenied = false
@@ -177,6 +177,9 @@ final class AppModel: ObservableObject {
     // Claimed synchronously by Stop or a recorder failure, so only one of them finishes a recording.
     private var completing = false
     static let waveformLength = 46
+    private static let roomInputPreferenceKey = "roomAudioInputDevice"
+    private static let macInputPreferenceKey = "macAudioInputDevice"
+    private static let systemDefaultInputPreference = "__system_default__"
     static var today: String { Core.dateString(Date(), format: "yyyy-MM-dd") }
     private let stressReason: () -> String?
     init(stressReason: @escaping () -> String? = {
@@ -185,6 +188,12 @@ final class AppModel: ObservableObject {
     }) {
         self.stressReason = stressReason
         if !Snapshot.isRunning { ReminderInterval.migrate() }
+        let defaults = UserDefaults.standard
+        Self.migrateInputPreference(defaults)
+        let reading = AudioInputs.reading()
+        inputs = reading.devices
+        systemInput = reading.systemDefault
+        inputUID = Self.selectedInputUID(for: recordingSource, devices: reading.devices, defaults: defaults)
     }
 
     var recording: Bool { phase == .recording }
@@ -869,6 +878,32 @@ final class AppModel: ObservableObject {
         (recording ? activeInputName : nil)
             ?? inputs.first(where: { $0.id == inputUID })?.name ?? systemInput?.name ?? "System default"
     }
+    private static func inputPreferenceKey(for source: RecordingSource) -> String {
+        source == .mic ? roomInputPreferenceKey : macInputPreferenceKey
+    }
+    private static func migrateInputPreference(_ defaults: UserDefaults) {
+        guard let legacyUID = defaults.string(forKey: "inputDeviceUID") else { return }
+        if defaults.object(forKey: roomInputPreferenceKey) == nil {
+            defaults.set(legacyUID, forKey: roomInputPreferenceKey)
+        }
+        if defaults.object(forKey: macInputPreferenceKey) == nil {
+            defaults.set(legacyUID, forKey: macInputPreferenceKey)
+        }
+        defaults.removeObject(forKey: "inputDeviceUID")
+    }
+    private static func selectedInputUID(for source: RecordingSource, devices: [AudioInputs.Device],
+                                         defaults: UserDefaults) -> String? {
+        let preference = defaults.string(forKey: inputPreferenceKey(for: source))
+        if let preference {
+            guard preference != systemDefaultInputPreference else { return nil }
+            return devices.first { $0.id == preference }?.id
+        }
+        guard source == .mic else { return nil }
+        return devices.first { $0.transport == .builtIn }?.id
+    }
+    private func selectedInputUID(for source: RecordingSource) -> String? {
+        Self.selectedInputUID(for: source, devices: inputs, defaults: .standard)
+    }
     private func requestMicrophoneAccess() async throws {
         let permission: Bool
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -888,7 +923,7 @@ final class AppModel: ObservableObject {
         Task {
             do {
                 if source.usesMic { try await requestMicrophoneAccess() }
-                try await recorder.switchSource(source, inputUID: inputUID)
+                try await recorder.switchSource(source, inputUID: selectedInputUID(for: source))
                 commitSource(source)
             } catch {
                 if error is MacAudioError { macAudioDenied = true }
@@ -899,6 +934,7 @@ final class AppModel: ObservableObject {
     }
     private func commitSource(_ source: RecordingSource) {
         recordingSource = source
+        inputUID = selectedInputUID(for: source)
         UserDefaults.standard.set(source.rawValue, forKey: "recordingSource")
         macAudioDenied = false
         macAudioQuiet = false
@@ -913,6 +949,8 @@ final class AppModel: ObservableObject {
         // A hover must not rebuild a menu whose devices have not changed.
         if inputs != reading.devices { inputs = reading.devices }
         if systemInput != reading.systemDefault { systemInput = reading.systemDefault }
+        let selectedUID = Self.selectedInputUID(for: recordingSource, devices: reading.devices, defaults: .standard)
+        if inputUID != selectedUID { inputUID = selectedUID }
     }
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {
@@ -928,8 +966,9 @@ final class AppModel: ObservableObject {
         }
     }
     private func commitInput(_ uid: String?) {
-        inputUID = uid
-        UserDefaults.standard.set(uid, forKey: "inputDeviceUID")
+        let defaults = UserDefaults.standard
+        defaults.set(uid ?? Self.systemDefaultInputPreference, forKey: Self.inputPreferenceKey(for: recordingSource))
+        inputUID = Self.selectedInputUID(for: recordingSource, devices: inputs, defaults: defaults)
     }
 
     // Fixtures must render the real view paths without starting a recorder or queue.

@@ -893,6 +893,9 @@ struct MainView: View {
     private var microphonePanel: some View {
         VStack(alignment: .leading, spacing: 4) {
             FieldLabel("Microphone").padding(.horizontal, 8).padding(.top, 2)
+            Text(model.recordingSource.usesMic ? "In use: \(model.microphoneName)" : "Selected: \(model.microphoneName)")
+                .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+                .padding(.horizontal, 8).padding(.bottom, 2)
             micRow(model.systemInput.map { "System default (\($0.name))" } ?? "System default",
                    chosen: model.inputUID == nil) { model.selectInput(nil) }
             ForEach(model.inputs) { device in
