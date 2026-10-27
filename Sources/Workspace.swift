@@ -9,12 +9,26 @@ final class WorkspaceNavigation: ObservableObject {
     @Published private(set) var mode: Mode = .home
     @Published private(set) var homeRequest = 0
     @Published private(set) var settingsPane: SettingsView.Pane = .general
+    @Published private(set) var settingsFocusRequest: SettingsFocusRequest?
     @Published private(set) var panel: Panel?
+    private var settingsFocusID = 0
 
     func showLibrary() { panel = nil; mode = .library }
     func showHome() { panel = nil; mode = .home }
     func requestHome() { homeRequest += 1 }
-    func showSettings(pane: SettingsView.Pane = .general) { settingsPane = pane; panel = .settings }
+    func showSettings(pane: SettingsView.Pane = .general, focus: SettingsFocusTarget? = nil) {
+        settingsPane = pane
+        if let focus {
+            settingsFocusID += 1
+            settingsFocusRequest = SettingsFocusRequest(id: settingsFocusID, target: focus)
+        } else {
+            settingsFocusRequest = nil
+        }
+        panel = .settings
+    }
+    func settingsFocusHandled(_ id: Int) {
+        if settingsFocusRequest?.id == id { settingsFocusRequest = nil }
+    }
     func showSetup() { panel = .setup }
     func dismissPanel() { panel = nil }
 }
@@ -163,7 +177,10 @@ struct WorkspaceView: View {
                     .padding(.horizontal, 18).padding(.vertical, 10)
                     Divider()
                     if panel == .settings {
-                        SettingsView(model: model, pane: previewSize != nil ? previewSettingsPane : navigation.settingsPane, showsHeading: false)
+                        SettingsView(model: model, pane: previewSize != nil ? previewSettingsPane : navigation.settingsPane,
+                                     showsHeading: false,
+                                     focusRequest: previewSize == nil ? navigation.settingsFocusRequest : nil,
+                                     onFocusHandled: { navigation.settingsFocusHandled($0) })
                             .id(previewSize != nil ? previewSettingsPane : navigation.settingsPane)
                     } else {
                         ScrollView { OnboardingView(model: model) }.scrollIndicators(.never)

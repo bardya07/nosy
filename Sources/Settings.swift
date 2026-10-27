@@ -1,14 +1,32 @@
 import SwiftUI
 import AppKit
 
+enum SettingsFocusTarget: String, Equatable, Hashable, Identifiable {
+    case aiFeatures = "settings-ai-features"
+    case provider = "settings-summary-provider"
+    case providerModel = "settings-provider-model"
+    case localModel = "settings-local-model"
+    case providerKey = "settings-provider-key"
+
+    var id: String { rawValue }
+}
+
+struct SettingsFocusRequest: Equatable {
+    let id: Int
+    let target: SettingsFocusTarget
+}
+
 struct SettingsView: View {
     @ObservedObject var model: AppModel
     var connector = ClaudeConnector.standard
     var showsHeading = true
+    var focusRequest: SettingsFocusRequest?
+    var onFocusHandled: (Int) -> Void = { _ in }
     @AppStorage(ReminderInterval.storageKey) private var reminderMinutes = ReminderInterval.defaultMinutes
     @AppStorage(LectureFolderTrash.askKey) private var askBeforeDeleting = true
     @AppStorage("compressAudio") private var compressAudio = true
     @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var customReminder = false
     @State private var connection: ClaudeConnector.Status = .notAdded
     @State private var desktop = ClaudeDesktopApp.Status(installed: false, running: false)
@@ -16,12 +34,18 @@ struct SettingsView: View {
     @State private var connectionMessage: String?
     @State private var connectionFailed = false
     @State private var pane: Pane
+    @State private var highlightedTarget: SettingsFocusTarget?
+    @State private var handledFocusID = 0
+    @State private var highlightID = 0
     private static let customReminderTag = -1
 
-    init(model: AppModel, connector: ClaudeConnector = .standard, pane: Pane = .general, showsHeading: Bool = true) {
+    init(model: AppModel, connector: ClaudeConnector = .standard, pane: Pane = .general, showsHeading: Bool = true,
+         focusRequest: SettingsFocusRequest? = nil, onFocusHandled: @escaping (Int) -> Void = { _ in }) {
         self.model = model
         self.connector = connector
         self.showsHeading = showsHeading
+        self.focusRequest = focusRequest
+        self.onFocusHandled = onFocusHandled
         _pane = State(initialValue: pane)
     }
 
@@ -42,8 +66,12 @@ struct SettingsView: View {
                     if showsHeading {
                         paneContent
                     } else {
-                        ScrollView { paneContent }
-                            .scrollIndicators(.never)
+                        ScrollViewReader { scroll in
+                            ScrollView { paneContent }
+                                .scrollIndicators(.never)
+                                .onAppear { handleFocus(focusRequest, using: scroll) }
+                                .onChange(of: focusRequest) { _, request in handleFocus(request, using: scroll) }
+                        }
                     }
                 }
                 .frame(width: Self.columnWidth, alignment: .topLeading)
@@ -218,8 +246,10 @@ struct SettingsView: View {
             .toggleStyle(.switch).tint(Theme.accentText)
             .accessibilityLabel("AI features")
             .interactionTarget("settings-ai-features")
+            .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .aiFeatures))
+            .id(SettingsFocusTarget.aiFeatures)
             section("Summaries") {
-                SummarySettingsSection(summaries: model.summaries)
+                SummarySettingsSection(summaries: model.summaries, highlightedTarget: highlightedTarget)
             }
             .disabled(!aiFeaturesEnabled)
             .opacity(aiFeaturesEnabled ? 1 : 0.45)
@@ -443,5 +473,48 @@ struct SettingsView: View {
         if let preview = Snapshot.displayPath(url.path) { return preview }
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         return url.path.hasPrefix(home) ? "~" + url.path.dropFirst(home.count) : url.path
+    }
+
+    private func handleFocus(_ request: SettingsFocusRequest?, using scroll: ScrollViewProxy) {
+        guard let request, request.id != handledFocusID else { return }
+        handledFocusID = request.id
+        DispatchQueue.main.async {
+            guard focusRequest?.id == request.id else { return }
+            if reduceMotion {
+                scroll.scrollTo(request.target, anchor: .center)
+            } else {
+                withAnimation(.easeInOut(duration: 0.24)) {
+                    scroll.scrollTo(request.target, anchor: .center)
+                }
+            }
+            highlightedTarget = request.target
+            highlightID = request.id
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                guard highlightID == request.id else { return }
+                highlightedTarget = nil
+            }
+            onFocusHandled(request.id)
+        }
+    }
+}
+
+struct SettingsFocusHighlight: ViewModifier {
+    let isHighlighted: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .inset(by: -6)
+                    .fill(isHighlighted ? Theme.warmFill.opacity(0.58) : .clear)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .inset(by: -6)
+                    .strokeBorder(isHighlighted ? Theme.warmText.opacity(0.58) : .clear, lineWidth: 1.5)
+                    .allowsHitTesting(false)
+            }
+            .animation(reduceMotion ? nil : Motion.state(reduceMotion), value: isHighlighted)
     }
 }

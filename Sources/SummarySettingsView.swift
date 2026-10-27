@@ -4,6 +4,7 @@ import AppKit
 // Settings › Summaries: what to include, who writes it, and when.
 struct SummarySettingsSection: View {
     @ObservedObject var summaries: SummaryCenter
+    var highlightedTarget: SettingsFocusTarget?
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
     @AppStorage(SummarySettings.customKey) private var custom = ""
     @AppStorage(SummarySettings.automaticKey) private var automatic = false
@@ -29,18 +30,39 @@ struct SummarySettingsSection: View {
                 .tip("Extra instructions for every summary")
 
             providerMenu
+                .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .provider))
+                .id(SettingsFocusTarget.provider)
             if provider != .off, !summaries.detection.isAvailable(provider), summaries.detection.checked || Snapshot.isRunning {
                 hint(provider.unavailableHint, color: Theme.warmText)
             }
             switch provider.kind {
             case .none: EmptyView()
             case .builtIn:
-                if let model = provider.builtInModel { LocalModelCard(model: model, store: summaries.localModels).id(provider) }
-            case .cli: SummaryModelField(provider: provider, placeholder: "Model (CLI default)").id(provider)
-            case .local: localModelMenu.id(provider)
+                if let model = provider.builtInModel {
+                    LocalModelCard(model: model, store: summaries.localModels)
+                        .id(provider)
+                        .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .localModel))
+                        .id(SettingsFocusTarget.localModel)
+                }
+            case .cli:
+                SummaryModelField(provider: provider, placeholder: "Model (CLI default)")
+                    .id(provider)
+                    .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .providerModel))
+                    .id(SettingsFocusTarget.providerModel)
+            case .local:
+                localModelMenu
+                    .id(provider)
+                    .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .providerModel))
+                    .id(SettingsFocusTarget.providerModel)
             case .api:
-                SummaryModelField(provider: provider, placeholder: "Model").id(provider)
-                SummaryKeyField(provider: provider, summaries: summaries).id(provider)
+                SummaryModelField(provider: provider, placeholder: "Model")
+                    .id(provider)
+                    .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .providerModel))
+                    .id(SettingsFocusTarget.providerModel)
+                SummaryKeyField(provider: provider, summaries: summaries)
+                    .id(provider)
+                    .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .providerKey))
+                    .id(SettingsFocusTarget.providerKey)
             }
             whenMenu
             Text(provider == .off

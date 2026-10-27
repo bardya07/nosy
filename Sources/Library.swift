@@ -957,7 +957,8 @@ struct LibraryView: View {
                     SummaryBar(transcript: item.url, summaries: model.summaries, hasSummary: details.summary != nil,
                                showSummary: $showSummary, paths: model.paths, aiMarkerCount: details.aiMarkers.count,
                                keyMoments: details.keyMoments, requested: { requestedSummary = item.url },
-                               selectMoment: selectMoment, openSettings: { model.workspace.showSettings(pane: .summaries) })
+                               selectMoment: selectMoment,
+                               openSettings: { target in model.workspace.showSettings(pane: .summaries, focus: target) })
                     Rectangle().fill(Theme.line).frame(height: 1)
                 }
                 if editing {

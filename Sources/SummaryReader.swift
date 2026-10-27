@@ -30,7 +30,7 @@ struct SummaryBar: View {
     var keyMoments: [ReaderKeyMoment] = []
     var requested: () -> Void = {}
     var selectMoment: (ReaderKeyMoment) -> Void = { _ in }
-    var openSettings: () -> Void = {}
+    var openSettings: (SettingsFocusTarget) -> Void = { _ in }
     @AppStorage(SummarySettings.providerKey) private var providerRaw = SummaryProvider.off.rawValue
     @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
     @Namespace private var toggleAnimation
@@ -78,20 +78,20 @@ struct SummaryBar: View {
             }
             if aiFeaturesEnabled {
                 statusText
-                Spacer(minLength: 0)
-                if aiMarkerCount > 0, moments == nil {
-                    Button(action: removeAIMarkers) {
-                        Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
-                    }
-                    .buttonStyle(IconButtonStyle(size: 28))
-                    .tip("Remove AI markers")
-                    .accessibilityLabel("Remove AI markers")
-                }
-                findButton(compact: compact)
-                    .animation(Motion.state(reduceMotion), value: moments != nil)
-                summarizeButton(compact: compact)
-                    .animation(Motion.state(reduceMotion), value: status != nil)
             }
+            Spacer(minLength: 0)
+            if aiFeaturesEnabled, aiMarkerCount > 0, moments == nil {
+                Button(action: removeAIMarkers) {
+                    Image(systemName: "bookmark.slash").font(.system(size: 11, weight: .semibold))
+                }
+                .buttonStyle(IconButtonStyle(size: 28))
+                .tip("Remove AI markers")
+                .accessibilityLabel("Remove AI markers")
+            }
+            findButton(compact: compact)
+                .animation(Motion.state(reduceMotion), value: moments != nil)
+            summarizeButton(compact: compact)
+                .animation(Motion.state(reduceMotion), value: status != nil)
         }
     }
 
@@ -153,13 +153,22 @@ struct SummaryBar: View {
             }
         }
     }
-    private func label(_ text: String, color: Color) -> some View {
-        Text(text).font(Theme.text(11.5)).foregroundStyle(color).lineLimit(1).truncationMode(.tail)
-            .tip(text, edge: .bottom)
+    @ViewBuilder private func label(_ text: String, color: Color) -> some View {
+        if let target = settingsTarget(for: text) {
+            Button { openSettings(target) } label: {
+                Text(text).font(Theme.text(11.5)).foregroundStyle(color).lineLimit(1).truncationMode(.tail)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .tip("Open Settings", edge: .bottom)
+        } else {
+            Text(text).font(Theme.text(11.5)).foregroundStyle(color).lineLimit(1).truncationMode(.tail)
+                .tip(text, edge: .bottom)
+        }
     }
 
     @ViewBuilder private func findButton(compact: Bool) -> some View {
-        if moments != nil {
+        if aiFeaturesEnabled, moments != nil {
             Button { summaries.cancelMoments(transcript) } label: {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
@@ -186,45 +195,95 @@ struct SummaryBar: View {
     private func summarizeButton(compact: Bool) -> some View {
         Button(action: summarize) {
             HStack(spacing: 6) {
-                if status != nil {
+                if aiFeaturesEnabled, status != nil {
                     ProgressView().controlSize(.small).scaleEffect(0.7).frame(width: 14, height: 14)
                         .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 } else {
                     Image(systemName: hasSummary ? "arrow.clockwise" : "sparkles").font(.system(size: 11, weight: .semibold))
                         .transition(.opacity.combined(with: .scale(scale: 0.85)))
                 }
-                if !compact { Text(provider == .off ? "Turn on summaries in Settings" : status != nil ? "Summarizing" : (hasSummary ? "Summarize again" : "Summarize")) }
+                if !compact { Text(aiFeaturesEnabled && status != nil ? "Summarizing" : hasSummary ? "Summarize again" : "Summarize") }
             }
         }
         .buttonStyle(PillButtonStyle(kind: .primary, height: 28, fullWidth: false, horizontalPadding: compact ? 10 : 12))
-        .disabled(status != nil)
+        .disabled(aiFeaturesEnabled && status != nil)
         .tip(buttonTip)
-        .accessibilityLabel(provider == .off ? "Turn on summaries in Settings" : hasSummary ? "Summarize again" : "Summarize")
+        .accessibilityLabel(hasSummary ? "Summarize again" : "Summarize")
     }
     private var findTip: String {
-        if provider == .off { return "Turn on summaries in Settings" }
+        if !aiFeaturesEnabled { return "Open Settings to turn on AI features" }
+        if provider == .off { return "Open Settings to choose a provider" }
         return provider.staysOnMac ? "Find key moments on this Mac" : "Find key moments with \(cloudName)"
     }
     private var buttonTip: String {
-        if provider == .off { return "Turn on summaries in Settings" }
+        if !aiFeaturesEnabled { return "Open Settings to turn on AI features" }
+        if provider == .off { return "Open Settings to choose a provider" }
         if status != nil { return "Summary in progress" }
         return provider.staysOnMac ? "Summarize on this Mac" : "Summarize with \(cloudName)"
     }
 
     private func summarize() {
-        guard provider != .off else { openSettings(); return }
-        requested()
-        summaries.summarize(transcript)
-    }
-    // Off explains itself in the bar and opens Settings. Cloud and CLI providers ask once before the first run.
-    private func findKeyMoments() {
-        guard provider != .off else {
-            summaries.findMoments(transcript, paths: paths)
-            openSettings()
-            return
+        Task {
+            guard !(await openSettingsIfUnavailable()) else { return }
+            requested()
+            summaries.summarize(transcript)
         }
-        guard confirmedOffMac() else { return }
-        summaries.findMoments(transcript, paths: paths)
+    }
+    // Cloud and CLI providers ask once before the first run.
+    private func findKeyMoments() {
+        Task {
+            guard !(await openSettingsIfUnavailable()) else { return }
+            guard confirmedOffMac() else { return }
+            summaries.findMoments(transcript, paths: paths)
+        }
+    }
+    private func openSettingsIfUnavailable() async -> Bool {
+        guard aiFeaturesEnabled else { openSettings(.aiFeatures); return true }
+        switch provider.kind {
+        case .none:
+            openSettings(.provider)
+            return true
+        case .builtIn:
+            guard let model = provider.builtInModel, summaries.localModels.available(model) else {
+                openSettings(.localModel)
+                return true
+            }
+        case .api:
+            let keychain = summaries.keychain
+            let account = provider.rawValue
+            do {
+                let key = try await Task.detached(priority: .userInitiated) {
+                    try keychain.read(account: account)
+                }.value
+                guard key != nil else { openSettings(.providerKey); return true }
+            } catch {
+                openSettings(.providerKey)
+                return true
+            }
+        case .cli:
+            let detection = summaries.detection.checked ? summaries.detection : await SummaryDetector.detect()
+            if !detection.isAvailable(provider) {
+                openSettings(.provider)
+                return true
+            }
+        case .local:
+            let settings = SummarySettings.load()
+            let detection = summaries.detection.checked ? summaries.detection : await SummaryDetector.detect()
+            if settings.model.isEmpty || !detection.isAvailable(provider) || detection.localModels[provider]?.isEmpty == true {
+                openSettings(.providerModel)
+                return true
+            }
+        }
+        return false
+    }
+    private func settingsTarget(for text: String) -> SettingsFocusTarget? {
+        if text.contains("Download this model in Settings") { return .localModel }
+        if text.hasPrefix("Add your "), text.hasSuffix(" in Settings.") { return .providerKey }
+        if text == "Pick a model for summaries in Settings." || text.contains(" isn't running. Open it and try again.") {
+            return .providerModel
+        }
+        if text.hasSuffix(" isn't installed.") { return .provider }
+        return nil
     }
     private func confirmedOffMac() -> Bool {
         guard !provider.staysOnMac else { return true }
