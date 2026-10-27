@@ -232,12 +232,6 @@ struct MainView: View {
         .clipShape(RoundedRectangle(cornerRadius: embedded ? 0 : 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.panelBorder.opacity(embedded ? 0 : 0.78)).allowsHitTesting(false))
         .tint(Theme.accentText)
-        .animation(Motion.state(reduceMotion), value: model.phase)
-        .animation(Motion.state(reduceMotion), value: model.paused)
-        .animation(Motion.state(reduceMotion), value: model.active?.id)
-        .animation(Motion.state(reduceMotion), value: openDropdown)
-        .animation(Motion.state(reduceMotion), value: saveToExpanded)
-        .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
         .onAppear {
             if previewDropping { dropping = true }
             if previewTranscribingHome { model.homeFromTranscribing = true }
@@ -374,7 +368,6 @@ struct MainView: View {
                 controlButton(.vocabulary, icon: "book.closed", value: model.vocabularySubject, truncation: .tail)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .animation(Motion.state(reduceMotion), value: saveToExpanded)
             if enteringNewFolderName {
                 newFolderNameEntry
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
@@ -400,7 +393,6 @@ struct MainView: View {
             }
         }
         .disabled(model.busy)
-        .animation(Motion.state(reduceMotion), value: enteringNewFolderName)
     }
 
     private var folderTitle: String {
@@ -709,7 +701,7 @@ struct MainView: View {
         if control == .vocabulary { prepareVocabularyDraft() }
         // Previews keep their fixture devices; the real device list never leaks into a snapshot.
         if control == .microphone && !Snapshot.isRunning { model.refreshInputs() }
-        withAnimation(Motion.state(reduceMotion)) { openDropdown = control }
+        WorkspaceNavigation.immediately { openDropdown = control }
         switch control {
         case .session: focus = .session
         case .vocabulary, .folders, .microphone: focus = nil
@@ -719,7 +711,7 @@ struct MainView: View {
     // Every dismissal (outside tap, Escape, a choice, the wheel again) animates the open panel and the wheel out together.
     private func closeDropdown() {
         if openDropdown == .vocabulary { vocabularyDraft?.flush() }
-        withAnimation(Motion.state(reduceMotion)) {
+        WorkspaceNavigation.immediately {
             openDropdown = nil
             saveToExpanded = false
             enteringNewFolderName = false
@@ -733,17 +725,17 @@ struct MainView: View {
         closeDropdown()
         guard !wasOpen else { return }
         model.refreshLectures()
-        withAnimation(Motion.state(reduceMotion)) { saveToExpanded = true }
+        WorkspaceNavigation.immediately { saveToExpanded = true }
     }
 
     private func toggleFolderList() {
         focus = nil
         hoveredFolder = nil
         if folderListOpen {
-            withAnimation(Motion.state(reduceMotion)) { openDropdown = nil }
+            WorkspaceNavigation.immediately { openDropdown = nil }
         } else {
             model.refreshLectures()
-            withAnimation(Motion.state(reduceMotion)) { openDropdown = .folders }
+            WorkspaceNavigation.immediately { openDropdown = .folders }
         }
     }
 
@@ -762,7 +754,6 @@ struct MainView: View {
         .buttonStyle(IconButtonStyle(size: 24, destructive: true))
         .opacity(shown ? 1 : 0)
         .allowsHitTesting(shown)
-        .animation(Motion.hover, value: shown)
         .tip("Delete folder")
         .accessibilityLabel("Delete folder \(lecture)")
         .interactionTarget("folder-delete-\(lecture)")
@@ -778,7 +769,7 @@ struct MainView: View {
     private func beginNewFolderName() {
         model.selectedLecture = "__new__"
         model.newLecture = ""
-        withAnimation(Motion.state(reduceMotion)) {
+        WorkspaceNavigation.immediately {
             openDropdown = nil
             saveToExpanded = false
             enteringNewFolderName = true
@@ -788,7 +779,7 @@ struct MainView: View {
 
     private func finishNewFolderName() {
         guard !model.newLecture.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        withAnimation(Motion.state(reduceMotion)) { enteringNewFolderName = false }
+        WorkspaceNavigation.immediately { enteringNewFolderName = false }
         focus = nil
     }
 
@@ -1064,9 +1055,7 @@ private struct CaptureModePicker: View {
             guard let target else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 guard selected == target else { return }
-                withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.14)) {
-                    tintedSelection = target
-                }
+                WorkspaceNavigation.immediately { tintedSelection = target }
             }
         }
     }
@@ -1096,9 +1085,7 @@ private struct CaptureModePicker: View {
     private func select(_ source: RecordingSource) {
         // Compare the real source: "Mac audio only" shows as the Mac audio category but still needs choosing.
         guard model.recordingSource != source else { return }
-        withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeInOut(duration: 0.22)) {
-            model.selectSource(source)
-        }
+        WorkspaceNavigation.immediately { model.selectSource(source) }
     }
 }
 
@@ -1342,7 +1329,7 @@ private struct CompactControlButtonStyle: ButtonStyle {
                 .contentShape(Capsule())
                 .overlay(RoundedRectangle(cornerRadius: 19, style: .continuous)
                     .strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2).padding(-2).allowsHitTesting(false))
-                .onHover { inside in withAnimation(Motion.hover) { hovering = inside } }
+                .onHover { hovering = $0 }
                 .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
                                             pressed: configuration.isPressed, shape: .capsule))
         }
