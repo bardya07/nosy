@@ -25,6 +25,7 @@ struct SettingsView: View {
     @AppStorage(ReminderInterval.storageKey) private var reminderMinutes = ReminderInterval.defaultMinutes
     @AppStorage(LectureFolderTrash.askKey) private var askBeforeDeleting = true
     @AppStorage("compressAudio") private var compressAudio = true
+    @AppStorage(TranscriptionQuality.storageKey) private var transcriptionQualityRaw = TranscriptionQuality.detailed.rawValue
     @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var customReminder = false
@@ -183,6 +184,30 @@ struct SettingsView: View {
                 }
                 note(compressAudio ? "About 22 MB per hour." : "About 115 MB per hour.", tip: "Storage estimate")
                 note("Unfinished audio stays. Saved audio follows this limit.", tip: "Audio cleanup rules")
+            }
+        }
+        section("Transcription") {
+            settingMenu("Transcription quality", value: transcriptionQuality.title) {
+                Button {
+                    transcriptionQualityRaw = TranscriptionQuality.fast.rawValue
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Fast").font(Theme.text(12, .semibold))
+                        Text("Lighter on battery and heat").font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    }
+                }
+                .accessibilityLabel("Fast")
+                .accessibilityValue("Lighter on battery and heat")
+                Button {
+                    transcriptionQualityRaw = TranscriptionQuality.detailed.rawValue
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Detailed").font(Theme.text(12, .semibold))
+                        Text("A bit more careful, works the Mac harder").font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    }
+                }
+                .accessibilityLabel("Detailed")
+                .accessibilityValue("A bit more careful, works the Mac harder")
             }
         }
         section("While recording") {
@@ -424,6 +449,9 @@ struct SettingsView: View {
         case 0: "Forever"
         default: "\(model.paths.retentionDays) days"
         }
+    }
+    private var transcriptionQuality: TranscriptionQuality {
+        TranscriptionQuality(rawValue: transcriptionQualityRaw) ?? .detailed
     }
     private func settingMenu<Options: View>(_ label: String, value: String, @ViewBuilder options: () -> Options) -> some View {
         Menu(content: options) {

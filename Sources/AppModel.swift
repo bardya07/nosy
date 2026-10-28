@@ -189,6 +189,7 @@ final class AppModel: ObservableObject {
         self.stressReason = stressReason
         if !Snapshot.isRunning { ReminderInterval.migrate() }
         let defaults = UserDefaults.standard
+        TranscriptionQuality.loadOrSelect(defaults: defaults)
         Self.migrateInputPreference(defaults)
         let reading = AudioInputs.reading()
         inputs = reading.devices

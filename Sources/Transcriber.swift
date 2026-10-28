@@ -48,23 +48,14 @@ final class TranscriptionJob: @unchecked Sendable {
 
 enum Transcriber {
     static var threadCount: Int {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/sbin/sysctl")
-        process.arguments = ["-n", "hw.perflevel0.physicalcpu"]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-        do {
-            try process.run()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            process.waitUntilExit()
-            if process.terminationStatus == 0, let count = Int(String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)) {
-                return max(4, count)
-            }
-        } catch { }
-        return max(4, ProcessInfo.processInfo.activeProcessorCount)
+        let available = max(1, ProcessInfo.processInfo.activeProcessorCount)
+        if let count = TranscriptionQuality.Hardware.current.performanceCores, count > 0 {
+            return min(count, available)
+        }
+        return min(4, available)
     }
-    static func arguments(paths: AppPaths, wav: URL, temporaryBase: URL, lecture: String, vocabularyText: String? = nil) -> [String] {
+    static func arguments(paths: AppPaths, wav: URL, temporaryBase: URL, lecture: String,
+                          vocabularyText: String? = nil, quality: TranscriptionQuality = .detailed) -> [String] {
         var args = ["-m", paths.model.path, "-f", wav.path, "-l", "en", "-otxt", "-of", temporaryBase.path, "-np", "-pp", "-t", String(threadCount),
                     "-mc", "0"]
         let vocab = paths.lectureFolder(lecture).appendingPathComponent("vocab.txt")
@@ -76,6 +67,7 @@ enum Transcriber {
             args += ["--prompt", prompt.text, "--carry-initial-prompt"]
         }
         if FileManager.default.fileExists(atPath: paths.vadModel.path) { args += ["--vad", "-vm", paths.vadModel.path] }
+        args += quality.whisperArguments
         return args
     }
     static func transcribe(record: SessionRecord, paths: AppPaths, job: TranscriptionJob = TranscriptionJob(),
@@ -153,9 +145,11 @@ enum Transcriber {
             let stderrFile = try FileHandle(forWritingTo: stderrURL)
             defer { try? stderrFile.close() }
             let process = Process()
-            process.qualityOfService = .utility
+            process.qualityOfService = .background
             process.executableURL = executable
-            process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture, vocabularyText: vocabularyText)
+            let quality = TranscriptionQuality.loadOrSelect()
+            process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture,
+                                          vocabularyText: vocabularyText, quality: quality)
             // JSON always: its segment timings feed Find key moments and marker insertion.
             if smart { process.arguments! += ["-ojf"] }
             else { process.arguments! += ["-oj"] }
