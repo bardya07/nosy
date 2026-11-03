@@ -58,11 +58,7 @@ struct WorkspaceView: View {
             WorkspaceTitlebar(model: model, managesWindowChrome: true)
             Group {
                 if model.recording {
-                    RecordingModeBanner(model: model) {
-                        if navigation.panel != nil { navigation.dismissPanel() }
-                        if navigation.mode != .home { model.showHome() }
-                        model.sourcePickerRequest += 1
-                    }
+                    RecordingModeBanner(model: model)
                     .padding(.horizontal, 20).padding(.vertical, 6)
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
                 }

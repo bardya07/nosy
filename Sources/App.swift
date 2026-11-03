@@ -186,7 +186,7 @@ struct MainView: View {
         VStack(spacing: 0) {
             if !embedded { WorkspaceTitlebar(model: model, onHome: goHome).zIndex(20) }
             if model.recording && !embedded {
-                RecordingModeBanner(model: model) { showDropdown(.microphone) }
+                RecordingModeBanner(model: model)
                     .padding(.horizontal, 20).padding(.top, 6)
                     .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
             }
@@ -1058,6 +1058,7 @@ struct FieldLabel: View {
 
 private struct CaptureModePicker: View {
     @ObservedObject var model: AppModel
+    var onReselect: (() -> Void)? = nil
     @Namespace private var selectionNamespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tintedSelection: RecordingSource = .mic
@@ -1087,6 +1088,10 @@ private struct CaptureModePicker: View {
                 }
             }
         }
+        // Live switches commit asynchronously, after the button's animation transaction ends.
+        .if(model.recording) { picker in
+            picker.animation(reduceMotion ? .easeOut(duration: 0.18) : .easeInOut(duration: 0.22), value: selected)
+        }
     }
     private func modeButton(_ title: String, source: RecordingSource, active: Bool) -> some View {
         Button { select(source) } label: {
@@ -1113,7 +1118,7 @@ private struct CaptureModePicker: View {
 
     private func select(_ source: RecordingSource) {
         // Compare the real source: "Mac audio only" shows as the Mac audio category but still needs choosing.
-        guard model.recordingSource != source else { return }
+        guard model.recordingSource != source else { onReselect?(); return }
         withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeInOut(duration: 0.22)) {
             model.selectSource(source)
         }
@@ -1421,25 +1426,58 @@ struct StatusPill: View {
 
 struct RecordingModeBanner: View {
     @ObservedObject var model: AppModel
-    let onChange: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pickerVisible = false
+    @State private var dismissalID = UUID()
+
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.amber)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Recording on \(model.recordingSource.modeTitle)")
-                    .font(Theme.text(11, .bold)).foregroundStyle(Theme.ink)
-                Text(recordingModeDescription)
-                    .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.amber)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Recording on \(model.recordingSource.modeTitle)")
+                        .font(Theme.text(11, .bold)).foregroundStyle(Theme.ink)
+                    Text(recordingModeDescription)
+                        .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+                }
+                Spacer(minLength: 4)
+                if !pickerVisible {
+                    Button("Change") {
+                        dismissalID = UUID()
+                        withAnimation(Motion.state(reduceMotion)) { pickerVisible = true }
+                    }
+                    .buttonStyle(LinkButtonStyle(tint: Theme.accentText))
+                    .disabled(model.transitioning)
+                    .transition(.opacity)
+                }
             }
-            Spacer(minLength: 4)
-            Button("Change", action: onChange)
-                .buttonStyle(LinkButtonStyle(tint: Theme.accentText))
-                .disabled(model.transitioning)
+            if pickerVisible {
+                CaptureModePicker(model: model, onReselect: scheduleDismissal)
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+            }
         }
         .padding(.horizontal, 12).padding(.vertical, 7)
         .card(Theme.amber.opacity(0.12), radius: 12)
+        .background(BannerDismissMonitor(active: pickerVisible, dismiss: dismissPicker))
+        .onChange(of: model.recordingSource) { _, _ in
+            if pickerVisible { scheduleDismissal() }
+        }
+    }
+
+    private func dismissPicker() {
+        dismissalID = UUID()
+        withAnimation(Motion.state(reduceMotion)) { pickerVisible = false }
+    }
+
+    private func scheduleDismissal() {
+        let id = UUID()
+        dismissalID = id
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+            guard dismissalID == id else { return }
+            dismissPicker()
+        }
     }
 
     private var recordingModeDescription: String {
@@ -1449,7 +1487,44 @@ struct RecordingModeBanner: View {
         case .macAudio: "your Mac's sound, not your mic"
         }
     }
+}
 
+// Observe local events without intercepting the control that receives an outside click.
+private struct BannerDismissMonitor: NSViewRepresentable {
+    var active: Bool
+    var dismiss: () -> Void
+
+    func makeNSView(context: Context) -> MonitorView { MonitorView() }
+    func updateNSView(_ view: MonitorView, context: Context) {
+        view.dismiss = dismiss
+        view.setActive(active)
+    }
+    static func dismantleNSView(_ view: MonitorView, coordinator: ()) { view.setActive(false) }
+
+    final class MonitorView: NSView {
+        var dismiss: (() -> Void)?
+        private var monitor: Any?
+
+        func setActive(_ active: Bool) {
+            if active && monitor == nil {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .keyDown]) { [weak self] event in
+                    guard let self else { return event }
+                    if event.type == .keyDown && event.keyCode == 53 {
+                        self.dismiss?()
+                        return nil
+                    }
+                    if event.type != .keyDown,
+                       event.window !== self.window || !self.bounds.contains(self.convert(event.locationInWindow, from: nil)) {
+                        self.dismiss?()
+                    }
+                    return event
+                }
+            } else if !active, let monitor {
+                NSEvent.removeMonitor(monitor)
+                self.monitor = nil
+            }
+        }
+    }
 }
 
 struct Banner<Actions: View>: View {
