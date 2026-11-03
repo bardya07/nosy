@@ -403,6 +403,47 @@ struct IconButtonStyle: ButtonStyle {
     }
 }
 
+// Titlebar actions have a lighter, independent hover treatment.
+struct TitlebarIconButtonStyle: ButtonStyle {
+    var ring = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        TitlebarIconBody(configuration: configuration, ring: ring)
+    }
+
+    private struct TitlebarIconBody: View {
+        let configuration: ButtonStyleConfiguration
+        let ring: Bool
+        @Environment(\.isEnabled) private var enabled
+        @Environment(\.isFocused) private var focused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
+        @State private var hovering = false
+
+        var body: some View {
+            configuration.label
+                .foregroundStyle(hovering && enabled ? Theme.accentText : Theme.muted)
+                .frame(width: 24, height: 24)
+                .background(configuration.isPressed && enabled ? Theme.line :
+                    (hovering && enabled ? Theme.surface : (ring ? Theme.surface.opacity(0.35) : .clear)), in: Circle())
+                .overlay(Circle().strokeBorder(ring ? Theme.line : .clear, lineWidth: 1).allowsHitTesting(false))
+                .contentShape(Circle())
+                .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2)
+                    .padding(-2).allowsHitTesting(false))
+                .brightness(hovering && enabled ? 0.025 : 0)
+                .shadow(color: .black.opacity(!reduceMotion && hovering && enabled ? 0.14 : 0),
+                        radius: hovering ? 3 : 1, y: hovering ? 2 : 0)
+                .offset(y: !reduceMotion && hovering && enabled && !configuration.isPressed ? -2 : 0)
+                .scaleEffect(!reduceMotion && enabled ? (configuration.isPressed ? 0.985 : (hovering ? 1.06 : 1)) : 1)
+                .onHover { hovering = $0 && enabled }
+                .onChange(of: enabled) { _, isEnabled in
+                    if !isEnabled { hovering = false }
+                }
+                .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.7), value: hovering)
+                .animation(reduceMotion ? nil : Motion.press, value: configuration.isPressed)
+        }
+    }
+}
+
 extension View {
     func fieldChrome(focused: Bool = false) -> some View { modifier(FieldChrome(focused: focused)) }
     func card(_ fill: Color = Theme.surface, radius: CGFloat = 12) -> some View {

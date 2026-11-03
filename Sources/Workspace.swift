@@ -240,7 +240,7 @@ struct WorkspaceTitlebar: View {
                         Image(systemName: "house").font(.system(size: 13, weight: .medium))
                             .frame(width: 14, height: 14)
                     }
-                    .buttonStyle(IconButtonStyle(size: 24))
+                    .buttonStyle(TitlebarIconButtonStyle(ring: true))
                     .tip("Home", edge: .bottom)
                     .accessibilityLabel("Home")
                     .interactionTarget("titlebar-home")
@@ -250,7 +250,7 @@ struct WorkspaceTitlebar: View {
                             .renderingMode(.template).resizable().interpolation(.high).scaledToFit()
                             .frame(width: 14, height: 14)
                     }
-                    .buttonStyle(IconButtonStyle(size: 24))
+                    .buttonStyle(TitlebarIconButtonStyle())
                     .tip("Open GitHub", edge: .bottom)
                     .accessibilityLabel("Open Nosy on GitHub")
                     .interactionTarget("titlebar-github")
@@ -258,7 +258,7 @@ struct WorkspaceTitlebar: View {
                         Image(systemName: "gearshape").font(.system(size: 13, weight: .medium))
                             .frame(width: 14, height: 14)
                     }
-                    .buttonStyle(IconButtonStyle(size: 24))
+                    .buttonStyle(TitlebarIconButtonStyle())
                     .tip("Settings (⌘,)", edge: .bottom)
                     .accessibilityLabel("Settings")
                     .interactionTarget("titlebar-settings")
