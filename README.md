@@ -1,38 +1,69 @@
+<img src="Resources/Brand/png/c-light-rounded.png" alt="Nosy app icon" width="96">
+
 # Nosy
 
-Private, on-device recording and transcription for lectures and meetings.
+Free, open-source lecture and meeting transcription that runs on your Mac. No account or subscription needed.
 
-![Nosy ready, recording, and saved](preview/nosy.light.png)
-![Save to wheel open](preview/nosy.dropdown-save-to.light.png)
-![Save to wheel closed](preview/nosy.save-to-wheel-closed.light.png)
-![Edit the session name](preview/nosy.dropdown-session.light.png)
-![Choose a vocabulary subject and edit custom terms](preview/nosy.dropdown-vocabulary.light.png)
-![Transcript library](preview/nosy.library.light.png)
-
-## Record
-
-Choose **Room audio** to capture your microphone, or **Mac audio** to capture your microphone and Mac audio. Mac audio requires **System Audio Recording** permission and macOS 14.4 or later.
-
-Choose where to **Save to**, name the **Session**, and select **Vocab**. Use the circular calendar button to enter today's date as a session name. Pick a folder from the Save to wheel, or choose a destination there too. Vocabulary options include **Auto**, **General**, and subject packs, including **Meetings & Work**. Auto chooses packs from the folder name or course and meeting keywords.
-
-Press **⌘M** or click **Mark moment** while recording to add a timestamped marker. Use **Library** beside Start recording, or **⌘L**, to browse past saves in the same window. The **← Nosy** button returns to compact Home. Recording continues while you browse, with controls along the bottom of Library. The title bar gear and **⌘,** open Settings over the current mode.
-
-Nosy transcribes on your Mac. Your recordings, transcripts, and vocabulary stay on your device.
+![Nosy in light mode](preview/nosy.workspace-home-room.light.png)
 
 ## Download
 
-Download the notarized DMG from [Nosy Releases](https://github.com/bardya07/nosy/releases), open it, and drag Nosy to Applications. Nosy includes whisper.cpp; Homebrew is not needed.
+[Download Nosy](https://github.com/bardya07/nosy/releases/latest), open the DMG, and drag Nosy to Applications.
 
-Requires macOS 14 or later and Apple Silicon. The first launch downloads the speech model. Allow microphone access for recording; allow System Audio Recording for Mac audio mode.
+Nosy requires **macOS 14 or later** and an **Apple Silicon Mac (M1 or later)**. Allow microphone access to record. Mac audio also requires macOS 14.4 or later and System Audio Recording permission.
 
-## Previews
+During first-time setup, download the speech model (about 1.6 GB). Nosy also downloads a Neural Engine file in the background when the model is ready. Updates are delivered through Sparkle, with automatic update checks.
 
-More interface states are available in the [preview folder](preview/), including dark mode, Room audio and Mac audio modes, each main control menu, Settings, onboarding, and recording activity.
+## What it does
 
-## Preparing a release
+- Record **Room audio** from your microphone, or **Mac audio** from your Mac and microphone together. No bot joins your call. Switch modes during a recording.
+- Mark a moment with **⌘M**, and open your **Library** with **⌘L**.
+- Save transcripts as Markdown to use in Obsidian, Notion, or any text editor. Import existing audio to transcribe it too.
+- Pick a subject and add course terms to improve vocabulary, or use **Auto** to choose a subject from context.
+- Choose **Fast** or **Detailed** transcription. Nosy uses the Neural Engine when its encoder is available.
+- By default, audio for successfully transcribed recordings is eligible for deletion after 14 days when the transcript is still readable; transcripts remain. You can change the retention period in Settings. Unfinished audio is kept.
 
-Set `CFBundleShortVersionString` to the release version and increase the integer `CFBundleVersion` for every release. Run `scripts/release.sh` on the signing Mac with the `nosy-notary` keychain profile and the Sparkle signing key in its login Keychain. It creates the notarized DMG and `dist/appcast.xml`; upload both to the matching GitHub release `vX.Y.Z` and mark it as the latest release. Preserve access to the Sparkle key for future updates. The script does not upload releases.
+![Library during a recording](preview/nosy.workspace-library-recording.dark.png)
+
+## Optional AI
+
+AI features are off by default. Turn them on in Settings to make summaries with notes, key terms, and exam questions, find key moments, or clean up vocabulary. Choose a provider:
+
+- Download **Qwen3 4B** or **SmolLM3 3B** to run offline.
+- Use **Claude Code**, **Codex**, or **Gemini CLI**; **Ollama** or **LM Studio**; or your own **OpenAI**, **Anthropic**, or **Gemini** API key. API keys are stored only in your Mac's Keychain.
+
+![AI settings](preview/nosy.workspace-ai-on.light.png)
+
+## Claude Desktop connector
+
+Nosy's read-only connector lets Claude Desktop list folders, list and read transcripts, and search them. In Nosy, open **Settings → Add to Claude Desktop → Restart Claude Desktop**. Then try: “Summarize my latest lecture.”
+
+## Screenshots
+
+- Home: [Room audio, light](preview/nosy.workspace-home-room.light.png) · [dark](preview/nosy.workspace-home-room.dark.png) | [Mac audio, light](preview/nosy.workspace-home-mac.light.png) · [dark](preview/nosy.workspace-home-mac.dark.png)
+- Library while recording: [light](preview/nosy.workspace-library-recording.light.png) · [dark](preview/nosy.workspace-library-recording.dark.png)
+- Settings and updates: [light](preview/nosy.workspace-settings-home.light.png) · [dark](preview/nosy.workspace-settings-home.dark.png) | AI: [light](preview/nosy.workspace-ai-on.light.png) · [dark](preview/nosy.workspace-ai-on.dark.png)
+
+## Privacy
+
+Recordings and transcripts stay on your Mac unless you choose to share them. Nosy connects to download models and check for updates. If you enable AI, the provider you choose may receive transcript content; local models can run offline. Claude Desktop can also read transcripts when you connect it, and its own service may receive the content you ask it to use.
+
+## Build from source
+
+On an Apple Silicon Mac, install Xcode command line tools and CMake, then run:
+
+```sh
+git clone https://github.com/bardya07/nosy.git
+cd nosy
+./scripts/build-whisper.sh
+./scripts/build-llama.sh
+./build.sh
+```
+
+The build script fetches Sparkle if needed and prints the path to `Nosy.app`. The default build is ad-hoc signed.
 
 ## License
 
-Nosy is [MIT licensed](LICENSE). Third-party materials retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). See [third-party notices](THIRD_PARTY_NOTICES.md) for bundled components and models.
+
+Made by a student.
