@@ -43,7 +43,8 @@ cmake -S "$SOURCE" -B "$BUILD" -G 'Unix Makefiles' \
     -DWHISPER_USE_SYSTEM_GGML=OFF -DWHISPER_USE_SYSTEM_LLAMA=OFF \
     -DWHISPER_BUILD_IS_DEV=OFF -DWHISPER_BUILD_TESTS=OFF \
     -DWHISPER_BUILD_EXAMPLES=ON -DWHISPER_BUILD_SERVER=OFF \
-    -DWHISPER_SDL2=OFF -DWHISPER_CURL=OFF -DWHISPER_COREML=OFF \
+    -DWHISPER_SDL2=OFF -DWHISPER_CURL=OFF -DWHISPER_COREML=ON \
+    -DWHISPER_COREML_ALLOW_FALLBACK=ON \
     -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON \
     -DGGML_ACCELERATE=ON -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=Apple \
     -DGGML_OPENMP=OFF -DGGML_CCACHE=OFF -DGGML_NATIVE=OFF \
@@ -54,7 +55,7 @@ mkdir -p "$OUTPUT"
 install -m 755 "$BUILD/bin/whisper-cli" "$OUTPUT/whisper-cli"
 strip -x "$OUTPUT/whisper-cli"
 cp "$SOURCE/LICENSE" "$OUTPUT/LICENSE"
-printf 'whisper.cpp v%s\nsource sha256: %s\narm64; macOS 14.0; static GGML; embedded Metal shaders\n' \
+printf 'whisper.cpp v%s\nsource sha256: %s\narm64; macOS 14.0; static GGML; Core ML encoder with fallback; embedded Metal shaders\n' \
     "$VERSION" "$SHA256" > "$OUTPUT/BUILD-INFO.txt"
 
 # Fail the build if a non-system library slipped in (including @rpath libraries).

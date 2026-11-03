@@ -209,3 +209,44 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
         finished.forEach { $0.resume() }
     }
 }
+
+// The optional encoder is installed only after the complete archive is verified and unpacked.
+enum CoreMLEncoderDownload {
+    static func install(paths: AppPaths, job: TranscriptionJob) async throws {
+        let manager = FileManager.default
+        let folder = paths.model.deletingLastPathComponent()
+        let name = "ggml-large-v3-turbo-encoder.mlmodelc"
+        let target = folder.appendingPathComponent(name, isDirectory: true)
+        guard !manager.fileExists(atPath: target.path) else { return }
+        let partial = folder.appendingPathComponent(".coreml-encoder.zip.partial")
+        let url = URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/87cd18b47b941d2f65d09981dad23bb7d0481c77/ggml-large-v3-turbo-encoder.mlmodelc.zip")!
+        try await LocalModelDownload.transfer(url: url, partial: partial, expectedBytes: 1_173_393_014,
+            checksum: "84bedfe895bd7b5de6e8e89a0803dfc5addf8c0c5bc4c937451716bf7cf7988a", job: job)
+        try await withTaskCancellationHandler {
+            try await Task.detached(priority: .utility) {
+                let manager = FileManager.default
+                let temporary = folder.appendingPathComponent(".coreml-encoder-\(UUID().uuidString)", isDirectory: true)
+                try manager.createDirectory(at: temporary, withIntermediateDirectories: true)
+                defer { try? manager.removeItem(at: temporary) }
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
+                process.arguments = ["-x", "-k", partial.path, temporary.path]
+                process.standardOutput = FileHandle.nullDevice
+                process.standardError = FileHandle.nullDevice
+                try job.launch(process)
+                process.waitUntilExit()
+                try job.checkCancellation()
+                guard process.terminationStatus == 0 else { throw LectureError.message("Could not unpack the Core ML encoder.") }
+                let unpacked = temporary.appendingPathComponent(name, isDirectory: true)
+                var directory: ObjCBool = false
+                guard manager.fileExists(atPath: unpacked.path, isDirectory: &directory), directory.boolValue else {
+                    throw LectureError.message("The Core ML encoder archive is incomplete.")
+                }
+                try job.checkCancellation()
+                // Never replace an existing encoder; the directory becomes visible in one move.
+                try manager.moveItem(at: unpacked, to: target)
+                try? manager.removeItem(at: partial)
+            }.value
+        } onCancel: { job.cancel() }
+    }
+}

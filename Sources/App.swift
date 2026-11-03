@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard model.finishLibraryEditing?() ?? true else { return .terminateCancel }
         guard model.working else {
             // Summaries can be the only remaining work. They must cancel and reap their CLI too.
-            guard model.summaries.hasPendingWork || model.finishOnboardingWork != nil else { return .terminateNow }
+            guard model.summaries.hasPendingWork || model.finishOnboardingWork != nil || model.hasEncoderWork else { return .terminateNow }
             Task { await model.prepareToQuit(); sender.reply(toApplicationShouldTerminate: true) }
             return .terminateLater
         }

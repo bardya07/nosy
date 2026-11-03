@@ -173,6 +173,9 @@ final class AppModel: ObservableObject {
     private var lecturesNeedRefresh = false
     // The folder the last session used, selected once the first folder list arrives.
     private var rememberedLecture: String?
+    private var encoderWork: Task<Void, Never>?
+    var hasEncoderWork: Bool { encoderWork != nil }
+    private var encoderAttempted = false
     private var quitting = false
     // Claimed synchronously by Stop or a recorder failure, so only one of them finishes a recording.
     private var completing = false
@@ -314,7 +317,17 @@ final class AppModel: ObservableObject {
         errorDetail = raw
     }
     func clearError() { errorMessage = nil; errorDetail = nil }
-    func refreshDependencies() { setupMessage = Core.setupMessage(paths: paths) }
+    func refreshDependencies() {
+        setupMessage = Core.setupMessage(paths: paths)
+        guard launched, !quitting, !encoderAttempted, SpeechModel.validate(paths.model) else { return }
+        encoderAttempted = true
+        let paths = paths
+        let job = TranscriptionJob()
+        encoderWork = Task {
+            try? await CoreMLEncoderDownload.install(paths: paths, job: job)
+            encoderWork = nil
+        }
+    }
     // Folder names and historical libraries are read off the main actor. Only changed results are published.
     func refreshLectures() {
         guard !lecturesRefreshing else { lecturesNeedRefresh = true; return }
@@ -1049,6 +1062,8 @@ final class AppModel: ObservableObject {
     }
     func prepareToQuit() async {
         quitting = true
+        encoderWork?.cancel()
+        await encoderWork?.value
         inputWatcher?.invalidate()
         inputWatcher = nil
         summaries.cancelAll()
