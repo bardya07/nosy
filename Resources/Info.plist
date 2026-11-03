@@ -18,7 +18,6 @@
     <key>LSApplicationCategoryType</key><string>public.app-category.education</string>
     <key>NSMicrophoneUsageDescription</key><string>Nosy records lectures so they can be transcribed on this Mac.</string>
     <key>NSAudioCaptureUsageDescription</key><string>Nosy records your Mac's audio, e.g. online meetings, only while you record.</string>
-    <key>ATSApplicationFontsPath</key><string>Fonts</string>
     <key>NSHighResolutionCapable</key><true/>
     <key>CFBundleIconFile</key><string>AppIcon</string>
     <key>CFBundleIconName</key><string>Nosy</string>

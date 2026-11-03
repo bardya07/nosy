@@ -1,12 +1,14 @@
 # Main window interaction regression
 
+> Historical verification recorded in commit `819ccfa6a4f904122d58da542043b92d24750c37` (2026-10-24). This describes the UI and checks at that point, not the current UI.
+
 The installed build reproduced the owner's failure: clicking the visible Session name field immediately removed the field from the accessibility tree.
 
 The old dismissal monitor compared an AppKit background view's flipped point with a SwiftUI named-coordinate panel rectangle. Titlebar insets and changing window geometry made those coordinates disagree. It also excluded the three toggle buttons from the protected region, so mouse down could dismiss a panel before the same button's action reopened it.
 
 The first replacement (af0b4b1) kept an AppKit local event monitor with a polling timer; it no longer dismissed on inner clicks but outside clicks failed to dismiss in the interaction test. It also sat inside a `ViewThatFits` that held two copies of the fields, so swapping copies could reset panel state and contend for text focus.
 
-Current dismissal is plain SwiftUI. The toggle row and any open panel publish one frame in a named coordinate space; a root `SpatialTapGesture` closes the panel or folder wheel when a click ends outside that frame. It fires on mouse-up after the clicked control has acted. `.onExitCommand` and the zero-size `.cancelAction` button close Escape regardless of focus, including while the Save to wheel is open. The details live in one `ScrollView` capped to the screen instead of `ViewThatFits`.
+At that point dismissal was plain SwiftUI. The toggle row and any open panel publish one frame in a named coordinate space; a root `SpatialTapGesture` closes the panel or folder wheel when a click ends outside that frame. It fires on mouse-up after the clicked control has acted. `.onExitCommand` and the zero-size `.cancelAction` button close Escape regardless of focus, including while the Save to wheel is open. The details live in one `ScrollView` capped to the screen instead of `ViewThatFits`.
 
 Save to rolls into a circular folder wheel at the row's leading edge. The space it frees holds one capsule: Pick folder opens an inline list of existing folders with New folder below it, and Choose destination (warm amber, a separate color) uses the folder chooser. Choosing a folder or destination, clicking the wheel again, Escape, and an outside click all roll back to the full Save to pill. New folder opens a focused inline name field. Session and Vocabulary hide while the wheel is open. The motion follows Reduce Motion, and the pill and wheel share one rounded stroke so no stray end caps appear.
 

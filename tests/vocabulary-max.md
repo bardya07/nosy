@@ -1,10 +1,12 @@
 # Vocabulary maximum → lean — 2026-10-23
 
-The full local report and reproducible evidence are in `~/nosy-work/vmax/ABLATION.md`. No audio was played. Both originals match their copied inputs by SHA-256. The installed app and original transcript folder were not changed.
+> Historical verification recorded in commit `445aef46ffee23e3e45f42f84ae294b77fe59bee` (2026-10-23); the maximum prototype commit is identified below. Results and feature descriptions apply to that development period, not necessarily the current app. The private benchmark recordings, transcripts, and local report are not included in this repository.
+
+The full local report and benchmark evidence were private and are unavailable here. No audio was played. Both originals match their copied inputs by SHA-256. The installed app and original transcript folder were not changed.
 
 The maximum prototype is commit `534420f2c79dbf46ce3f384c710856add1367260` on `vocab-max`. It implemented independently switchable routing, spelling/phonetic retrieval, one persistent libwhisper worker for selective prompt retries, gated trie callback retries, restricted edit acceptance and conservative substitution. The final commit removes the stages that did not pay for their cost.
 
-The app ships eight subject groups and 49 plain word-list packs, saved folder-level subject choices and folder-name guessing, the audited transcript router, cached phonetic/spelling retrieval, conservative uncertain-spelling substitutions, and **Fix this word…** in the transcript selection menu. Subject refinement now follows each folder's vocabulary choice: **Auto** by default, an explicit subject, or **General** to disable subject packs. The former global toggle is removed. Custom user terms still use the existing native-counted 160-token first-pass prompt, with no decoded history. No source metadata, CSV, native helper or additional runtime model is bundled.
+At that point the app shipped eight subject groups and 49 plain word-list packs, saved folder-level subject choices and folder-name guessing, the audited transcript router, cached phonetic/spelling retrieval, conservative uncertain-spelling substitutions, and **Fix this word…** in the transcript selection menu. Subject refinement then followed each folder's vocabulary choice: **Auto** by default, an explicit subject, or **General** to disable subject packs. The former global toggle is removed. Custom user terms still use the existing native-counted 160-token first-pass prompt, with no decoded history. No source metadata, CSV, native helper or additional runtime model is bundled.
 
 ## Product-baseline results
 

@@ -1,5 +1,7 @@
 # System audio recording
 
+> Historical verification recorded in commit `203ebcd1d1712ca83813aef6f05e39954893d20e` (2026-10-23). This describes the interface and implementation at that point, not the current UI.
+
 The mic menu's Source section offers Mic, Mac audio, and Both on macOS 14.4+.
 Choices persist; starting/stopping and unpaused recording lock source changes.
 Mac audio needs system audio recording consent, requested when the aggregate's
