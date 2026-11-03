@@ -36,7 +36,16 @@ trap 'exit 143' TERM
 
 # build.sh signs the static whisper-cli first, then the app with its microphone
 # entitlement. Both receive hardened runtime and a secure timestamp; no --deep signing.
-[[ -x vendor/whisper/whisper-cli ]] || ./scripts/build-whisper.sh
+# Rebuild both helpers from their checksum-verified pinned archives for each release.
+./scripts/build-whisper.sh
+./scripts/build-llama.sh
+# Reject missing or unexpected build metadata before packaging either helper.
+printf 'whisper.cpp v1.9.5\nsource sha256: ff1a9053feb509ff9d7729703355541ae9690073a6b1c40eb692c962e0dc1720\narm64; macOS 14.0; static GGML; Core ML encoder with fallback; embedded Metal shaders\n' | cmp -s - vendor/whisper/BUILD-INFO.txt || {
+    printf 'Whisper helper build metadata does not match the release pin.\n' >&2; exit 1;
+}
+printf 'llama.cpp b11869 (d327bf1f0780f87b8c01b367b61853b0c291d7c4)\nsource sha256: f808461a7a07acf0b60c0fa08c5bc65bb7641a377d63b758569c941c12ad8a0c\narm64; macOS 14.0; static GGML; embedded Metal shaders\n' | cmp -s - vendor/llama/BUILD-INFO.txt || {
+    printf 'Llama helper build metadata does not match the release pin.\n' >&2; exit 1;
+}
 ./build.sh
 codesign --verify --strict --deep "$APP"
 VERSION=$(plutil -extract CFBundleShortVersionString raw -o - "$APP/Contents/Info.plist")

@@ -32,6 +32,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+GGML in both bundled engines includes YaRN code by Jeffrey Quesnelle and Bowen Peng. The [upstream YaRN MIT license](https://github.com/jquesnelle/yarn/blob/master/LICENSE) follows:
+
+```text
+Copyright (c) 2023 Jeffrey Quesnelle and Bowen Peng
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 The CLI also includes **miniaudio** by David Reid and **stb_vorbis** by Sean Barrett under their public-domain (Unlicense) options. [miniaudio license](https://github.com/ggml-org/whisper.cpp/blob/v1.9.5/examples/miniaudio.h), [stb_vorbis license](https://github.com/ggml-org/whisper.cpp/blob/v1.9.5/examples/stb_vorbis.c). Their shared Unlicense text follows:
 
 ```text
@@ -60,7 +84,7 @@ For more information, please refer to <http://unlicense.org/>
 
 ## Models downloaded at runtime
 
-- **Whisper large-v3-turbo** — Copyright (c) 2022 OpenAI. MIT license for code and model weights, confirmed by the [Whisper license](https://github.com/openai/whisper/blob/main/LICENSE), [upstream README](https://github.com/openai/whisper#license), and [large-v3-turbo model card](https://huggingface.co/openai/whisper-large-v3-turbo). Nosy downloads the [whisper.cpp GGML conversion](https://huggingface.co/ggerganov/whisper.cpp/blob/main/README.md), `ggml-large-v3-turbo.bin`, during setup. Weights are not included in this repository or app bundle.
+- **Whisper large-v3-turbo** — Copyright (c) 2022 OpenAI. MIT license for code and model weights, confirmed by the [Whisper license](https://github.com/openai/whisper/blob/main/LICENSE), [upstream README](https://github.com/openai/whisper#license), and [large-v3-turbo model card](https://huggingface.co/openai/whisper-large-v3-turbo). Nosy downloads the [whisper.cpp GGML conversion](https://huggingface.co/ggerganov/whisper.cpp/blob/main/README.md), `ggml-large-v3-turbo.bin`, during setup. The optional [Core ML encoder conversion](https://huggingface.co/ggerganov/whisper.cpp/blob/87cd18b47b941d2f65d09981dad23bb7d0481c77/ggml-large-v3-turbo-encoder.mlmodelc.zip) is also downloaded for acceleration. Weights are not included in this repository or app bundle.
 - **Silero VAD v5.1.2** — Copyright (c) 2020-present Silero Team. MIT license. [Source and full license](https://github.com/snakers4/silero-vad/blob/master/LICENSE), [GGML conversion model card](https://huggingface.co/ggml-org/whisper-vad/blob/main/README.md). The optional `ggml-silero-v5.1.2.bin` voice activity model is downloaded during setup, not bundled.
 
 Keep the relevant upstream copyright and license notices with any separate redistribution of engine binaries or weights.
@@ -69,6 +93,10 @@ Keep the relevant upstream copyright and license notices with any separate redis
 
 The Nosy app icon and mark are original artwork by Bardya, the app's owner, and are included under the repository's MIT license. Source artwork is in `Resources/Brand/`. Preview images show sample data.
 
+`Resources/GitHubMark.png` is the GitHub mark, sourced from [GitHub's logo assets](https://github.com/logos) and used to link to the repository. GitHub and its mark are trademarks of GitHub, Inc.; the mark is subject to [GitHub's brand guidelines](https://brand.github.com/foundations/logo), not Nosy's MIT artwork grant.
+
+The app uses Apple-provided system fonts and SF Symbols through macOS APIs. These are system resources, not Nosy original artwork or assets distributed under Nosy's MIT license.
+
 ## Vocabulary data
 
 `Resources/Vocabulary` contains plain UTF-8 word lists and the umbrella-to-pack manifest, as selected for distribution by the repository owner. The app bundles these lists without source metadata or provenance CSV files. No external retrieval, phonetic, or contextual-biasing implementation was copied into the app.
@@ -76,6 +104,32 @@ The Nosy app icon and mark are original artwork by Bardya, the app's owner, and 
 ## Optional built in summary engine
 
 **llama.cpp b11869**, commit `d327bf1f0780f87b8c01b367b61853b0c291d7c4`, including its vendored GGML — MIT license, Copyright (c) 2023–2026 The ggml authors. The complete MIT text printed above for whisper.cpp also applies to llama.cpp. Nosy bundles `Contents/Helpers/nosy-llama`, a small custom one shot runner linked statically with llama and GGML, with embedded Metal shaders. It is a separate executable from whisper and has no network or audio functionality. [Pinned source and license](https://github.com/ggml-org/llama.cpp/tree/d327bf1f0780f87b8c01b367b61853b0c291d7c4). Rebuild using `scripts/build-llama.sh`; the immutable source archive SHA256 is `f808461a7a07acf0b60c0fa08c5bc65bb7641a377d63b758569c941c12ad8a0c`.
+
+The llama build enables the llamafile matrix multiplication component. Its MIT notice follows ([pinned source](https://github.com/ggml-org/llama.cpp/blob/d327bf1f0780f87b8c01b367b61853b0c291d7c4/ggml/src/ggml-cpu/llamafile/sgemm.cpp)):
+
+```text
+Copyright 2024 Mozilla Foundation
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 Summary models are optional downloads and are never included in the app bundle:
 

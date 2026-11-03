@@ -1,5 +1,7 @@
 # Optional built in summaries builder checks
 
+> Historical verification from the `r8-llm` development work recorded in integration commit `709438a` (2026-10-25); the exact tested worktree commit was not recorded. These results and UI descriptions apply to that development period, not necessarily the current app.
+
 Built on branch `r8-llm`, based on `851def9`, in the dedicated worktree. No install, push, merge, audio playback, full unit suite, native click suite, or pipeline suite was run.
 
 ## Reproduce
