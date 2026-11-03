@@ -58,10 +58,11 @@ VERSION=$(plutil -extract CFBundleShortVersionString raw -o - "$APP/Contents/Inf
 BUILD_NUMBER=$(plutil -extract CFBundleVersion raw -o - "$APP/Contents/Info.plist")
 [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]] || { printf "Invalid build number: %s\n" "$BUILD_NUMBER" >&2; exit 1; }
 # Increment CFBundleVersion for every release, including patch releases.
+# The update signing key is a private file outside the repo and iCloud. Back it up.
+SPARKLE_KEY="${NOSY_SPARKLE_KEY:-$HOME/Library/Application Support/Nosy Release/sparkle-ed25519-private.txt}"
+[[ -f "$SPARKLE_KEY" ]] || { printf 'Missing Sparkle signing key: %s\n' "$SPARKLE_KEY" >&2; exit 1; }
 EXPECTED_KEY=$(plutil -extract SUPublicEDKey raw -o - "$APP/Contents/Info.plist")
-[[ $(vendor/sparkle/bin/generate_keys -p) == "$EXPECTED_KEY" ]] || {
-    printf "Sparkle Keychain public key does not match the app.\n" >&2; exit 1;
-}
+[[ -n "$EXPECTED_KEY" ]] || { printf 'Info.plist has no SUPublicEDKey.\n' >&2; exit 1; }
 [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
     printf 'Invalid release version in Info.plist: %s\n' "$VERSION" >&2
     exit 1
@@ -133,9 +134,9 @@ hdiutil detach "$STAGING/mount"
 MOUNTED=false
 
 # Sign the final stapled bytes; stapling after signing would invalidate the signature.
-SIGNATURE=$(vendor/sparkle/bin/sign_update -p "$DMG")
+SIGNATURE=$(vendor/sparkle/bin/sign_update --ed-key-file "$SPARKLE_KEY" -p "$DMG")
 [[ "$SIGNATURE" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] || { printf 'Invalid Sparkle signature.\n' >&2; exit 1; }
-vendor/sparkle/bin/sign_update --verify "$DMG" "$SIGNATURE"
+vendor/sparkle/bin/sign_update --ed-key-file "$SPARKLE_KEY" --verify "$DMG" "$SIGNATURE"
 LENGTH=$(stat -f %z "$DMG")
 PUB_DATE=$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')
 cat > "$STAGING/appcast.xml" <<EOF
