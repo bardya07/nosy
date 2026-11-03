@@ -112,7 +112,12 @@ xcrun stapler validate "$DMG"
 # Assess the actual shipped app without launching it or touching /Applications.
 hdiutil attach -readonly -nobrowse -mountpoint "$STAGING/mount" "$DMG"
 MOUNTED=true
-codesign --verify --strict --deep "$STAGING/mount/Nosy.app"
+# A read-only HFS+ mount can carry system-added attributes that strict codesign
+# rejects; verify the copy a user gets by dragging Nosy to Applications instead.
+ditto "$STAGING/mount/Nosy.app" "$STAGING/installed/Nosy.app"
+codesign --verify --strict --deep "$STAGING/installed/Nosy.app"
+xcrun stapler validate "$STAGING/installed/Nosy.app"
+spctl -a -vv "$STAGING/installed/Nosy.app"
 xcrun stapler validate "$STAGING/mount/Nosy.app"
 spctl -a -vv "$STAGING/mount/Nosy.app" 2>&1 | tee "$STAGING/app-assessment.txt"
 grep -q 'source=Notarized Developer ID' "$STAGING/app-assessment.txt"
