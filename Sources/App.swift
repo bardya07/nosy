@@ -1176,17 +1176,24 @@ private struct StartButtonGlow: View {
     @State private var pulsing = false
 
     var body: some View {
-        Capsule()
-            .fill(Theme.green.opacity(pulsing ? 0.65 : 0.35))
-            .blur(radius: pulsing ? 14 : 9)
-            .animation(active && !reduceMotion ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil,
-                       value: pulsing)
-            .opacity(active ? 1 : 0)
-            .animation(.easeInOut(duration: 0.25), value: active)
-            .allowsHitTesting(false)
-            .onAppear { pulsing = active && !reduceMotion }
-            .onChange(of: active) { _, value in pulsing = value && !reduceMotion }
-            .onChange(of: reduceMotion) { _, value in pulsing = active && !value }
+        ZStack {
+            Capsule()
+                .fill(Theme.green.opacity(pulsing || reduceMotion ? 0.7 : 0.4))
+                .scaleEffect(1.04)
+                .blur(radius: pulsing || reduceMotion ? 24 : 18)
+                .offset(y: -3)
+            Capsule()
+                .fill(Theme.green.opacity(pulsing || reduceMotion ? 0.9 : 0.6))
+                .blur(radius: pulsing || reduceMotion ? 8 : 6)
+        }
+        .animation(active && !reduceMotion ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil,
+                   value: pulsing)
+        .opacity(active ? 1 : 0)
+        .animation(.easeInOut(duration: 0.25), value: active)
+        .allowsHitTesting(false)
+        .onAppear { pulsing = active && !reduceMotion }
+        .onChange(of: active) { _, value in pulsing = value && !reduceMotion }
+        .onChange(of: reduceMotion) { _, value in pulsing = active && !value }
     }
 }
 
