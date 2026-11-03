@@ -94,7 +94,8 @@ xcrun stapler validate "$APP"
 codesign --verify --strict --deep "$APP"
 
 mkdir -p "$STAGING/payload" "$STAGING/mount"
-ditto "$APP" "$STAGING/payload/Nosy.app"
+# HFS+ images reject copied extended attributes inside signed bundles.
+ditto --norsrc --noextattr --noqtn "$APP" "$STAGING/payload/Nosy.app"
 ln -s /Applications "$STAGING/payload/Applications"
 DMG="$STAGING/Nosy-$VERSION.dmg"
 hdiutil create -volname Nosy -srcfolder "$STAGING/payload" -fs HFS+ \
