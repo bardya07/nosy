@@ -1132,19 +1132,6 @@ private extension View {
     }
 }
 
-struct TitlebarBrandButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(Theme.onAccent)
-            .padding(.horizontal, 12)
-            .frame(height: 30)
-            .background(Theme.accent, in: Capsule())
-            .contentShape(Capsule())
-            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
-                                   pressed: configuration.isPressed, shape: .capsule))
-    }
-}
-
 private struct StartShake: GeometryEffect {
     var animatableData: CGFloat
     func effectValue(size: CGSize) -> ProjectionTransform {

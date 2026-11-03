@@ -229,19 +229,22 @@ struct WorkspaceTitlebar: View {
         ZStack {
             HStack(spacing: 8) {
                 Color.clear.frame(width: 64).accessibilityHidden(true)
-                if navigation.mode == .library {
-                    Button { model.showHome() } label: {
-                        Label("Nosy", systemImage: "arrow.left")
-                            .font(Theme.text(12, .semibold))
-                    }
-                    .buttonStyle(TitlebarBrandButtonStyle())
-                    .accessibilityLabel("Return to Nosy")
-                    .interactionTarget("library-home")
-                    .disabled(navigation.panel != nil)
-                }
                 Spacer(minLength: 0)
                 HStack(spacing: 6) {
                     StatusPill(model: model).fixedSize()
+                    Button {
+                        if navigation.mode == .library { model.showHome() }
+                        else if let onHome { onHome() }
+                        else { navigation.requestHome() }
+                    } label: {
+                        Image(systemName: "house").font(.system(size: 13, weight: .medium))
+                            .frame(width: 14, height: 14)
+                    }
+                    .buttonStyle(IconButtonStyle(size: 24))
+                    .tip("Home", edge: .bottom)
+                    .accessibilityLabel("Home")
+                    .interactionTarget("titlebar-home")
+                    .disabled(navigation.panel != nil)
                     Button { NSWorkspace.shared.open(URL(string: "https://github.com/bardya07/nosy")!) } label: {
                         Image(nsImage: Bundle.main.image(forResource: "GitHubMark") ?? NSImage())
                             .renderingMode(.template).resizable().interpolation(.high).scaledToFit()
@@ -261,19 +264,6 @@ struct WorkspaceTitlebar: View {
                     .interactionTarget("titlebar-settings")
                 }
                 .interactionTarget("titlebar-tools")
-            }
-            if navigation.mode == .home {
-                Button { if let onHome { onHome() } else { navigation.requestHome() } } label: {
-                    HStack(spacing: 6) {
-                        NosyMark(size: 18)
-                        Text("Nosy").font(Theme.display(13, .semibold)).foregroundStyle(Theme.onAccent)
-                    }
-                }
-                .buttonStyle(TitlebarBrandButtonStyle())
-                .tip("Home", edge: .bottom)
-                .accessibilityLabel("Home")
-                .accessibilityElement(children: .combine)
-                .disabled(navigation.panel != nil)
             }
         }
         .padding(.horizontal, 12).frame(height: 44)
