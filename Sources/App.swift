@@ -869,6 +869,10 @@ struct MainView: View {
             }
         }
         .buttonStyle(primaryButtonStyle)
+        .background {
+            StartButtonGlow(active: model.phase == .idle &&
+                !model.session.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
         .overlay {
             if sessionGate.required && !model.recording && !showsHomeAction {
                 RoundedRectangle(cornerRadius: 23, style: .circular)
@@ -1163,6 +1167,26 @@ private struct LibraryPillStyle: ButtonStyle {
                 .modifier(ButtonChrome(tier: .primary, tint: Theme.libraryBlue,
                                        pressed: configuration.isPressed, shape: .capsule))
         }
+    }
+}
+
+private struct StartButtonGlow: View {
+    let active: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pulsing = false
+
+    var body: some View {
+        Capsule()
+            .fill(Theme.green.opacity(pulsing ? 0.65 : 0.35))
+            .blur(radius: pulsing ? 14 : 9)
+            .animation(active && !reduceMotion ? .easeInOut(duration: 1.2).repeatForever(autoreverses: true) : nil,
+                       value: pulsing)
+            .opacity(active ? 1 : 0)
+            .animation(.easeInOut(duration: 0.25), value: active)
+            .allowsHitTesting(false)
+            .onAppear { pulsing = active && !reduceMotion }
+            .onChange(of: active) { _, value in pulsing = value && !reduceMotion }
+            .onChange(of: reduceMotion) { _, value in pulsing = active && !value }
     }
 }
 
