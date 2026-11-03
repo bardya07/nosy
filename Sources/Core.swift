@@ -183,6 +183,66 @@ struct AppPaths: Sendable {
         return true
     }
 
+    // Validate each existing component before creating any missing directory. The
+    // support root and everything below it must be owned by the current user.
+    func createSupportDirectory(_ url: URL) throws {
+        let root = support.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        guard path == root || path.hasPrefix(root + "/") else { throw LectureError.message("Unsafe support storage.") }
+        let library = transcripts.resolvingSymlinksInPath().standardizedFileURL.path
+        let canonical = url.resolvingSymlinksInPath().standardizedFileURL.path
+        guard canonical != library, !canonical.hasPrefix(library + "/"), !library.hasPrefix(canonical + "/") else {
+            throw LectureError.message("Unsafe support storage.")
+        }
+        var current = URL(fileURLWithPath: "/", isDirectory: true)
+        for component in url.standardizedFileURL.pathComponents.dropFirst() {
+            current.appendPathComponent(component, isDirectory: true)
+            var info = stat()
+            if lstat(current.path, &info) == 0 {
+                if (info.st_mode & S_IFMT) == S_IFLNK {
+                    let aliases = ["/tmp": "/private/tmp", "/var": "/private/var"]
+                    guard current.path != root, !current.path.hasPrefix(root + "/"),
+                          info.st_uid == 0, let target = aliases[current.path],
+                          current.resolvingSymlinksInPath().standardizedFileURL.path == target else { throw LectureError.message("Unsafe support storage.") }
+                } else {
+                    let inside = current.path == root || current.path.hasPrefix(root + "/")
+                    guard (info.st_mode & S_IFMT) == S_IFDIR,
+                          inside ? info.st_uid == getuid() : (info.st_uid == 0 || info.st_uid == getuid()) else {
+                        throw LectureError.message("Unsafe support storage.")
+                    }
+                }
+            } else {
+                guard errno == ENOENT else { throw LectureError.message("Unsafe support storage.") }
+                // Parent must already have been checked; create one component at a time.
+                try FileManager.default.createDirectory(at: current, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+            }
+        }
+        guard safeSupportItem(url, directory: true) else { throw LectureError.message("Unsafe support storage.") }
+    }
+
+    func safeSupportTree(_ root: URL) -> Bool {
+        guard safeSupportItem(root, directory: true),
+              let entries = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) else { return false }
+        for entry in entries {
+            var info = stat()
+            guard lstat(entry.path, &info) == 0 else { return false }
+            let kind = info.st_mode & S_IFMT
+            if kind == S_IFDIR {
+                guard safeSupportTree(entry) else { return false }
+            } else {
+                guard kind == S_IFREG, safeSupportItem(entry, directory: false) else { return false }
+            }
+        }
+        return true
+    }
+
+    func safeSupportDestination(_ url: URL) -> Bool {
+        guard safeSupportItem(url.deletingLastPathComponent(), directory: true) else { return false }
+        var info = stat()
+        if lstat(url.path, &info) == 0 { return safeSupportItem(url, directory: false) }
+        return errno == ENOENT
+    }
+
     func removeSupportFile(_ url: URL) throws {
         guard safeSupportItem(url, directory: false) else { throw LectureError.message("Unsafe support file; it was preserved.") }
         try FileManager.default.removeItem(at: url)
@@ -195,21 +255,11 @@ struct AppPaths: Sendable {
 
     private func repairSupportPermissions() throws {
         let manager = FileManager.default
-        // Creating the root is permitted only when its canonical location does not
-        // overlap the library. Never repair a symlink or an unowned directory.
-        let root = support.resolvingSymlinksInPath().standardizedFileURL.path
-        let library = transcripts.resolvingSymlinksInPath().standardizedFileURL.path
-        guard root != library, !root.hasPrefix(library + "/") else { return }
-        if !manager.fileExists(atPath: support.path) {
-            try manager.createDirectory(at: support, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        }
-        guard safeSupportItem(support, directory: true, checkOverlap: false) else { return }
-        if safeSupportItem(support, directory: true) {
-            try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: support.path)
-        }
+        try createSupportDirectory(support)
+        try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: support.path)
         for root in [audio, support.appendingPathComponent("models"), support.appendingPathComponent("routing")] {
             if !manager.fileExists(atPath: root.path), root != support.appendingPathComponent("routing") {
-                try manager.createDirectory(at: root, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+                try createSupportDirectory(root)
             }
             guard safeSupportItem(root, directory: true) else { continue }
             try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path)
@@ -321,6 +371,7 @@ struct SessionRecord: Codable, Sendable, Equatable {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let file = paths.audioFile(id, "json")
         guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
+        guard paths.safeSupportDestination(file) else { throw LectureError.message("Unsafe audio file.") }
         try encoder.encode(self).write(to: file, options: .atomic)
         guard paths.safeSupportItem(file, directory: false) else { throw LectureError.message("Unsafe audio file.") }
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
@@ -421,25 +472,57 @@ enum Core {
             if let value = legacyDefaults?.object(forKey: key) { defaults.set(value, forKey: key) }
         }
         let manager = FileManager.default
-        guard manager.fileExists(atPath: legacySupport.path) else { return }
-        if !manager.fileExists(atPath: paths.support.path) {
-            try manager.createDirectory(at: paths.support.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try manager.moveItem(at: legacySupport, to: paths.support)
+        var legacyInfo = stat()
+        guard lstat(legacySupport.path, &legacyInfo) == 0 else { return }
+        let legacyPaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": legacySupport.path,
+                                                  "NOSY_TRANSCRIPTS_DIR": paths.transcripts.path])
+        let legacyRoot = legacySupport.resolvingSymlinksInPath().standardizedFileURL.path
+        let destinationRoot = paths.support.resolvingSymlinksInPath().standardizedFileURL.path
+        guard legacyRoot != destinationRoot, !legacyRoot.hasPrefix(destinationRoot + "/"),
+              !destinationRoot.hasPrefix(legacyRoot + "/"), legacyPaths.safeSupportTree(legacySupport) else {
+            NSLog("Skipping legacy migration: unsafe source storage.")
             return
         }
-        // Merge only immediate model/audio files. Existing files and all other legacy data stay put.
+        // Validate both trees completely before the first move, including existing
+        // destination entries. Do not move a linked file or linked ancestor.
+        var destinationInfo = stat()
+        let destinationExists = lstat(paths.support.path, &destinationInfo) == 0
+        if destinationExists {
+            guard paths.safeSupportTree(paths.support) else {
+                NSLog("Skipping legacy migration: unsafe destination storage.")
+                return
+            }
+        }
+        do { try paths.createSupportDirectory(paths.support) }
+        catch { NSLog("Skipping legacy migration: unsafe destination storage."); return }
+        if !destinationExists {
+            for file in try manager.contentsOfDirectory(at: legacySupport, includingPropertiesForKeys: nil) {
+                var info = stat()
+                guard lstat(file.path, &info) == 0,
+                      legacyPaths.safeSupportItem(file, directory: (info.st_mode & S_IFMT) == S_IFDIR),
+                      paths.safeSupportItem(paths.support, directory: true) else {
+                    NSLog("Skipping legacy migration: storage changed."); return
+                }
+                try manager.moveItem(at: file, to: paths.support.appendingPathComponent(file.lastPathComponent))
+            }
+            return
+        }
         for directory in ["models", "audio"] {
             let source = legacySupport.appendingPathComponent(directory, isDirectory: true)
-            guard manager.fileExists(atPath: source.path) else { continue }
+            var info = stat()
+            guard lstat(source.path, &info) == 0 else { continue }
+            guard legacyPaths.safeSupportItem(source, directory: true) else {
+                NSLog("Skipping legacy migration: unsafe source storage."); return
+            }
             let destination = paths.support.appendingPathComponent(directory, isDirectory: true)
-            let files = try manager.contentsOfDirectory(at: source, includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey])
-            for file in files {
-                let attributes = try file.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
-                guard attributes.isRegularFile == true || attributes.isSymbolicLink == true else { continue }
+            try paths.createSupportDirectory(destination)
+            for file in try manager.contentsOfDirectory(at: source, includingPropertiesForKeys: nil) {
+                guard legacyPaths.safeSupportItem(file, directory: false) else { continue }
                 let target = destination.appendingPathComponent(file.lastPathComponent)
-                // attributesOfItem also detects dangling symlinks, which must never be replaced.
-                guard (try? manager.attributesOfItem(atPath: target.path)) == nil else { continue }
-                try manager.createDirectory(at: destination, withIntermediateDirectories: true)
+                var targetInfo = stat()
+                guard lstat(target.path, &targetInfo) != 0, errno == ENOENT,
+                      legacyPaths.safeSupportItem(file, directory: false),
+                      paths.safeSupportItem(destination, directory: true) else { continue }
                 try manager.moveItem(at: file, to: target)
             }
         }
@@ -656,6 +739,7 @@ enum Core {
         } catch { try? output.close(); throw error }
         try checkCancellation()
         // rename is atomic, including replacement of a WAV left by an interrupted finalization.
+        guard paths.safeSupportItem(temporary, directory: false), paths.safeSupportDestination(wav) else { throw LectureError.message("Unsafe audio storage.") }
         let result = temporary.path.withCString { from in wav.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw LectureError.message("Could not finalize WAV (errno \(errno)); raw audio is kept.") }
         try checkCancellation()

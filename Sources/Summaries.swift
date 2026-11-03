@@ -373,10 +373,14 @@ enum SummaryDetector {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: shell)
         process.arguments = ["-l", "-i", "-c", "printf '__NOSY_PATH__%s__NOSY_PATH__' \"$PATH\""]
-        let temporary = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-path-\(UUID().uuidString)")
-        guard FileManager.default.createFile(atPath: temporary.path, contents: Data(), attributes: [.posixPermissions: 0o600]),
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-path-\(UUID().uuidString)")
+        let scratchPaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": scratch.path])
+        guard (try? scratchPaths.createSupportDirectory(scratch)) != nil else { return nil }
+        defer { if scratchPaths.safeSupportTree(scratch) { try? FileManager.default.removeItem(at: scratch) } }
+        let temporary = scratch.appendingPathComponent("output")
+        guard scratchPaths.safeSupportItem(scratch, directory: true), FileManager.default.createFile(atPath: temporary.path, contents: Data(), attributes: [.posixPermissions: 0o600]),
               let output = try? FileHandle(forWritingTo: temporary) else { return nil }
-        defer { try? output.close(); try? FileManager.default.removeItem(at: temporary) }
+        defer { try? output.close(); try? scratchPaths.removeSupportFile(temporary) }
         process.standardOutput = output
         process.standardError = FileHandle.nullDevice
         process.standardInput = FileHandle.nullDevice
@@ -540,8 +544,9 @@ enum SummaryRunner {
         let provider = request.provider
         // Private scratch files are removed after the helper exits; this folder alone is not an agent sandbox.
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-summary-\(UUID().uuidString)")
-        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        defer { try? FileManager.default.removeItem(at: scratch) }
+        let scratchPaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": scratch.path])
+        try scratchPaths.createSupportDirectory(scratch)
+        defer { if scratchPaths.safeSupportTree(scratch) { try? FileManager.default.removeItem(at: scratch) } }
         let lastMessage = scratch.appendingPathComponent("last-message.txt")
         let process = Process()
         process.executableURL = executable

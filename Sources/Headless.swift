@@ -53,7 +53,7 @@ enum Headless {
                 let id = Core.newID(in: paths)
                 let events = CaptureEvents()
                 let recorder = Recorder(source: source) { events.receive($0) }
-                try await recorder.start(at: paths.audioFile(id, "pcm"))
+                try await recorder.start(at: paths.audioFile(id, "pcm"), paths: paths)
                 do {
                     // Exercise the actual recorder guards/restart paths without producing sound.
                     if args.count == 5 {
@@ -100,7 +100,7 @@ enum Headless {
                 let recorder = Recorder { event in
                     if case .failed(let message, _) = event { Task { await failure.set(message) } }
                 }
-                try await recorder.start(at: paths.audioFile(record.id, "pcm"))
+                try await recorder.start(at: paths.audioFile(record.id, "pcm"), paths: paths)
                 print("RECORDING \(record.id)")
                 let iterations = Int(ceil(seconds * 5))
                 for _ in 0..<iterations {

@@ -38,6 +38,7 @@ enum AudioFiles {
         let session = try Core.sanitize(session)
         try paths.validateLectureFolder(lecture)
         try paths.prepareSupport()
+        guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
         try FileManager.default.createDirectory(at: paths.lectureFolder(lecture), withIntermediateDirectories: true)
         let id = Core.newID(in: paths)
         do {
@@ -58,6 +59,7 @@ enum AudioFiles {
     // checkCancellation runs between buffers and before publication and deletion; the default never cancels.
     static func compress(id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws {
         try checkCancellation()
+        guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
         let wav = paths.audioFile(id, "wav")
         let m4a = paths.audioFile(id, "m4a")
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).m4a")
@@ -109,7 +111,7 @@ enum AudioFiles {
         try durable.synchronize()
         try durable.close()
         try checkCancellation()
-        try publish(temporary, to: m4a)
+        try publish(temporary, to: m4a, paths: paths)
         // The original WAV goes only after the verified m4a is published; cancellation may stop before that removal.
         try checkCancellation()
         try paths.removeSupportFile(wav)
@@ -161,6 +163,7 @@ enum AudioFiles {
         let gain = min(29_000 / Double(level), 40)
         guard gain > 1.5 else { return nil }
 
+        if let paths, !paths.safeSupportDestination(target) { throw LectureError.message("Unsafe audio storage.") }
         let input = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         let output = try AVAudioFile(forWriting: target, settings: input.processingFormat.settings,
                                      commonFormat: .pcmFormatInt16, interleaved: true)
@@ -191,6 +194,7 @@ enum AudioFiles {
     }
 
     private static func decode(source: URL, id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
+        guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).pcm")
         defer { try? paths.removeSupportFile(temporary) }
         guard FileManager.default.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
@@ -207,7 +211,7 @@ enum AudioFiles {
         try file.synchronize()
         try file.close()
         try checkCancellation()
-        try publish(temporary, to: paths.audioFile(id, "pcm"))
+        try publish(temporary, to: paths.audioFile(id, "pcm"), paths: paths)
         return try Core.finalizeWAV(id: id, paths: paths, checkCancellation: checkCancellation)
     }
 
@@ -298,7 +302,9 @@ enum AudioFiles {
         }
     }
 
-    private static func publish(_ temporary: URL, to target: URL) throws {
+    private static func publish(_ temporary: URL, to target: URL, paths: AppPaths) throws {
+        guard paths.safeSupportItem(temporary, directory: false),
+              paths.safeSupportDestination(target) else { throw LectureError.message("Unsafe audio storage.") }
         let status = temporary.path.withCString { from in target.path.withCString { to in rename(from, to) } }
         guard status == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
     }

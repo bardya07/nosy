@@ -45,8 +45,7 @@ enum SpeechModel {
     }
     fileprivate static func place(_ source: URL, at target: URL, paths: AppPaths, copy: Bool, vad: Bool) throws {
         let manager = FileManager.default
-        try manager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true,
-                                    attributes: [.posixPermissions: 0o700])
+        try paths.createSupportDirectory(target.deletingLastPathComponent())
         guard paths.safeSupportItem(target.deletingLastPathComponent(), directory: true) else { throw LectureError.message("Unsafe model storage.") }
         let temporary = target.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).download")
         defer { try? paths.removeSupportFile(temporary) }
@@ -63,6 +62,7 @@ enum SpeechModel {
         try file.synchronize()
         try file.close()
         try Task.checkCancellation()
+        guard paths.safeSupportItem(temporary, directory: false), paths.safeSupportDestination(target) else { throw LectureError.message("Unsafe model storage.") }
         let result = temporary.path.withCString { from in target.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
     }
@@ -244,7 +244,7 @@ enum CoreMLEncoderDownload {
             try await Task.detached(priority: .utility) {
                 let manager = FileManager.default
                 let temporary = folder.appendingPathComponent(".coreml-encoder-\(UUID().uuidString)", isDirectory: true)
-                try manager.createDirectory(at: temporary, withIntermediateDirectories: true)
+                try paths.createSupportDirectory(temporary)
                 defer { if paths.safeSupportItem(temporary, directory: true) { try? manager.removeItem(at: temporary) } }
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
@@ -262,6 +262,7 @@ enum CoreMLEncoderDownload {
                 }
                 try job.checkCancellation()
                 // Never replace an existing encoder; the directory becomes visible in one move.
+                guard paths.safeSupportTree(unpacked), paths.safeSupportItem(folder, directory: true) else { throw LectureError.message("Unsafe model storage.") }
                 try manager.moveItem(at: unpacked, to: target)
                 try? paths.removeSupportFile(partial)
             }.value

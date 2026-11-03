@@ -473,7 +473,7 @@ final class AppModel: ObservableObject {
                 let recorder = Recorder(inputUID: inputUID, source: recordingSource) { [weak self = self] event in Task { @MainActor in self?.handle(event, id: record.id) } }
                 self.recorder = recorder
                 updateActivity()
-                try await recorder.start(at: paths.audioFile(record.id, "pcm"))
+                try await recorder.start(at: paths.audioFile(record.id, "pcm"), paths: paths)
                 // A failure or quit during startup already finished this recording; don't show it as live.
                 guard self.recorder === recorder, current?.id == record.id, !completing, !quitting else {
                     if self.recorder === recorder, !completing, !quitting {

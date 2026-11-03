@@ -139,6 +139,7 @@ enum Transcriber {
             do { input = try AudioFiles.boosted(wav, to: louderURL, paths: paths, checkCancellation: checkCancellation) ?? wav }
             catch is CancellationError { throw CancellationError() }
             catch { input = wav }
+            guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
             guard FileManager.default.createFile(atPath: stderrURL.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
                 throw LectureError.message("Could not create transcription log file.")
             }

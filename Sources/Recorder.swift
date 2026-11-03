@@ -115,7 +115,7 @@ final class Recorder: @unchecked Sendable {
         self.onEvent = onEvent
     }
 
-    func start(at url: URL) async throws {
+    func start(at url: URL, paths: AppPaths? = nil) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             control.async {
                 self.lock.lock(); let running = self.accepting; self.lock.unlock()
@@ -126,6 +126,9 @@ final class Recorder: @unchecked Sendable {
                 do {
                     self.defaultInputReported = false
                     self.restartLimiter.reset()
+                    if let paths, !paths.safeSupportItem(url.deletingLastPathComponent(), directory: true) {
+                        throw LectureError.message("Unsafe audio storage.")
+                    }
                     guard FileManager.default.createFile(atPath: url.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
                         throw LectureError.message("Could not create recording file.")
                     }

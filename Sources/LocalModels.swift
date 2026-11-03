@@ -44,12 +44,13 @@ enum LocalModelDownload {
                          verifying: @escaping @Sendable () -> Void = {}) async throws {
         try await withTaskCancellationHandler {
             try await Task.detached(priority: .utility) {
-                try FileManager.default.createDirectory(at: partial.deletingLastPathComponent(), withIntermediateDirectories: true,
-                                                       attributes: [.posixPermissions: 0o700])
+                try paths.createSupportDirectory(partial.deletingLastPathComponent())
                 guard paths.safeSupportItem(partial.deletingLastPathComponent(), directory: true) else { throw LectureError.message("Unsafe model storage.") }
+                guard paths.safeSupportDestination(partial) else { throw LectureError.message("Unsafe model storage.") }
                 if Core.fileSize(partial) > expectedBytes { try paths.removeSupportFile(partial) }
                 if Core.fileSize(partial) < expectedBytes {
                     let log = partial.appendingPathExtension("log")
+                    guard paths.safeSupportDestination(log) else { throw LectureError.message("Unsafe model storage.") }
                     FileManager.default.createFile(atPath: log.path, contents: Data(), attributes: [.posixPermissions: 0o600])
                     defer { try? paths.removeSupportFile(log) }
                     let errors = try FileHandle(forWritingTo: log)
@@ -245,10 +246,12 @@ final class LocalModelStore: ObservableObject {
                 try job.checkCancellation()
                 let target = file(model)
                 if FileManager.default.fileExists(atPath: target.path) { try safetyPaths.removeSupportFile(target) }
+                guard safetyPaths.safeSupportItem(partial(model), directory: false), safetyPaths.safeSupportItem(target.deletingLastPathComponent(), directory: true) else { throw LectureError.message("Unsafe model storage.") }
                 try FileManager.default.moveItem(at: partial(model), to: target)
                 guard safetyPaths.safeSupportItem(target, directory: false) else { throw LectureError.message("Unsafe model file.") }
                 try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: target.path)
                 let modified = try target.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate!
+                guard safetyPaths.safeSupportDestination(receipt(model)) else { throw LectureError.message("Unsafe model storage.") }
                 try JSONEncoder().encode(Receipt(checksum: model.sha256, bytes: model.bytes, modified: modified)).write(to: receipt(model), options: .atomic)
                 states[model.id] = .downloaded
             } catch is CancellationError { states[model.id] = .notDownloaded }

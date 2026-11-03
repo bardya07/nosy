@@ -13,8 +13,9 @@ enum Snapshot {
         isRunning = true
         defer { isRunning = false }
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-local-previews-\(UUID().uuidString)")
-        try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: root) }
+        let scratchPaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": root.path])
+        guard (try? scratchPaths.createSupportDirectory(root)) != nil else { return 1 }
+        defer { if scratchPaths.safeSupportTree(root) { try? FileManager.default.removeItem(at: root) } }
         let base = URL(fileURLWithPath: out).deletingPathExtension()
         try? FileManager.default.createDirectory(at: base.deletingLastPathComponent(), withIntermediateDirectories: true)
         let suite = "com.bardya.nosy.preview.local-models.\(UUID().uuidString)"
@@ -61,6 +62,8 @@ enum Snapshot {
         isRunning = true
         let manager = FileManager.default
         let fixture = manager.temporaryDirectory.appendingPathComponent("Nosy-preview-\(UUID().uuidString)")
+        let fixturePaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": fixture.path])
+        guard (try? fixturePaths.createSupportDirectory(fixture)) != nil else { return 1 }
         let transcripts = fixture.appendingPathComponent("transcripts")
         let emptyTranscripts = fixture.appendingPathComponent("empty-transcripts")
         let support = fixture.appendingPathComponent("support")
@@ -77,7 +80,7 @@ enum Snapshot {
             if let oldTranscripts { setenv("NOSY_TRANSCRIPTS_DIR", oldTranscripts, 1) } else { unsetenv("NOSY_TRANSCRIPTS_DIR") }
             if let oldSupport { setenv("NOSY_SUPPORT_DIR", oldSupport, 1) } else { unsetenv("NOSY_SUPPORT_DIR") }
             UserDefaults.standard.setVolatileDomain(argumentDomain, forName: UserDefaults.argumentDomain)
-            try? manager.removeItem(at: fixture)
+            if fixturePaths.safeSupportTree(fixture) { try? manager.removeItem(at: fixture) }
             transcriptRoot = nil
             isRunning = false
         }
@@ -137,7 +140,7 @@ enum Snapshot {
         do {
             try manager.createDirectory(at: course, withIntermediateDirectories: true)
             try manager.createDirectory(at: emptyTranscripts, withIntermediateDirectories: true)
-            try manager.createDirectory(at: support, withIntermediateDirectories: true)
+            try fixturePaths.createSupportDirectory(support)
             try Data(text.utf8).write(to: transcript)
             try Data(vocabulary.utf8).write(to: course.appendingPathComponent("vocab.txt"))
             try Data(SummaryFiles.document(body: summaryFixture, transcript: transcript, provider: .claudeCode, date: date).utf8)
@@ -154,6 +157,7 @@ enum Snapshot {
                                         AIMarker(t: 300, label: "Electron transport chain", anchor: KeyMoments.anchor("The electron transport chain uses"), approximate: true)],
                                        transcript: transcript, paths: paths)
             let audio = paths.audioFile(previewRecord.id, "wav")
+            guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
             try Core.wavHeader(pcmBytes: 1_920_000).write(to: audio)
             let audioFile = try FileHandle(forWritingTo: audio)
             try audioFile.seekToEnd()
