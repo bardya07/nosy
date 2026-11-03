@@ -1066,6 +1066,9 @@ private struct CaptureModePicker: View {
     @Namespace private var selectionNamespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tintedSelection: RecordingSource = .mic
+    @State private var roomPop = false
+    @State private var glimmerProgress = 1.0
+    @State private var motionGeneration = 0
     private var selected: RecordingSource? {
         model.recordingSource == .mic ? .mic : .both
     }
@@ -1085,6 +1088,27 @@ private struct CaptureModePicker: View {
         .onAppear { tintedSelection = selected ?? .mic }
         .onChange(of: selected) { _, target in
             guard let target else { return }
+            motionGeneration += 1
+            let generation = motionGeneration
+            if reduceMotion {
+                roomPop = false
+                glimmerProgress = 1
+            } else if target == .mic {
+                withAnimation(.spring(response: 0.34, dampingFraction: 0.56)) { roomPop = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+                    guard motionGeneration == generation else { return }
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.58)) { roomPop = false }
+                }
+            } else {
+                roomPop = false
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) { glimmerProgress = 0 }
+                DispatchQueue.main.async {
+                    guard motionGeneration == generation, !reduceMotion else { return }
+                    withAnimation(.easeInOut(duration: 0.42)) { glimmerProgress = 1 }
+                }
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 guard selected == target else { return }
                 withAnimation(reduceMotion ? .easeOut(duration: 0.18) : .easeOut(duration: 0.14)) {
@@ -1103,9 +1127,23 @@ private struct CaptureModePicker: View {
                 if active {
                     Capsule()
                         .fill(tintedSelection == .mic ? Theme.roomModeTint : Theme.macModeTint)
+                        .overlay {
+                            if source == .both && !reduceMotion {
+                                GeometryReader { geometry in
+                                    LinearGradient(colors: [.clear, .white.opacity(0.4), .clear],
+                                                   startPoint: .leading, endPoint: .trailing)
+                                        .frame(width: max(32, geometry.size.width * 0.46))
+                                        .rotationEffect(.degrees(16))
+                                        .offset(x: -geometry.size.width * 0.55 + geometry.size.width * 1.55 * glimmerProgress)
+                                }
+                                .clipShape(Capsule())
+                                .allowsHitTesting(false)
+                            }
+                        }
                         .if(!reduceMotion) { highlight in
                             highlight
                                 .matchedGeometryEffect(id: "capture-mode-selection", in: selectionNamespace)
+                                .scaleEffect(source == .mic && roomPop ? 1.06 : 1)
                         }
                         .if(reduceMotion) { highlight in highlight.transition(.opacity) }
                 }

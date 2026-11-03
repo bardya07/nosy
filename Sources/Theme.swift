@@ -103,7 +103,8 @@ struct ButtonChrome: ViewModifier {
                         .allowsHitTesting(false)
                 }
             }
-            .scaleEffect(!reduceMotion && enabled && pressed ? (tier == .secondary ? 0.99 : 0.985) : 1)
+            .offset(y: !reduceMotion && enabled && hovering && !pressed ? -1 : 0)
+            .scaleEffect(!reduceMotion && enabled && pressed ? (tier == .icon ? 0.985 : 0.97) : 1)
             // An exit always clears the highlight, even while disabled, so re-enabling cannot revive it.
             .onHover { inside in hovering = inside && enabled }
             .onChange(of: enabled) { _, isEnabled in
