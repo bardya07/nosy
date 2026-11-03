@@ -130,13 +130,13 @@ enum Transcriber {
             let jsonURL = base.appendingPathExtension("json")
             let louderURL = base.appendingPathExtension("wav")
             defer {
-                try? FileManager.default.removeItem(at: stderrURL)
-                try? FileManager.default.removeItem(at: textURL)
-                try? FileManager.default.removeItem(at: jsonURL)
-                try? FileManager.default.removeItem(at: louderURL)
+                try? paths.removeSupportFile(stderrURL)
+                try? paths.removeSupportFile(textURL)
+                try? paths.removeSupportFile(jsonURL)
+                try? paths.removeSupportFile(louderURL)
             }
             let input: URL
-            do { input = try AudioFiles.boosted(wav, to: louderURL, checkCancellation: checkCancellation) ?? wav }
+            do { input = try AudioFiles.boosted(wav, to: louderURL, paths: paths, checkCancellation: checkCancellation) ?? wav }
             catch is CancellationError { throw CancellationError() }
             catch { input = wav }
             guard FileManager.default.createFile(atPath: stderrURL.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {

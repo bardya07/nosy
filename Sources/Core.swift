@@ -16,6 +16,10 @@ struct AppPaths: Sendable {
     private let engineSearchPath: String
     private let retentionOverride: Int?
     private let modelOverride: URL?
+    #if NOSY_UI_TEST
+    private var testModelValidation: (@Sendable (URL) -> Bool)? = nil
+    mutating func useTestModelValidation(_ validate: @escaping @Sendable (URL) -> Bool) { testModelValidation = validate }
+    #endif
     private let vadModelOverride: URL?
     // Days to keep audio after a successful transcript; 0 keeps it forever. Read live, so a
     // change in Settings applies even to a transcription that started before it.
@@ -75,6 +79,9 @@ struct AppPaths: Sendable {
         engineSearchPath = original.engineSearchPath
         retentionOverride = original.retentionOverride
         modelOverride = original.modelOverride
+        #if NOSY_UI_TEST
+        testModelValidation = original.testModelValidation
+        #endif
         vadModelOverride = original.vadModelOverride
     }
     static func libraryLocations(current: URL, previous: [String], home: URL = FileManager.default.homeDirectoryForCurrentUser) -> [URL] {
@@ -95,6 +102,9 @@ struct AppPaths: Sendable {
         support = directory
         transcripts = directory.appendingPathComponent("transcripts", isDirectory: true)
         modelOverride = original.model
+        #if NOSY_UI_TEST
+        testModelValidation = original.testModelValidation
+        #endif
         vadModelOverride = original.vadModel
         whisperOverride = original.whisperOverride
         engineBundle = original.engineBundle
@@ -117,7 +127,12 @@ struct AppPaths: Sendable {
     var dependencyWarning: String? {
         var missing: [String] = []
         if whisper == nil { missing.append(Core.missingEngineMessage) }
-        if !SpeechModel.validate(model) {
+        #if NOSY_UI_TEST
+        let modelValid = testModelValidation?(model) ?? SpeechModel.validate(model)
+        #else
+        let modelValid = SpeechModel.validate(model)
+        #endif
+        if !modelValid {
             missing.append("Speech model missing or invalid. Download it again in setup.")
         }
         return missing.isEmpty ? nil : missing.joined(separator: "\n")
@@ -125,10 +140,26 @@ struct AppPaths: Sendable {
     func audioFile(_ id: String, _ ext: String) -> URL { audio.appendingPathComponent(id).appendingPathExtension(ext) }
     // Check every component from the support root without following links. The transcript
     // library may itself be linked, so compare canonical paths in both directions.
-    private func safeSupportItem(_ url: URL, directory: Bool, checkOverlap: Bool = true) -> Bool {
+    func safeSupportItem(_ url: URL, directory: Bool, checkOverlap: Bool = true) -> Bool {
         let root = support.standardizedFileURL.path
         let path = url.standardizedFileURL.path
         guard path == root || path.hasPrefix(root + "/") else { return false }
+        // macOS exposes /tmp and /var as root-owned aliases of /private. Do not
+        // follow any other linked ancestor of the configured support directory.
+        var ancestor = support.standardizedFileURL.deletingLastPathComponent()
+        while ancestor.path != "/" {
+            var info = stat()
+            guard lstat(ancestor.path, &info) == 0 else { return false }
+            if (info.st_mode & S_IFMT) == S_IFLNK {
+                let aliases = ["/tmp": "/private/tmp", "/var": "/private/var"]
+                guard info.st_uid == 0, let target = aliases[ancestor.path],
+                      ancestor.resolvingSymlinksInPath().standardizedFileURL.path == target else { return false }
+            } else {
+                guard (info.st_mode & S_IFMT) == S_IFDIR,
+                      info.st_uid == 0 || info.st_uid == getuid() else { return false }
+            }
+            ancestor.deleteLastPathComponent()
+        }
         let library = transcripts.resolvingSymlinksInPath().standardizedFileURL.path
         let canonical = url.resolvingSymlinksInPath().standardizedFileURL.path
         if checkOverlap {
@@ -150,6 +181,11 @@ struct AppPaths: Sendable {
             }
         }
         return true
+    }
+
+    func removeSupportFile(_ url: URL) throws {
+        guard safeSupportItem(url, directory: false) else { throw LectureError.message("Unsafe support file; it was preserved.") }
+        try FileManager.default.removeItem(at: url)
     }
 
     func prepareSupport() throws {
@@ -284,7 +320,9 @@ struct SessionRecord: Codable, Sendable, Equatable {
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let file = paths.audioFile(id, "json")
+        guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
         try encoder.encode(self).write(to: file, options: .atomic)
+        guard paths.safeSupportItem(file, directory: false) else { throw LectureError.message("Unsafe audio file.") }
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
     static func read(_ url: URL) throws -> SessionRecord {
@@ -598,7 +636,8 @@ enum Core {
         // A process can die during a sample write; preserve every complete sample.
         let size = fileSize(pcm) / 2 * 2
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).wav")
-        defer { try? FileManager.default.removeItem(at: temporary) }
+        defer { try? paths.removeSupportFile(temporary) }
+        guard paths.safeSupportItem(paths.audio, directory: true) else { throw LectureError.message("Unsafe audio storage.") }
         guard FileManager.default.createFile(atPath: temporary.path, contents: try wavHeader(pcmBytes: size),
                                              attributes: [.posixPermissions: 0o600]) else { throw CocoaError(.fileWriteUnknown) }
         let output = try FileHandle(forWritingTo: temporary)
@@ -620,7 +659,7 @@ enum Core {
         let result = temporary.path.withCString { from in wav.path.withCString { to in rename(from, to) } }
         guard result == 0 else { throw LectureError.message("Could not finalize WAV (errno \(errno)); raw audio is kept.") }
         try checkCancellation()
-        try FileManager.default.removeItem(at: pcm)
+        try paths.removeSupportFile(pcm)
         return wav
     }
     static func paragraphs(_ text: String) -> String {
@@ -736,6 +775,7 @@ enum Core {
     }
     static func applyRetention(paths: AppPaths, now: Date = Date(), checkCancellation: () throws -> Void = {}) throws {
         try checkCancellation()
+        guard paths.safeSupportItem(paths.audio, directory: true) else { return }
         // Poll while reading sidecars too; a large library must not delay Quit before deletion starts.
         let files = (try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)) ?? []
         for sidecar in files where sidecar.pathExtension == "json" && !KeyMomentStore.isLegacySegmentsFile(sidecar) {
@@ -759,7 +799,7 @@ enum Core {
             let sidecars = owned.filter { $0.pathExtension == "json" }
             for url in audioFiles + sidecars {
                 try checkCancellation()
-                try FileManager.default.removeItem(at: url)
+                try paths.removeSupportFile(url)
             }
         }
     }
@@ -768,10 +808,18 @@ enum Core {
             .sorted { $0.startedAt > $1.startedAt }
     }
     static func recover(paths: AppPaths) throws -> [SessionRecord] {
+        guard paths.safeSupportItem(paths.audio, directory: true) else { return [] }
         // Only helper scratch files are disposable; preserve all recordings and sidecars.
-        let files = (try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)) ?? []
-        for file in files where file.lastPathComponent.hasPrefix(".whisper-") {
-            try? FileManager.default.removeItem(at: file)
+        if paths.safeSupportItem(paths.audio, directory: true),
+           let files = try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil) {
+            for file in files {
+                let name = file.deletingPathExtension().lastPathComponent
+                guard ["stderr", "txt", "json", "wav"].contains(file.pathExtension),
+                      name.hasPrefix(".whisper-"), name.count > 46,
+                      UUID(uuidString: String(name.suffix(36))) != nil,
+                      name.dropLast(36).last == "-" else { continue }
+                try? paths.removeSupportFile(file)
+            }
         }
         var recovered: [SessionRecord] = []
         for var record in recoveryCandidates(records(in: paths)) {

@@ -41,19 +41,21 @@ enum SpeechModel {
         return false
     }
     static func install(from url: URL, paths: AppPaths) throws {
-        try place(url, at: paths.model, copy: true, vad: false)
+        try place(url, at: paths.model, paths: paths, copy: true, vad: false)
     }
-    fileprivate static func place(_ source: URL, at target: URL, copy: Bool, vad: Bool) throws {
+    fileprivate static func place(_ source: URL, at target: URL, paths: AppPaths, copy: Bool, vad: Bool) throws {
         let manager = FileManager.default
         try manager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true,
                                     attributes: [.posixPermissions: 0o700])
+        guard paths.safeSupportItem(target.deletingLastPathComponent(), directory: true) else { throw LectureError.message("Unsafe model storage.") }
         let temporary = target.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).download")
-        defer { try? manager.removeItem(at: temporary) }
+        defer { try? paths.removeSupportFile(temporary) }
         if copy { try copyInChunks(from: source, to: temporary) }
         else { try manager.moveItem(at: source, to: temporary) }
         guard vad ? validateVAD(temporary) : validate(temporary) else {
             throw LectureError.message("Model verification failed. Choose or download the correct model again.")
         }
+        guard paths.safeSupportItem(temporary, directory: false) else { throw LectureError.message("Unsafe model file.") }
         try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
         try Task.checkCancellation()
         let file = try FileHandle(forReadingFrom: temporary)
@@ -174,10 +176,10 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
                 throw LectureError.message("The model server could not complete the download. Please try again.")
             }
             if mainInstalled {
-                try SpeechModel.place(location, at: paths.vadModel, copy: false, vad: true)
+                try SpeechModel.place(location, at: paths.vadModel, paths: paths, copy: false, vad: true)
                 finish(.success(()))
             } else {
-                try SpeechModel.place(location, at: paths.model, copy: false, vad: false)
+                try SpeechModel.place(location, at: paths.model, paths: paths, copy: false, vad: false)
                 mainInstalled = true
                 resumeData = nil
                 progress?(1, Core.fileSize(paths.model), Core.fileSize(paths.model))
@@ -237,13 +239,13 @@ enum CoreMLEncoderDownload {
         let partial = folder.appendingPathComponent(".coreml-encoder.zip.partial")
         let url = URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/87cd18b47b941d2f65d09981dad23bb7d0481c77/ggml-large-v3-turbo-encoder.mlmodelc.zip")!
         try await LocalModelDownload.transfer(url: url, partial: partial, expectedBytes: 1_173_393_014,
-            checksum: "84bedfe895bd7b5de6e8e89a0803dfc5addf8c0c5bc4c937451716bf7cf7988a", job: job)
+            checksum: "84bedfe895bd7b5de6e8e89a0803dfc5addf8c0c5bc4c937451716bf7cf7988a", job: job, paths: paths)
         try await withTaskCancellationHandler {
             try await Task.detached(priority: .utility) {
                 let manager = FileManager.default
                 let temporary = folder.appendingPathComponent(".coreml-encoder-\(UUID().uuidString)", isDirectory: true)
                 try manager.createDirectory(at: temporary, withIntermediateDirectories: true)
-                defer { try? manager.removeItem(at: temporary) }
+                defer { if paths.safeSupportItem(temporary, directory: true) { try? manager.removeItem(at: temporary) } }
                 let process = Process()
                 process.executableURL = URL(fileURLWithPath: "/usr/bin/ditto")
                 process.arguments = ["-x", "-k", partial.path, temporary.path]
@@ -261,7 +263,7 @@ enum CoreMLEncoderDownload {
                 try job.checkCancellation()
                 // Never replace an existing encoder; the directory becomes visible in one move.
                 try manager.moveItem(at: unpacked, to: target)
-                try? manager.removeItem(at: partial)
+                try? paths.removeSupportFile(partial)
             }.value
         } onCancel: { job.cancel() }
     }

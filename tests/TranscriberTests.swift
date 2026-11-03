@@ -50,9 +50,10 @@ enum TranscriberTests {
         let root = manager.temporaryDirectory.appendingPathComponent("nosy-transcriber-unit-\(UUID().uuidString)")
         defer { try? manager.removeItem(at: root) }
         let cli = root.appendingPathComponent("whisper-cli")
-        let paths = AppPaths(environment: ["NOSY_SUPPORT_DIR": root.appendingPathComponent("support").path,
+        var paths = AppPaths(environment: ["NOSY_SUPPORT_DIR": root.appendingPathComponent("support").path,
                                           "NOSY_TRANSCRIPTS_DIR": root.appendingPathComponent("transcripts").path,
                                           "NOSY_WHISPER_CLI": cli.path])
+        paths.useTestModelValidation { _ in true }
         try paths.prepareSupport()
         var model = Data()
         func integer(_ value: UInt32) { var value = value.littleEndian; withUnsafeBytes(of: &value) { model.append(contentsOf: $0) } }
@@ -98,7 +99,7 @@ enum TranscriberTests {
         check(prompted[prompted.firstIndex(of: "--prompt")! + 1] == expectedPrompt, "vocab.txt preserves complete terms and collapses whitespace")
         check(prompted[prompted.firstIndex(of: "-mc")! + 1] == String(expectedPrompt.utf8.count + 1), "context fits exactly the native prompt tokens plus marker, with no history slots")
         check(prompted.contains("--carry-initial-prompt"), "vocabulary prompt is retained across decoder windows")
-        check(prompted.contains("--vad") && prompted[prompted.firstIndex(of: "-vm")! + 1] == paths.vadModel.path, "vocabulary preserves VAD arguments")
+        check(!prompted.contains("--vad") && !prompted.contains("-vm"), "corrupt VAD is rejected")
         let bytes = Set((UInt8(0)...127).map { Data([$0]) })
         let long = Vocabulary.prompt(Array(repeating: "ICAM", count: 74).joined(separator: ", "), vocabulary: bytes)!
         check(long.tokens <= Vocabulary.tokenBudget && long.tokens == long.text.utf8.count, "long vocabulary respects the native token budget")

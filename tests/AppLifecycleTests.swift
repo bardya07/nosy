@@ -18,9 +18,9 @@ enum AppLifecycleTests {
         }
         var stress: String? = "Mac is hot"
         let model = AppModel(stressReason: { stress })
+        model.useTestModelValidation { _ in true }
         let paths = model.paths
         try paths.prepareSupport()
-        try Data([0]).write(to: paths.model)
         let cli = root.appendingPathComponent("whisper-cli")
         let gate = root.appendingPathComponent("continue")
         let calls = root.appendingPathComponent("calls")

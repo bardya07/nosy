@@ -106,6 +106,7 @@ enum VocabularyRefinement {
                                      "packs": output.route.selected, "schemaVersion": 1]
         let file = directory.appendingPathComponent(id + ".json")
         try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]).write(to: file, options: .atomic)
+        guard paths.safeSupportItem(file, directory: false) else { throw LectureError.message("Unsafe routing storage.") }
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
 }

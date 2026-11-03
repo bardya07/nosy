@@ -40,17 +40,18 @@ enum LocalModelDownload {
         }
         return hash.finalize().map { String(format: "%02x", $0) }.joined()
     }
-    static func transfer(url: URL, partial: URL, expectedBytes: Int64, checksum: String, job: TranscriptionJob,
+    static func transfer(url: URL, partial: URL, expectedBytes: Int64, checksum: String, job: TranscriptionJob, paths: AppPaths,
                          verifying: @escaping @Sendable () -> Void = {}) async throws {
         try await withTaskCancellationHandler {
             try await Task.detached(priority: .utility) {
                 try FileManager.default.createDirectory(at: partial.deletingLastPathComponent(), withIntermediateDirectories: true,
                                                        attributes: [.posixPermissions: 0o700])
-                if Core.fileSize(partial) > expectedBytes { try FileManager.default.removeItem(at: partial) }
+                guard paths.safeSupportItem(partial.deletingLastPathComponent(), directory: true) else { throw LectureError.message("Unsafe model storage.") }
+                if Core.fileSize(partial) > expectedBytes { try paths.removeSupportFile(partial) }
                 if Core.fileSize(partial) < expectedBytes {
                     let log = partial.appendingPathExtension("log")
                     FileManager.default.createFile(atPath: log.path, contents: Data(), attributes: [.posixPermissions: 0o600])
-                    defer { try? FileManager.default.removeItem(at: log) }
+                    defer { try? paths.removeSupportFile(log) }
                     let errors = try FileHandle(forWritingTo: log)
                     defer { try? errors.close() }
                     for attempt in 0...1 {
@@ -69,7 +70,7 @@ enum LocalModelDownload {
                         if process.terminationStatus == 0 { break }
                         // Range ignored, changed remote, or an invalid partial: restart once safely.
                         if attempt == 0, [33, 36].contains(process.terminationStatus) {
-                            try? FileManager.default.removeItem(at: partial)
+                            try? paths.removeSupportFile(partial)
                             continue
                         }
                         throw LectureError.message("The model download stopped. Check disk space and your connection, then resume.")
@@ -78,7 +79,7 @@ enum LocalModelDownload {
                 try job.checkCancellation()
                 verifying()
                 guard Core.fileSize(partial) == expectedBytes, try sha256(partial, job: job) == checksum else {
-                    try? FileManager.default.removeItem(at: partial)
+                    try? paths.removeSupportFile(partial)
                     throw LectureError.message("SHA256 verification failed. Download the model again.")
                 }
             }.value
@@ -124,6 +125,13 @@ final class LocalModelStore: ObservableObject {
     init(root: URL = AppPaths().support.appendingPathComponent("models/llm", isDirectory: true)) {
         self.root = root
         refresh()
+    }
+    private var safetyPaths: AppPaths {
+        let standard = AppPaths()
+        let rootPath = root.standardizedFileURL.path
+        let supportPath = standard.support.standardizedFileURL.path
+        if rootPath == supportPath || rootPath.hasPrefix(supportPath + "/") { return standard }
+        return AppPaths(environment: ["NOSY_SUPPORT_DIR": root.path, "NOSY_TRANSCRIPTS_DIR": standard.transcripts.path])
     }
     func file(_ model: LocalModel) -> URL { root.appendingPathComponent(model.fileName) }
     func partial(_ model: LocalModel) -> URL { file(model).appendingPathExtension("part") }
@@ -228,7 +236,7 @@ final class LocalModelStore: ObservableObject {
             defer { ticker.cancel(); tasks[model.id] = nil; jobs[model.id] = nil; requestDiskScan() }
             do {
                 try await LocalModelDownload.transfer(url: source ?? model.url, partial: partial(model), expectedBytes: model.bytes,
-                    checksum: model.sha256, job: job, verifying: { [weak self] in
+                    checksum: model.sha256, job: job, paths: safetyPaths, verifying: { [weak self] in
                         Task { @MainActor in
                             guard let self, self.tasks[model.id] != nil, case .downloading = self.state(model) else { return }
                             self.states[model.id] = .verifying
@@ -236,8 +244,9 @@ final class LocalModelStore: ObservableObject {
                     })
                 try job.checkCancellation()
                 let target = file(model)
-                if FileManager.default.fileExists(atPath: target.path) { try FileManager.default.removeItem(at: target) }
+                if FileManager.default.fileExists(atPath: target.path) { try safetyPaths.removeSupportFile(target) }
                 try FileManager.default.moveItem(at: partial(model), to: target)
+                guard safetyPaths.safeSupportItem(target, directory: false) else { throw LectureError.message("Unsafe model file.") }
                 try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: target.path)
                 let modified = try target.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate!
                 try JSONEncoder().encode(Receipt(checksum: model.sha256, bytes: model.bytes, modified: modified)).write(to: receipt(model), options: .atomic)
@@ -256,7 +265,7 @@ final class LocalModelStore: ObservableObject {
     func remove(_ model: LocalModel) throws {
         guard tasks[model.id] == nil, state(model) != .loaded else { return }
         for url in [file(model), partial(model), receipt(model)] where FileManager.default.fileExists(atPath: url.path) {
-            try FileManager.default.removeItem(at: url)
+            try safetyPaths.removeSupportFile(url)
         }
         adjustPartial(model, to: 0)
         states[model.id] = .notDownloaded

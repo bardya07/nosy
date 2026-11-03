@@ -204,6 +204,9 @@ final class AppModel: ObservableObject {
         inputUID = Self.selectedInputUID(for: recordingSource, devices: reading.devices, defaults: defaults)
     }
 
+    #if NOSY_UI_TEST
+    func useTestModelValidation(_ validate: @escaping @Sendable (URL) -> Bool) { paths.useTestModelValidation(validate) }
+    #endif
     var recording: Bool { phase == .recording }
     // Course/session fields lock while a recording starts, runs or stops.
     var busy: Bool { phase == .recording || transitioning }

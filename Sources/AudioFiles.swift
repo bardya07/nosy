@@ -61,7 +61,7 @@ enum AudioFiles {
         let wav = paths.audioFile(id, "wav")
         let m4a = paths.audioFile(id, "m4a")
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).m4a")
-        defer { try? FileManager.default.removeItem(at: temporary) }
+        defer { try? paths.removeSupportFile(temporary) }
         var expectedDuration = 0.0
         // Scope both files so the encoder is closed (including its final AAC packet and
         // container metadata) before verifying or publishing the result.
@@ -78,6 +78,7 @@ enum AudioFiles {
                 AVNumberOfChannelsKey: 1,
                 AVEncoderBitRateKey: 32_000
             ])
+            guard paths.safeSupportItem(temporary, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
             defer { if #available(macOS 15, *) { output.close() } }
             while input.framePosition < input.length {
@@ -111,7 +112,7 @@ enum AudioFiles {
         try publish(temporary, to: m4a)
         // The original WAV goes only after the verified m4a is published; cancellation may stop before that removal.
         try checkCancellation()
-        try FileManager.default.removeItem(at: wav)
+        try paths.removeSupportFile(wav)
     }
 
     static func playable(id: String, paths: AppPaths) -> URL? {
@@ -134,7 +135,7 @@ enum AudioFiles {
 
     /// A louder copy of a quiet recording, or nil when it's already loud enough.
     /// Far-away lecture mics can sit near -50 dBFS, where whisper loops on one phrase.
-    static func boosted(_ wav: URL, to target: URL, checkCancellation: () throws -> Void = {}) throws -> URL? {
+    static func boosted(_ wav: URL, to target: URL, paths: AppPaths? = nil, checkCancellation: () throws -> Void = {}) throws -> URL? {
         try checkCancellation()
         let source = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: source.processingFormat, frameCapacity: 65_536) else { return nil }
@@ -163,6 +164,7 @@ enum AudioFiles {
         let input = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         let output = try AVAudioFile(forWriting: target, settings: input.processingFormat.settings,
                                      commonFormat: .pcmFormatInt16, interleaved: true)
+        guard paths?.safeSupportItem(target, directory: false) ?? true else { throw LectureError.message("Unsafe audio storage.") }
         try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: target.path)
         defer { if #available(macOS 15, *) { output.close() } }
         while input.framePosition < input.length {
@@ -181,16 +183,16 @@ enum AudioFiles {
     }
 
     static func deleteAudio(id: String, paths: AppPaths) throws {
-        guard FileManager.default.fileExists(atPath: paths.audio.path) else { return }
+        guard paths.safeSupportItem(paths.audio, directory: true) else { return }
         for url in try FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
             where url.lastPathComponent.hasPrefix(id + ".") {
-            try FileManager.default.removeItem(at: url)
+            try paths.removeSupportFile(url)
         }
     }
 
     private static func decode(source: URL, id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).pcm")
-        defer { try? FileManager.default.removeItem(at: temporary) }
+        defer { try? paths.removeSupportFile(temporary) }
         guard FileManager.default.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
             throw LectureError.message("Could not create imported audio file.")
         }
