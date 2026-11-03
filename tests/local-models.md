@@ -7,7 +7,7 @@ Built on branch `r8-llm`, based on `851def9`, in the dedicated worktree. No inst
 ```sh
 ./scripts/build-llama.sh
 BUILD_DIR="$HOME/Library/Caches/Nosy Build r8llm" ./build.sh
-swiftc -typecheck -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 -module-cache-path /tmp/nosy-mc-r8l Sources/*.swift
+swiftc -typecheck -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 -module-cache-path /tmp/nosy-mc-r8l -I Native -F vendor/sparkle Sources/*.swift
 ./tests/run_local_models.sh
 "$HOME/Library/Caches/Nosy Build r8llm/Nosy.app/Contents/MacOS/Nosy" --headless-snapshot "$PWD/vendor/previews/local.png" --local-models
 ```

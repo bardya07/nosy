@@ -40,6 +40,13 @@ trap 'exit 143' TERM
 ./build.sh
 codesign --verify --strict --deep "$APP"
 VERSION=$(plutil -extract CFBundleShortVersionString raw -o - "$APP/Contents/Info.plist")
+BUILD_NUMBER=$(plutil -extract CFBundleVersion raw -o - "$APP/Contents/Info.plist")
+[[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]] || { printf "Invalid build number: %s\n" "$BUILD_NUMBER" >&2; exit 1; }
+# Increment CFBundleVersion for every release, including patch releases.
+EXPECTED_KEY=$(plutil -extract SUPublicEDKey raw -o - "$APP/Contents/Info.plist")
+[[ $(vendor/sparkle/bin/generate_keys -p) == "$EXPECTED_KEY" ]] || {
+    printf "Sparkle Keychain public key does not match the app.\n" >&2; exit 1;
+}
 [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
     printf 'Invalid release version in Info.plist: %s\n' "$VERSION" >&2
     exit 1
@@ -103,6 +110,31 @@ grep -q 'source=Notarized Developer ID' "$STAGING/app-assessment.txt"
 hdiutil detach "$STAGING/mount"
 MOUNTED=false
 
+# Sign the final stapled bytes; stapling after signing would invalidate the signature.
+SIGNATURE=$(vendor/sparkle/bin/sign_update -p "$DMG")
+[[ "$SIGNATURE" =~ ^[A-Za-z0-9+/]+={0,2}$ ]] || { printf 'Invalid Sparkle signature.\n' >&2; exit 1; }
+vendor/sparkle/bin/sign_update --verify "$DMG" "$SIGNATURE"
+LENGTH=$(stat -f %z "$DMG")
+PUB_DATE=$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')
+cat > "$STAGING/appcast.xml" <<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>Nosy Updates</title>
+    <item>
+      <title>Nosy $VERSION</title>
+      <pubDate>$PUB_DATE</pubDate>
+      <sparkle:version>$BUILD_NUMBER</sparkle:version>
+      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <enclosure url="https://github.com/bardya07/nosy/releases/download/v$VERSION/Nosy-$VERSION.dmg" sparkle:edSignature="$SIGNATURE" length="$LENGTH" type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>
+EOF
+xmllint --noout "$STAGING/appcast.xml"
 mv -f "$DMG" "$DIST/Nosy-$VERSION.dmg"
+mv -f "$STAGING/appcast.xml" "$DIST/appcast.xml"
+printf 'Upload these files to the GitHub release v%s:\n  %s\n  %s\n' "$VERSION" "$DIST/Nosy-$VERSION.dmg" "$DIST/appcast.xml"
 printf 'RELEASE PASS: %s (%s bytes)\n' "$DIST/Nosy-$VERSION.dmg" \
     "$(stat -f %z "$DIST/Nosy-$VERSION.dmg")"

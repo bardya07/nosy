@@ -5,6 +5,9 @@ import UniformTypeIdentifiers
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        _ = SparkleUpdater.shared
+    }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         showWindow()
@@ -76,6 +79,9 @@ struct NosyApp: App {
         .defaultSize(width: 400, height: 300)
         .commands {
             CommandGroup(replacing: .newItem) { FileCommands(model: model) }
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { SparkleUpdater.shared.checkForUpdates() }
+            }
             CommandGroup(replacing: .appSettings) {
                 Button("Settings…") { model.workspace.showSettings(); delegate.showWindow() }
                     .keyboardShortcut(",", modifiers: .command)

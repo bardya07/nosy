@@ -18,7 +18,7 @@ All generated files used worktree-local paths, with `BUILD_DIR="$PWD/build"` and
 
 - `tests/run_unit.sh`: 144 core + 69 backend + 37 transcriber assertions passed (250 total). Includes bundled-engine precedence, missing/non-executable helper behavior, rehearsal, and development fallback.
 - `tests/run_pipeline.sh`: passed using the **helper from the built app**. Real recognition with and without vocabulary, AAC compression, 44.1 kHz stereo M4A import/resampling, Retry from M4A, missing-engine audio preservation, and unique Markdown output. Metal active; no CPU fallback.
-- `swiftc -typecheck -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 -module-cache-path build/module-cache Sources/*.swift`: passed. Existing Swift capture/deprecation warnings remain.
+- `swiftc -typecheck -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 -module-cache-path build/module-cache -I Native -F vendor/sparkle Sources/*.swift`: passed. Existing Swift capture/deprecation warnings remain.
 - Built app `--headless-snapshot`: passed; generated all six light/dark app, library, and settings images.
 - Helper transcribed the pinned source's 11-second `samples/jfk.wav` with `env -i PATH=/usr/bin:/bin`, an absolute model path, and no shader resource environment. Logs report `using embedded metal library` and `using MTL0 backend`; recognized the expected speech.
 - The packaged app also passed `--headless-import` in the same clean environment, with `NOSY_WHISPER_CLI=/nonexistent/whisper-cli`, isolated support/transcript directories, and a symlink to the existing downloaded model. This confirms packaged apps use the helper, ignoring development overrides.

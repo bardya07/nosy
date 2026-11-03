@@ -18,6 +18,7 @@ struct SettingsFocusRequest: Equatable {
 
 struct SettingsView: View {
     @ObservedObject var model: AppModel
+    @ObservedObject private var updater = SparkleUpdater.shared
     var connector = ClaudeConnector.standard
     var showsHeading = true
     var focusRequest: SettingsFocusRequest?
@@ -142,6 +143,16 @@ struct SettingsView: View {
     }
 
     @ViewBuilder private var generalPane: some View {
+        section("Updates") {
+            VStack(alignment: .leading, spacing: 10) {
+                settingToggle("Check for updates automatically", isOn: Binding(
+                    get: { updater.automaticallyChecks },
+                    set: { updater.automaticallyChecks = $0 }
+                ), tip: "Check for updates automatically")
+                Button("Check for Updates…") { updater.checkForUpdates() }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
+            }
+        }
         section("Transcripts") {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 10) {

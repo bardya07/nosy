@@ -29,6 +29,10 @@ Requires macOS 14 or later and Apple Silicon. The first launch downloads the spe
 
 More interface states are available in the [preview folder](preview/), including dark mode, Room audio and Mac audio modes, each main control menu, Settings, onboarding, and recording activity.
 
+## Preparing a release
+
+Set `CFBundleShortVersionString` to the release version and increase the integer `CFBundleVersion` for every release. Run `scripts/release.sh` on the signing Mac with the `nosy-notary` keychain profile and the Sparkle signing key in its login Keychain. It creates the notarized DMG and `dist/appcast.xml`; upload both to the matching GitHub release `vX.Y.Z` and mark it as the latest release. Preserve access to the Sparkle key for future updates. The script does not upload releases.
+
 ## License
 
 Nosy is [MIT licensed](LICENSE). Third-party materials retain their own terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

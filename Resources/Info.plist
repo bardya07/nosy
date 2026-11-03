@@ -7,8 +7,13 @@
     <key>CFBundleDisplayName</key><string>Nosy</string>
     <key>CFBundleExecutable</key><string>Nosy</string>
     <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleShortVersionString</key><string>1.0.0</string>
     <key>CFBundleVersion</key><string>1</string>
+    <key>SUFeedURL</key><string>https://github.com/bardya07/nosy/releases/latest/download/appcast.xml</string>
+    <key>SUPublicEDKey</key><string>LqG2QjKIzsAPMWDGHtnvZxXBQhK7djU71VOZRYMV3uY=</string>
+    <key>SUEnableAutomaticChecks</key><true/>
+    <key>SUScheduledCheckInterval</key><integer>86400</integer>
+    <key>SUAutomaticallyUpdate</key><true/>
     <key>LSMinimumSystemVersion</key><string>14.0</string>
     <key>LSApplicationCategoryType</key><string>public.app-category.education</string>
     <key>NSMicrophoneUsageDescription</key><string>Nosy records lectures so they can be transcribed on this Mac.</string>

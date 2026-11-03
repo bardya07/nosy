@@ -7,6 +7,8 @@ source scripts/audio-shim.sh
 APP="$BUILD_DIR/Nosy.app"
 WHISPER="$PWD/vendor/whisper/whisper-cli"
 LLAMA="$PWD/vendor/llama/nosy-llama"
+SPARKLE="$PWD/vendor/sparkle"
+[[ -f "$SPARKLE/Sparkle.framework/Sparkle" && -x "$SPARKLE/bin/generate_keys" && -x "$SPARKLE/bin/sign_update" && -x "$SPARKLE/bin/generate_appcast" ]] || ./scripts/fetch-sparkle.sh
 [[ -x "$LLAMA" ]] || { printf 'Build the bundled summary engine first: ./scripts/build-llama.sh\n' >&2; exit 1; }
 [[ $(lipo -archs "$LLAMA") == arm64 ]] || { printf 'nosy-llama must be arm64.\n' >&2; exit 1; }
 otool -L "$LLAMA" | awk 'NR > 1 && $1 !~ /^\/usr\/lib\// && $1 !~ /^\/System\/Library\// { bad = 1 } END { exit bad }'
@@ -19,6 +21,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources"
 swift -module-cache-path "$BUILD_DIR/module-cache" scripts/MakeIcon.swift .
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
     -target arm64-apple-macos14.0 -module-cache-path "$BUILD_DIR/module-cache" \
+    -F "$SPARKLE" -framework Sparkle -Xlinker -rpath -Xlinker @executable_path/../Frameworks \
     "${AUDIO_SHIM[@]}" Sources/*.swift -o "$APP/Contents/MacOS/Nosy"
 # The MCP server that lets Claude Desktop and other AI apps read transcripts. Standard library only.
 swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
@@ -47,6 +50,8 @@ else
 fi
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"
 install -m 755 "$LLAMA" "$APP/Contents/Helpers/nosy-llama"
+mkdir -p "$APP/Contents/Frameworks"
+ditto "$SPARKLE/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
 cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 xattr -cr "$APP"
 # Set NOSY_CODESIGN_IDENTITY to use a local signing identity; default to ad-hoc.
@@ -55,6 +60,13 @@ SIGN_OPTIONS=(--force --options runtime --sign "$IDENTITY")
 if [[ "$IDENTITY" != - ]]; then SIGN_OPTIONS+=(--timestamp); fi
 # Sign nested code first with the same identity and hardened runtime. An explicit
 # identity must succeed: silently falling back to ad-hoc would break notarization.
+SPARKLE_VERSION="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
+for service in "$SPARKLE_VERSION"/XPCServices/*.xpc; do
+    codesign "${SIGN_OPTIONS[@]}" --preserve-metadata=entitlements "$service"
+done
+codesign "${SIGN_OPTIONS[@]}" "$SPARKLE_VERSION/Autoupdate"
+codesign "${SIGN_OPTIONS[@]}" "$SPARKLE_VERSION/Updater.app"
+codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Frameworks/Sparkle.framework"
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/whisper-cli"
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/nosy-mcp"
 codesign "${SIGN_OPTIONS[@]}" "$APP/Contents/Helpers/nosy-llama"
