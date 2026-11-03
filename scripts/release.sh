@@ -117,9 +117,7 @@ MOUNTED=true
 ditto "$STAGING/mount/Nosy.app" "$STAGING/installed/Nosy.app"
 codesign --verify --strict --deep "$STAGING/installed/Nosy.app"
 xcrun stapler validate "$STAGING/installed/Nosy.app"
-spctl -a -vv "$STAGING/installed/Nosy.app"
-xcrun stapler validate "$STAGING/mount/Nosy.app"
-spctl -a -vv "$STAGING/mount/Nosy.app" 2>&1 | tee "$STAGING/app-assessment.txt"
+spctl -a -vv "$STAGING/installed/Nosy.app" 2>&1 | tee "$STAGING/app-assessment.txt"
 grep -q 'source=Notarized Developer ID' "$STAGING/app-assessment.txt"
 [[ $(readlink "$STAGING/mount/Applications") == /Applications ]]
 hdiutil detach "$STAGING/mount"
