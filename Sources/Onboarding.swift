@@ -25,7 +25,6 @@ final class OnboardingModel: ObservableObject {
         micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
     }
     func whisperReady(_ paths: AppPaths) -> Bool { paths.whisper != nil }
-    func modelReady(_ paths: AppPaths) -> Bool { SpeechModel.validate(paths.model) }
 
     func startDownload(paths: AppPaths) {
         guard !downloading else { return }
@@ -200,8 +199,8 @@ struct OnboardingView: View {
                             .buttonStyle(LinkButtonStyle())
                             .tip("Check speech engine")
                     }
-                    status(setup.modelReady(model.paths) ? "Speech model ready" : "Speech model not downloaded", ok: setup.modelReady(model.paths))
-                    if !setup.modelReady(model.paths) {
+                    status(model.checkingSpeechModel ? "Checking speech model…" : model.speechModelReady ? "Speech model ready" : "Speech model not downloaded", ok: model.speechModelReady && !model.checkingSpeechModel)
+                    if !model.speechModelReady && !model.checkingSpeechModel {
                         if setup.downloading {
                             VStack(alignment: .leading, spacing: 6) {
                                 ProgressTrack(value: setup.downloadFraction, tint: Theme.accent).frame(width: 340)

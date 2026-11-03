@@ -130,6 +130,9 @@ final class AppModel: ObservableObject {
     @Published var errorDetail: String?
     @Published var microphoneDenied = false
     @Published var setupMessage: String?
+    @Published private(set) var checkingSpeechModel = false
+    @Published private(set) var speechModelReady = false
+    private var dependencyCheckGeneration = 0
     @Published var recovery: [SessionRecord] = []
     @Published var transitioning = false
     @Published var current: SessionRecord? { didSet { refreshSavedTranscript() } }
@@ -319,14 +322,30 @@ final class AppModel: ObservableObject {
     }
     func clearError() { errorMessage = nil; errorDetail = nil }
     func refreshDependencies() {
-        setupMessage = Core.setupMessage(paths: paths)
-        guard launched, !quitting, !encoderAttempted, SpeechModel.validate(paths.model) else { return }
-        encoderAttempted = true
+        dependencyCheckGeneration += 1
+        let generation = dependencyCheckGeneration
         let paths = paths
-        let job = TranscriptionJob()
-        encoderWork = Task {
-            try? await CoreMLEncoderDownload.install(paths: paths, job: job)
-            encoderWork = nil
+        checkingSpeechModel = true
+        setupMessage = "Checking speech model…"
+        Task {
+            let result = await Task.detached(priority: .utility) {
+                let ready = SpeechModel.validate(paths.model)
+                var messages: [String] = []
+                if paths.whisper == nil { messages.append(Core.missingEngineMessage) }
+                if !ready { messages.append("Nosy needs a valid speech model (1.6 GB). Download it again in setup.") }
+                return (ready, messages.isEmpty ? nil : messages.joined(separator: "\n"))
+            }.value
+            guard generation == dependencyCheckGeneration else { return }
+            speechModelReady = result.0
+            setupMessage = result.1
+            checkingSpeechModel = false
+            guard launched, !quitting, !encoderAttempted, result.0 else { return }
+            encoderAttempted = true
+            let job = TranscriptionJob()
+            encoderWork = Task {
+                try? await CoreMLEncoderDownload.install(paths: paths, job: job)
+                encoderWork = nil
+            }
         }
     }
     // Folder names and historical libraries are read off the main actor. Only changed results are published.

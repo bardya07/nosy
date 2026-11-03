@@ -68,9 +68,7 @@ enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
     // Shown greyed next to a provider Nosy can't use yet.
     var unavailableHint: String {
         switch self {
-        case .claudeCode: "Install Claude Code to use it"
-        case .codex: "Install the Codex CLI to use it"
-        case .geminiCLI: "Install the Gemini CLI to use it"
+        case .claudeCode, .codex, .geminiCLI: "Coming back in an update"
         case .ollama: "Open Ollama to use it"
         case .lmStudio: "Start the LM Studio server to use it"
         default: ""
@@ -340,7 +338,7 @@ struct SummaryDetection: Equatable, Sendable {
     func isAvailable(_ provider: SummaryProvider) -> Bool {
         switch provider.kind {
         case .none, .api, .builtIn: true
-        case .cli: executables[provider] != nil
+        case .cli: false
         case .local: localModels[provider] != nil
         }
     }
@@ -1010,6 +1008,9 @@ final class SummaryCenter: ObservableObject {
 
     // The request for the chosen provider. Built in and local engines are checked here before any run.
     private func providerRequest(_ settings: SummarySettings, pauseState: LlamaPauseState) async throws -> SummaryRequest {
+        if case .cli = settings.provider.kind {
+            throw SummaryError.failed(settings.provider.title, "This CLI cannot be verified as a text-only completion. Choose a built-in model or an API provider instead.")
+        }
         if !detection.checked, settings.provider.kind != .api, settings.provider.builtInModel == nil {
             detection = await SummaryDetector.detect()
         }

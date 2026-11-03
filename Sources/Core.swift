@@ -123,32 +123,91 @@ struct AppPaths: Sendable {
         return missing.isEmpty ? nil : missing.joined(separator: "\n")
     }
     func audioFile(_ id: String, _ ext: String) -> URL { audio.appendingPathComponent(id).appendingPathExtension(ext) }
-    func prepareSupport() throws {
-        let manager = FileManager.default
-        for directory in [support, audio, support.appendingPathComponent("models", isDirectory: true)] {
-            try manager.createDirectory(at: directory, withIntermediateDirectories: true,
-                                        attributes: [.posixPermissions: 0o700])
-            try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+    // Check every component from the support root without following links. The transcript
+    // library may itself be linked, so compare canonical paths in both directions.
+    private func safeSupportItem(_ url: URL, directory: Bool, checkOverlap: Bool = true) -> Bool {
+        let root = support.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        guard path == root || path.hasPrefix(root + "/") else { return false }
+        let library = transcripts.resolvingSymlinksInPath().standardizedFileURL.path
+        let canonical = url.resolvingSymlinksInPath().standardizedFileURL.path
+        if checkOverlap {
+            guard canonical != library, !canonical.hasPrefix(library + "/"),
+                  !library.hasPrefix(canonical + "/") else { return false }
         }
-        // Repair only app-owned storage; never follow symlinks or alter the transcript library.
-        for root in [audio, support.appendingPathComponent("models", isDirectory: true), support.appendingPathComponent("routing", isDirectory: true)] {
-            guard root.standardizedFileURL != transcripts.standardizedFileURL,
-                  (try? root.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true else { continue }
-            if manager.fileExists(atPath: root.path) {
-                try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path)
+        let suffix = String(path.dropFirst(root.count)).split(separator: "/")
+        var current = root
+        let components = suffix.map(String.init)
+        for index in 0...components.count {
+            if index > 0 { current += "/" + components[index - 1] }
+            var info = stat()
+            guard lstat(current, &info) == 0, info.st_uid == getuid(),
+                  (info.st_mode & S_IFMT) != S_IFLNK else { return false }
+            if index < components.count || directory {
+                guard (info.st_mode & S_IFMT) == S_IFDIR else { return false }
+            } else {
+                guard (info.st_mode & S_IFMT) == S_IFREG else { return false }
             }
+        }
+        return true
+    }
+
+    func prepareSupport() throws {
+        try repairSupportPermissions()
+        purgeLegacyNotes()
+    }
+
+    private func repairSupportPermissions() throws {
+        let manager = FileManager.default
+        // Creating the root is permitted only when its canonical location does not
+        // overlap the library. Never repair a symlink or an unowned directory.
+        let root = support.resolvingSymlinksInPath().standardizedFileURL.path
+        let library = transcripts.resolvingSymlinksInPath().standardizedFileURL.path
+        guard root != library, !root.hasPrefix(library + "/") else { return }
+        if !manager.fileExists(atPath: support.path) {
+            try manager.createDirectory(at: support, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        }
+        guard safeSupportItem(support, directory: true, checkOverlap: false) else { return }
+        if safeSupportItem(support, directory: true) {
+            try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: support.path)
+        }
+        for root in [audio, support.appendingPathComponent("models"), support.appendingPathComponent("routing")] {
+            if !manager.fileExists(atPath: root.path), root != support.appendingPathComponent("routing") {
+                try manager.createDirectory(at: root, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
+            }
+            guard safeSupportItem(root, directory: true) else { continue }
+            try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path)
             if let entries = manager.enumerator(at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey]) {
                 for case let url as URL in entries {
                     let values = try url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
-                    if values.isSymbolicLink == true || url.standardizedFileURL == transcripts.standardizedFileURL {
+                    let isDirectory = values.isDirectory == true
+                    guard values.isSymbolicLink != true, safeSupportItem(url, directory: isDirectory) else {
                         entries.skipDescendants(); continue
                     }
-                    try manager.setAttributes([.posixPermissions: values.isDirectory == true ? 0o700 : 0o600], ofItemAtPath: url.path)
+                    try manager.setAttributes([.posixPermissions: isDirectory ? 0o700 : 0o600], ofItemAtPath: url.path)
                 }
             }
         }
-        // Remove legacy content-bearing notes; new summaries keep notes in memory only.
-        try? manager.removeItem(at: support.appendingPathComponent("models/llm/notes"))
+    }
+
+    // Older versions wrote only SHA-256-named JSON files in per-model folders.
+    // Leave directories and any unrecognized content intact.
+    func purgeLegacyNotes() {
+        let manager = FileManager.default
+        let notes = support.appendingPathComponent("models/llm/notes")
+        guard safeSupportItem(notes, directory: true) else { return }
+        for modelID in ["qwen", "smol"] {
+            let folder = notes.appendingPathComponent(modelID)
+            guard safeSupportItem(folder, directory: true),
+                  let files = try? manager.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil) else { continue }
+            for file in files {
+                let name = file.deletingPathExtension().lastPathComponent
+                guard file.pathExtension == "json", name.count == 64,
+                      name.allSatisfy({ "0123456789abcdef".contains($0) }),
+                      safeSupportItem(file, directory: false) else { continue }
+                try? manager.removeItem(at: file)
+            }
+        }
     }
     func lectureFolder(_ name: String) -> URL { transcripts.appendingPathComponent(name, isDirectory: true) }
     func lectures() -> [String] {

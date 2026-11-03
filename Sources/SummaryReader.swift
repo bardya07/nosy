@@ -291,7 +291,9 @@ struct SummaryBar: View {
         if UserDefaults.standard.bool(forKey: key) { return true }
         let alert = NSAlert()
         alert.messageText = "Send this transcript to \(cloudName)?"
-        alert.informativeText = "Finding key moments sends the transcript text to \(cloudName), which runs outside this Mac. Nosy asks once for each provider. Built in and local models keep the text on this Mac."
+        alert.informativeText = provider == .ollama || provider == .lmStudio
+            ? "Finding key moments sends the transcript text to the local service. Its model and server settings determine whether it is sent elsewhere. Nosy asks once for each provider. Built-in models process text on this Mac."
+            : "Finding key moments sends the transcript text to \(cloudName). Nosy asks once for each provider. Built-in models process text on this Mac."
         alert.addButton(withTitle: "Find key moments")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return false }

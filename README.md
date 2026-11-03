@@ -30,7 +30,7 @@ During first-time setup, download the speech model (about 1.6 GB). Nosy also dow
 AI features are off by default. Turn them on in Settings to make summaries with notes, key terms, and exam questions, find key moments, or clean up vocabulary. Choose a provider:
 
 - Download **Qwen3 4B** or **SmolLM3 3B** to run offline.
-- Use **Claude Code**, **Codex**, or **Gemini CLI**; **Ollama** or **LM Studio**; or your own **OpenAI**, **Anthropic**, or **Gemini** API key. API keys are stored only in your Mac's Keychain.
+- Use **Ollama** or **LM Studio**, or your own **OpenAI**, **Anthropic**, or **Gemini** API key. API keys are stored only in your Mac's Keychain.
 
 ![AI settings](preview/nosy.workspace-ai-on.light.png)
 

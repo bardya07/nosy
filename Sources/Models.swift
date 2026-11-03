@@ -19,22 +19,23 @@ enum SpeechModel {
         var entries: [String: (String, Bool)] = [:]
     }
     private static let verificationCache = VerificationCache()
-    private static func verified(_ url: URL, bytes: Int64, checksum: String) -> Bool {
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+    static func verified(_ url: URL, bytes: Int64, checksum: String) -> Bool {
+        let target = url.resolvingSymlinksInPath().standardizedFileURL
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: target.path),
               let size = attributes[.size] as? NSNumber, size.int64Value == bytes,
               let modified = attributes[.modificationDate] as? Date,
               let inode = attributes[.systemFileNumber] as? NSNumber else { return false }
         let identity = "\(inode)-\(modified.timeIntervalSince1970)-\(bytes)-\(checksum)"
         verificationCache.lock.lock()
         defer { verificationCache.lock.unlock() }
-        if let cached = verificationCache.entries[url.path], cached.0 == identity { return cached.1 }
-        let valid = (try? LocalModelDownload.sha256(url)) == checksum
+        if let cached = verificationCache.entries[target.path], cached.0 == identity { return cached.1 }
+        let valid = (try? LocalModelDownload.sha256(target)) == checksum
         // Never cache a result for a file changed while it was being read.
-        if let after = try? FileManager.default.attributesOfItem(atPath: url.path),
+        if let after = try? FileManager.default.attributesOfItem(atPath: target.path),
            (after[.modificationDate] as? Date) == modified,
            (after[.systemFileNumber] as? NSNumber) == inode,
            (after[.size] as? NSNumber)?.int64Value == bytes {
-            verificationCache.entries[url.path] = (identity, valid)
+            verificationCache.entries[target.path] = (identity, valid)
             return valid
         }
         return false
@@ -183,7 +184,6 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
                 if SpeechModel.validateVAD(paths.vadModel) {
                     finish(.success(()))
                 } else {
-                    try? FileManager.default.removeItem(at: paths.vadModel)
                     let vadTask = session.downloadTask(with: SpeechModel.vadURL)
                     task = vadTask
                     vadTask.resume()

@@ -64,7 +64,7 @@ struct SummarySettingsSection: View {
             whenMenu
             if provider.builtInModel != nil {
                 Button("Clear old excerpt cache") {
-                    try? FileManager.default.removeItem(at: summaries.localModels.root.appendingPathComponent("notes"))
+                    AppPaths().purgeLegacyNotes()
                 }
                 .buttonStyle(LinkButtonStyle(tint: Theme.muted))
                 .tip("Remove notes saved by older versions")
@@ -114,7 +114,8 @@ struct SummarySettingsSection: View {
         .accessibilityLabel("Summary provider").accessibilityValue(provider.title)
     }
     private func providerOption(_ option: SummaryProvider) -> some View {
-        let available = summaries.detection.isAvailable(option) || !summaries.detection.checked && !Snapshot.isRunning
+        let isCLI: Bool = { if case .cli = option.kind { return true }; return false }()
+        let available = !isCLI && (summaries.detection.isAvailable(option) || !summaries.detection.checked && !Snapshot.isRunning)
         let title: String = {
             if let model = option.builtInModel {
                 let suffix = model == LocalModel.recommended() ? "recommended" : model == .smol ? "smaller, for 8 GB Macs" : "for more than 8 GB"

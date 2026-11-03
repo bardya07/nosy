@@ -124,8 +124,8 @@ enum LocalModelTests {
         settings.sections = [.questions]
         _ = try await Summarizer.summarize(transcript, settings: settings, request: request, job: TranscriptionJob(), cacheRoot: root)
         let count = try String(contentsOf: calls, encoding: .utf8).split(separator: "\n").count
-        try check(count == 3, "Changing sections reuses map cache, only reduces again")
-        try check(LlamaRunner.cacheKey(transcript: transcript, model: .qwen) != LlamaRunner.cacheKey(transcript: transcript + " changed", model: .qwen), "Cache invalidated by transcript changes")
+        try check(count == 4, "Changing sections maps again without persistent notes")
+        try check(!FileManager.default.fileExists(atPath: root.appendingPathComponent("notes").path), "No persistent notes are written")
         // Force a hierarchical reduce with many bounded map outputs.
         let verbose = "#!/bin/sh\necho called >> '\(calls.path)'\nprintf '" + String(repeating: "source note ", count: 160) + "'\n"
         try verbose.write(to: helper, atomically: true, encoding: .utf8)

@@ -99,7 +99,7 @@ enum CoreTests {
                                           "NOSY_WHISPER_CLI": "/does/not/exist"])
         try paths.prepareSupport()
         check(paths.whisper == nil, "explicit missing CLI override")
-        check(paths.dependencyWarning?.contains("Model missing") == true, "dependency banner")
+        check(paths.dependencyWarning?.contains("Speech model missing or invalid") == true, "dependency banner")
         // A shipped app must never depend on Homebrew, PATH, or a developer override.
         let bundle = root.appendingPathComponent("Nosy.app", isDirectory: true)
         let helper = bundle.appendingPathComponent("Contents/Helpers/whisper-cli")

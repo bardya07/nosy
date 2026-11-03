@@ -258,8 +258,6 @@ final class LocalModelStore: ObservableObject {
         for url in [file(model), partial(model), receipt(model)] where FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
         }
-        // Map notes are specific to this model. Removal frees those too.
-        try? FileManager.default.removeItem(at: root.appendingPathComponent("notes/\(model.id)"))
         adjustPartial(model, to: 0)
         states[model.id] = .notDownloaded
         requestDiskScan()

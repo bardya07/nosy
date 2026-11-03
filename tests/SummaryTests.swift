@@ -218,7 +218,7 @@ enum SummaryTests {
         let found = SummaryDetector.detectExecutables(in: fakes)
         check(found[.claudeCode] != nil && found[.geminiCLI] != nil && found[.codex] == nil, "detection maps CLIs to providers")
         var detection = SummaryDetection(executables: found, localModels: [.ollama: []], checked: true)
-        check(detection.isAvailable(.claudeCode) && !detection.isAvailable(.codex), "CLI availability follows detection")
+        check(!detection.isAvailable(.claudeCode) && !detection.isAvailable(.codex), "CLIs remain unavailable even when installed")
         check(detection.isAvailable(.ollama) && !detection.isAvailable(.lmStudio), "a running server is available even with no models")
         check(detection.isAvailable(.anthropic) && detection.isAvailable(.off), "API providers are always available")
         detection.localModels[.ollama] = nil
@@ -231,47 +231,14 @@ enum SummaryTests {
         check(codex.starts(with: ["exec", "--sandbox", "read-only"]) && codex.last == "-" && codex.contains("--output-last-message"), "codex args")
         check(SummaryRunner.cliArguments(.geminiCLI, model: "m", lastMessage: last).suffix(2) == ["--model", "m"], "gemini args carry the model")
 
-        // Runs through the fake CLIs.
-        let settings = SummarySettings(provider: .claudeCode, sections: [.notes])
-        var request = SummaryRequest(provider: .claudeCode, model: "", executable: found[.claudeCode])
-        let one = try await Summarizer.summarize("Paragraph one.\n\nParagraph two.", settings: settings, request: request, job: TranscriptionJob())
-        check(one == "## Short notes\n- first", "a short transcript is one CLI call")
-        request.chunkLimit = 25
-        let steps = LockedData()
-        let merged = try await Summarizer.summarize("Paragraph number one.\n\nParagraph number two.", settings: settings, request: request,
-                                                    job: TranscriptionJob(), progress: { step, total in steps.append(Data("\(step)/\(total);".utf8)) })
-        check(merged == "## Short notes\n- merged", "a long transcript is summarized in parts, then merged")
-        check(String(decoding: steps.value, as: UTF8.self) == "1/3;2/3;3/3;", "progress counts the parts and the merge")
-        let calls = try String(contentsOf: root.appendingPathComponent("calls.txt"), encoding: .utf8).split(separator: "\n")
-        check(calls.count == 4 && calls.allSatisfy { $0 == "-p --output-format text" }, "every call runs non interactively")
-
-        var failure: SummaryError?
-        do {
-            _ = try await SummaryRunner.run("x", request: SummaryRequest(provider: .geminiCLI, model: "", executable: found[.geminiCLI]), job: TranscriptionJob())
-        } catch let error as SummaryError { failure = error }
-        check(failure == .failed("Gemini CLI", "quota exceeded"), "a failing CLI reports its error output")
-
-        let slow = bin.appendingPathComponent("slow")
-        try script(slow, "trap '' TERM; cat > /dev/null; while :; do sleep 1; done")
-        failure = nil
-        let started = Date()
-        do {
-            _ = try await SummaryRunner.run("x", request: SummaryRequest(provider: .claudeCode, model: "", executable: slow, timeout: 1), job: TranscriptionJob())
-        } catch let error as SummaryError { failure = error }
-        check(failure == .timedOut && Date().timeIntervalSince(started) < 10, "a hung CLI times out")
-
-        let job = TranscriptionJob()
-        let task = Task { try await SummaryRunner.run("x", request: SummaryRequest(provider: .claudeCode, model: "", executable: slow), job: job) }
-        try await Task.sleep(for: .milliseconds(300))
-        task.cancel()
-        var cancelled = false
-        do { _ = try await task.value } catch is CancellationError { cancelled = true } catch {}
-        check(cancelled, "cancelling stops the CLI")
-
-        failure = nil
-        do {
-            _ = try await SummaryRunner.run("x", request: SummaryRequest(provider: .codex, model: "", executable: nil), job: TranscriptionJob())
-        } catch let error as SummaryError { failure = error }
-        check(failure == .notInstalled("Codex"), "a missing CLI says it isn't installed")
+        // A configured executable must never receive transcript text.
+        for provider in [SummaryProvider.claudeCode, .codex, .geminiCLI] {
+            var failure: SummaryError?
+            do {
+                _ = try await SummaryRunner.run("private text", request: SummaryRequest(provider: provider, model: "", executable: found[provider]), job: TranscriptionJob())
+            } catch let error as SummaryError { failure = error }
+            check(failure == .failed(provider.title, "This CLI cannot be verified as a text-only completion. Choose a built-in model or an API provider instead."), "CLI refused before execution")
+        }
+        check(!FileManager.default.fileExists(atPath: root.appendingPathComponent("calls.txt").path), "CLI was not executed")
     }
 }
