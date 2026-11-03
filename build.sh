@@ -27,6 +27,24 @@ swiftc -O -swift-version 6 -strict-concurrency=complete -parse-as-library \
 cp -R Resources/Vocabulary "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns Resources/NosyMark.png Resources/GitHubMark.png "$APP/Contents/Resources/"
+# Compile before signing. Keep the supplied static AppIcon.icns for macOS 14–15.
+if xcrun --find actool >/dev/null 2>&1; then
+    ICON_BUILD_DIR=$(mktemp -d "$BUILD_DIR/icon.XXXXXX")
+    if xcrun actool Resources/Brand/Nosy.icon --compile "$ICON_BUILD_DIR" \
+        --app-icon Nosy --platform macosx --target-device mac \
+        --minimum-deployment-target 14.0 \
+        --output-partial-info-plist "$ICON_BUILD_DIR/partial.plist"; then
+        cp "$ICON_BUILD_DIR/Assets.car" "$APP/Contents/Resources/Assets.car"
+        rm -rf "$ICON_BUILD_DIR"
+    else
+        rm -rf "$ICON_BUILD_DIR"
+        printf 'Icon compilation failed.\n' >&2
+        exit 1
+    fi
+else
+    printf 'Note: actool unavailable; using the static app icon.\n'
+    /usr/libexec/PlistBuddy -c 'Delete :CFBundleIconName' "$APP/Contents/Info.plist"
+fi
 install -m 755 "$WHISPER" "$APP/Contents/Helpers/whisper-cli"
 install -m 755 "$LLAMA" "$APP/Contents/Helpers/nosy-llama"
 cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"

@@ -1,0 +1,194 @@
+{
+  "fill-specializations": [
+    {
+      "value": {
+        "solid": "srgb:0.74510,0.89804,0.84706,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "solid": "srgb:0.08627,0.29020,0.38431,1.00000"
+      }
+    },
+    {
+      "appearance": "tinted",
+      "value": {
+        "solid": "srgb:0.08627,0.29020,0.38431,1.00000"
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "Hamster",
+      "layers": [
+        {
+          "name": "Hamster (light)",
+          "image-name": "light-01-hamster.svg",
+          "hidden-specializations": [
+            {
+              "value": false
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Hamster (dark)",
+          "image-name": "dark-01-hamster.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": false
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Hamster (mono)",
+          "image-name": "mono-01-hamster.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Laptop and audio",
+      "layers": [
+        {
+          "name": "Laptop and audio (light)",
+          "image-name": "light-02-laptop-and-audio.svg",
+          "hidden-specializations": [
+            {
+              "value": false
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Laptop and audio (dark)",
+          "image-name": "dark-02-laptop-and-audio.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": false
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Laptop and audio (mono)",
+          "image-name": "mono-02-laptop-and-audio.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Paws",
+      "layers": [
+        {
+          "name": "Paws (light)",
+          "image-name": "light-03-paws.svg",
+          "hidden-specializations": [
+            {
+              "value": false
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Paws (dark)",
+          "image-name": "dark-03-paws.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": false
+            },
+            {
+              "appearance": "tinted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "name": "Paws (mono)",
+          "image-name": "mono-03-paws.svg",
+          "hidden-specializations": [
+            {
+              "value": true
+            },
+            {
+              "appearance": "dark",
+              "value": true
+            },
+            {
+              "appearance": "tinted",
+              "value": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}
