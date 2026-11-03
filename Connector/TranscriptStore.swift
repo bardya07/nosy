@@ -102,7 +102,7 @@ struct TranscriptStore: Sendable {
         var hits: [Hit] = []
         guard limit > 0 else { return hits }
         for entry in try transcripts(folder: nil, limit: .max) {
-            let text = (try? String(contentsOf: URL(fileURLWithPath: entry.path), encoding: .utf8)) ?? ""
+            let text = (try? String(contentsOf: root.appendingPathComponent(entry.path), encoding: .utf8)) ?? ""
             for (index, line) in text.components(separatedBy: .newlines).enumerated() {
                 guard let match = line.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) else { continue }
                 hits.append(Hit(folder: entry.folder, name: entry.name, date: entry.date, line: index + 1,
@@ -196,7 +196,7 @@ struct TranscriptStore: Sendable {
         let created = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate)
             .map { Self.format($0, "yyyy-MM-dd HH:mm") }
         return Entry(folder: folder, name: Self.stemOfFile(url.lastPathComponent),
-                     date: header.date ?? created, duration: header.duration, path: url.path)
+                     date: header.date ?? created, duration: header.duration, path: folder + "/" + url.lastPathComponent)
     }
 
     // The header Nosy writes: "- Date: 2026-10-23", "- Started: 16:13", "- Length: 1 min".

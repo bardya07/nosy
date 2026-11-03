@@ -126,7 +126,7 @@ final class Recorder: @unchecked Sendable {
                 do {
                     self.defaultInputReported = false
                     self.restartLimiter.reset()
-                    guard FileManager.default.createFile(atPath: url.path, contents: nil) else {
+                    guard FileManager.default.createFile(atPath: url.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
                         throw LectureError.message("Could not create recording file.")
                     }
                     let handle = try FileHandle(forWritingTo: url)
@@ -344,7 +344,7 @@ final class Recorder: @unchecked Sendable {
                 defaultInputReported = true
                 onEvent(.usingDefaultInput)
             }
-            logger.info("session=\(self.sessionID, privacy: .public) source=\(self.source.rawValue, privacy: .public) generation=\(generation, privacy: .public) input_uid=\(device.id, privacy: .public) follows_default=\(self.inputUID == nil, privacy: .public) rate=\(format.sampleRate, privacy: .public) channels=\(format.channelCount, privacy: .public) device_configuration_written=false")
+            logger.info("session=\(self.sessionID, privacy: .public) source=\(self.source.rawValue, privacy: .public) generation=\(generation, privacy: .public) input_uid=\(device.id, privacy: .private) follows_default=\(self.inputUID == nil, privacy: .public) rate=\(format.sampleRate, privacy: .public) channels=\(format.channelCount, privacy: .public) device_configuration_written=false")
             onEvent(.input(name: device.name))
         } catch {
             logCaptureCleanup(capture.stop(), kind: "microphone start failed", generation: generation)
@@ -386,7 +386,7 @@ final class Recorder: @unchecked Sendable {
             logger.info("session=\(self.sessionID, privacy: .public) generation=\(next, privacy: .public) restart=complete reason=\(reason, privacy: .public)")
         } catch {
             // A failed reader must still be eligible for the bounded retry.
-            logger.error("session=\(self.sessionID, privacy: .public) generation=\(next, privacy: .public) restart=failed error=\(error.localizedDescription, privacy: .public)")
+            logger.error("session=\(self.sessionID, privacy: .public) generation=\(next, privacy: .public) restart=failed error=\(error.localizedDescription, privacy: .private)")
             scheduleMicrophoneRestart(reason: "microphone restart retry", generation: next)
         }
     }
@@ -669,7 +669,7 @@ final class Recorder: @unchecked Sendable {
                     return
                 }
                 self.inputUID = uid
-                self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pending_input_uid=\(self.inputUID ?? "system default", privacy: .public) hardware_open=false")
+                self.logger.info("session=\(self.sessionID, privacy: .public) generation=\(self.captureGeneration, privacy: .public) pending_input_uid=\(self.inputUID ?? "system default", privacy: .private) hardware_open=false")
                 continuation.resume()
             }
         }

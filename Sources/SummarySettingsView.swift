@@ -45,10 +45,7 @@ struct SummarySettingsSection: View {
                         .id(SettingsFocusTarget.localModel)
                 }
             case .cli:
-                SummaryModelField(provider: provider, placeholder: "Model (CLI default)")
-                    .id(provider)
-                    .modifier(SettingsFocusHighlight(isHighlighted: highlightedTarget == .providerModel))
-                    .id(SettingsFocusTarget.providerModel)
+                hint("CLI summaries are unavailable because text-only isolation cannot be verified. Choose a built-in or API provider.", color: Theme.warmText)
             case .local:
                 localModelMenu
                     .id(provider)
@@ -65,10 +62,22 @@ struct SummarySettingsSection: View {
                     .id(SettingsFocusTarget.providerKey)
             }
             whenMenu
-            Text(provider == .off
-                 ? "Built in models, Ollama and LM Studio keep transcripts on this Mac. Other providers receive them."
-                 : provider.staysOnMac ? "\(provider.title) keeps the transcript on this Mac. Other providers receive it."
-                 : "Summaries send the transcript to \(provider.title.replacingOccurrences(of: " API key", with: "")). Ollama and LM Studio keep it on this Mac.")
+            if provider.builtInModel != nil {
+                Button("Clear old excerpt cache") {
+                    try? FileManager.default.removeItem(at: summaries.localModels.root.appendingPathComponent("notes"))
+                }
+                .buttonStyle(LinkButtonStyle(tint: Theme.muted))
+                .tip("Remove notes saved by older versions")
+            }
+            Text(provider.builtInModel != nil
+                 ? "Built-in models process transcripts on this Mac. Temporary excerpt notes stay in memory only; old cached notes are cleared at startup."
+                 : provider == .ollama || provider == .lmStudio
+                 ? "The transcript goes to the local service. Its model and server settings determine whether it is sent elsewhere."
+                 : { if case .cli = provider.kind { return true }; return false }()
+                 ? "CLI summaries are unavailable; no transcript is sent to the CLI."
+                 : provider == .off
+                 ? "Built-in models run on this Mac. Local service settings determine whether transcripts are sent elsewhere."
+                 : "Summaries send the transcript to the selected provider. Provider retention policies apply.")
                 .font(Theme.text(10)).foregroundStyle(Theme.muted)
                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 .tip("Where transcripts go")

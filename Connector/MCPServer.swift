@@ -174,7 +174,7 @@ struct MCPServer: Sendable {
                  description: "List the folders of Nosy transcripts, with how many transcripts each one holds.",
                  properties: [:]),
             tool("list_transcripts", title: "List transcripts",
-                 description: "List saved transcripts, newest first, with folder, name, date, duration and file path. Pass a folder to list only that one. Pass folder and name to read_transcript.",
+                 description: "List saved transcripts, newest first, with folder, name, date, duration and library-relative path. Pass a folder to list only that one. Pass folder and name to read_transcript.",
                  properties: [
                     "folder": ["type": "string", "description": "Folder name, as returned by list_folders."],
                     "limit": ["type": "integer", "minimum": 1, "maximum": 200, "description": "How many to return. Defaults to 50."],

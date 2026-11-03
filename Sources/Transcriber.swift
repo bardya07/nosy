@@ -66,7 +66,7 @@ enum Transcriber {
             args[args.count - 1] = String(prompt.tokens + 1)
             args += ["--prompt", prompt.text, "--carry-initial-prompt"]
         }
-        if FileManager.default.fileExists(atPath: paths.vadModel.path) { args += ["--vad", "-vm", paths.vadModel.path] }
+        if SpeechModel.validateVAD(paths.vadModel) { args += ["--vad", "-vm", paths.vadModel.path] }
         args += quality.whisperArguments
         return args
     }
@@ -139,17 +139,18 @@ enum Transcriber {
             do { input = try AudioFiles.boosted(wav, to: louderURL, checkCancellation: checkCancellation) ?? wav }
             catch is CancellationError { throw CancellationError() }
             catch { input = wav }
-            guard FileManager.default.createFile(atPath: stderrURL.path, contents: nil) else {
+            guard FileManager.default.createFile(atPath: stderrURL.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
                 throw LectureError.message("Could not create transcription log file.")
             }
             let stderrFile = try FileHandle(forWritingTo: stderrURL)
             defer { try? stderrFile.close() }
             let process = Process()
             process.qualityOfService = .background
-            process.executableURL = executable
+            process.executableURL = URL(fileURLWithPath: "/bin/sh")
             let quality = TranscriptionQuality.loadOrSelect()
-            process.arguments = arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture,
-                                          vocabularyText: vocabularyText, quality: quality)
+            process.arguments = ["-c", "umask 077; exec \"$@\"", "nosy-whisper", executable.path] +
+                arguments(paths: paths, wav: input, temporaryBase: base, lecture: record.lecture,
+                          vocabularyText: vocabularyText, quality: quality)
             // JSON always: its segment timings feed Find key moments and marker insertion.
             if smart { process.arguments! += ["-ojf"] }
             else { process.arguments! += ["-oj"] }

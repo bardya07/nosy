@@ -85,8 +85,8 @@ enum SummaryProvider: String, CaseIterable, Sendable, Identifiable {
         default: ""
         }
     }
-    // Built in models and local apps keep the transcript on this Mac.
-    var staysOnMac: Bool { self == .off || builtInModel != nil || self == .ollama || self == .lmStudio }
+    // Only the bundled helper guarantees local inference.
+    var staysOnMac: Bool { self == .off || builtInModel != nil }
     var builtInModel: LocalModel? { self == .qwen ? .qwen : self == .smol ? .smol : nil }
     static let menuGroups: [(title: String, providers: [SummaryProvider])] = [
         ("Built in (on this Mac)", [.qwen, .smol]),
@@ -512,7 +512,7 @@ enum SummaryRunner {
     static func run(_ prompt: String, request: SummaryRequest, job: TranscriptionJob) async throws -> String {
         switch request.provider.kind {
         case .none: throw SummaryError.off
-        case .cli: return try await runCLI(prompt, request: request, job: job)
+        case .cli: throw SummaryError.failed(request.provider.title, "This CLI cannot be verified as a text-only completion. Choose a built-in model or an API provider instead.")
         case .builtIn:
             await request.processActivity?(true)
             do {
@@ -540,7 +540,7 @@ enum SummaryRunner {
 
     private static func blockingCLI(_ prompt: String, request: SummaryRequest, executable: URL, job: TranscriptionJob) throws -> String {
         let provider = request.provider
-        // An empty scratch folder: the CLI has no project files to read or change.
+        // Private scratch files are removed after the helper exits; this folder alone is not an agent sandbox.
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-summary-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         defer { try? FileManager.default.removeItem(at: scratch) }
@@ -550,8 +550,9 @@ enum SummaryRunner {
         // Set arguments after creating the private prompt file below.
         process.currentDirectoryURL = scratch
         process.qualityOfService = .utility
-        var environment = ProcessInfo.processInfo.environment
-        let existing = environment["PATH"] ?? ""
+        let parent = ProcessInfo.processInfo.environment
+        var environment = parent.filter { ["HOME", "TMPDIR", "LANG", "LC_ALL"].contains($0.key) }
+        let existing = "/usr/bin:/bin:/usr/sbin:/sbin"
         environment["PATH"] = [executable.deletingLastPathComponent().path, request.searchPath, existing]
             .filter { !$0.isEmpty }.joined(separator: ":")
         environment["NO_COLOR"] = "1"

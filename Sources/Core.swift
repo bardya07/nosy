@@ -117,15 +117,38 @@ struct AppPaths: Sendable {
     var dependencyWarning: String? {
         var missing: [String] = []
         if whisper == nil { missing.append(Core.missingEngineMessage) }
-        if !FileManager.default.isReadableFile(atPath: model.path) {
-            missing.append("Model missing: \(model.path)")
+        if !SpeechModel.validate(model) {
+            missing.append("Speech model missing or invalid. Download it again in setup.")
         }
         return missing.isEmpty ? nil : missing.joined(separator: "\n")
     }
     func audioFile(_ id: String, _ ext: String) -> URL { audio.appendingPathComponent(id).appendingPathExtension(ext) }
     func prepareSupport() throws {
-        try FileManager.default.createDirectory(at: audio, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: support.appendingPathComponent("models"), withIntermediateDirectories: true)
+        let manager = FileManager.default
+        for directory in [support, audio, support.appendingPathComponent("models", isDirectory: true)] {
+            try manager.createDirectory(at: directory, withIntermediateDirectories: true,
+                                        attributes: [.posixPermissions: 0o700])
+            try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: directory.path)
+        }
+        // Repair only app-owned storage; never follow symlinks or alter the transcript library.
+        for root in [audio, support.appendingPathComponent("models", isDirectory: true), support.appendingPathComponent("routing", isDirectory: true)] {
+            guard root.standardizedFileURL != transcripts.standardizedFileURL,
+                  (try? root.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) != true else { continue }
+            if manager.fileExists(atPath: root.path) {
+                try manager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path)
+            }
+            if let entries = manager.enumerator(at: root, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey]) {
+                for case let url as URL in entries {
+                    let values = try url.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+                    if values.isSymbolicLink == true || url.standardizedFileURL == transcripts.standardizedFileURL {
+                        entries.skipDescendants(); continue
+                    }
+                    try manager.setAttributes([.posixPermissions: values.isDirectory == true ? 0o700 : 0o600], ofItemAtPath: url.path)
+                }
+            }
+        }
+        // Remove legacy content-bearing notes; new summaries keep notes in memory only.
+        try? manager.removeItem(at: support.appendingPathComponent("models/llm/notes"))
     }
     func lectureFolder(_ name: String) -> URL { transcripts.appendingPathComponent(name, isDirectory: true) }
     func lectures() -> [String] {
@@ -201,7 +224,9 @@ struct SessionRecord: Codable, Sendable, Equatable {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        try encoder.encode(self).write(to: paths.audioFile(id, "json"), options: .atomic)
+        let file = paths.audioFile(id, "json")
+        try encoder.encode(self).write(to: file, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
     static func read(_ url: URL) throws -> SessionRecord {
         let decoder = JSONDecoder()
@@ -281,8 +306,8 @@ enum Core {
         if paths.whisper == nil {
             messages.append(missingEngineMessage)
         }
-        if !FileManager.default.isReadableFile(atPath: paths.model.path) {
-            messages.append("Nosy needs its speech model (1.6 GB) before it can transcribe.")
+        if !SpeechModel.validate(paths.model) {
+            messages.append("Nosy needs a valid speech model (1.6 GB). Download it again in setup.")
         }
         return messages.isEmpty ? nil : messages.joined(separator: "\n")
     }
@@ -515,7 +540,8 @@ enum Core {
         let size = fileSize(pcm) / 2 * 2
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).wav")
         defer { try? FileManager.default.removeItem(at: temporary) }
-        try wavHeader(pcmBytes: size).write(to: temporary)
+        guard FileManager.default.createFile(atPath: temporary.path, contents: try wavHeader(pcmBytes: size),
+                                             attributes: [.posixPermissions: 0o600]) else { throw CocoaError(.fileWriteUnknown) }
         let output = try FileHandle(forWritingTo: temporary)
         do {
             try output.seekToEnd()
@@ -683,6 +709,11 @@ enum Core {
             .sorted { $0.startedAt > $1.startedAt }
     }
     static func recover(paths: AppPaths) throws -> [SessionRecord] {
+        // Only helper scratch files are disposable; preserve all recordings and sidecars.
+        let files = (try? FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)) ?? []
+        for file in files where file.lastPathComponent.hasPrefix(".whisper-") {
+            try? FileManager.default.removeItem(at: file)
+        }
         var recovered: [SessionRecord] = []
         for var record in recoveryCandidates(records(in: paths)) {
             let unfinished = record.status == .recording || record.status == .transcribing

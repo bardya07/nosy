@@ -1,43 +1,59 @@
 import Foundation
 
 enum SpeechModel {
-    static let remoteURL = URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin")!
+    static let remoteURL = URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin")!
     static let expectedBytes: Int64 = 1_624_555_275
-    static let vadURL = URL(string: "https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin")!
+    static let checksum = "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
+    static let vadURL = URL(string: "https://huggingface.co/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v5.1.2.bin")!
+    static let vadBytes: Int64 = 885_098
+    static let vadChecksum = "29940d98d42b91fbd05ce489f3ecf7c72f0a42f027e4875919a28fb4c04ea2cf"
 
-    static func validate(_ url: URL) -> Bool { validate(url, minimumBytes: 100_000_000) }
-
-    // The on-disk UInt32 magic is little endian: 6c 6d 67 67 ("lmgg").
-    // Read only the header, even for the 1.6 GB model. Tests can lower the size floor.
-    static func validate(_ url: URL, minimumBytes: Int64) -> Bool {
-        guard Core.fileSize(url) >= max(4, minimumBytes),
-              let file = try? FileHandle(forReadingFrom: url) else { return false }
-        defer { try? file.close() }
-        return (try? file.read(upToCount: 4)) == Data([0x6c, 0x6d, 0x67, 0x67])
+    static func validate(_ url: URL) -> Bool {
+        verified(url, bytes: expectedBytes, checksum: checksum)
     }
-
-    static func install(from url: URL, paths: AppPaths) throws {
-        try install(from: url, paths: paths, minimumBytes: 100_000_000)
+    static func validateVAD(_ url: URL) -> Bool {
+        verified(url, bytes: vadBytes, checksum: vadChecksum)
     }
-
-    static func install(from url: URL, paths: AppPaths, minimumBytes: Int64) throws {
-        guard validate(url, minimumBytes: minimumBytes) else {
-            throw LectureError.message("This is not a valid speech model. Choose the speech model file.")
+    private final class VerificationCache: @unchecked Sendable {
+        let lock = NSLock()
+        var entries: [String: (String, Bool)] = [:]
+    }
+    private static let verificationCache = VerificationCache()
+    private static func verified(_ url: URL, bytes: Int64, checksum: String) -> Bool {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = attributes[.size] as? NSNumber, size.int64Value == bytes,
+              let modified = attributes[.modificationDate] as? Date,
+              let inode = attributes[.systemFileNumber] as? NSNumber else { return false }
+        let identity = "\(inode)-\(modified.timeIntervalSince1970)-\(bytes)-\(checksum)"
+        verificationCache.lock.lock()
+        defer { verificationCache.lock.unlock() }
+        if let cached = verificationCache.entries[url.path], cached.0 == identity { return cached.1 }
+        let valid = (try? LocalModelDownload.sha256(url)) == checksum
+        // Never cache a result for a file changed while it was being read.
+        if let after = try? FileManager.default.attributesOfItem(atPath: url.path),
+           (after[.modificationDate] as? Date) == modified,
+           (after[.systemFileNumber] as? NSNumber) == inode,
+           (after[.size] as? NSNumber)?.int64Value == bytes {
+            verificationCache.entries[url.path] = (identity, valid)
+            return valid
         }
-        try place(url, at: paths.model, copy: true, minimumBytes: minimumBytes)
+        return false
     }
-
-    fileprivate static func place(_ source: URL, at target: URL, copy: Bool, minimumBytes: Int64? = nil) throws {
+    static func install(from url: URL, paths: AppPaths) throws {
+        try place(url, at: paths.model, copy: true, vad: false)
+    }
+    fileprivate static func place(_ source: URL, at target: URL, copy: Bool, vad: Bool) throws {
         let manager = FileManager.default
-        try manager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try manager.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true,
+                                    attributes: [.posixPermissions: 0o700])
         let temporary = target.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).download")
         defer { try? manager.removeItem(at: temporary) }
         if copy { try copyInChunks(from: source, to: temporary) }
         else { try manager.moveItem(at: source, to: temporary) }
-        if let minimumBytes, !validate(temporary, minimumBytes: minimumBytes) {
-            throw LectureError.message("The downloaded speech model is invalid or incomplete. Please try again.")
+        guard vad ? validateVAD(temporary) : validate(temporary) else {
+            throw LectureError.message("Model verification failed. Choose or download the correct model again.")
         }
-        // A cancelled copy never reaches the final name; the defer above removes the temporary file.
+        try manager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
         try Task.checkCancellation()
         let file = try FileHandle(forReadingFrom: temporary)
         defer { try? file.close() }
@@ -50,7 +66,7 @@ enum SpeechModel {
 
     // A bounded copy loop, so Cancel can stop a multi-gigabyte copy between chunks.
     private static func copyInChunks(from source: URL, to destination: URL) throws {
-        guard FileManager.default.createFile(atPath: destination.path, contents: nil) else {
+        guard FileManager.default.createFile(atPath: destination.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
             throw CocoaError(.fileWriteUnknown)
         }
         let input = try FileHandle(forReadingFrom: source)
@@ -157,17 +173,17 @@ final class ModelDownload: NSObject, URLSessionDownloadDelegate, @unchecked Send
                 throw LectureError.message("The model server could not complete the download. Please try again.")
             }
             if mainInstalled {
-                guard Core.fileSize(location) > 0 else { throw LectureError.message("The voice activity model download was empty.") }
-                try SpeechModel.place(location, at: paths.vadModel, copy: false)
+                try SpeechModel.place(location, at: paths.vadModel, copy: false, vad: true)
                 finish(.success(()))
             } else {
-                try SpeechModel.place(location, at: paths.model, copy: false, minimumBytes: 100_000_000)
+                try SpeechModel.place(location, at: paths.model, copy: false, vad: false)
                 mainInstalled = true
                 resumeData = nil
                 progress?(1, Core.fileSize(paths.model), Core.fileSize(paths.model))
-                if FileManager.default.isReadableFile(atPath: paths.vadModel.path), Core.fileSize(paths.vadModel) > 0 {
+                if SpeechModel.validateVAD(paths.vadModel) {
                     finish(.success(()))
                 } else {
+                    try? FileManager.default.removeItem(at: paths.vadModel)
                     let vadTask = session.downloadTask(with: SpeechModel.vadURL)
                     task = vadTask
                     vadTask.resume()

@@ -78,6 +78,7 @@ enum AudioFiles {
                 AVNumberOfChannelsKey: 1,
                 AVEncoderBitRateKey: 32_000
             ])
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: temporary.path)
             defer { if #available(macOS 15, *) { output.close() } }
             while input.framePosition < input.length {
                 try checkCancellation()
@@ -162,6 +163,7 @@ enum AudioFiles {
         let input = try AVAudioFile(forReading: wav, commonFormat: .pcmFormatInt16, interleaved: true)
         let output = try AVAudioFile(forWriting: target, settings: input.processingFormat.settings,
                                      commonFormat: .pcmFormatInt16, interleaved: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: target.path)
         defer { if #available(macOS 15, *) { output.close() } }
         while input.framePosition < input.length {
             try checkCancellation()
@@ -189,7 +191,7 @@ enum AudioFiles {
     private static func decode(source: URL, id: String, paths: AppPaths, checkCancellation: () throws -> Void = {}) throws -> URL {
         let temporary = paths.audio.appendingPathComponent(".\(id)-\(UUID().uuidString).pcm")
         defer { try? FileManager.default.removeItem(at: temporary) }
-        guard FileManager.default.createFile(atPath: temporary.path, contents: nil) else {
+        guard FileManager.default.createFile(atPath: temporary.path, contents: nil, attributes: [.posixPermissions: 0o600]) else {
             throw LectureError.message("Could not create imported audio file.")
         }
         let file = try FileHandle(forWritingTo: temporary)

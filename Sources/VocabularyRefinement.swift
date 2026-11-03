@@ -101,9 +101,11 @@ enum VocabularyRefinement {
     }
     static func save(_ output: Output, baseline: String, id: String, paths: AppPaths) throws {
         let directory = paths.support.appendingPathComponent("routing", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         let record: [String: Any] = ["baseline": baseline, "edits": try JSONSerialization.jsonObject(with: JSONEncoder().encode(output.edits)),
                                      "packs": output.route.selected, "schemaVersion": 1]
-        try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]).write(to: directory.appendingPathComponent(id + ".json"), options: .atomic)
+        let file = directory.appendingPathComponent(id + ".json")
+        try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]).write(to: file, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
     }
 }

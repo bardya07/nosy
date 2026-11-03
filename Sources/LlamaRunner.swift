@@ -140,28 +140,18 @@ enum LlamaRunner {
                           progress: @escaping @Sendable (Int, Int) -> Void) async throws -> String {
         guard let model = settings.provider.builtInModel else { throw SummaryError.noModel }
         let parts = chunks(transcript)
-        let cache = cacheRoot?.appendingPathComponent("notes/\(model.id)/\(cacheKey(transcript: transcript, model: model)).json")
+        // Notes stay in memory only; no transcript-derived cache survives the request.
         var notes: [String] = []
-        if let cache, let data = try? Data(contentsOf: cache), let saved = try? JSONDecoder().decode([String].self, from: data),
-           saved.count == parts.count, saved.allSatisfy({ !$0.isEmpty && $0.utf8.count < 12_000 }) { notes = saved }
-        if notes.isEmpty {
-            for (index, part) in parts.enumerated() {
-                try job.checkCancellation()
-                try await beforeEachStep()
-                progress(index + 1, parts.count + max(1, settings.sections.count))
-                var mapRequest = request
-                mapRequest.outputTokens = 250
-                // A compact running list, capped near 200 English tokens.
-                let terms = String(notes.flatMap { $0.components(separatedBy: .newlines) }
-                    .filter { $0.hasPrefix("TERM ") }.joined(separator: "\n").prefix(800))
-                notes.append(try await map(part, terms: terms, request: mapRequest, job: job, beforeEachStep: beforeEachStep))
-            }
-            if let cache {
-                try FileManager.default.createDirectory(at: cache.deletingLastPathComponent(), withIntermediateDirectories: true,
-                                                       attributes: [.posixPermissions: 0o700])
-                try JSONEncoder().encode(notes).write(to: cache, options: .atomic)
-                try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: cache.path)
-            }
+        for (index, part) in parts.enumerated() {
+            try job.checkCancellation()
+            try await beforeEachStep()
+            progress(index + 1, parts.count + max(1, settings.sections.count))
+            var mapRequest = request
+            mapRequest.outputTokens = 250
+            // A compact running list, capped near 200 English tokens.
+            let terms = String(notes.flatMap { $0.components(separatedBy: .newlines) }
+                .filter { $0.hasPrefix("TERM ") }.joined(separator: "\n").prefix(800))
+            notes.append(try await map(part, terms: terms, request: mapRequest, job: job, beforeEachStep: beforeEachStep))
         }
         // Bound reduce inputs for very long lectures, including all source notes rather than truncating.
         var step = parts.count
