@@ -617,6 +617,47 @@ final class Recorder: @unchecked Sendable {
         }
     }
 
+    // Resume on the control queue so a failed new source can be rolled back before reporting it.
+    func resumeAfterSourceSwitch() async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
+            control.async {
+                self.lock.lock()
+                guard self.accepting, !self.failed, self.paused else {
+                    self.lock.unlock()
+                    continuation.resume(throwing: LectureError.message("Could not resume the recording."))
+                    return
+                }
+                self.pauseGeneration &+= 1
+                self.paused = false
+                self.mixer = self.source.usesMacAudio ? CaptureMixer(origin: Self.audioTime) : nil
+                self.lastRenderTime = Self.audioTime
+                self.lastMacBuffer = Self.audioTime
+                self.tapStalled = false
+                self.lastMacSignal = Self.audioTime
+                self.macQuietReported = false
+                self.silenceStart = nil
+                self.silenceWarned = false
+                self.lastMeter = 0
+                self.lastBuffer = Date.timeIntervalSinceReferenceDate
+                self.stalled = false
+                self.converter?.reset()
+                self.lock.unlock()
+                do {
+                    try self.startSources()
+                    if self.stallTimer == nil { self.startStallTimer() }
+                    continuation.resume()
+                } catch {
+                    self.lock.lock()
+                    self.paused = true
+                    self.lock.unlock()
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    func failAfterSourceSwitch(_ message: String) { scheduleFailure(message) }
+
     func switchInput(uid: String?) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, any Error>) in
             control.async {

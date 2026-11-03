@@ -36,7 +36,7 @@ enum RecordingSource: String, CaseIterable, Sendable {
         return available.contains(source) ? source : .mic
     }
     static func canChange(recording: Bool, paused: Bool, transitioning: Bool) -> Bool {
-        !transitioning && (!recording || paused)
+        !transitioning
     }
     func inputName(mic: String) -> String {
         switch self {

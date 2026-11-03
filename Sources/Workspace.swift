@@ -56,6 +56,18 @@ struct WorkspaceView: View {
     var body: some View {
         VStack(spacing: 0) {
             WorkspaceTitlebar(model: model, managesWindowChrome: true)
+            Group {
+                if model.recording {
+                    RecordingModeBanner(model: model) {
+                        if navigation.panel != nil { navigation.dismissPanel() }
+                        if navigation.mode != .home { model.showHome() }
+                        model.sourcePickerRequest += 1
+                    }
+                    .padding(.horizontal, 20).padding(.vertical, 6)
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(Motion.state(reduceMotion), value: model.recording)
             // Home keeps its natural height for the window; a screen too short for it scrolls instead of clipping.
             ScrollView {
                 MainView(model: model, embedded: true,
@@ -102,7 +114,7 @@ struct WorkspaceView: View {
         .background {
             if previewSize == nil {
                 WorkspaceWindowFrame(mode: navigation.mode, panel: navigation.panel,
-                                     homeSize: CGSize(width: 400, height: homeHeight + 44), reduceMotion: reduceMotion,
+                                     homeSize: CGSize(width: 400, height: homeHeight + 44 + (model.recording ? 54 : 0)), reduceMotion: reduceMotion,
                                      canClose: { model.finishLibraryEditing?() ?? true })
             }
         }

@@ -118,6 +118,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var systemInput: AudioInputs.Device?
     @Published private(set) var inputUID: String?
     @Published private(set) var activeInputName: String?
+    @Published var sourcePickerRequest = 0
     @Published private(set) var recordingSource = RecordingSource.restored(UserDefaults.standard.string(forKey: "recordingSource"))
     @Published private(set) var macAudioDenied = false
     @Published private(set) var macAudioQuiet = false
@@ -932,12 +933,27 @@ final class AppModel: ObservableObject {
     }
     func selectSource(_ source: RecordingSource) {
         guard !micLocked, source != recordingSource, RecordingSource.available.contains(source) else { return }
-        guard recording, paused, let recorder else { commitSource(source); return }
+        guard recording else { commitSource(source); return }
+        guard let recorder else { return }
+        let wasPaused = paused
+        let oldSource = recordingSource
+        let oldInputUID = inputUID
         transitioning = true
         Task {
             do {
                 if source.usesMic { try await requestMicrophoneAccess() }
-                try await recorder.switchSource(source, inputUID: selectedInputUID(for: source))
+                if !wasPaused { recorder.setPaused(true) }
+                do {
+                    try await recorder.switchSource(source, inputUID: selectedInputUID(for: source))
+                    if !wasPaused { try await recorder.resumeAfterSourceSwitch() }
+                } catch {
+                    if !wasPaused {
+                        try? await recorder.switchSource(oldSource, inputUID: oldInputUID)
+                        do { try await recorder.resumeAfterSourceSwitch() }
+                        catch { recorder.failAfterSourceSwitch(error.localizedDescription) }
+                    }
+                    throw error
+                }
                 commitSource(source)
             } catch {
                 if error is MacAudioError { macAudioDenied = true }
@@ -968,7 +984,7 @@ final class AppModel: ObservableObject {
     }
     // Before recording this just saves the choice; while paused it switches the live recording.
     func selectInput(_ uid: String?) {
-        guard !micLocked else { return }
+        guard !transitioning, !recording || paused else { return }
         guard recording, paused, let recorder else { commitInput(uid); return }
         transitioning = true
         Task {

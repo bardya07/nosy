@@ -185,6 +185,11 @@ struct MainView: View {
     var body: some View {
         VStack(spacing: 0) {
             if !embedded { WorkspaceTitlebar(model: model, onHome: goHome).zIndex(20) }
+            if model.recording && !embedded {
+                RecordingModeBanner(model: model) { showDropdown(.microphone) }
+                    .padding(.horizontal, 20).padding(.top, 6)
+                    .transition(reduceMotion ? .opacity : .move(edge: .top).combined(with: .opacity))
+            }
             if showsTranscribingScreen {
                 StagePanel(model: model, telemetryVisible: telemetryVisible,
                            onHome: { model.homeFromTranscribing = true })
@@ -257,6 +262,7 @@ struct MainView: View {
             }
         }
         .onReceive(model.workspace.$homeRequest.dropFirst()) { _ in goHome() }
+        .onChange(of: model.sourcePickerRequest) { _, _ in showDropdown(.microphone) }
         .onChange(of: model.startValidationRequest) { _, _ in requestSessionName() }
         .onChange(of: model.session) { _, session in sessionGate.sessionChanged(to: session) }
         .onChange(of: model.selectedLecture) { _, lecture in
@@ -906,9 +912,9 @@ struct MainView: View {
                 .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
                 .padding(.horizontal, 8).padding(.bottom, 2)
             micRow(model.systemInput.map { "System default (\($0.name))" } ?? "System default",
-                   chosen: model.inputUID == nil) { model.selectInput(nil) }
+                   chosen: model.inputUID == nil, device: true) { model.selectInput(nil) }
             ForEach(model.inputs) { device in
-                micRow(device.name, chosen: model.inputUID == device.id) { model.selectInput(device.id) }
+                micRow(device.name, chosen: model.inputUID == device.id, device: true) { model.selectInput(device.id) }
             }
             if RecordingSource.macAudioAvailable {
                 FieldLabel("Source").padding(.horizontal, 8).padding(.top, 6)
@@ -939,8 +945,8 @@ struct MainView: View {
         .interactionTarget("microphone-panel")
     }
 
-    // Changing the device or source is locked while a recording runs; the meter stays live.
-    private func micRow(_ title: String, chosen: Bool, action: @escaping () -> Void) -> some View {
+    // Device selection remains locked during active capture; sources can change while recording.
+    private func micRow(_ title: String, chosen: Bool, device: Bool = false, action: @escaping () -> Void) -> some View {
         Button {
             action()
             closeDropdown()
@@ -957,7 +963,7 @@ struct MainView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(InsetButtonStyle())
-        .disabled(model.micLocked)
+        .disabled(model.micLocked || (device && model.recording && !model.paused))
         .accessibilityLabel(title)
         .accessibilityAddTraits(chosen ? .isSelected : [])
         .interactionTarget("mic-\(title)")
@@ -1411,6 +1417,39 @@ struct StatusPill: View {
         case .failed: Theme.coral
         }
     }
+}
+
+struct RecordingModeBanner: View {
+    @ObservedObject var model: AppModel
+    let onChange: () -> Void
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.amber)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Recording on \(model.recordingSource.modeTitle)")
+                    .font(Theme.text(11, .bold)).foregroundStyle(Theme.ink)
+                Text(recordingModeDescription)
+                    .font(Theme.text(10.5)).foregroundStyle(Theme.muted)
+            }
+            Spacer(minLength: 4)
+            Button("Change", action: onChange)
+                .buttonStyle(LinkButtonStyle(tint: Theme.accentText))
+                .disabled(model.transitioning)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 7)
+        .card(Theme.amber.opacity(0.12), radius: 12)
+    }
+
+    private var recordingModeDescription: String {
+        switch model.recordingSource {
+        case .both: "your Mac's sound and your mic"
+        case .mic: "the sound around you through your mic"
+        case .macAudio: "your Mac's sound, not your mic"
+        }
+    }
+
 }
 
 struct Banner<Actions: View>: View {
