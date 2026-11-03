@@ -1,857 +1,857 @@
-abdominal aorta
-abduct
-abductor
-abductor digiti minimi
-abductor pollicis brevis
-abductor pollicis longus
-acetabular labrum
-acetabulum
-acne
-acromial process
-acromioclavicular joint
-acromion
-adductor
-adductor brevis
-adductor longus
-adductor Magnus
-adductor pollicis
-adductor tubercle
-adrenal artery
-adrenal vein
-agonist
-albinism
-amphiarthrosis
-anagen
-anal triangle
-anaphylactic shock
-anatomical neck
-anconeus
-angioblasts
-angle of the mandible
-angle of the rib
-ankle joint
-annular ligament
-antagonist
-anterior (ventral) sacral foramen
-anterior arch
-anterior cerebral artery
-anterior communicating artery
-anterior cranial fossa
-anterior cruciate ligament
-anterior inferior iliac spine
-anterior longitudinal ligament
-anterior sacroiliac ligament
-anterior scalene
-anterior superior iliac spine
-anterior talofibular ligament
-anterior tibial artery
-anterior tibial vein
-anulus fibrosus
-aortic arch
-aortic hiatus
-aortic sinuses
-apical ectodermal ridge
-apocrine sweat gland
-appendicular
-arrector pili
-arterial circle
-arteriole
-arteriovenous anastomosis
-artery
-articular capsule
-articular cartilage
-articular disc
-articular tubercle
-ascending aorta
-atlanto-occipital joint
-atlantoaxial joint
+secondary curve
 atlas
-axial
-axillary artery
-axillary vein
-axis
-ball-and-socket joint
-basal cell
-basal cell carcinoma
-basilic vein
-BCOP
-bedsore
-belly
-bi
-biaxial joint
-biceps brachii
-biceps femoris
-bicipital groove
-bipennate
-body of the rib
-brachial artery
-brachial vein
-brachialis
-brachiocephalic vein
-brachioradialis
-brain case
-brevis
-bronchial artery
-bronchial vein
-buccinator
-bursa
-calcaneal tendon
-calcaneofibular ligament
-calcaneus
-callus
-calvaria
-capillary
-capillary bed
-capillary hydrostatic pressure
-capitate
-capitulum
-carotid canal
-carotid sinuses
-carpal bone
-carpal tunnel
-carpometacarpal joint
-cartilaginous joint
-catagen
-caval opening
-celiac trunk
-central canal
-cephalic vein
-cerebrovascular accident
-cervical curve
-cervical vertebrae
+transverse foramen
+suprascapular notch
+pulmonary artery
+metatarsal bone
+longus
+appendicular
+hypoxia
+hinge joint
+posterior cerebral artery
+tarsal bone
+surgical neck
 CHP
-circular
+spinalis group
+internal jugular vein
+multiaxial joint
+condyle
+costal cartilage
+linea alba
+extensor radialis longus
+iliocostalis group
+extrinsic eye muscles
+bedsore
+lateral (external) rotation
+adductor brevis
+iliac fossa
+interosseous membrane
+papillary layer
+hepatic portal system
+posterior superior iliac spine
+costoclavicular ligament
+pectineus
+open reduction
+mean arterial pressure
+head of the humerus
+inferior articular process
+vastus medialis
+joint interzone
+thoracic aorta
+ischiofemoral ligament
+projection
+hypoglossal canal
+palatine bone
+brachial vein
+ramus of the mandible
+stylomastoid foramen
+anterior tibial vein
+mastoid process
+fibular notch
+antagonist
+acromioclavicular joint
+hole
+osteoblast
+inferior pubic ramus
+mandibular fossa
+infraorbital foramen
+articular disc
+subclavius
+multifidus
+superior gemellus
+teres minor
+angioblasts
+trapezius
+sternal angle
+hematopoiesis
+red marrow
+piriformis
+extensor digitorum longus
+suture
+neck of the radius
+adductor Magnus
+articular cartilage
+dermis
+brachial artery
+eponychium
+adrenal artery
+reposition
+skeletal system
+neck of the femur
+coracoclavicular ligament
+occipital condyle
+great saphenous vein
+capillary bed
+fibularis longus
+pelvic diaphragm
+median sacral artery
+iliocostalis cervicis
+subscapular vein
+systolic pressure
+anagen
+articular capsule
+third-degree burn
+middle scalene
+sustentaculum tali
+humeroulnar joint
+infraspinatus
+glassy membrane
+opponens digiti minimi
+symphysis
+axillary vein
+temporalis
+fibularis tertius
+glenohumeral joint
+lateral malleolus
+trochlea
+triceps brachii
+talus
+intertubercular groove (sulcus)
+lumbar curve
+iliacus
+pedicle
+stratum granulosum
+serratus anterior
+pubofemoral ligament
+hair follicle
+nasal bone
+atlanto-occipital joint
+proximal radioulnar joint
+nasal conchae
+vertebral foramen
+callus
+spinalis capitis
+pennate
+splenius cervicis
+caval opening
+geniohyoid
+pubic tubercle
+abductor pollicis longus
+epiphyseal line
+minimus
+supraspinatus
+popliteal fossa
+intrinsic ligament
+olecranon fossa
+splenic artery
+rectus sheaths
+hypocalcemia
+pubis
+deep anterior compartment
+levator ani
+sphenoid sinus
+metarteriole
+carpometacarpal joint
+apocrine sweat gland
+facet
+biceps femoris
+middle cerebral artery
+vitamin D
+diploë
+middle cranial fossa
+thenar eminence
+flexor hallucis longus
+ophthalmic artery
+occipital sinus
+kyphosis
+aortic hiatus
+flexor pollicis brevis
+acetabulum
+transversospinales
+extensor
+ear ossicles
+vertebral vein
+subtalar joint
+anterior cranial fossa
+anterior (ventral) sacral foramen
+distal tibiofibular joint
+jugular foramen
+axial
+calcaneofibular ligament
+pelvic brim
+ulnar collateral ligament
+lateral circumflex artery
+femoral triangle
+gluteus medius
+radial fossa
+synergist
+manubrium
+hypothenar eminence
+nasolacrimal canal
+plantar aponeurosis
+coracoid process
+melanin
+sinusoid capillary
+intertrochanteric line
+linea aspera
+tendinous intersections
+remodeling
+medial cuneiform
+xiphoid process
+quadratus femoris
+mental foramen
+radial vein
+calcaneal tendon
+medialis
+semispinalis capitis
+ischiococcygeus
+langerhans cell
+supraspinous fossa
+extensor carpi radialis brevis
+hyponychium
+extensor hallucis longus
+spine of the scapula
+ischial tuberosity
+stratum spinosum
+oblique
+internal iliac vein
+pelvic outlet
+desmosome
+extensor pollicis brevis
+intercondylar eminence
+multipennate
+cervical curve
+fossa
+hard palate
+spinalis thoracis
+semispinalis thoracis
+fixator
+superior nasal concha
+hip joint
+femoral circumflex vein
+external carotid artery
+mental protuberance
+rhomboid major
+hair root
+long bone
+middle nasal concha
+crista galli
+infrahyoid muscles
+opponens pollicis
+sternoclavicular joint
+scalene muscles
+perichondrium
+greater trochanter
+medial pterygoid plate
+reticular layer
+costal groove
+fibular collateral ligament
+lacrimal fossa
+subacromial bursa
+vertebral (spinal) canal
+omohyoid
+anterior cruciate ligament
+common hepatic artery
+bronchial vein
+greater sciatic foramen
+hair bulb
+pectoralis major
+spinalis cervicis
+popliteal artery
+pericardial artery
+jugular (suprasternal) notch
+semimembranosus
+adductor
+nail cuticle
+metastasis
+fracture hematoma
+lateralis
+endosteum
+infraglenoid tubercle
+anulus fibrosus
+anterior longitudinal ligament
+pubic arch
+mediastinal artery
+dorsal interossei
+thyrocervical artery
+superior pubic ramus
+shaft of the fibula
+carpal bone
+Merkel cell
+synostosis
+nail bed
+arterial circle
+compressor urethrae
+calvaria
+occipitalis
+midcarpal joint
+flexor carpi ulnaris
+subclavian vein
+internal acoustic meatus
+zygomatic bone
+orthopedist
+glenoid cavity
+frontalis
+capillary hydrostatic pressure
+hyoglossus
+false ribs
+urogenital triangle
+IFCOP
+condyloid joint
+zygapophysial joints
+retinacula
+external occipital protuberance
+anterior inferior iliac spine
+vertebra
+posterior communicating artery
+humeroradial joint
+tensor fascia latae
+shaft of the ulna
+transverse process
+hepatic artery proper
+soleus
+deltoid
+popliteus
+capillary
+keratohyalin
+temporal vein
+limb bud
+ischial spine
+gluteus minimus
+ascending aorta
+CVA
+subcutaneous bursa
+palmar venous arches
+gluteus maximus
+patellar ligament
+renal vein
+medial malleolus
+anal triangle
+gracilis
+navicular
+squamous suture
+abdominal aorta
+external jugular vein
+posterior talofibular ligament
+intermediate cuneiform
+ulnar tuberosity
+basal cell
+pisiform
+esophageal artery
+nuchal ligament
+gastrocnemius
+external acoustic meatus
+nail root
+cuboid
+mylohyoid
+iliopsoas group
+continuous capillary
+fontanelle
+extensor digiti minimi
+glenoid labrum
+anterior communicating artery
+optic canal
+hyperflexion
+lateral pterygoid plate
+medius
+nucleus pulposus
+femoropatellar joint
+sebum
+biaxial joint
+lingula
+primary ossification center
+hair matrix
+acromial process
+obturator internus
+central canal
+fovea capitis
+lunula
+superior phrenic artery
+anterior superior iliac spine
+stratum basale
+posterior tibial artery
+infratemporal fossa
+occipital bone
+longissimus cervicis
+osteon
+extrinsic ligament
+extensor digitorum
+internal intercostal
+precapillary sphincters
+posterior (dorsal) sacral foramen
+lateral supracondylar ridge
+right gastric artery
+sphincter urethrovaginalis
+vertebral artery
+frontal bone
+osteogenic cell
+horizontal plate
+extensor digitorum brevis
+deltoid tuberosity
+subscapularis
+sacral promontory
+masseter
+costal facet
+occipitofrontalis
+abductor digiti minimi
+lunate
+brain case
+stylohyoid
+ligament
+common iliac artery
+great cerebral vein
+subtendinous bursa
+nutrient foramen
+intervertebral foramen
+fracture
+foramen lacerum
+periosteum
+intermediate
+catagen
+vastus intermedius
+annular ligament
+paranasal sinuses
+temporomandibular joint
+posterior longitudinal ligament
+pubic body
+lateral sacral crest
+basal cell carcinoma
+longissimus thoracis
+inferior gemellus
+rotator cuff
+cervical vertebrae
+hemangioblasts
+external callus
+carpal tunnel
+pterion
+dorsalis pedis artery
+meniscus
+perforating canal
+medial plantar artery
+lordosis
 clavicle
 clavicular notch
-closed reduction
-coccyx
-common carotid artery
-common hepatic artery
-common iliac artery
-common iliac vein
-compressor urethrae
-condyle
-condyloid joint
-continuous capillary
-convergent
-coracobrachialis
-coracoclavicular ligament
-coracohumeral ligament
-coracoid process
-corn
-coronal suture
-coronoid fossa
-corrugator supercilii
-costal cartilage
-costal facet
-costal groove
-costoclavicular ligament
-coxal bone
-cribriform plate
-crista galli
-cuboid
-CVA
-cystic artery
-deep anterior compartment
-deep femoral artery
-deep femoral vein
-deep transverse perineal
-deglutition
-deltoid
-deltoid ligament
-deltoid tuberosity
-dens
-dermal papilla
-dermis
-descending aorta
-desmosome
-diarthrosis
-diastolic pressure
-digastric
-diploë
-distal radioulnar joint
-distal tibiofibular joint
-dorsal group
-dorsal interossei
-dorsal venous arch
-dorsalis pedis artery
-ear ossicles
-eccrine sweat gland
-eczema
-elastic artery
-elastin fibers
-elbow joint
-eleidin
-endosteum
-epicranial aponeurosis
-epiphyseal line
-epiphysis
-eponychium
-erector spinae group
-esophageal artery
-ethmoid air cell
-ethmoid bone
-extensor
-extensor carpi radialis brevis
-extensor carpi ulnaris
-extensor digiti minimi
-extensor digitorum
-extensor digitorum brevis
-extensor digitorum longus
-extensor hallucis longus
-extensor indicis
-extensor pollicis brevis
-extensor pollicis longus
-extensor radialis longus
-extensor retinaculum
-external acoustic meatus
-external callus
-external carotid artery
-external iliac artery
-external iliac vein
-external intercostal
-external jugular vein
-external oblique
-external occipital protuberance
-external root sheath
-extrinsic eye muscles
-extrinsic ligament
-facet
-false ribs
-femoral artery
-femoral circumflex vein
-femoral triangle
-femoral vein
-femoropatellar joint
-fenestrated capillary
-fibrous joint
-fibular collateral ligament
-fibular notch
-fibular vein
-fibularis brevis
-fibularis longus
-fibularis tertius
-first-degree burn
-fixator
-flat bone
-flexor
-flexor carpi radialis
-flexor carpi ulnaris
-flexor digiti minimi brevis
-flexor digitorum longus
-flexor digitorum profundus
-flexor digitorum superficialis
-flexor hallucis longus
-flexor pollicis brevis
-flexor pollicis longus
-flexor retinaculum
-floating ribs
-fontanelle
-foramen lacerum
-foramen magnum
-foramen rotundum
-foramen spinosum
-fossa
-fourth-degree burn
-fovea capitis
-fracture
-fracture hematoma
-frontal bone
-frontal sinus
-frontalis
-gastrocnemius
-genicular artery
-genioglossus
-geniohyoid
-glabella
-glassy membrane
-glenohumeral joint
-glenohumeral ligament
-glenoid cavity
-glenoid labrum
-gluteal group
-gluteal tuberosity
-gluteus maximus
-gluteus medius
-gluteus minimus
-gomphosis
-gonadal artery
-gracilis
-great cerebral vein
-great saphenous vein
-greater pelvis
-greater sciatic foramen
-greater sciatic notch
-greater trochanter
-greater tubercle
-hair bulb
-hair follicle
-hair matrix
-hair papilla
-hair root
-hair shaft
-hallux
-hamate
-hamstring group
-hard palate
-head of the femur
-head of the fibula
-head of the humerus
-head of the radius
-head of the rib
-head of the ulna
-hemangioblasts
-hematopoiesis
-hepatic artery proper
-hepatic portal system
-hepatic vein
-hinge joint
-hip bone
-hip joint
-hole
-horizontal plate
-humeroradial joint
-humeroulnar joint
-hyoglossus
-hypercalcemia
-hyperflexion
-hypertension
-hypervolemia
-hypocalcemia
-hypodermis
-hypoglossal canal
-hyponychium
-hypophyseal (pituitary) fossa
-hypothenar
-hypothenar eminence
-hypovolemic shock
-hypoxia
-IFCOP
-IFHP
-iliac crest
-iliac fossa
-iliacus
-iliococcygeus
-iliocostalis cervicis
-iliocostalis group
-iliocostalis lumborum
-iliocostalis thoracis
-iliofemoral ligament
-iliopsoas group
-iliotibial tract
-ilium
-inferior articular process
-inferior extensor retinaculum
-inferior gemellus
-inferior mesenteric artery
-inferior nasal concha
-inferior phrenic artery
-inferior pubic ramus
-inferior rotation
-infraglenoid tubercle
-infrahyoid muscles
-infraorbital foramen
-infraspinatus
-infraspinous fossa
-infratemporal fossa
-innermost intercostal
-insertion
-integumentary system
-intercondylar eminence
-intercondylar fossa
-intercostal artery
-intercostal vein
-intermediate
-intermediate cuneiform
-internal acoustic meatus
-internal callus
-internal carotid artery
-internal iliac artery
-internal iliac vein
-internal intercostal
-internal jugular vein
-internal oblique
-internal root sheath
-internal thoracic artery
-interosseous membrane
-interphalangeal joint
-intertrochanteric crest
-intertrochanteric line
-intertubercular groove (sulcus)
-intervertebral disc
-intervertebral foramen
-intracapsular ligament
-intrinsic ligament
 irregular bone
-ischemia
-ischial ramus
-ischial spine
-ischial tuberosity
-ischiococcygeus
-ischiofemoral ligament
-ischiopubic ramus
-ischium
-joint cavity
-joint interzone
-jugular (suprasternal) notch
-jugular foramen
-keloid
+descending aorta
+coccyx
+basilic vein
+anaphylactic shock
+somite
 keratinocyte
-keratohyalin
-knee joint
-kyphosis
-lacrimal bone
-lacrimal fossa
-lacuna
-lambdoid suture
-langerhans cell
-lateral (external) rotation
-lateral circumflex artery
-lateral cuneiform
-lateral excursion
-lateral flexion
-lateral malleolus
-lateral meniscus
-lateral plantar artery
-lateral pterygoid
-lateral pterygoid plate
-lateral sacral crest
-lateral supracondylar ridge
-lateral tibiofemoral joint
-lateralis
-latissimus dorsi
-left gastric artery
-lesser pelvis
-lesser sciatic foramen
+hypovolemic shock
+nasal septum
+ossification center
+IFHP
+superior extensor retinaculum
+ovarian artery
+true ribs
+subpubic angle
+digastric
+external iliac artery
+deep femoral vein
+hypophyseal (pituitary) fossa
 lesser sciatic notch
+radial tuberosity
+arteriole
+bursa
+elbow joint
+iliocostalis lumborum
+superior rotation
+left gastric artery
+median antebrachial vein
+sphygmomanometer
+rectus abdominis
+apical ectodermal ridge
+posterior sacroiliac ligament
+ethmoid air cell
+myogenic response
+posterior cruciate ligament
+prime mover
+extensor pollicis longus
+brachialis
+patellar surface
+subclavian artery
+radiocarpal joint
+dermal papilla
+hypothenar
+abductor pollicis brevis
+intracapsular ligament
+mandibular foramen
+radial artery
+lateral meniscus
+intercostal artery
+anterior sacroiliac ligament
+abductor
+dorsal group
+palatine process
+stretch mark
+palatoglossus
+palmaris longus
+suprahyoid muscles
+ulnar vein
+cartilaginous joint
+ischial ramus
+lacrimal bone
+internal carotid artery
+short bone
+external iliac vein
+hamate
+interphalangeal joint
+tunica externa
+squamous cell carcinoma
+capitate
+subscapular bursa
+rhomboid minor
+coronoid fossa
+quadriceps tendon
+sacrum
+superior orbital fissure
+innermost intercostal
+flexor digitorum longus
+medial meniscus
+tibialis anterior
+angle of the mandible
+corrugator supercilii
+intercostal vein
+femoral vein
+fourth-degree burn
+intertrochanteric crest
+anterior talofibular ligament
+parietal branches
+iliac crest
+petrous ridge
+superior mesenteric artery
+venous reserve
+adductor tubercle
+osteoclast
+tunica media
+lacuna
+foramen spinosum
+periodontal ligament
+primary curve
+ankle joint
+diarthrosis
+rectus
+atlantoaxial joint
+tibial tuberosity
+psoas major
+lateral excursion
+soleal line
+bronchial artery
+mylohyoid line
+neck of the rib
+TMJ
+ischiopubic ramus
+sacral hiatus
+thenar
+vomer bone
+supraorbital foramen
+submuscular bursa
+lateral pterygoid
+ball-and-socket joint
+sclerotome
+frontal sinus
+head of the ulna
+body of the rib
+metacarpophalangeal joint
+mandible
+lambdoid suture
+genicular artery
+plane joint
+longissimus capitis
+shaft of the femur
+lateral flexion
+yellow marrow
+melanosome
+iliotibial tract
+glenohumeral ligament
+quadratus lumborum
+ischemia
+scaphoid
+pectoralis minor
+ilium
+orbicularis oris
+deglutition
+hypercalcemia
+posterior scalene
+lesser pelvis
+hallux
+elastin fibers
+iliococcygeus
+internal root sheath
+radial collateral ligament
+anterior cerebral artery
+venule
+gomphosis
+coxal bone
+lumbar vertebrae
+coronal suture
+sacroiliac joint
+neurogenic shock
+posterior inferior iliac spine
+fibularis brevis
+abduct
+biceps brachii
+axis
+tendon
+pivot joint
+sacrococcygeal curve
+shaft of the tibia
+medial tibiofemoral joint
+scoliosis
+celiac trunk
+hepatic vein
+renal artery
+synovial fluid
+adductor pollicis
+pronated position
+intervertebral disc
+inferior phrenic artery
+Meissner corpuscle
+brachioradialis
+hypertension
+semitendinosus
+greater sciatic notch
+foramen magnum
+obturator externus
+osteocyte
+visceral branches
+flexor digitorum profundus
+medullary cavity
+acromion
+lesser sciatic foramen
+first-degree burn
+thyrohyoid
+deltoid ligament
+quadriceps femoris group
+pelvic inlet
+epiphysis
+internal thoracic artery
+knee joint
+mastication
 lesser trochanter
 lesser tubercle
-levator ani
-ligament
-ligamentum flavum
-limb bud
-linea alba
-linea aspera
-lingula
-long bone
-longissimus capitis
-longissimus cervicis
-longissimus group
-longissimus thoracis
-longus
-lordosis
-lumbar curve
-lumbar vertebrae
-lumbrical
-lunate
-lunula
-mandible
-mandibular foramen
-mandibular fossa
-mandibular notch
-manubrium
-masseter
-mastication
-mastoid process
-maxillary bone
-maxillary sinus
-maxillary vein
-maximus
-mean arterial pressure
-medial (internal) rotation
-medial cuneiform
-medial excursion
-medial malleolus
-medial meniscus
-medial plantar artery
-medial pterygoid
-medial pterygoid plate
-medial tibiofemoral joint
-medialis
-median antebrachial vein
-median sacral artery
-median sacral crest
-mediastinal artery
-medius
-medullary cavity
-Meissner corpuscle
-melanin
-melanocyte
-melanoma
-melanosome
-meniscus
-mental foramen
-mental protuberance
-Merkel cell
-metacarpal bone
-metacarpophalangeal joint
-metarteriole
-metastasis
-metatarsal bone
-metatarsophalangeal joint
-midcarpal joint
-middle cerebral artery
-middle cranial fossa
-middle nasal concha
-middle sacral vein
-middle scalene
-minimus
-modeling
-multiaxial joint
-multifidus
-multipennate
-muscular artery
-mylohyoid
-mylohyoid line
-myogenic response
-nail bed
-nail body
-nail cuticle
-nail fold
-nail root
-nasal bone
-nasal conchae
-nasal septum
-nasolacrimal canal
-navicular
-neck of the femur
-neck of the radius
-neck of the rib
-neurogenic shock
-NFP
-nuchal ligament
-nucleus pulposus
-nutrient foramen
-oblique
-obturator externus
-obturator foramen
-obturator internus
-occipital bone
-occipital condyle
-occipital sinus
-occipitalis
-occipitofrontalis
-olecranon fossa
-olecranon process
-omohyoid
-open reduction
-ophthalmic artery
-opponens digiti minimi
-opponens pollicis
-optic canal
-orbicularis oculi
-orbicularis oris
-orthopedist
-ossification center
-osteoblast
-osteoclast
-osteocyte
-osteogenic cell
-osteoid
-osteon
-osteoporosis
-ovarian artery
-pacinian corpuscle
-palatine bone
-palatine process
-palatoglossus
-palmar interossei
-palmar venous arches
-palmaris longus
-papillary layer
-paranasal sinuses
-parietal bone
-parietal branches
-patellar ligament
-patellar surface
-pectineal line
-pectineus
-pectoralis major
-pectoralis minor
-pedicle
-pelvic brim
-pelvic diaphragm
-pelvic inlet
-pelvic outlet
-pelvis
-pennate
-perforating canal
-pericardial artery
-perichondrium
-perineum
-periodontal ligament
-periosteum
-petrous ridge
-phrenic vein
-piriformis
-pisiform
-pivot joint
-plane joint
-plantar aponeurosis
 plantar group
-plantar venous arch
-plantaris
-pollex
-popliteal artery
-popliteal fossa
-popliteal vein
-popliteus
-posterior (dorsal) sacral foramen
-posterior arch
-posterior cerebral artery
-posterior communicating artery
-posterior cranial fossa
-posterior cruciate ligament
-posterior inferior iliac spine
-posterior longitudinal ligament
-posterior sacroiliac ligament
-posterior scalene
-posterior superior iliac spine
-posterior talofibular ligament
-posterior tibial artery
-posterior tibial vein
-precapillary sphincters
-primary curve
-primary ossification center
-prime mover
-projection
-proliferative zone
-pronated position
-pronator quadratus
-pronator teres
-proximal radioulnar joint
-proximal tibiofibular joint
-psoas major
-pterion
-pubic arch
-pubic body
-pubic symphysis
-pubic tubercle
-pubis
-pubococcygeus
-pubofemoral ligament
-pulmonary artery
-quadratus femoris
-quadratus lumborum
-quadriceps femoris group
-quadriceps tendon
-radial artery
-radial collateral ligament
-radial fossa
-radial tuberosity
-radial vein
-radiocarpal joint
-ramus of the mandible
-rectus
-rectus abdominis
-rectus femoris
-rectus sheaths
-red marrow
-remodeling
-renal artery
-renal vein
-reposition
-reserve zone
-reticular layer
-retinacula
-rhomboid major
-rhomboid minor
-rickets
-right gastric artery
-rotator cuff
-sacral canal
-sacral foramina
-sacral hiatus
-sacral promontory
-sacrococcygeal curve
-sacroiliac joint
-sacrospinous ligament
-sacrotuberous ligament
-sacrum
-saddle joint
-sagittal suture
-sartorius
-scalene muscles
-scaphoid
-scapula
-sclerotome
-scoliosis
-sebaceous gland
-sebum
-second-degree burn
-secondary curve
-secondary ossification center
-segmental muscle group
-sella turcica
-semimembranosus
-semispinalis capitis
-semispinalis cervicis
-semispinalis thoracis
-semitendinosus
-septal cartilage
-serratus anterior
-sesamoid bone
-shaft of the femur
-shaft of the fibula
-shaft of the humerus
-shaft of the radius
-shaft of the tibia
-shaft of the ulna
-short bone
-sinusoid capillary
-skeletal system
-small saphenous vein
-soleal line
-soleus
-somite
-sphenoid bone
-sphenoid sinus
-sphincter urethrovaginalis
-sphygmomanometer
-spinalis capitis
-spinalis cervicis
-spinalis group
-spinalis thoracis
-spine of the scapula
-spinous process
-splenic artery
-splenius
-splenius capitis
-splenius cervicis
-squamous cell carcinoma
-squamous suture
-sternal angle
-sternoclavicular joint
-sternocleidomastoid
-sternohyoid
-sternothyroid
-stratum basale
-stratum corneum
-stratum granulosum
-stratum lucidum
-stratum spinosum
-stretch mark
-styloglossus
-stylohyoid
-styloid process
-stylomastoid foramen
-subacromial bursa
-subclavian artery
-subclavian vein
-subclavius
-subcutaneous bursa
-submuscular bursa
-subpubic angle
-subscapular bursa
-subscapular fossa
-subscapular vein
-subscapularis
-subtalar joint
-subtendinous bursa
-sudoriferous glands
-superior articular process
-superior extensor retinaculum
-superior gemellus
-superior mesenteric artery
-superior nasal concha
-superior nuchal line
-superior orbital fissure
-superior phrenic artery
-superior pubic ramus
-superior rotation
-supinated position
-supinator
-supraglenoid tubercle
-suprahyoid muscles
-supraorbital foramen
-supraorbital margin
-suprascapular notch
-supraspinatus
-supraspinous fossa
-supraspinous ligament
-surgical neck
-sustentaculum tali
-suture
-symphysis
-syndesmosis
-synergist
-synostosis
-synovial fluid
-synovial joint
-systolic pressure
-talocrural joint
-talus
-tarsal bone
-telogen
-temporal bone
-temporal fossa
-temporal vein
-temporalis
-temporomandibular joint
-tendinous intersections
-tendon
-tendon sheath
-tensor fascia latae
-teres major
-teres minor
+inferior extensor retinaculum
+genioglossus
+maxillary sinus
+bipennate
+floating ribs
+epicranial aponeurosis
+bicipital groove
+obturator foramen
 testicular artery
-thenar
-thenar eminence
-thigh
-third-degree burn
-thoracic aorta
-thoracic curve
-thoracic vertebrae
-thyrocervical artery
-thyrohyoid
-tibial collateral ligament
-tibial tuberosity
-tibialis anterior
-tibialis posterior
-TMJ
-transverse foramen
-transverse process
-transversospinales
-transversus abdominis
-trapezium
-trapezius
-trapezoid
-triceps brachii
-triquetrum
-trochlea
-trochlear notch
-true ribs
-tubercle of the rib
-tunica externa
-tunica intima
-tunica media
-ulnar artery
-ulnar collateral ligament
-ulnar tuberosity
-ulnar vein
-uniaxial joint
-unipennate
-urogenital triangle
-vasa vasorum
-vasomotion
-vastus intermedius
-vastus lateralis
-vastus medialis
-venous reserve
-venule
-vertebra
-vertebral (spinal) canal
-vertebral arch
-vertebral artery
-vertebral foramen
-vertebral vein
-visceral branches
-vitamin D
-vitiligo
-vomer bone
-xiphoid process
-yellow marrow
+medial excursion
+brevis
 zone of calcified matrix
-zygapophysial joints
+osteoid
+supraglenoid tubercle
+telogen
+transversus abdominis
+anterior tibial artery
+iliocostalis thoracis
+axillary artery
+perineum
+pubococcygeus
+flexor pollicis longus
+NFP
+erector spinae group
+rectus femoris
+shaft of the humerus
+median sacral crest
+iliofemoral ligament
+uniaxial joint
+internal callus
+rickets
+tubercle of the rib
+styloglossus
+syndesmosis
+sacral foramina
+keloid
+pronator teres
+joint cavity
+stratum lucidum
+carotid sinuses
+flexor digiti minimi brevis
+supinator
+supraspinous ligament
+thoracic vertebrae
+stratum corneum
+capitulum
+popliteal vein
+adrenal vein
+hip bone
+spinous process
+longissimus group
+corn
+temporal bone
+inferior nasal concha
+sternohyoid
+diastolic pressure
+gonadal artery
+belly
+agonist
+anterior arch
+pectineal line
+vasomotion
+sphenoid bone
+arteriovenous anastomosis
+tibial collateral ligament
+teres major
+external root sheath
+sternothyroid
+coracobrachialis
+saddle joint
+tunica intima
+proximal tibiofibular joint
+flat bone
+shaft of the radius
+foramen rotundum
+tendon sheath
+mandibular notch
+sacrotuberous ligament
+melanoma
+vitiligo
+modeling
+femoral artery
+dorsal venous arch
+integumentary system
+secondary ossification center
+elastic artery
+vertebral arch
+pronator quadratus
+arrector pili
+sudoriferous glands
+ulnar artery
+sartorius
+flexor digitorum superficialis
+plantar venous arch
+cerebrovascular accident
+talocrural joint
+hypervolemia
+external intercostal
+splenius capitis
+fibular vein
+extensor retinaculum
+ischium
+eleidin
+calcaneus
+tibialis posterior
+convergent
+superior nuchal line
+cribriform plate
+lumbrical
+segmental muscle group
+acne
+triquetrum
+adductor longus
+glabella
+internal oblique
+common carotid artery
+sella turcica
+inferior rotation
+muscular artery
+plantaris
+dens
+thoracic curve
+temporal fossa
+melanocyte
+eczema
+artery
 zygomatic arch
-zygomatic bone
+superior articular process
+trapezium
+trapezoid
+hypodermis
+bi
+palmar interossei
+fibrous joint
+orbicularis oculi
+circular
+middle sacral vein
+scapula
+inferior mesenteric artery
+acetabular labrum
+internal iliac artery
+supraorbital margin
+extensor carpi ulnaris
+gluteal group
+aortic arch
+small saphenous vein
+nail fold
+gluteal tuberosity
+pubic symphysis
+ethmoid bone
+sagittal suture
+vasa vasorum
+anconeus
+parietal bone
+head of the fibula
+pelvis
+albinism
+phrenic vein
+intercondylar fossa
+greater pelvis
+metacarpal bone
+thigh
+proliferative zone
+pollex
+distal radioulnar joint
+subscapular fossa
+posterior tibial vein
+sacrospinous ligament
+maxillary vein
+second-degree burn
+sacral canal
+sternocleidomastoid
+sesamoid bone
+fenestrated capillary
+splenius
+medial pterygoid
+insertion
+head of the radius
+lateral cuneiform
+trochlear notch
+aortic sinuses
+brachiocephalic vein
+extensor indicis
+lateral plantar artery
+latissimus dorsi
+deep femoral artery
+metatarsophalangeal joint
+reserve zone
+eccrine sweat gland
+cephalic vein
+cystic artery
+anterior scalene
+osteoporosis
+ligamentum flavum
+hamstring group
+vastus lateralis
+flexor carpi radialis
+amphiarthrosis
+coracohumeral ligament
+carotid canal
+semispinalis cervicis
+maximus
+septal cartilage
+medial (internal) rotation
+lateral tibiofemoral joint
+head of the femur
+styloid process
+nail body
+anatomical neck
+synovial joint
+unipennate
+external oblique
+infraspinous fossa
+articular tubercle
+olecranon process
+sebaceous gland
+greater tubercle
+posterior cranial fossa
+hair shaft
+posterior arch
+flexor
+flexor retinaculum
+deep transverse perineal
+common iliac vein
+closed reduction
+BCOP
+buccinator
+hair papilla
+pacinian corpuscle
+head of the rib
+maxillary bone
+supinated position
+angle of the rib

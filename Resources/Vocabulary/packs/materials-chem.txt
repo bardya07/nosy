@@ -1,220 +1,220 @@
-block copolymer
-block copolymer lithography
-block homopolymer
-block polymer
-bottom anti-reflective coating
-bottom-up lithography
-branched polymer
-brush polymer
-bulk polymerisation
-Contact hole
-continuous emulsion polymerisation
-continuous phase
-continuous-phase concentration
-controlled anionic polymerization
-controlled cationic polymerization
-controlled ionic polymerization
-controlled polymerization
-controlled radical polymerization
-coordination polymerization
-coordination ring-opening polymerization
-coordination-addition polymerization
-coordination-insertion polymerization
-coordinative chain-transfer polymerization
-copolymer
-copolymer isomorphism
-copolymer micelle
-copolymerisation composition equation
-copolymerization
-core-crosslinked micelle
-core-shell particle
-core-shell structure
-Coulomb radius
-coumarone-indene polymer
-counter-current flow
-cross-over concentration
-cross-propagation
-cross-termination
-crystal polymorph
-crystalline polymer
-crystalline polymer-inclusion complex
-crystalline-polymer molecular complex
-crystallisable polymer
-cubic mesophase
-cumulative mass-distribution function
-cumulative number-distribution function
-cyclopolymerization
-dead polymer chain
-dead-end polymerisation
-defect-free pattern
-degenerate-transfer radical polymerisation
-degenerative chain-transfer radical polymerization
-degenerative-transfer polymerization
-degradable polymer
-degree of polymerization
-degree-of-polymerisation dispersity
-dendrimer molecule
-dynamic-load thermomechanical analysis
-ecotoxicity
-elastomer
-electrically conducting polymer
-electrically conducting polymer composite
-electro-dialysis
-electro-optic effect
-electrochromic polymer
-electroclinic polymer
-electroinjection
-electroluminescent polymer
-electromagnetic field responsive polymer
-enthalpy of polymerisation
-enthalpy relaxation
-entropy of polymerisation
-environmental stress cracking
-environmentally degradable polymer
 environmentally friendly
-epoxy polymer
-equivalent hydrodynamic radius
-erythro structures
-globular-chain crystal
-globule-to-coil transition
-graft copolymer
-graft copolymerization
-graft homopolymer
-graft macromolecule
-graft polymer
-Green body
-Green polymer
-group-transfer polymerization
-halato-telechelic polymer
-hard-segment phase domain
-head-tail isomerism
-homopolymers
-line-space patterning
-linear copolymer
-linear polymer
-liquid-crystal dendrimer
-liquid-crystal polymer
-liquid-crystal state
-liquid-crystalline phase
-liquid-crystalline polymer
-living anionic polymerization
 living cationic polymerization
-living condensative chain polymerization
-living coordination polymerization
-living copolymerization
-living ionic polymerization
-living polymer
-olefin metathesis polymerization
-polyarylenes
-polyarylenethynylenes
-polyarylenevinylenes
-polybase
-polybenzimidazoles
-polybenzothiazole
-polybenzoxazole
-polybismaleimide
-polycarbodiimide
-polycarborane
-polycarbosilane
-polycrystalline polymer
-polycyanurate
-polydiacetylenes
-polyester
-polyether
-polyglutarimide
-polyimidazole
-polyimides
-polyisocyanide
-polyisocyanurate
-polyketone
-polymer alloy
-polymer bead
-polymer blend
-polymer catalyst
-polymer clathrate
-polymer co-crystal
-polymer co-crystallisation
-polymer colloid
-polymer compatibilizer
-polymer complexation
-polymer composite
-polymer content
-polymer crystal
-polymer crystallite
-polymer cyclization
-polymer degradation
-polymer dispersion
-polymer drug
-polymer emulsion
-polymer fibre
-polymer fibril
-polymer functionalization
-polymer gel
-polymer gel particle
-polymer glass
-polymer mass fraction
-polymer melt
-polymer membrane
-polymetaloxane
-polymorphic polymer crystal
-polyoxadiazoles
-polyoxyalkylene
-polyoxyarylene
-polyoxymethylene
-polyoxyphenylene
-polyparabanic acid
-polyphenylenemethylene
-polyphenylenes
-polyphenylenethynylenes
-polyphenylenevinylenes
-polyphosphate
-polyphosphazene
-polysilanes
-polysiloxane
-polysulfonamide
-polysulfone
-polytetrazines
-polythiadiazoles
-polythiazoles
-polythioester
-polythioether
-polythiophenes
-polytriazine
-polyurea
-polyurethane
-polyvinyl ester
-polyvinyl Ether
-reversible-addition-fragmentation chain-transfer polymerization
-reversible-addition-fragmentation radical polymerization
-reversible-deactivation anionic polymerization
-reversible-deactivation cationic polymerization
-reversible-deactivation coordination polymerization
-reversible-deactivation ionic polymerization
 reversible-deactivation polymerization
-reversible-deactivation radical polymerization
+polyoxyalkylene
+reversible-deactivation ionic polymerization
+polymer clathrate
+polyvinyl Ether
+polyarylenethynylenes
+polyoxadiazoles
+cross-termination
+continuous phase
+polyarylenevinylenes
 right-handed helix
-ring-opening copolymerization
-ring-opening metathesis polymerization
-ring-opening nucleophilic chain polymerization
-ring-opening polymerization
-rod-coil copolymer
-T-stacking
-tactic block polymer
-tactic polymer
-Tammann's 2/3rd rule
-telechelic polymer
-template polymerization
+polymer catalyst
+polysulfone
+polyether
+polyimidazole
+liquid-crystal dendrimer
+graft polymer
+living condensative chain polymerization
+environmental stress cracking
+polythiazoles
+degenerative-transfer polymerization
+polythiadiazoles
+polymer functionalization
 therapeutic polymer
+cross-propagation
+ring-opening metathesis polymerization
+polyketone
+hard-segment phase domain
+dead polymer chain
+enthalpy of polymerisation
+polybenzothiazole
+polyisocyanide
 thermal injection
-thermogravimetric analyser
-thermoluminescence analysis
-thermoplastic elastomer
+coordination-addition polymerization
+polyphosphate
+halato-telechelic polymer
+polymer drug
+crystalline-polymer molecular complex
+polymer dispersion
+dead-end polymerisation
+electroluminescent polymer
 thermosetting polymer
+block copolymer lithography
+coordination polymerization
+liquid-crystal polymer
+polymer crystallite
+polyphosphazene
+tactic block polymer
+block homopolymer
+block copolymer
+reversible-addition-fragmentation chain-transfer polymerization
+defect-free pattern
+cross-over concentration
+electroclinic polymer
+polytetrazines
+electrically conducting polymer
+ring-opening polymerization
+reversible-deactivation coordination polymerization
 thermotropic mesophase
-thrombogenicity
+living copolymerization
+copolymerization
+polybenzoxazole
+bulk polymerisation
+polyoxyarylene
+controlled radical polymerization
+polymer co-crystal
+coordination ring-opening polymerization
+ring-opening copolymerization
+cyclopolymerization
+liquid-crystal state
+homopolymers
+polymer degradation
+polythiophenes
+graft copolymer
+dynamic-load thermomechanical analysis
+thermoplastic elastomer
+controlled cationic polymerization
+bottom-up lithography
+living polymer
+polythioester
+polymer membrane
+polysiloxane
+Tammann's 2/3rd rule
+polymer emulsion
+copolymer isomorphism
+globular-chain crystal
+polyphenylenethynylenes
+cumulative number-distribution function
+polybismaleimide
+polycyanurate
+head-tail isomerism
+polymer bead
+crystal polymorph
+polyparabanic acid
+liquid-crystalline phase
+polymer fibre
+brush polymer
+ecotoxicity
+environmentally degradable polymer
+copolymerisation composition equation
+polymer alloy
+polyvinyl ester
+ring-opening nucleophilic chain polymerization
+core-shell structure
+graft copolymerization
+polymer fibril
+coordination-insertion polymerization
+electromagnetic field responsive polymer
+polysulfonamide
+globule-to-coil transition
 time-temperature superposition principle
+Contact hole
+polymer melt
+Green polymer
+living anionic polymerization
+polydiacetylenes
+dendrimer molecule
+polyoxyphenylene
+cumulative mass-distribution function
+graft macromolecule
+polymer colloid
+polybenzimidazoles
+group-transfer polymerization
+degree-of-polymerisation dispersity
+block polymer
+polymer compatibilizer
+polybase
+Ziegler-Natta catalysts
+erythro structures
+living coordination polymerization
+polymer blend
+thermoluminescence analysis
+electro-optic effect
+polyphenylenevinylenes
+bottom anti-reflective coating
+controlled polymerization
+tactic polymer
+core-crosslinked micelle
+cubic mesophase
+polyphenylenes
+thrombogenicity
+polysilanes
+line-space patterning
 top-down patterning
 top-surface imaging
-topochemical polymerisation
-Ziegler-Natta catalysts
+crystalline polymer
+electroinjection
+crystalline polymer-inclusion complex
+continuous emulsion polymerisation
+degenerate-transfer radical polymerisation
+elastomer
+polycarborane
+Coulomb radius
+core-shell particle
+degradable polymer
+counter-current flow
+thermogravimetric analyser
+copolymer
+living ionic polymerization
+polyglutarimide
+polyester
+equivalent hydrodynamic radius
+polyphenylenemethylene
+telechelic polymer
+controlled anionic polymerization
+controlled ionic polymerization
+polymer mass fraction
+polymer co-crystallisation
+polymer glass
+electro-dialysis
+template polymerization
+degenerative chain-transfer radical polymerization
+polyarylenes
+polymetaloxane
+polymer gel particle
+linear polymer
+coumarone-indene polymer
+reversible-deactivation cationic polymerization
+polytriazine
+copolymer micelle
+electrically conducting polymer composite
 χ-parameter
+polyurethane
+polycarbodiimide
+reversible-deactivation anionic polymerization
+polymorphic polymer crystal
+epoxy polymer
+degree of polymerization
+electrochromic polymer
+Green body
+linear copolymer
+coordinative chain-transfer polymerization
+polymer crystal
+crystallisable polymer
+polyimides
+entropy of polymerisation
+polymer content
+polythioether
+olefin metathesis polymerization
+polycrystalline polymer
+liquid-crystalline polymer
+topochemical polymerisation
+polymer complexation
+graft homopolymer
+polymer composite
+reversible-deactivation radical polymerization
+rod-coil copolymer
+polymer cyclization
+polycarbosilane
+T-stacking
+branched polymer
+enthalpy relaxation
+polyurea
+polyoxymethylene
+polymer gel
+reversible-addition-fragmentation radical polymerization
+polyisocyanurate
+continuous-phase concentration

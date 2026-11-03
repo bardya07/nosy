@@ -1,192 +1,192 @@
-A2C
-A3C
-AdaDelta
-AdaGrad
-Adam
-AdamW
-AlphaGo
-AUC
-autoencoder
-backpropagation
-backpropagation through structure
-backpropagation through time
-Bayesian analysis
-Bayesian computation
-Bayesian network models
-Bayesian networks
-Bayesian neural network
-Bayesian nonparametric models
-Bayesian optimization
-Bayesian programming
-Bellman equation
-BERT
-bigram
-BLEU
-BLEURT
-Boltzmann machine
-BoolQ
-case-based reasoning
-CB
+rank (ordinality)
 CDF
-character N-Gram F-score
-cloud TPU
-CNN
-convex function
-convex set
-convolution
-convolutional neural network
-COPA
-cross-entropy
-CTC
-DataFrame
-DPO
-DQN
-dropout
-ELU
-EMD
-ERM
-F1
-F1 score
-FFN
+WMT
+Markov processes
+T5X
 FN
-FP
-FPR
-GAN
-GAT
-GBT
-GCN
-GELU
-generative pretrained transformer
-GNN
-GPT
+SiLU
+tensor network theory
+stochastic optimization
+TensorStore
 GRU
-hidden Markov model
+RNN
+QLoRA
+GBT
+character N-Gram F-score
+Occam's razor
+Boltzmann machine
+skip-Gram
+generative pretrained transformer
+EMD
+partially-observable Markov decision processes
+sigmoid function
+BERT
+MIMO Systems
+Bayesian optimization
+stochastic gradient descent
+Markov property
+ORA
+underfitting
+Markov-chain Monte Carlo methods
+Bellman equation
+Bayesian nonparametric models
+sparse dictionary learning
+Swish
+Watson
 Hill climbing
-HITL
+PLM
+SARSA
+AdaGrad
+COPA
+out-of-bag evaluation (OOB evaluation)
+ML
+VAE
+MT
+N-Gram
+modus ponens
+case-based reasoning
+AdamW
+POMDP
+tensor Processing Unit
+RL
+Bayesian neural network
 HMM
+post-processing
+SGD
+NLP
+F1 score
+PyTorch
+TensorBoard
+GPT
+MOE
+transformer
+MMIT
+ELU
+tokenizer
+NORA
+DPO
+L1 loss
+Bayesian networks
+TensorFlow Serving
+SRM
+Nesterov momentum
+CB
+LIT
+XLA
 hyperparameter
 hyperparameter optimization
-JAX
-KL divergence
-KL-ONE
-KSVMs
-L0 regularization
-L1 loss
-L1 regularization
+UCR
 L2 loss
-L2 regularization
-latent Dirichlet allocation
-Leaky ReLU
-LIT
+DQN
+AdaDelta
+TP
+XL-Sum (xlsum)
+hidden Markov model
+RTE
+convex set
+PS
+bigram
 LLM
+recursive self-improvement
+PPO
+L1 regularization
+AUC
+MIMO
+naive Bayes classifier
+CNN
+T5
+ReLU
+convex function
+GAN
+GAT
+GCN
+AlphaGo
+perceptron
+backpropagation
+TPR
+WER
+Bayesian programming
+cloud TPU
+PR curve
+Markov decision process
+SAC
+GNN
+A2C
+backpropagation through structure
+ERM
+SVM
+FPR
+NAS
+subword token
+F1
+RMSE
+FFN
+KSVMs
+RMSProp
+L0 regularization
+node (TensorFlow graph)
+sepCNN
+BLEU
+mini-batch stochastic gradient descent
+ROC
+DataFrame
+TPU
+cross-entropy
+Leaky ReLU
+Markov chain
+GELU
+ROUGE-L
+BLEURT
+XGBoost
+multilayer perceptron
+ROUGE
+SELU
 LLM evaluations (evals)
+dropout
+Bayesian computation
+Markov decision processes
+HITL
+MNIST
+KL-ONE
+softmax
+trigram
+SQuAD
+backpropagation through time
+restricted Boltzmann machine
+ROUGE-N
+nouvelle AI
+post-trained model
+overfitting
+BoolQ
+MAE
+TRPO
+JAX
+autoencoder
+RLHF
+A3C
+MBPP
+WSC
+MSE
+TN
+variational autoencoder
+latent Dirichlet allocation
+Markov networks
+convolution
+RAG
+TensorFlow
 logits
 LSTM
-MAE
-Markov chain
-Markov decision process
-Markov decision processes
-Markov networks
-Markov processes
-Markov property
-Markov-chain Monte Carlo methods
-MBPP
-MDP
-MIMO
-MIMO Systems
-mini-batch stochastic gradient descent
-ML
-MMIT
-MNIST
-modus ponens
-MOE
-MSE
-MT
-multilayer perceptron
-N-Gram
-naive Bayes classifier
-NAS
-Nesterov momentum
-NLP
-NLU
-node (TensorFlow graph)
-NORA
-nouvelle AI
-Occam's razor
+Bayesian network models
+FP
 one-hot encoding
-ORA
-out-of-bag evaluation (OOB evaluation)
-overfitting
-partially-observable Markov decision processes
-PCA
-perceptron
-PLM
-POMDP
-post-processing
-post-trained model
-PPO
-PR curve
-PS
-PyTorch
-QLoRA
-RAG
-rank (ordinality)
-recursive self-improvement
-ReLU
-restricted Boltzmann machine
-RL
-RLHF
-RMSE
-RMSProp
-RNN
-ROC
-ROUGE
-ROUGE-L
-ROUGE-N
-RTE
-SAC
-SARSA
-SELU
-sepCNN
-SGD
-sigmoid function
-SiLU
-skip-Gram
-softmax
-sparse dictionary learning
-SQuAD
-SRM
-stochastic gradient descent
-stochastic optimization
+Adam
+Bayesian analysis
 stochastic semantic analysis
-subword token
-SVM
-Swish
-T5
-T5X
-tensor network theory
-tensor Processing Unit
-TensorBoard
-TensorFlow
-TensorFlow Serving
-TensorStore
-TN
-tokenizer
-TP
-TPR
-TPU
-transformer
-trigram
-TRPO
+NLU
+CTC
+PCA
 TTL
-UCR
-underfitting
-VAE
-variational autoencoder
-Watson
-WER
-WMT
-WSC
-XGBoost
-XL-Sum (xlsum)
-XLA
+KL divergence
+convolutional neural network
+L2 regularization
+MDP

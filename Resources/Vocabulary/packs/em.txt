@@ -1,259 +1,259 @@
-AC voltage
-Alternator
-Ampere
-Ampère
-Ampère's circuital law
-Ampère's law
-Ampère-Maxwell law
-antenna
-antiferromagnetic
-antiferromagnetism
-Arago
-Bandwidth
-BCS theory
-Biot
-Biot-Savart law
-Bohr magneton
-capacitance
-capacitive reactance
-capacitor
-CGS
-Charge density
-Charging capacitor
-Commutator
-Cooper
-Coulomb
-Coulomb constant
-Coulomb force
-Coulomb gauge
-Coulomb's constant
-Coulomb's law
-Critical damping
-Curie point
-Curie temperature
-Curie's law
-Curl
-current density
-cyclotron
-Damped oscillation
-diamagnetic materials
-diamagnetism
-dielectric constant
-dielectric strength
-diode
-dipole radiation
-Dirac delta function
-Discharging capacitor
-displacement current
-divergence
-drift velocity
-Drude
-Drude model
-eddy current
-Electric charge
-electric dipole
-electric field
-electric field lines
-electric flux
-electric potential
-electric potential energy
-Electric shielding
-electric susceptibility
-Electrochemical cell
-electrochemical series
-electrolysis
-electromagnetic induction
-electromagnetic wave
-Electromagnetism
-electromotive force
-electron paramagnetic resonance
-electron volt
-electronvolt
-Electrostatic potential energy
-electrostatics
-elementary charge
-EMF
-Energy stored in a capacitor
-Equipotential
-equipotential surface
-ESR
-Farad
-Faraday
-Faraday cage
-Faraday constant
-Faraday's constant
-Faraday's law
-Faraday's law of induction
-ferrimagnetic
-ferrimagnetism
-ferromagnetic material
-ferromagnetism
-Galvani
-galvanic cell
-Gauss (G)
-Gauss unit
-Gauss's law
-Gauss's law for electricity
-Gauss's law for magnetism
-Gaussian surface
-Gaussian units
-Gilbert
-Gilbert unit
-gradient
-Green's function
-half-wave antenna
-Hall coefficient
-Hall effect
-Hall probe
-Heaviside
-Heaviside step function
-Helmholtz coil
-Henry
-Henry (H)
-Hertzian dipole
-hysteresis
-hysteresis loop
-impedance
-induced electric-dipole moment
-induced emf
-inductance
-inductive reactance
-inductor
-Josephson effect
-Josephson junction
-Joule
-Joule heating
-Joule's law
-Kirchhoff
-Kirchhoff's circuit laws
 Kirchhoff's current law
-Kirchhoff's rules
-Kirchhoff's voltage law
-Langevin
-Langevin function
-Larmor
-Larmor formula
-Larmor frequency
-Larmor precession
-LC circuit
-lead acid battery
-Lenz
-Lenz's law
-Linear charge density
-Liénard-Wiechert potential
-Lorentz force
-Lorentz force equation
-Lorentz gauge
-LR circuit
-magnetic dipole
-magnetic domain
-magnetic field
-magnetic flux
-magnetic moment
-magnetic monopole
-magnetic resonance
-magnetic susceptibility
-magnetization
-magnetomotive force
-mass spectrometer
-Maxwell
-Maxwell unit
-Maxwell's displacement current
-Maxwell's equations
-Maxwell-Faraday law
-Meissner effect
-Millikan oil-drop experiment
-MRI
-multi-loop circuit
-mutual inductance
-Nernst
-Nernst equation
-NMR
-Norton
-Norton equivalent circuit
-Norton's theorem
-Néel temperature
-Oersted
-Oersted (Oe)
-Oersted unit
+Gauss's law for electricity
 Oersted's law
-Ohm
-Ohm's law
-ohmic
-Overdamping
-Parallel capacitors
-parallel-plate capacitor
-paramagnetic material
-paramagnetism
-Peak voltage
-Permanent dipole
-permeability
-permeability of free space
-permittivity
-permittivity of free space
-permittivity of vacuum
-Phasor
-Phasors
-piezoelectricity
-Planck
-Poisson's equation
-polarization
-potential difference
-Potential energy
-Power factor
+diode
+voltaic cell
+Charging capacitor
+Henry (H)
+Coulomb's law
+ESR
+Kirchhoff's rules
+half-wave antenna
+inductance
 Poynting theorem
-Poynting vector
-Q factor
-quality factor
-RC circuit
-reactance
-resistance
+LR circuit
+ferrimagnetism
+galvanic cell
+Electrostatic potential energy
+step-down transformer
+Hall probe
+magnetomotive force
+Nernst
+Lenz
+permittivity of vacuum
+Langevin function
+solenoid
+Arago
+SI
+Charge density
+Bohr magneton
+Hertzian dipole
+Poisson's equation
+Phasor
+Drude model
+Faraday
+Henry
+Faraday's law
+equipotential surface
+Ampère
+Surface charge density
+Josephson junction
+LC circuit
+Heaviside
+paramagnetism
+capacitive reactance
+diamagnetism
 resistivity
-resistor
-resonance
-resonant frequency
-retarded potential
-RL circuit
-RLC circuit
-RLC series circuit
-RMS voltage
+magnetic resonance
+Power factor
+Wheatstone bridge
+Ampère's circuital law
+Electric shielding
+divergence
+Helmholtz coil
+electric field
+Gaussian units
+Oersted unit
+inductive reactance
+scalar potential
+resistance
+Norton's theorem
+paramagnetic material
+Volta
+Planck
+electrostatics
+Alternator
+Thévenin
+Maxwell unit
+magnetic flux
+ferrimagnetic
+SI units
+potential difference
+Ampere
+electron paramagnetic resonance
+Weiss domain
+volt
+Weber
+electric dipole
+Hall effect
 root mean square
 Savart
-scalar potential
-Seebeck effect
-self-inductance
-semiconductor
-Series capacitors
-SI
-SI units
-Siemens
-Siemens (S)
-skin depth
-solenoid
-SQUID
-step-down transformer
-step-up transformer
-superconductivity
-superconductor
-Surface charge density
-Tesla
-Tesla (T)
-Thevenin equivalent circuit
-Thomson
-Thévenin
-Thévenin's theorem
-time constant
-TMS
-transformer
-transistor
-transmission line
-Underdamping
 Van de Graaff generator
-vector potential
-volt
-Volta
-voltaic cell
-Weber
-Weiss domain
-Wheatstone bridge
+BCS theory
+impedance
+Lorentz gauge
+mutual inductance
+parallel-plate capacitor
+Equipotential
+Thévenin's theorem
+magnetic monopole
+Discharging capacitor
+magnetization
+Gilbert unit
+Drude
+step-up transformer
+Larmor precession
+Thevenin equivalent circuit
+Kirchhoff
+dielectric constant
+diamagnetic materials
+Maxwell
+resonant frequency
+Ampère-Maxwell law
+drift velocity
+piezoelectricity
+electric susceptibility
+Gilbert
+permeability
+Faraday's law of induction
+hysteresis
+Gauss (G)
+electrolysis
+Ampère's law
 X-ray
+multi-loop circuit
+Lorentz force
+capacitance
+skin depth
+magnetic susceptibility
+RLC circuit
+Hall coefficient
+RLC series circuit
+Farad
+resonance
+Coulomb force
+induced emf
+Larmor frequency
+Maxwell's equations
+CGS
+RMS voltage
+Norton equivalent circuit
+electrochemical series
+Coulomb constant
+Kirchhoff's voltage law
+current density
+Green's function
+Curl
+Siemens
+Biot-Savart law
+Ohm's law
+inductor
+Lorentz force equation
+Peak voltage
+electric potential energy
+Maxwell-Faraday law
+quality factor
+Joule's law
+ferromagnetism
+Heaviside step function
+Josephson effect
+permittivity of free space
+Ohm
+Lenz's law
+Thomson
+magnetic field
+Oersted
+Seebeck effect
+Curie point
+Q factor
+Cooper
+Electric charge
+Biot
+transistor
+Liénard-Wiechert potential
+Tesla
+Joule
+RC circuit
+retarded potential
+Norton
+Curie's law
+elementary charge
+electromagnetic wave
+electric flux
+electromotive force
+Gauss's law
+mass spectrometer
+Coulomb
+superconductivity
+Permanent dipole
+NMR
+Gauss unit
+Underdamping
+Oersted (Oe)
+reactance
+Linear charge density
+Millikan oil-drop experiment
+Potential energy
+permittivity
+Faraday cage
+hysteresis loop
+TMS
+Larmor
+Néel temperature
+eddy current
+electromagnetic induction
+resistor
+time constant
+antiferromagnetism
+capacitor
+magnetic moment
+Langevin
+magnetic dipole
+induced electric-dipole moment
+Kirchhoff's circuit laws
+semiconductor
+MRI
+Bandwidth
+Parallel capacitors
+EMF
+Coulomb gauge
+Faraday's constant
+cyclotron
+self-inductance
+Damped oscillation
+dielectric strength
+AC voltage
+Maxwell's displacement current
+Siemens (S)
+Gaussian surface
+dipole radiation
+antenna
+Electromagnetism
+Faraday constant
+polarization
+electric potential
+SQUID
+Electrochemical cell
+electronvolt
+Commutator
+Galvani
+vector potential
+Phasors
+superconductor
+Joule heating
+electron volt
+transformer
+Meissner effect
+Tesla (T)
+transmission line
+ferromagnetic material
+permeability of free space
+Curie temperature
+Series capacitors
+Critical damping
+displacement current
+antiferromagnetic
+gradient
+Gauss's law for magnetism
+magnetic domain
+RL circuit
+Overdamping
+lead acid battery
+Coulomb's constant
+Larmor formula
+ohmic
+Dirac delta function
+Poynting vector
+Energy stored in a capacitor
+Nernst equation
+electric field lines

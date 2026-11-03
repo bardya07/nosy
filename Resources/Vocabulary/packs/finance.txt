@@ -1,225 +1,225 @@
-acid-test ratio
-after-tax cost of debt
-agency problem
-agency theory
-AICPA
-amortization
-annuity
-annuity due
-arithmetic average return
-audit committee
-Basel III
-bill of lading
-Black–Scholes formula
-bond laddering
-call option
-capital asset pricing model
-capital budgeting
-capital employed
-capital gain yield
-CAPM
-cash conversion cycle
-cash ratio
-certificate of deposit
-ceteris paribus
+market capitalization
+SEO
+firm-specific risk
+investment grade
 commercial paper
-common-size
-comparable company analysis
-compensating balances
-compounding period
-comps
-comptroller
-constant perpetuity
-contra-asset
-conversion price
-conversion ratio
-core inflation index
-coupon rate
-credit risk
-CVA
-DCF
-DDM
-debenture
-debt-to-assets ratio
-debt-to-equity ratio
-deep discount bonds
-derivative
-discount bond
-discount window
-discounted cash flow
-discounted payback period
-dividend discount model
-DJIA
-Dow Jones Industrial Average
-DuPont method
+time value of money
+AICPA
 EAR
-earnings per share
-EBIT
-EBITDA
-EDGAR
-effective annual rate
-effective interest rate
-enterprise value
-EPS
-equity multiples
-ETFs
+NPV
+pro forma
+discount window
+money market mutual funds
 EV
-exchange-traded funds
+acid-test ratio
+Net Stable Funding Ratio
+discount bond
+PI
+precedent transaction analysis
+initial public offering
+option writer
+perpetuity
+mortgage bond
+individual retirement accounts
+core inflation index
+general obligation bonds
+DDM
+Basel III
+MMMFs
+marking to market
+growing perpetuity
+holding period percentage return
+geometric mean
+CVA
+YTM
+IRAs
+NOPAT
+translation risk
+capital budgeting
+munis
+LIBOR
+EBIT
+marketable securities
+conversion price
+P/CF
+P/S
+operating cycle
+risk-free rate
+bill of lading
+DCF
+translation exposure
+RMA
+earnings per share
+FV
+cash conversion cycle
+mixed stream
+debt-to-equity ratio
+call option
+comptroller
+SOFR
+profitability index
+repo
+constant perpetuity
+NSFR
+SPACs
 factoring
-FASB
+common-size
+TIE
+derivative
+trade-off theory
+Black–Scholes formula
 FCF
-federal funds rate
-FICC
+transactional motive
+revolvers
+fixed-income securities
+audit committee
+internal rate of return
+NBER
+required rate of return
+replacement chain approach
+MD&A
+DJIA
+precedents
+risk premium
+net working capital
+dividend discount model
+Dow Jones Industrial Average
+ordinary annuity
+IRR
+municipal bonds
+Secured Overnight Financing Rate
+NYSE
+speculative motive
+yield to maturity
+equity multiples
+comparable company analysis
+transaction exposure
+Risk Management Association
+free cash flow
+interest rate risk
+IFRS
+P/B
+scenario analysis
+price-to-book ratio
+floating-rate bonds
+put option
+capital gain yield
+GASB
+price-to-cash-flow ratio
+OTC
+seasoned equity offering
+Sharpe ratio
+PV
+strike price
+present value
+prime rate
+P/E TTM
+EPS
+precautionary motive
+systematic risk
+tri-party repo
+P/E
+spot exchange rate
+FINRA
+structured settlements
+negotiable certificates of deposit
+hedging
+market risk premium
+MM Proposition I
+letter of credit
+future value
+zero-coupon bonds
+after-tax cost of debt
+trade credit
+Treasury bills
+FRED
+T-notes
+natural hedge
+shelf registration
+DuPont method
+arithmetic average return
+junk bonds
+ceteris paribus
+S&P 500
+times interest earned ratio
+WACC
+conversion ratio
 financial distress
 financial intermediary
-financial leverage
-FINRA
-firm-specific risk
-Fisher effect
-fixed-income securities
-floating-rate bonds
-floor planning
-flotation costs
-forward contract
-FRED
-free cash flow
-future value
-futures contract
-FV
-GAAP
-GASB
-general obligation bonds
-geometric average return
-geometric mean
-Gordon growth model
-gross working capital
-growing perpetuity
-hedging
-holding period percentage return
-IFAC
-IFRS
-individual retirement accounts
-initial public offering
-interest rate risk
-interest tax shield
-internal rate of return
-intrinsic value
-investment grade
-IRAs
-IRR
-Jensen's alpha
-junk bonds
-LCR
-letter of credit
-levered equity
-LIBOR
-Liquidity Coverage Ratio
-management discussion and analysis
-market capitalization
-market risk premium
-marketable securities
-marking to market
-MD&A
-method of least squares
-MIRR
-mixed stream
-MM Proposition I
-MMMFs
-modified internal rate of return
-money market mutual funds
-mortgage bond
-municipal bonds
-munis
-mutually exclusive projects
-NASDAQ
-natural hedge
-NBER
-NCDs
-negotiable certificates of deposit
-net debt
-net present value
-Net Stable Funding Ratio
-net working capital
-nominal interest rate
-NOPAT
-NPV
-NSFR
-NYSE
-operating cycle
-option writer
-ordinary annuity
-OTC
-over-the-counter market
-P/B
-P/CF
-P/E
-P/E TTM
-P/S
-perpetuity
-PI
-precautionary motive
-precedent transaction analysis
-precedents
-preferred stock
-premium bond
-present value
-price-to-book ratio
-price-to-cash-flow ratio
-price-to-earnings ratio
-price-to-sales ratio
-prime rate
-pro forma
-profitability index
-put option
-PV
-quick ratio
-real options
-realized return
-replacement chain approach
-repo
-required rate of return
-revenue bonds
-revolvers
-revolving lines of credit
-Risk Management Association
-risk premium
-risk-free rate
-RMA
-S&P 500
-scenario analysis
-seasoned equity offering
-Secured Overnight Financing Rate
-SEO
-Sharpe ratio
-shelf registration
-SIPC
-SOFR
-SPACs
-speculative motive
-spot exchange rate
-spot rate
-strike price
-structured settlements
-systematic risk
-T-bills
-T-notes
-TIE
-time value of money
-times interest earned ratio
-trade credit
-trade-off theory
-transaction exposure
-transactional motive
-translation exposure
-translation risk
-Treasury bills
-Treasury notes
-tri-party repo
 TVM
-unlevered equity
-WACC
+intrinsic value
+management discussion and analysis
+Treasury notes
+EBITDA
 weighted average cost of capital
+debt-to-assets ratio
+real options
+price-to-earnings ratio
+geometric average return
+agency theory
+contra-asset
+exchange-traded funds
+Liquidity Coverage Ratio
+ETFs
+NCDs
+compounding period
+debenture
+method of least squares
+nominal interest rate
+SIPC
+IFAC
+coupon rate
+discounted cash flow
+CAPM
+Fisher effect
+effective interest rate
+T-bills
+floor planning
+GAAP
+revolving lines of credit
+enterprise value
+capital asset pricing model
+gross working capital
+credit risk
+over-the-counter market
+unlevered equity
 yield curve
-yield to maturity
-YTM
-zero-coupon bonds
+FICC
+annuity
+price-to-sales ratio
+cash ratio
+MIRR
+deep discount bonds
+annuity due
+certificate of deposit
+premium bond
+revenue bonds
+discounted payback period
+financial leverage
+levered equity
+net debt
+compensating balances
+federal funds rate
+comps
+spot rate
+NASDAQ
+realized return
+futures contract
+quick ratio
+bond laddering
+amortization
+net present value
+interest tax shield
+flotation costs
+FASB
+LCR
+effective annual rate
+Gordon growth model
+agency problem
+forward contract
+EDGAR
+Jensen's alpha
+modified internal rate of return
+capital employed
+mutually exclusive projects
+preferred stock

@@ -1,337 +1,337 @@
-Abrikosov
-Abrikosov vortex
-acoustic phonon
-Anderson
-Anderson localization
-Anderson model
-Anderson's theorem
-anisotropy
-antiferromagnet
-antiferromagnetic order
-antiferromagnetic phase
-Ashcroft
-band gap
-band structure
-band theory
-bandwidth
-Bardeen
-Bardeen theory
-Bardeen-Cooper-Schrieffer theory
-base current
-BCC
-BCS gap
-BCS theory
-Berezinskii-Kosterlitz-Thouless transition
-Berry curvature
-Berry phase
-Bethe ansatz
-Bloch
-Bloch electron
-Bloch oscillation
-Bloch theorem
-Bloch wave
-Bloch wave function
-Bloch's theorem
-body-centered cubic
-body-centered tetragonal
-Bogoliubov
-Bogoliubov quasiparticle
-Bogoliubov transformation
-Born-Mayer
-Bose-Einstein condensate
-Bose-Einstein condensation
-Bose-Einstein distribution
-Bose-Einstein statistics
-Bose-Hubbard model
-Bragg
-Bragg diffraction
-Bragg peak
-Bravais lattice
-Brillouin
-Brillouin function
-Brillouin scattering
-Brillouin zone
-cesium chloride structure
-charge density wave
-chemical potential
-Chern insulator
-Chern number
-conduction band
-Cooper instability
-Cooper pair
-Cooper pair condensate
-Cooper pairs
-Coulomb blockade
-Coulomb glass
-Coulomb interaction
-critical current
-critical field
-critical magnetic field
-critical temperature
-crystal field
-crystal momentum
-crystal structure
-crystallography
-Curie temperature
-Curie-Weiss law
-Debye frequency
-Debye model
-Debye temperature
-Debye-Waller factor
-degeneracy pressure
-Density functional theory
-density of states
-DFT
-diamagnetism
-diamond structure
-dielectric function
-diffusion
-Dirac cone
-Dirac sea
-Dirac semimetal
-dislocation
-dispersion
-dispersion relation
-donor
-doping
-Dresselhaus
-drift mobility
-Drude model
-effective mass
-Ehrenfest
-Einstein frequency
-Einstein model
-Einstein solid
-Einstein temperature
-electron gas
 electron mobility
-electron scattering
-electron-phonon coupling
-electronic specific heat
-energy gap
-Ettingshausen
-Ewald summation
-exchange interaction
-face-centered cubic
-FCC
-Fermi
-Fermi energy
-Fermi factor
-Fermi gas
-Fermi level
-Fermi liquid
-Fermi sphere
-Fermi surface
-Fermi temperature
-Fermi velocity
-Fermi wave vector
-Fermi's golden rule
-Fermi-Dirac distribution
-Fermi-liquid theory
-ferroelectric
-ferromagnet
-ferromagnetic domain
-ferromagnetic order
-flux quantization
-flux qubit
-Fock
-Frenkel defect
-Frenkel exciton
-Fröhlich
-Fröhlich Hamiltonian
-Gaussian distribution
-Ginzburg
-Ginzburg-Landau equation
-Ginzburg-Landau parameter
-Ginzburg-Landau theory
-grain boundary
-graphene
-graphene sheet
-Hall
-Hall conductance
-Hall effect
 Hall resistance
-Hall voltage
-Hartree
-Hartree-Fock
-HCP
-heavy fermion system
-Heisenberg
-Heisenberg model
-Heitler-London
-hexagonal close-packed
-Hofstadter butterfly
-Hohenberg-Kohn theorem
-hole
-hole mobility
-Holstein-Primakoff transformation
-hopping conduction
-Hubbard
-Hubbard model
-Hubbard-Stratonovich
-Hund's rule
-Hund's rules
-impurity band
-insulator
+Bragg peak
+Fermi level
 intrinsic semiconductor
-Ising
-Ising model
-Josephson effect
-Josephson junction
-Josephson vortex
-Kagome
-Kagome lattice
-Kittel
-Kohn
-Kohn-Sham
-Kondo effect
-Kondo lattice
-Kosterlitz
-Kosterlitz-Thouless transition
-Kramers
-Kramers degeneracy
-Kramers pair
-Kramers-Kronig relations
-Kronig-Penney model
-Landau
-Landau damping
-Landau Fermi liquid
-Landau level
-Landau theory
-Landau-Lifshitz
-lattice constant
-lattice vibration
-Laue
-Lennard-Jones
-Lennard-Jones potential
-Lifshitz
-Lindemann criterion
-Lindhard function
-London equation
-London penetration depth
-Lorentz oscillator
-Luttinger
-Luttinger liquid
-Madelung
-Madelung constant
-magnetic flux quantum
-magnetic order
-magnetic penetration depth
-magnon
-Majorana
-Majorana fermion
-Matthias
-Matthiessen's rule
-Meissner
-Mermin
-Mermin-Wagner theorem
-metal-insulator transition
-Miller
-Miller indices
-Mott
-Mott insulator
-Mott transition
-Mott-Hubbard
-n-type semiconductor
-nearly free electron model
-Nernst effect
-Nernst-Ettingshausen effect
-neutron scattering
-Néel temperature
-optical lattice
-optical phonon
-p-n junction
-p-type semiconductor
-Pauli
-Pauli paramagnetism
-Pauli principle
-Peierls
-Peierls transition
-Peltier
-perovskite
-phase transition
-phonon
-phonon dispersion
-phonon scattering
-photonic crystal
-piezoelectric effect
-plasma frequency
-plasma oscillation
-plasmon
-point defect
-polaron
-polycrystalline
-Potts model
-pyroelectric
-quantum dot
-quantum Hall effect
-quantum well
-quantum wire
-quasiparticle
-quasiparticle excitation
-Raman scattering
-rare earth
-Rashba
-Rashba effect
-reciprocal lattice
-rock salt structure
-Schottky barrier
-second-order phase transition
-Seebeck
-Shockley diode
-simple cubic
-Slater
-Slater determinant
-Sommerfeld model
-spin density wave
-spin glass
-spin Hall effect
-spin wave
-spin-orbit coupling
-spin-orbit interaction
-spintronics
-spontaneous magnetization
-Stoner criterion
-Stoner model
-superconductor
-superfluid
-superfluid helium
-superfluidity
-surface states
-thermal conductivity
-thermoelectric effect
-Thomas-Fermi screening
-Thouless
-Tight-binding model
-topological insulator
-transistor
-transition temperature
-twisted bilayer graphene
-type I superconductor
-type II superconductor
-unit cell
-vacancy
-valence band
-Van Hove singularity
-Van Vleck
-Wannier
-Wannier function
-Weiss molecular field
-Weyl fermion
-Weyl semimetal
-Wiedemann-Franz law
-Wigner
-Wigner crystal
-Wigner-Seitz
-Wigner-Seitz cell
-Wigner-Seitz radius
-Wilson number
-Wyckoff
-x-ray crystallography
-X-ray diffraction
-XY model
-Zeeman splitting
-Zener breakdown
-Zener diode
-Zener tunneling
+cesium chloride structure
+graphene
+hole
+Bethe ansatz
 zone folding
+Peierls
+body-centered tetragonal
+vacancy
+Nernst effect
+Stoner criterion
+Lindemann criterion
+Fröhlich
+XY model
+Anderson model
+crystal momentum
+Hubbard-Stratonovich
+Kondo lattice
+Bloch
+Fock
+critical field
+Landau
+Born-Mayer
+Pauli paramagnetism
+Kohn
+electron scattering
+Fermi surface
+Sommerfeld model
+Gaussian distribution
+electronic specific heat
+Anderson
+Kosterlitz-Thouless transition
+Fermi liquid
+base current
+Coulomb glass
+Bogoliubov
+donor
+body-centered cubic
+quasiparticle excitation
+Wigner-Seitz radius
+metal-insulator transition
+Mott-Hubbard
+BCS gap
+antiferromagnetic order
+bandwidth
+Bose-Einstein condensate
+Hartree
+hexagonal close-packed
+magnetic flux quantum
+Mott
+Fermi energy
+Peierls transition
+Landau theory
+Hubbard model
+X-ray diffraction
+London equation
+plasma oscillation
+antiferromagnet
+Wigner-Seitz cell
+Kramers pair
+spontaneous magnetization
+superconductor
+ferroelectric
+Bose-Hubbard model
+Abrikosov
+p-n junction
+phonon dispersion
+dielectric function
+polycrystalline
+Nernst-Ettingshausen effect
+Josephson junction
+Bose-Einstein distribution
+anisotropy
+Einstein model
+p-type semiconductor
+ferromagnetic domain
+DFT
+Thouless
+Density functional theory
+doping
+Zener tunneling
+Ising model
+impurity band
+quasiparticle
+Matthias
+spin Hall effect
+spin-orbit coupling
+Chern number
+Bragg
+Brillouin zone
+Coulomb blockade
+flux quantization
+spin-orbit interaction
+piezoelectric effect
+nearly free electron model
+critical magnetic field
+unit cell
+critical temperature
+Kramers degeneracy
+Ginzburg
+Schottky barrier
+Madelung
+Kagome lattice
+Berezinskii-Kosterlitz-Thouless transition
+Wigner
+spintronics
+Frenkel exciton
+n-type semiconductor
+Stoner model
+Tight-binding model
+Laue
+Ashcroft
+Heitler-London
+Mott transition
+point defect
+Debye temperature
+Debye frequency
+Mermin
+Landau damping
+Bardeen
+exchange interaction
+Shockley diode
+spin density wave
+Fermi sphere
+crystallography
+plasmon
+Bloch wave
+electron gas
+Drude model
+Miller
+Brillouin
+Luttinger liquid
+magnetic order
+Debye-Waller factor
+magnetic penetration depth
+Bardeen-Cooper-Schrieffer theory
+polaron
+Thomas-Fermi screening
+Dirac sea
+superfluid helium
+Wilson number
+Hall voltage
+Fröhlich Hamiltonian
+Bloch wave function
+plasma frequency
+Fermi velocity
+Kagome
+Rashba effect
+Wannier function
+Fermi
+band gap
+Kramers-Kronig relations
+Pauli
+surface states
+Heisenberg model
+Curie temperature
+Zener breakdown
+Weiss molecular field
+Cooper pair
+Brillouin scattering
+grain boundary
+transistor
+dispersion
+Pauli principle
+Fermi's golden rule
+Slater determinant
+diamond structure
+Hartree-Fock
+Ewald summation
+Miller indices
+Kramers
+Hofstadter butterfly
+dispersion relation
+degeneracy pressure
+x-ray crystallography
+Matthiessen's rule
+Néel temperature
+Einstein frequency
+Hall
+Anderson's theorem
+electron-phonon coupling
+Bloch oscillation
+thermal conductivity
+Abrikosov vortex
+Madelung constant
+Lennard-Jones
+Josephson effect
+transition temperature
+Van Hove singularity
+acoustic phonon
+lattice constant
+Peltier
+Bogoliubov quasiparticle
+Dresselhaus
+Curie-Weiss law
+ferromagnetic order
+ferromagnet
+Coulomb interaction
+Ginzburg-Landau parameter
+Ettingshausen
+hole mobility
+type II superconductor
+Wigner crystal
+Cooper instability
+Ising
+Zener diode
+band theory
+second-order phase transition
+flux qubit
+Raman scattering
+Kondo effect
+Ehrenfest
+Rashba
+Potts model
+Josephson vortex
+quantum wire
+density of states
+crystal structure
+Bragg diffraction
+Frenkel defect
+graphene sheet
+Chern insulator
+charge density wave
+BCS theory
+Heisenberg
+Wiedemann-Franz law
+antiferromagnetic phase
+Bloch electron
+Hall conductance
+Bogoliubov transformation
+Cooper pairs
+Seebeck
+perovskite
+FCC
+magnon
+critical current
+Bardeen theory
+Weyl semimetal
+Berry phase
+Fermi-Dirac distribution
+Dirac cone
+Mott insulator
+chemical potential
+hopping conduction
+heavy fermion system
+Hund's rules
+Lifshitz
+Anderson localization
+Bose-Einstein condensation
+diffusion
+lattice vibration
+Wigner-Seitz
+band structure
+quantum well
+neutron scattering
+insulator
+reciprocal lattice
+Cooper pair condensate
+Meissner
+pyroelectric
+diamagnetism
+London penetration depth
+simple cubic
+conduction band
+HCP
+optical lattice
+Fermi-liquid theory
+Wyckoff
+superfluidity
+rare earth
+energy gap
+drift mobility
+Fermi wave vector
+Luttinger
+Slater
+Lennard-Jones potential
+topological insulator
+Hohenberg-Kohn theorem
+Bravais lattice
+Zeeman splitting
+quantum dot
+Landau-Lifshitz
+dislocation
+Fermi temperature
+Holstein-Primakoff transformation
+Lindhard function
+Bloch's theorem
+optical phonon
+effective mass
+spin glass
+Hubbard
+Ginzburg-Landau equation
+Weyl fermion
+Kosterlitz
+Berry curvature
+quantum Hall effect
+face-centered cubic
+crystal field
+Mermin-Wagner theorem
+valence band
+twisted bilayer graphene
+Majorana fermion
+type I superconductor
+Ginzburg-Landau theory
+Kittel
+thermoelectric effect
+Majorana
+photonic crystal
+Bose-Einstein statistics
+BCC
+phase transition
+Landau level
+Bloch theorem
+Van Vleck
+Einstein solid
+spin wave
+phonon scattering
+Kronig-Penney model
+phonon
+Hund's rule
+Fermi factor
+superfluid
+Debye model
+Brillouin function
+Landau Fermi liquid
+rock salt structure
+Kohn-Sham
+Dirac semimetal
+Lorentz oscillator
+Wannier
+Fermi gas
+Hall effect
+Einstein temperature

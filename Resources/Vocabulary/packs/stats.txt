@@ -1,329 +1,329 @@
-AIC
-Akaike information criterion
-Alpha level
-ANCOVA
-Anderson-Darling test
-ANOVA
-Antithetic variates
-area under the curve
-ARIMA
-ARMA
-AUC
-Autocorrelation
-Bartlett test
-Bayes factor
-Bayes' theorem
-Bayesian inference
-Bayesian information criterion
-Bayesian statistics
-Benjamini-Hochberg procedure
-Bernoulli distribution
-Bernoulli Trial
-Beta distribution
-Beta error
-Beta function
-Beta-binomial
-BIC
-Binomial coefficient
-Binomial distribution
-Bonferroni correction
-bootstrap
-Bootstrap confidence interval
-bootstrapping
-Box-Muller transform
-Box-Pierce test
-Breusch-Godfrey test
-Breusch-Pagan test
-BUGS
-Cauchy distribution
-CDF
-central limit theorem
-Chebyshev's inequality
-Chi-square
-chi-square distribution
-Chi-square goodness of fit
-chi-square test
-Chi-squared distribution
-chi-squared test
-Chow test
-Cluster analysis
-coefficient of determination
-Cohen d
-Cohen kappa
-Cohen's d
-Cointegration
-conditional probability
-confidence interval
-confidence level
-confounding variable
-Conjugate prior
-Cook's distance
-correlation coefficient
-covariance matrix
-Cox proportional hazards
-Cramér V
-Cramér's V
-Cramér-Rao bound
-Cronbach alpha
-Cronbach's alpha
-Cumulative distribution
-cumulative distribution function
-degrees of freedom
-Dendrogram
-Dickey-Fuller test
-Difference-in-differences
-Dirichlet distribution
-discriminant analysis
-dummy variable
-Duncan's multiple range test
-Dunn's test
-Dunnett's test
-Durbin-Watson
-Durbin-Watson statistic
-Effect size
-Eigenvalue
-Empirical Bayes
-empirical rule
-Entropy
-ergodic
-eukaryote
-Euler-Poisson differential equations
-Euler-Poisson-Darboux equation
-exponential distribution
-Exponential smoothing
-F-distribution
-F-statistic
-F-test
-factor analysis
-Factor loading
-False discovery rate
-Familywise error rate
-FDR
-Fisher information
-Fisher's exact
-Fisher's exact test
-Fisher's linear discriminant
-Fisher's z-transformation
-Fixed effects model
-Fleiss kappa
-FWER
-Gamma distribution
-Gamma function
-Gauss-Markov theorem
-Gaussian distribution
-Gaussian process
-Geometric distribution
-Gibbs sampler
-Gibbs sampling
-Gini coefficient
-Granger causality
-Gumbel distribution
-Hamiltonian Monte Carlo
-Hardy-Weinberg
-Hausman test
-Heckman correction
-Hedges g
-heteroscedasticity
-Hierarchical clustering
-HMC
-Holm's method
-Holm-Bonferroni method
-homeostasis
-homoscedasticity
-Hotelling's T-squared
-hypergeometric probability
-hypothesis testing
-Importance sampling
-Improper prior
-independent events
-inferential statistics
-Instrumental variables
-Inter-rater reliability
-interquartile range
-Intraclass correlation
-Inverse transform sampling
-IQR
-IRB
-Jackknife
-Jackknife estimator
-JAGS
-Jarque-Bera test
-Jeffreys prior
-k-means
-k-means clustering
-Kalman filter
-Kaplan-Meier estimator
-Kendall tau
-Kendall's W
-KL divergence
-Kolmogorov
-Kolmogorov-Smirnov test
-Kruskal-Wallis test
-Kullback-Leibler divergence
-kurtosis
-Laplace distribution
-Lasso regression
-law of large numbers
-law of total probability
-Levene test
-Levene's test
-likelihood
-likelihood function
-likelihood ratio test
-Lilliefors test
-linear regression
-Ljung-Box test
-log-normal distribution
-logistic regression
-logit
-Mahalanobis distance
-MANCOVA
-Mann-Whitney U
-MANOVA
-MAP
-Markov chain
-Markov chain Monte Carlo
-Markov process
-Markov property
-Markov's theorem
-maximum likelihood estimation
-MCMC
-McNemar test
-mean absolute error
-median
-Metropolis algorithm
-Metropolis-Hastings algorithm
-Minitab
-mixed effects model
-MLE
-mode
-Monte Carlo simulation
-Moving average
-multicollinearity
-multinomial distribution
-multivariate normal distribution
-Mutual information
-negative binomial distribution
-Newey-West
-Neyman-Pearson lemma
-normal distribution
-null hypothesis
-NUTS
-OLS
-ordinal scale
-Ordinary least squares
-p-value
-Panel data
-Pareto distribution
-Pascal's triangle
-PCA
-PDF
-Pearson
-Pearson chi-square
-Pearson's r
-permutation test
-Phi coefficient
-Pillai's trace
-PMF
-Point-biserial correlation
-Poisson bracket
-Poisson distribution
-Poisson identity
-Poisson integral
-Poisson kernel
-Poisson probability distribution
-Poisson regression
-Poisson's equation
-Poisson's integral
-Poisson's summation formula
-posterior distribution
-posterior mean
-posterior probability
-power analysis
-Principal component analysis
-prior distribution
-probability density function
-probability mass function
-propensity score
-quantile
-Quartile
-R programming
-R-squared
-Random effects model
-random variable
-random walk
 Rao-Blackwell theorem
-Rayleigh distribution
-Regression discontinuity
-regression toward the mean
-Rejection sampling
-residual
-Ridge regression
-ROC curve
-Sample size
-sampling distribution
-SAS
-Scheffé test
-Scree plot
-Shannon entropy
-Shapiro-Wilk
-Shapiro-Wilk test
-Sidak correction
-sigmoid function
-Significance level
-Simple random sampling
-Simpson's paradox
-skewness
-Spearman correlation
-Spearman's rho
-SPSS
-SSE
-Stan
-standard deviation
-standard error
-standard normal distribution
-Stata
-Stationarity
-Statistical power
-Stochastic gradient descent
-Stochastic process
-Stratified sampling
-Student t-distribution
-Student's t
-Student's t-distribution
-Student's t-test
-Sum of squares
-survival analysis
-Time series
-Tukey
-Tukey's HSD
-Tukey's test
-Two-stage least squares
-Two-way ANOVA
-type 1 error
-Type I error
-type II error
-unbiased estimator
-Uniform distribution
-Unit root
-variance
-Variance inflation factor
-Variance reduction
-VIF
-Wald statistic
-Wald test
-Weibull
-Weibull distribution
-Welch t-test
-White test
-Wiener
+Gumbel distribution
+Fisher's exact
+Alpha level
+Dirichlet distribution
+Hotelling's T-squared
 Wiener process
-Wilcoxon rank-sum
-Wilcoxon signed-rank test
-Wilcoxon test
-Wilks' lambda
-Wishart distribution
+Gaussian process
 Yates' correction
-z-score
-z-test
+Cramér V
+k-means clustering
+Chi-squared distribution
+Stata
+Bayes' theorem
+sigmoid function
+ANOVA
+chi-squared test
+Fleiss kappa
+Poisson kernel
+Box-Pierce test
+Point-biserial correlation
+Bonferroni correction
+Bayesian inference
+factor analysis
+coefficient of determination
+FWER
+power analysis
+posterior mean
+negative binomial distribution
+Ordinary least squares
+Poisson regression
+MLE
+inferential statistics
+Lasso regression
+Poisson probability distribution
+Levene's test
+FDR
+Stratified sampling
+Tukey's HSD
+Laplace distribution
+Simpson's paradox
+Fixed effects model
+Chi-square
+Benjamini-Hochberg procedure
+Kendall's W
+Cohen kappa
+Jackknife estimator
+Tukey's test
+Gini coefficient
+Beta-binomial
+confounding variable
+ARIMA
+Kaplan-Meier estimator
+Empirical Bayes
+Antithetic variates
+Principal component analysis
+BUGS
+Rayleigh distribution
+Bayes factor
+logistic regression
+Cox proportional hazards
+random variable
+Stationarity
+Poisson identity
+Exponential smoothing
+propensity score
+KL divergence
+residual
+type II error
+Scree plot
+ROC curve
+SSE
+Wilcoxon signed-rank test
+False discovery rate
+probability mass function
+Mahalanobis distance
+sampling distribution
+Chow test
+F-statistic
+Akaike information criterion
+Holm's method
 Zipf's law
+Simple random sampling
+IQR
+maximum likelihood estimation
+Wiener
+Bayesian statistics
+Cluster analysis
+Instrumental variables
+Fisher's z-transformation
+Pascal's triangle
+interquartile range
+Student's t
+probability density function
+AIC
+area under the curve
+Autocorrelation
+Welch t-test
+Breusch-Pagan test
+Jackknife
+SAS
+Dickey-Fuller test
+Gaussian distribution
+ANCOVA
+PDF
+multicollinearity
+Student t-distribution
+Hedges g
+Importance sampling
+Kolmogorov-Smirnov test
+Statistical power
+ordinal scale
+Eigenvalue
+Poisson distribution
+Euler-Poisson-Darboux equation
+Markov property
+PCA
+Heckman correction
+MANOVA
+type 1 error
+standard normal distribution
+McNemar test
+Anderson-Darling test
+MAP
+random walk
+Pareto distribution
+Significance level
+cumulative distribution function
+Wilks' lambda
+Monte Carlo simulation
+Cook's distance
+Phi coefficient
+Shapiro-Wilk
+multinomial distribution
+Stochastic process
+confidence level
+hypergeometric probability
+likelihood
+AUC
+Markov chain Monte Carlo
+Newey-West
+dummy variable
+Cohen d
+Jeffreys prior
+Type I error
+Wilcoxon test
+covariance matrix
+chi-square test
+Spearman's rho
+Ljung-Box test
+Granger causality
+correlation coefficient
+posterior probability
+Hardy-Weinberg
+Minitab
+Markov's theorem
+normal distribution
+MCMC
+bootstrapping
+law of large numbers
+Wald statistic
+median
+Poisson bracket
+Beta function
+OLS
+Neyman-Pearson lemma
+Kalman filter
+central limit theorem
+White test
+mixed effects model
+Two-stage least squares
+F-distribution
+Random effects model
+Sample size
+Pillai's trace
+Shapiro-Wilk test
+Markov chain
+standard deviation
+Chi-square goodness of fit
+Sum of squares
+Binomial coefficient
+Holm-Bonferroni method
+Bootstrap confidence interval
+Levene test
+Poisson's summation formula
+Intraclass correlation
+Rejection sampling
+posterior distribution
+mode
+Gibbs sampler
+IRB
+Conjugate prior
+Breusch-Godfrey test
+logit
+k-means
+Variance reduction
+Jarque-Bera test
+JAGS
+chi-square distribution
+likelihood function
+Poisson's integral
+Pearson
+Shannon entropy
+quantile
+Improper prior
+Sidak correction
+Mann-Whitney U
+Geometric distribution
+kurtosis
+Poisson's equation
+Weibull distribution
+Difference-in-differences
+SPSS
+Gauss-Markov theorem
+Dendrogram
+R programming
+Chebyshev's inequality
+Hierarchical clustering
+Two-way ANOVA
+Kruskal-Wallis test
+Duncan's multiple range test
+Binomial distribution
+Tukey
+null hypothesis
+Weibull
+Bernoulli distribution
+discriminant analysis
+Bayesian information criterion
+Wilcoxon rank-sum
+Kendall tau
+ergodic
+Variance inflation factor
+F-test
+heteroscedasticity
+exponential distribution
+Stochastic gradient descent
+HMC
+linear regression
+Inter-rater reliability
+bootstrap
+independent events
+Pearson chi-square
+homeostasis
+law of total probability
+Metropolis-Hastings algorithm
+Cohen's d
+Durbin-Watson
+Gamma function
+BIC
+skewness
+Beta distribution
+Euler-Poisson differential equations
+Cumulative distribution
+MANCOVA
+Mutual information
+Familywise error rate
+Stan
+permutation test
+Pearson's r
+empirical rule
+Scheffé test
+z-score
+Dunnett's test
+Gibbs sampling
+p-value
+Kullback-Leibler divergence
+confidence interval
+standard error
+Fisher's exact test
+Panel data
+Wald test
+unbiased estimator
+Effect size
+Ridge regression
+Fisher's linear discriminant
+Entropy
+Bartlett test
+Durbin-Watson statistic
+Cronbach alpha
+Spearman correlation
+Beta error
+homoscedasticity
+Kolmogorov
+Box-Muller transform
+hypothesis testing
+Hamiltonian Monte Carlo
+regression toward the mean
+Markov process
+prior distribution
+Student's t-test
+Cronbach's alpha
+Bernoulli Trial
+Wishart distribution
+survival analysis
+Lilliefors test
+degrees of freedom
+Quartile
+VIF
+R-squared
+Cointegration
+ARMA
+PMF
+Uniform distribution
+Hausman test
+Gamma distribution
+NUTS
+Unit root
+Regression discontinuity
+log-normal distribution
+likelihood ratio test
+Metropolis algorithm
+Cauchy distribution
+Cramér-Rao bound
+Fisher information
+multivariate normal distribution
+Factor loading
+Moving average
+Student's t-distribution
+Time series
+Inverse transform sampling
+Cramér's V
+z-test
+variance
+CDF
+mean absolute error
+Dunn's test
+Poisson integral
+conditional probability
+eukaryote

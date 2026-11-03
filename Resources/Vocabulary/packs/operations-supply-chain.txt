@@ -1,262 +1,262 @@
-3P
-8D
-A3 report
-acceptance number
-acceptance quality limit
-acceptance sampling
-acceptance sampling plan
-activity network diagram
-Advanced Product Quality Planning
-affinity diagram
-analysis of means
-andon board
-ANOM
-ANSI ACS X12
-AOQ
-AOQL
-appraisal cost
-APQP
-AQL
-ARL
-arrow diagram
-ASN
-assignable cause
-ATI
-attribute data
-autonomation
-average outgoing quality
-average outgoing quality limit
-average run lengths
-average sample number
-average total inspection
-baka-yoke
-balanced plant
-balanced scorecard
-balancing the line
-Baldrige award
-batch and queue
-BB
-Big Q, little q
-Black Belt
-c-chart
-CAD
-CAE
+variable data
 capability maturity model
-capacity constraint resources
-CAR
-cause and effect diagram
-CE
-cellular manufacturing
-chain sampling plan
-changeover time
-CLCA
-closed-loop corrective action
-CMM
-common causes
 computer aided design
-computer aided engineering
-computer-aided manufacturing
-concurrent engineering
-conformity assessment
-constraints management
-consumer's risk
-continuous flow production
-continuous quality improvement
-continuous sampling plan
-control chart
-control limits
-control plan
-coordinate measuring machine
-COPQ
-COQ
-corrective action recommendation
-cost of poor quality
-cost of quality
-Cp
-Cpk index
-CQI
-CSM
-cumulative sum control chart
-customer-supplier model
-CUSUM
-cycle time
-d-chart
-demerit chart
-Deming cycle
-Design for Six Sigma
-design of experiments
-DFSS
-DMADV
-DMAIC
-Dodge-Romig sampling plans
-DoE
-EDI
-eight disciplines model
-eight wastes
-eighty-twenty
-electronic data interchange
-enterprise resource planning
-ERP
-flexible manufacturing system
-GLIS
-global logistics information system
-global supply chain management
-GSCM
-heijunka
-hoshin kanri
-integer programming
-ISO 14000
-ISO 14001
-ISO 19011
-ISO 26000
-ISO 9000
-ISO 9001
-jidoka
-JIT
-Juran trilogy
-just-in-time manufacturing
-Kaizen
-Kanban
-Kano model
-key process characteristic
-key product characteristic
-kitting
-LCL
-lean enterprise
-lean manufacturing
-level loading
-linear programming
-load-load
-lot tolerance percentage defective
-lower control limit
-LTPD
-manufacturing resource planning
-mass customization
-Master Black Belt
-material requirements planning
-MBB
-mean time between failures
-measurement uncertainty
-metrology
-MRP
-MRP II
-MTBF
-muda
-multivariate control chart
-Nagara system
-NCR
-nominal group technique
-nonconforming record
-nonconformity
-nondestructive testing
-nonvalue added
-OC curve
-OEE
-OEM
-one-piece flow
-one-touch exchange of dies
-operating characteristic curve
-original equipment manufacturer
-out-of-control process
-overall equipment effectiveness
-p-chart
-Pareto chart
-parts per million
-PDCA cycle
 PDPC
-plan-do-check-act cycle
-point kaizen
-Poisson distribution
-poka-yoke
-PPAP
-PPM
-prevention cost
-probability of rejection
-problem concentration diagram
-process capability
-process capability index
-process decision program chart
-process flow diagram
-process kaizen
-production part approval process
-production smoothing
-proportion chart
-pull system
-Q9000 series
-QA/QC
-QFD
-QMS
-quality assurance
-quality circle
-quality control
-quality function deployment
-quality loss function
-quality management system
-queue time
-quick changeover
 quincunx
-R-chart
-range chart
-red bead experiment
-rejection number
-RFID
-root cause analysis
-run chart
-S-chart
-S/N ratio
-sample standard deviation chart
-SCM
-SDWT
-Seiban
-self-directed work team
-seven tools of quality
-seven wastes
-Shainin System
-Shewhart cycle
-signal to noise ratio
-single-minute exchange of dies
-single-piece flow
-SIPOC diagram
+ISO 19011
+A3 report
 Six Sigma quality
-spaghetti diagram
-SPC
+work in process
+range chart
+TQC
+ISO 26000
+d-chart
+control plan
+GLIS
+multivariate control chart
+Deming cycle
+quality loss function
+Seiban
+process flow diagram
+attribute data
+closed-loop corrective action
+nonconforming record
+cumulative sum control chart
+COPQ
+original equipment manufacturer
+CAE
+measurement uncertainty
+value stream mapping
+DoE
+level loading
+heijunka
+process capability index
+value engineering
+rejection number
+continuous quality improvement
+TRIZ
+operating characteristic curve
 special causes
-SQC
-SSCM
-standard in-process stock
-standard work
-statistical process control
+Kanban
+one-touch exchange of dies
+trend control chart
+conformity assessment
+queue time
+autonomation
+constraints management
+pull system
+UCL
+value stream loops
+coordinate measuring machine
 statistical quality control
-structural variation
+mass customization
+corrective action recommendation
+baka-yoke
+voice of the customer
+poka-yoke
+average sample number
+ANSI ACS X12
+AOQL
+Kaizen
+CAR
+AOQ
+key product characteristic
+lot tolerance percentage defective
+process kaizen
+continuous flow production
+NCR
+common causes
+linear programming
+MRP
+RFID
+balancing the line
+run chart
+design of experiments
+QFD
+key process characteristic
+ERP
+sample standard deviation chart
+Q9000 series
+flexible manufacturing system
+electronic data interchange
+single-minute exchange of dies
+Cpk index
+SPC
+hoshin kanri
+QMS
+lower control limit
+production smoothing
+upper control limit
+Baldrige award
+problem concentration diagram
+Kano model
+Black Belt
+CSM
+Advanced Product Quality Planning
+overall equipment effectiveness
+CQI
+mean time between failures
+eight wastes
 suboptimization
-supply chain management
-sustainable supply chain management
-system kaizen
+Shewhart cycle
+zero defects
+root cause analysis
+average total inspection
+value analysis
+quality circle
+jidoka
+seven wastes
+statistical process control
+structural variation
+control chart
+S-chart
+vital few, useful many
+lean enterprise
+OEM
+TOC
+material requirements planning
+standard in-process stock
+plan-do-check-act cycle
+cost of poor quality
+eight disciplines model
+SIPOC diagram
+CAD
+point kaizen
+GSCM
+cycle time
+nonvalue added
+quality assurance
+kitting
+signal to noise ratio
+appraisal cost
+analysis of means
+Dodge-Romig sampling plans
+CE
+average run lengths
+cost of quality
+out-of-control process
+lean manufacturing
 Taguchi Methods
+total quality control
+Master Black Belt
+capacity constraint resources
+ASN
+LTPD
+waiting line models
+cellular manufacturing
+acceptance quality limit
+CLCA
+sustainable supply chain management
+SCM
+andon board
+ISO 14001
+TPS
+DMAIC
+metrology
+MTBF
+ISO 9000
+CUSUM
+acceptance number
+Pareto chart
+production part approval process
+Nagara system
 takt time
 theory of constraints
-TOC
-total productive maintenance
-total quality control
+3P
+muda
+changeover time
 total quality management
-Toyota production system
+quality function deployment
+continuous sampling plan
+quality management system
+Poisson distribution
+c-chart
+LCL
+demerit chart
+concurrent engineering
+nominal group technique
+ISO 14000
+ISO 9001
+balanced scorecard
+global supply chain management
+Big Q, little q
+customer-supplier model
 TPM
-TPS
-TQC
-TQM
-trend control chart
-TRIZ
+JIT
+APQP
+process capability
+spaghetti diagram
+BB
+computer-aided manufacturing
+system kaizen
+proportion chart
+p-chart
+balanced plant
+probability of rejection
+average outgoing quality
+PPM
+eighty-twenty
+seven tools of quality
+integer programming
+single-piece flow
+OC curve
+QA/QC
+parts per million
+ANOM
+acceptance sampling
+CMM
+SSCM
+activity network diagram
+global logistics information system
+nondestructive testing
+self-directed work team
+EDI
+Toyota production system
+R-chart
+Design for Six Sigma
+process decision program chart
+SDWT
+manufacturing resource planning
+standard work
+DMADV
+computer aided engineering
+Juran trilogy
+one-piece flow
+SQC
+Shainin System
+prevention cost
+COQ
+nonconformity
+arrow diagram
+enterprise resource planning
+OEE
+supply chain management
+batch and queue
+just-in-time manufacturing
+consumer's risk
+assignable cause
 u-chart
-UCL
-upper control limit
-value analysis
-value engineering
-value stream loops
-value stream mapping
-variable data
-vital few, useful many
-voice of the customer
-waiting line models
-work in process
+affinity diagram
+cause and effect diagram
+MBB
 x-bar chart
-zero defects
+8D
+quality control
+MRP II
+TQM
+quick changeover
+ATI
+DFSS
+load-load
+S/N ratio
+ARL
+chain sampling plan
+PDCA cycle
+average outgoing quality limit
+total productive maintenance
+AQL
+red bead experiment
+control limits
+Cp
+acceptance sampling plan
+PPAP

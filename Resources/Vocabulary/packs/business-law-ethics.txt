@@ -1,186 +1,186 @@
-access economy
-acculturation
-agribusiness
-business judgment rule
-business purpose exception
-Canada Business Corporations Act
-Canada's Anti-Spam Legislation
-cap and trade
-case law
-CASL
-categorical imperative
-cause of action
-caveat emptor
-CBCA
-Central Hudson Test for Commercial Speech
-CISG
-Citizens United v. Federal Election Commission
-class action lawsuit
-closed shop
-collective bargaining
-collective bargaining agreement
-commerce clause
-commercial reasonableness
-common-carrier delivery contract
-comparable worth
-comparative negligence
-conditional sales contract
-consequentialism
-contributory negligence
-corporate personhood
-corporate social responsibility
-CSR
-decertification election
-deontologist ethics
-deontology
-descriptive approach
-destination contract
-diffused stakeholder
-disparate impact
-disparate treatment
-diversity dividend
-divestiture
-doctrine of sovereign immunity
-dormant commerce clause
-due process clause
-duty of care
-duty of confidentiality
-duty of loyalty
-duty to aid
-dyadic negotiation
-e-mediation
-EEOC
-embezzlement
-employment at will
-enabling stakeholder
+restraint of trade
+police power
 enculturation
-encumbrance
-ethical maximum
-ethical minimum
-ethical relativism
-eudaimonia
-exclusive remedy
-express warranty
-Federal Arbitration Act
-federalism
-fiduciary
-fiduciary duty
-firm offers
-force majeure
-forced-arbitration clauses
-Foreign Commerce Clause
-Foreign Sovereign Immunities Act of 1976
-foreseeability
-Form 10-K
-Form 10-Q
-Form 8-K
-free exercise clause
-functional stakeholder
-garnishment
-GDPR
-General Data Protection Regulation
-golden mean
-goods-in-bailment contract
-grant of authority
-greenwashing
-grievance arbitration
-harm principle
-hostile work environment
-humanistic business model
-inaccessibility exception
-insider trading
-institutional investors
-instrumental approach
+CASL
+ultra vires
+stakeholder claim
+case law
+pump-and-dump
+Canada Business Corporations Act
 involuntary arbitration
-ISO 14000
-junzi
-just compensation
-justice as fairness
-justice theory
-laissez-faire
-litigation
-malpractice
-managerial ethics
-material nonpublic information
-mens rea
-mercantilism
-mirror-image rule
-mixed sale
-moral agency
-moral minimum
-non-binding arbitration
+enabling stakeholder
+quantum meruit
+strict liability
+duty of care
+caveat emptor
+corporate personhood
+social contract theory
+redlining
+triple bottom line
+yellow-dog contracts
+institutional investors
+quid pro quo
+respondeat superior
+Form 10-Q
+Foreign Commerce Clause
+foreseeability
+fiduciary
+dormant commerce clause
+agribusiness
+ethical maximum
+rule of reason
+veil of ignorance
+functional stakeholder
+contributory negligence
 non-compete agreement
 nonsolicitation clause
-normative approach
-normative ethical theories
-organic statute
-original position
-OSHA
-output contracts
-Personal Information Protection and Electronic Documents Act
-pervasive-regulation exception
-phrónēsis
-PIPEDA
-plaintiff
-police power
-pre-arranged trading plans
-prima facie
 privilege against self-incrimination
-probable cause
-promissory estoppel
-pump-and-dump
-quantum meruit
-qui tam provision
-quid pro quo
-rational-basis test
-reasonable accommodation
-reasonable standard of care
-reasonableness test of reliance
-redlining
-requirements contracts
-res ipsa loquitur
-respondeat superior
-restraint of trade
-rule of reason
-SEC
-self-regulatory organizations
-shareholder primacy
-shipment contract
-social contract theory
-SROs
-stakeholder claim
-stakeholder prioritization
-strict liability
-subliminal advertising
-supremacy clause
-takings clause
-TBL
-tender of delivery
-Thomas-Kilmann Conflict Mode Instrument
-TKI
-tortfeasor
-torts
-trade fixtures
-tragedy of the commons
-triple bottom line
-UCC
-ultra vires
+class action lawsuit
+hostile work environment
+descriptive approach
+forced-arbitration clauses
+golden mean
+pervasive-regulation exception
 unconscionable
-undue hardship
+moral minimum
+phrónēsis
+junzi
+destination contract
+mens rea
+non-binding arbitration
+express warranty
+UCC
+res ipsa loquitur
+grant of authority
+commercial reasonableness
+cap and trade
+force majeure
+vesting
+duty of loyalty
+encumbrance
+cause of action
+due process clause
+organic statute
+disparate impact
+output contracts
+federalism
+goods-in-bailment contract
+decertification election
+TKI
+closed shop
+laissez-faire
+subliminal advertising
+takings clause
+vendee
 union security agreement
 union shop
+doctrine of sovereign immunity
+undue hardship
+inaccessibility exception
+Citizens United v. Federal Election Commission
+insider trading
+free exercise clause
+self-regulatory organizations
+disparate treatment
+managerial ethics
+dyadic negotiation
+Canada's Anti-Spam Legislation
+OSHA
+litigation
 United Nations Convention on Contracts for the International Sale of Goods
-utilitarianism
-veil of ignorance
-vendee
-vesting
-virtue ethics
-virtue theory
+instrumental approach
+acculturation
+supremacy clause
+fiduciary duty
 voidable
-voluntary arbitration
-WARN
-warranty against infringement
+TBL
+access economy
+normative ethical theories
+SEC
+rational-basis test
+tender of delivery
+deontologist ethics
+tortfeasor
+justice theory
+categorical imperative
+business purpose exception
+duty to aid
+qui tam provision
+corporate social responsibility
+grievance arbitration
+garnishment
+collective bargaining agreement
+diffused stakeholder
+ethical minimum
+trade fixtures
+virtue theory
+common-carrier delivery contract
 warranty of merchantability
+commerce clause
 Worker Adjustment and Retraining Notification Act
-yellow-dog contracts
+tragedy of the commons
+virtue ethics
+Foreign Sovereign Immunities Act of 1976
+ethical relativism
+moral agency
+reasonable accommodation
+greenwashing
+collective bargaining
+embezzlement
+conditional sales contract
+GDPR
+CISG
+just compensation
+prima facie
+justice as fairness
+diversity dividend
+business judgment rule
+PIPEDA
+Federal Arbitration Act
+Central Hudson Test for Commercial Speech
+WARN
+Thomas-Kilmann Conflict Mode Instrument
+Personal Information Protection and Electronic Documents Act
+CBCA
+probable cause
+CSR
+utilitarianism
+promissory estoppel
+Form 8-K
+firm offers
+employment at will
+consequentialism
+malpractice
+harm principle
+ISO 14000
+shipment contract
 zero-sum negotiation
+EEOC
+stakeholder prioritization
+material nonpublic information
+pre-arranged trading plans
+deontology
+duty of confidentiality
+plaintiff
+mixed sale
+General Data Protection Regulation
+reasonable standard of care
+mercantilism
+comparative negligence
+SROs
+exclusive remedy
+divestiture
+Form 10-K
+mirror-image rule
+requirements contracts
+eudaimonia
+shareholder primacy
+humanistic business model
+warranty against infringement
+reasonableness test of reliance
+torts
+original position
+comparable worth
+voluntary arbitration
+normative approach
+e-mediation

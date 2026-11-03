@@ -1,353 +1,353 @@
-Abbe
-Abbe diffraction limit
-Abbe number
-Abbe sine condition
-ABCD matrix
-aberration
-absorption
-absorption coefficient
-accommodation
-achromatic doublet
-achromatic lens
-Acousto-optic
-Acousto-optic modulator
-Airy
-Airy disk
-Airy pattern
-Airy rings
-amplitude
-angle of minimum deviation
-anomalous dispersion
-anti-reflection coating
-antinode
-aperture
-Aperture stop
-apochromat
-Arago spot
-astigmatism
-Babinet's principle
-beam divergence
-beam splitter
-beam waist
-Bessel beam
-birefringence
-blackbody radiation
-Bragg
-Bragg angle
-Bragg condition
-Bragg planes
-Bragg reflection
-Bragg's law
-Brewster
-Brewster angle
-Brewster's angle
-Brewster's law
-Brillouin scattering
-Cardinal points
-Cassegrain telescope
-Cauchy
-Cauchy equation
-Cauchy's formula
-CCD
-charge-coupled device
-Cherenkov radiation
-chirp
-chirped pulse
-chromatic aberration
-chromatic dispersion
-circle of confusion
-circular polarization
-coherence length
-coherence time
-coherent light
-collimated
-collimator
-coma
-Compton
-Compton scattering
-concave lens
-concave mirror
-constructive interference
-convex lens
-convex mirror
-Cornea
-Cornu spiral
-critical angle
-crystal optics
-decibel
-depth of field
-Descartes
-destructive interference
-dielectric
-diffraction grating
-diffraction limit
-diffraction order
-diffraction pattern
-dispersion relation
-dispersive prism
-distortion
-Doppler
-Doppler broadening
-Doppler effect
-Doppler shift
-Doppler velocimetry
-double refraction
-double slit
-Dove prism
-eigenpolarization
-electro-optic effect
-electromagnetic spectrum
-ellipsometry
-emission spectrum
-endoscope
-entrance pupil
-equal-inclination fringes
-equal-thickness fringes
-etalon
-evanescent wave
-Ewald sphere
-exit pupil
-extraordinary ray
-f-number
-f-stop
-Fabry-Perot
-Fabry-Pérot cavity
-Fabry-Pérot interferometer
-Faraday effect
-Faraday rotation
-Fermat
-Fermat's principle
-Fiber Bragg grating
-fiber optic
-Field stop
-Fizeau
-focal length
-focal plane
-focal point
-Fourier optics
-Fourier plane
-Fourier transform
-Fraunhofer
-Fraunhofer diffraction
-frequency comb
-frequency doubling
-Fresnel
-Fresnel diffraction
-Fresnel equations
-Fresnel lens
-Fresnel number
-Fresnel zone
-Fresnel zone plate
-fringe
-fringe visibility
-Galileo
-Gauss's lens formula
-Gaussian beam
-Gaussian lens formula
-Gaussian optics
-geometric optics
-Glan-Thompson prism
-grating equation
-grating spectrometer
-Gregorian telescope
-group index
-group velocity
-Hermite-Gaussian modes
-Hertz
-heterodyne
-hologram
-holography
-homodyne
-Hubble space Telescope
-Hubble telescope
-Huygens
-Huygens' wave theory
-Huygens's principle
-Huygens-Fresnel principle
-Hyperfocal distance
-hyperopia
-image formation
-index ellipsoid
-index of refraction
-infrared
-intensity
-interference
-interferogram
-irradiance
-isotropic
-James Webb Space Telescope
-Jones calculus
-Jones matrix
-Keck telescope
-Kepler
-Kepler's telescope
-Keplerian telescope
-Keratometer
-Kerr cell
-Kerr effect
-Kirchhoff diffraction
-Kramers-Kronig
-Lambert's cosine law
-Lambertian surface
-laser
-lasing
-LCDs
-lens equation
-lens maker's equation
-lensmaker's equation
-liquid crystal displays
-Lloyd's mirror
-Lorentz-Lorenz
-Mach number
-Mach-Zehnder interferometer
-magnetic birefringence
-magnification
-Maksutov
-Malus
-Malus' law
-Malus's law
-Maxwell
-Michelson
-Michelson interferometer
-Michelson stellar interferometer
-Michelson-Morley
-Michelson-Morley experiment
-microscope
-Mie scattering
-Mirror equation
-mirror formula
-Mode-locking
-Moiré pattern
-monochromatic
-myopia
-Newton's lens formula
-Newton's rings
-Newtonian design
-Newtonian telescope
-Nicol prism
-Nodal points
-numerical aperture
-objective lens
-ocular lens
-ophthalmoscope
-optical activity
-optical axis
-optical cavity
-optical density
-optical depth
-optical fiber
-optical isolator
-optical path
-optical path length
-optical resonator
-optical rotation
-optical tweezers
-ordinary ray
-Petzval field curvature
-phase velocity
-photodiode
-photoelectric effect
-photon
-photon counting
-photon energy
-phototransistor
-pinhole camera
-Planck
-Planck blackbody
-plane wave
-Pockels effect
-Poincaré sphere
-polarimeter
-polarization angle
-polarization state
-polarizer
-polarizing filter
-Presbyopia
-principal plane
-principal ray
-prism
-pupil
-Q-switching
-Raman scattering
-Raman shift
-Ray transfer matrix
-Rayleigh
-Rayleigh criterion
-Rayleigh limit
-Rayleigh range
-Rayleigh scattering
-Rayleigh's criterion
-Rayleigh's law
-Rayleigh-Sommerfeld
-reflectance
-reflection coefficient
-refraction
-refractive index
-resolving power
-resonator
-Ritchey-Chrétien
-Rowland circle
-Rydberg
-Sagittal plane
-Sagnac interferometer
-Schlieren
-Schmidt camera
-Seidel aberrations
-Sellmeier equation
-Sinc function
-sine condition
-slit
-Snell
-Snell's law
-Snell-Descartes law
-spatial coherence
-spectral lines
-spectrometer
-spectroscope
-spectroscopic dispersion
-specular reflection
-spherical aberration
-standing wave
-Stefan-Boltzmann law
-stimulated emission
-Stokes parameters
-Stokes shift
 superposition principle
-surface plasmon
-Talbot effect
-tangential plane
-telescope
-thin lens
-thin lens equation
-thin-film interference
-Thomas Young
-Thomson scattering
-total internal reflection
-total reflection
+mirror formula
+beam waist
+Snell-Descartes law
+spectroscopic dispersion
+Fermat's principle
+phototransistor
+Stokes shift
+Michelson-Morley
 transmission grating
-transmittance
-transverse wave
-Tyndall effect
-Ultraviolet
-vacuum wavelength
-vergence
-Very Large Telescope
-vignetting
-virtual image
-visible spectrum
-wave equation
-wave number
-wave plate
+interference
+Cauchy equation
+Descartes
 wavefront
-wavefront aberration
-waveguide
-Wien's displacement law
-Wien's law
-Wollaston prism
-Wulff net
-X-ray diffraction
-Young
-Young's double-slit experiment
+frequency comb
+optical isolator
+specular reflection
+lasing
+Gaussian optics
+tangential plane
 Zeeman effect
-Zernike polynomials
+objective lens
+Abbe sine condition
+convex lens
+Kepler's telescope
+homodyne
+Rayleigh
+infrared
+Sinc function
+refraction
+Hubble telescope
+Mach-Zehnder interferometer
+Compton scattering
+vergence
+spectral lines
+Wulff net
+Airy pattern
+Fresnel lens
+absorption coefficient
+blackbody radiation
+Faraday effect
+Fresnel
+optical depth
 zone plate
+dispersion relation
+polarizer
+coherent light
+Cauchy
+Tyndall effect
+thin lens
+angle of minimum deviation
+standing wave
+polarization angle
+Petzval field curvature
+constructive interference
+decibel
+optical cavity
+Fresnel number
+Newtonian telescope
+exit pupil
+Lambertian surface
+Lambert's cosine law
+Faraday rotation
+Bragg condition
+electromagnetic spectrum
+thin-film interference
+double slit
+polarization state
+Fresnel zone plate
+Field stop
+double refraction
+Fabry-Pérot interferometer
+reflection coefficient
+irradiance
+Brewster angle
+Wien's displacement law
+Jones matrix
+lens maker's equation
+Very Large Telescope
+Cardinal points
+holography
+vignetting
+intensity
+entrance pupil
+Huygens's principle
+Planck blackbody
+Compton
+Rayleigh-Sommerfeld
+surface plasmon
+Babinet's principle
+Fresnel equations
+resonator
+total reflection
+Hertz
+Sellmeier equation
+Ewald sphere
+Cauchy's formula
+antinode
+interferogram
+stimulated emission
+Michelson interferometer
+Bragg reflection
+extraordinary ray
+thin lens equation
+Stefan-Boltzmann law
+Hermite-Gaussian modes
+Huygens-Fresnel principle
+Fresnel diffraction
+Young
+Fresnel zone
+apochromat
+Michelson-Morley experiment
+grating equation
+ophthalmoscope
+Maxwell
+chromatic aberration
+Bragg planes
+frequency doubling
+Sagittal plane
+Thomson scattering
+lensmaker's equation
+Doppler
+Keratometer
+virtual image
+endoscope
+Fraunhofer diffraction
+Abbe
+transverse wave
+etalon
+amplitude
+dielectric
+Malus' law
+Brewster's law
+photoelectric effect
+Rayleigh scattering
+chirp
+Airy
+optical axis
+Dove prism
+Wien's law
+wave equation
+Fraunhofer
+Michelson
+Moiré pattern
+laser
+sine condition
+hyperopia
+Michelson stellar interferometer
+wavefront aberration
+Malus's law
+Doppler shift
+dispersive prism
+Abbe number
+Kramers-Kronig
+Stokes parameters
+concave lens
+Newton's lens formula
+Aperture stop
+astigmatism
+Sagnac interferometer
+index of refraction
+Planck
+Galileo
+total internal reflection
+Nodal points
+spherical aberration
+transmittance
+Gauss's lens formula
+equal-thickness fringes
+Kerr cell
+Bragg's law
+coherence length
+heterodyne
+Talbot effect
+pupil
+aperture
+slit
+liquid crystal displays
+telescope
+image formation
+Presbyopia
+Newton's rings
+Huygens' wave theory
+Rayleigh range
+Doppler effect
+Rowland circle
+critical angle
+Zernike polynomials
+ordinary ray
+Mach number
+Ultraviolet
+circle of confusion
+microscope
+magnification
+beam divergence
+resolving power
+diffraction limit
+absorption
+Acousto-optic
+plane wave
+convex mirror
+accommodation
+focal length
+Fabry-Perot
+Keck telescope
+Acousto-optic modulator
+waveguide
+focal point
+Fizeau
+index ellipsoid
+Poincaré sphere
+Rydberg
+optical resonator
+ellipsometry
+Gaussian lens formula
+achromatic lens
+Seidel aberrations
+pinhole camera
+optical path length
+Young's double-slit experiment
+f-stop
+Schmidt camera
+Rayleigh's law
+Mie scattering
+Airy disk
+Jones calculus
+numerical aperture
+optical tweezers
+fringe visibility
+Rayleigh limit
+Huygens
+Fabry-Pérot cavity
+optical activity
+Brewster's angle
+photon
+Rayleigh criterion
+geometric optics
+circular polarization
+polarizing filter
+Brillouin scattering
+Nicol prism
+wave number
+James Webb Space Telescope
+Snell
+Wollaston prism
+Hubble space Telescope
+coherence time
+photodiode
+CCD
+polarimeter
+Glan-Thompson prism
+vacuum wavelength
+spectroscope
+Kepler
+myopia
+Rayleigh's criterion
+optical density
+Pockels effect
+emission spectrum
+chromatic dispersion
+birefringence
+fringe
+distortion
+Arago spot
+chirped pulse
+Cornu spiral
+f-number
+monochromatic
+Raman scattering
+magnetic birefringence
+Cherenkov radiation
+Maksutov
+charge-coupled device
+refractive index
+beam splitter
+isotropic
+Malus
+focal plane
+aberration
+Gregorian telescope
+Bessel beam
+ocular lens
+depth of field
+Keplerian telescope
+phase velocity
+Kirchhoff diffraction
+spatial coherence
+optical rotation
+prism
+Fermat
+visible spectrum
+principal ray
+Abbe diffraction limit
+coma
+achromatic doublet
+lens equation
+Mirror equation
+anti-reflection coating
+Lorentz-Lorenz
+Fourier transform
+Gaussian beam
+concave mirror
+destructive interference
+optical path
+Q-switching
+photon counting
+X-ray diffraction
+Snell's law
+Doppler velocimetry
+diffraction grating
+Ray transfer matrix
+Schlieren
+reflectance
+crystal optics
+LCDs
+spectrometer
+group velocity
+Mode-locking
+evanescent wave
+Airy rings
+diffraction order
+ABCD matrix
+Ritchey-Chrétien
+Bragg angle
+fiber optic
+grating spectrometer
+Fiber Bragg grating
+diffraction pattern
+principal plane
+anomalous dispersion
+Brewster
+Bragg
+Hyperfocal distance
+hologram
+Cassegrain telescope
+Raman shift
+photon energy
+wave plate
+Lloyd's mirror
+Doppler broadening
+Fourier plane
+equal-inclination fringes
+group index
+Newtonian design
+eigenpolarization
+Kerr effect
+Thomas Young
+collimator
+Cornea
+optical fiber
+Fourier optics
+electro-optic effect
+collimated

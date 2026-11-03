@@ -1,464 +1,464 @@
-abducens nerve
-absolute refractory period
-accommodation
-accommodation-convergence reflex
-activation gate
-ADHD
-adrenergic
-adrenergic receptor
-alar plate
-alpha adrenergic receptor
-alpha-1 adrenergic receptor
-alpha-2 adrenergic receptor
-alpha-adrenergic receptor
-Alzheimer's disease
-AMPA receptor
-amygdala
-anosmia
-ANS
-anterior columns
-anterior corticospinal tract
-anterior horn
-anterior median fissure
-anterior spinal artery
-anticholinergic drugs
-aphasia
-arachnoid granulations
-arachnoid mater
-arachnoid trabeculae
-ascending tracts
-ASD
-ataxia
-attention deficit/hyperactivity disorder
-auricle
-autonomic nervous system
-axillary nerve
-axon
-axon hillock
-axon segment
-axon terminal
-axoplasm
-baroreceptor
-baroreceptor reflex
-basal forebrain
-basal ganglia
-basal nuclei
-basal plate
-basilar artery
-BBB
-beta adrenergic receptor
-beta-1 adrenergic receptor
-beta-2 adrenergic receptor
-beta-adrenergic receptor
-biogenic amine
-bipolar
-bipolar neurons
-blood-brain barrier
-brachial plexus
-Broca's area
-Brodmann's areas
-cardiac accelerator nerves
-cauda equina
-caudate
-celiac ganglion
-central chemoreceptor
-central nervous system
-central neuron
-central sulcus
-cephalic flexure
-cerebellum
-cerebral aqueduct
-cerebral cortex
-cerebral hemisphere
-cerebral peduncles
-cerebrocerebellum
-cerebrospinal fluid
-cerebrum
-cervical plexus
-chemical synapse
-chemoreceptor
-chief sensory nucleus
-cholinergic
-cholinergic receptor
-cholinergic system
-choroid
-choroid plexus
-ciliary body
-ciliary ganglion
-cingulate gyrus
-circle of Willis
-clasp-knife response
-CNS
-cochlea
-cochlear duct
-collateral ganglia
-common carotid arteries
-conduction aphasia
-cone photoreceptor
-continuous conduction
-contralateral
-corneal reflex
-cortico-ponto-cerebellar pathway
-corticospinal tract
-cranial nerve
-cranial nerve ganglion
-craniosacral system
-CSF
-cytoarchitecture
-decussates
-deep tendon reflex
-dendrite
-dendritic spine
-descending tracts
-diencephalon
-diplopia
-direct pathway
-disinhibition
-dopamine D1 receptor
-dopamine D2 receptor
-dopamine receptor
-dorsal (posterior) nerve root
-dorsal (posterior) root ganglion
-dorsal column system
-dura mater
-dural sinuses
-edinger-Westphal nucleus
-effector protein
-electrical synapse
-Electrochemical exclusion
-embolus
-endogenous
-endogenous chemical
-endoneurium
-ENS
-enteric nervous system
-enteric plexus
-ependymal
-ependymal cell
-epineurium
-epithalamus
-EPSP
-esophageal plexus
-excitable membrane
-excitatory postsynaptic potential
-expressive aphasia
-exteroceptor
-extraocular muscles
-facial nerve
-fasciculus gracilis
-femoral nerve
-fibular nerve
-fight-or-flight response
-flaccid paralysis
-forebrain
-fourth ventricle
-fovea
-frontal eye Fields
-frontal lobe
-G protein-coupled receptor
-GABA receptor
-GABA-A receptor
-ganglion
-ganglionic neuron
-gastric plexuses
-gated
-generator potential
-glia
-glial cell
-globus pallidus
-glomeruli
-glossopharyngeal nerve
-glutamate receptor
-Golgi tendon organs
-graded potential
-graphesthesia
-gray matter
-greater splanchnic nerve
-gustation
-gustatory receptor cells
-gyri
-gyrus
-hindbrain
-hippocampus
-hyperflexia
-hyperopia
-hypoglossal nerve
-hypothalamus
-hypotonicity
-hypovolemia
-ICP
-inactivation gate
-indirect pathway
-inferior cerebellar peduncle
-inferior colliculus
-inferior mesenteric ganglion
-inferior oblique
-inferior olive
-inferior rectus
-inhibitory postsynaptic potential
-initial segment
-inner synaptic layer
-intercostal nerves
-internal carotid arteries
-internuclear ophthalmoplegia
-interoceptor
-interventricular foramina
-intramural ganglia
-ionotropic receptor
-ipsilateral
-IPSP
-iris
-ischemic stroke
-jaw-jerk reflex
-jugular veins
-kinesthesia
-lacrimal duct
-lacrimal gland
-lateral apertures
-lateral columns
-lateral corticospinal tract
-lateral geniculate nucleus
-lateral horn
-lateral rectus
-lateral sulcus
-lateral ventricles
-leakage channel
-lesser splanchnic nerve
-levator palpebrae superioris
-ligand-gated cation channel
-ligand-gated channel
-limbic cortex
-long-term depression
-long-term potentiation
-longitudinal fissure
-lower motor neuron
-LTD
-LTP
-lumbar plexus
-lumbar puncture
-macula
-MCP
-mechanically gated channel
-mechanoreceptor
-medial geniculate nucleus
-medial lemniscus
-medial rectus
-median aperture
-median nerve
-Meissner's corpuscles
-meninges
-Merkel's disks
-mesencephalic nuclei
-mesencephalon
-mesenteric plexus
-metabotropic glutamate receptor
-metabotropic receptor
-metencephalon
-microglia
-midbrain
-middle cerebellar peduncle
-MLF
-multipolar
-muscarinic receptor
-myelencephalon
-myelin
-myelin sheath
-myopia
-nerve plexus
-neural crest
-neural fold
-neural groove
-neural plate
-neuraxis
-neurodegenerative disorders
-neurokinin-1 receptor
-neurokinin-2 receptor
-neurological exam
-neuropeptide
-nicotinic receptor
-nociception
-nociceptor
-node of Ranvier
-nodes of Ranvier
-nonspecific channel
-norepinephrine
-nucleus ambiguus
-nucleus cuneatus
-nucleus gracilis
-occipital
-occipital lobe
-occipital sinuses
-oculomotor nerve
-olfaction
-olfactory bulb
-olfactory epithelium
-olfactory nerve
-olfactory receptor
-olfactory sensory neuron
-opsins
-optic nerve
-organ of Corti
-orthostatic reflex
-otolithic membrane
-outer synaptic layer
-palpebral conjunctiva
-paramedian pontine reticular formation
-paravertebral ganglia
-paresis
-parietal
-parietal lobe
-parieto-occipital sulcus
-Parkinson's disease
-perineurium
-peripheral chemoreceptor
-peripheral nervous system
-photoisomerization
-photoreceptor
-phrenic nerve
-pia mater
-plexus
-PNS
-postcentral gyrus
-posterior columns
-posterior horn
-posterior median sulcus
-posterolateral sulcus
-postganglionic fiber
-postsynaptic potential
-PPRF
-precentral gyrus
-prefrontal lobe
-preganglionic fiber
-premotor area
-presbyopia
-prevertebral ganglia
-primary vesicles
-pronator drift
-propagation
-proprioception
-proprioceptor
-prosencephalon
-PSP
-putamen
-pyramidal decussation
-radial glia
-radial nerve
-receptive aphasia
-red nucleus
-relative refractory period
-repolarization
-resting membrane potential
-reticular formation
-reticulospinal tract
-retinal
-retinal ganglion cell
-RGC
-rhodopsin
-rhombencephalon
-rod photoreceptor
-ruffini endings
-saccule
-sacral plexus
-saltatory conduction
-saphenous nerve
-satellite glia
-scala vestibuli
-schwann cell
-sciatic nerve
-sciatica
-sclera
-SCP
-secondary vesicles
-semicircular canals
-sensation
-sensory homunculus
-sensory-somatic nervous system
-serotonin receptor
-short-term memory
-sigmoid sinuses
-size exclusion
-SNS
-solitary nucleus
-soma
-somatic nervous system
-somatic reflex
-somatosensation
-spatial summation
 Special sense
-spinal accessory nerve
-spinal nerve
-spinal trigeminal nucleus
-spinocerebellar tract
-spinocerebellum
-spinothalamic tract
-spiral ganglia
-stereocilia
-stereognosis
-straight sinus
-striatum
-subarachnoid space
-subcortical nuclei
-substantia nigra pars compacta
-substantia nigra pars reticulata
-subthalamus
-sulci
-sulcus
-summate
-superior cerebellar peduncle
-superior cervical ganglion
-superior mesenteric ganglion
-superior oblique
-superior rectus
-superior sagittal sinus
-suprachiasmatic nucleus
-sympathetic chain ganglia
-synapse
-synaptic cleft
-synaptic end bulb
-synaptic vesicles
-systemic nerve
-target effector
-tectorial membrane
-tectospinal tract
-tectum
-tegmentum
-telencephalon
-temporal
-temporal lobe
-temporal summation
-terminal ganglia
-thalamus
-thermoreceptor
-third ventricle
-TIA
-tibial nerve
-tract
-transient ischemic attack
+rhombencephalon
+lesser splanchnic nerve
+neural fold
+clasp-knife response
+cingulate gyrus
+prefrontal lobe
+short-term memory
+conduction aphasia
+deep tendon reflex
+brachial plexus
+ipsilateral
 transverse sinuses
-trigeminal ganglion
-trigeminal nerve
-trochlear nerve
-ulnar nerve
-unipolar
-upper motor neuron
-utricle
+Parkinson's disease
+hyperflexia
+mechanically gated channel
+common carotid arteries
+chemical synapse
+activation gate
+neuraxis
+cerebrocerebellum
+systemic nerve
+gyri
+peripheral chemoreceptor
+superior rectus
+posterior columns
+beta adrenergic receptor
+beta-adrenergic receptor
+descending tracts
+levator palpebrae superioris
+adrenergic
+jugular veins
+Alzheimer's disease
+ENS
+transient ischemic attack
+midbrain
+dura mater
+anterior columns
+inactivation gate
+basilar artery
+baroreceptor
+TIA
+olfactory receptor
+sensation
+neurodegenerative disorders
+ataxia
+inferior olive
+alar plate
+cauda equina
+femoral nerve
+craniosacral system
+neurokinin-1 receptor
+nicotinic receptor
+hyperopia
+spatial summation
+occipital sinuses
+axon
+temporal
+muscarinic receptor
+axoplasm
+G protein-coupled receptor
+basal forebrain
+red nucleus
+interventricular foramina
+extraocular muscles
+sciatic nerve
+arachnoid mater
+tract
+glossopharyngeal nerve
+lateral ventricles
+outer synaptic layer
+telencephalon
+terminal ganglia
+epithalamus
+inferior colliculus
+occipital lobe
+organ of Corti
+SCP
+central nervous system
+posterior median sulcus
+norepinephrine
+node of Ranvier
+frontal eye Fields
+inferior mesenteric ganglion
+dorsal (posterior) nerve root
+cochlea
+longitudinal fissure
+MLF
+neural groove
+ligand-gated cation channel
+adrenergic receptor
 vagus nerve
-vasomotor nerves
-ventral (anterior) nerve root
-ventral posterior nucleus
-vertebral arteries
-vestibular ganglion
+cerebral cortex
+Golgi tendon organs
+satellite glia
+glutamate receptor
+lateral horn
+sensory-somatic nervous system
+olfaction
+intramural ganglia
+accommodation
+lacrimal duct
+mesencephalic nuclei
+nodes of Ranvier
+EPSP
+medial lemniscus
+PSP
+alpha-adrenergic receptor
+fovea
+LTD
+decussates
+optic nerve
+inferior cerebellar peduncle
+postsynaptic potential
+dopamine D1 receptor
+propagation
+CNS
+resting membrane potential
+subarachnoid space
+diplopia
+thalamus
+MCP
+dorsal (posterior) root ganglion
+macula
 vestibular nuclei
-vestibular sensation
-vestibule
-vestibulo-ocular reflex
-vestibulocerebellum
-vestibulocochlear nerve
-vestibulospinal tract
-visceral reflex
-visceral sense
-voltage-gated channel
-VOR
-Weber test
-Wernicke's area
+reticulospinal tract
+cerebellum
+proprioceptor
+neurological exam
+peripheral nervous system
 white matter
+tectospinal tract
+ASD
+sigmoid sinuses
+long-term depression
+inhibitory postsynaptic potential
+cone photoreceptor
+internal carotid arteries
+nucleus ambiguus
+vestibular ganglion
+size exclusion
+perineurium
+anosmia
+CSF
+esophageal plexus
+multipolar
+spiral ganglia
+reticular formation
+sulcus
+photoisomerization
+paravertebral ganglia
+hypoglossal nerve
+visceral sense
+kinesthesia
+myelencephalon
+inferior oblique
+cochlear duct
+radial glia
+primary vesicles
+GABA-A receptor
+gray matter
+gastric plexuses
+dendrite
+central neuron
+graphesthesia
+plexus
+relative refractory period
+alpha-1 adrenergic receptor
+BBB
+utricle
+sensory homunculus
+interoceptor
+GABA receptor
+olfactory bulb
+IPSP
+vestibular sensation
+fight-or-flight response
+superior cervical ganglion
+limbic cortex
+tectorial membrane
+gyrus
+lacrimal gland
+serotonin receptor
+basal plate
+beta-2 adrenergic receptor
+posterior horn
+expressive aphasia
+voltage-gated channel
+third ventricle
+alpha adrenergic receptor
+thermoreceptor
+vasomotor nerves
+preganglionic fiber
+anterior corticospinal tract
+upper motor neuron
+ANS
+parieto-occipital sulcus
+indirect pathway
+chief sensory nucleus
+substantia nigra pars compacta
+receptive aphasia
+visceral reflex
+frontal lobe
+cerebrum
+excitatory postsynaptic potential
+ischemic stroke
+substantia nigra pars reticulata
+ICP
+amygdala
+Wernicke's area
+spinothalamic tract
+celiac ganglion
+vestibulospinal tract
+central chemoreceptor
+basal ganglia
+sulci
+paramedian pontine reticular formation
+neural plate
+mechanoreceptor
+soma
+glomeruli
+spinocerebellar tract
+target effector
+superior cerebellar peduncle
+nonspecific channel
+neural crest
+ciliary ganglion
+long-term potentiation
+ependymal cell
+median aperture
+endogenous chemical
+ligand-gated channel
+dorsal column system
+parietal lobe
+paresis
+cephalic flexure
+enteric plexus
+dendritic spine
+axillary nerve
+ionotropic receptor
+Meissner's corpuscles
+ciliary body
+fasciculus gracilis
+generator potential
+nerve plexus
+presbyopia
+postcentral gyrus
+diencephalon
+basal nuclei
+accommodation-convergence reflex
+cholinergic system
+sclera
+flaccid paralysis
+hindbrain
+absolute refractory period
+cerebral peduncles
+ganglion
+nucleus gracilis
+aphasia
+summate
+metabotropic receptor
+tibial nerve
+ruffini endings
+circle of Willis
+exteroceptor
+vestibulocerebellum
+straight sinus
+bipolar
+myelin
+stereognosis
+precentral gyrus
+myelin sheath
+sciatica
+gustation
+spinal accessory nerve
+anterior spinal artery
+facial nerve
+anticholinergic drugs
+orthostatic reflex
+metencephalon
+cervical plexus
+PPRF
+electrical synapse
+photoreceptor
+hypothalamus
+subcortical nuclei
+cytoarchitecture
+choroid plexus
+striatum
+lateral sulcus
+axon terminal
+cerebrospinal fluid
+gustatory receptor cells
+olfactory sensory neuron
+embolus
+blood-brain barrier
+bipolar neurons
+ulnar nerve
+superior sagittal sinus
+biogenic amine
+sympathetic chain ganglia
+microglia
+semicircular canals
+olfactory epithelium
+schwann cell
+leakage channel
+opsins
+spinal nerve
+Broca's area
+palpebral conjunctiva
+baroreceptor reflex
+prevertebral ganglia
+neuropeptide
+scala vestibuli
+middle cerebellar peduncle
+auricle
+continuous conduction
+SNS
+forebrain
+retinal ganglion cell
+rod photoreceptor
+lateral corticospinal tract
+beta-1 adrenergic receptor
+olfactory nerve
+axon hillock
+endogenous
+lower motor neuron
+VOR
+pronator drift
+medial geniculate nucleus
+excitable membrane
+premotor area
+hypotonicity
+chemoreceptor
+ganglionic neuron
+epineurium
+vestibule
+nociceptor
+superior mesenteric ganglion
+fibular nerve
+somatic reflex
+ADHD
+vestibulo-ocular reflex
+LTP
+prosencephalon
+glial cell
+arachnoid granulations
+vestibulocochlear nerve
+dopamine receptor
+saphenous nerve
+tectum
+pia mater
+contralateral
+occipital
+Electrochemical exclusion
+suprachiasmatic nucleus
+hippocampus
+synaptic cleft
+cerebral hemisphere
+proprioception
+cerebral aqueduct
+greater splanchnic nerve
+axon segment
+tegmentum
+somatic nervous system
+synaptic vesicles
+cortico-ponto-cerebellar pathway
+mesenteric plexus
+nucleus cuneatus
+neurokinin-2 receptor
+glia
+trigeminal ganglion
+solitary nucleus
+synapse
+oculomotor nerve
+corneal reflex
+spinal trigeminal nucleus
+cardiac accelerator nerves
+ventral posterior nucleus
+metabotropic glutamate receptor
+anterior horn
+globus pallidus
+saccule
+myopia
+jaw-jerk reflex
+cranial nerve
+ascending tracts
+putamen
+median nerve
+ependymal
+inner synaptic layer
+arachnoid trabeculae
+cholinergic
+inferior rectus
+lateral rectus
+cholinergic receptor
+saltatory conduction
+AMPA receptor
+nociception
+dural sinuses
+mesencephalon
+temporal summation
+attention deficit/hyperactivity disorder
+choroid
+central sulcus
+phrenic nerve
+cranial nerve ganglion
+stereocilia
+gated
+autonomic nervous system
+Merkel's disks
+sacral plexus
+abducens nerve
+effector protein
+anterior median fissure
+caudate
+lumbar plexus
+repolarization
+rhodopsin
+subthalamus
+trochlear nerve
+lateral columns
+lateral apertures
+radial nerve
+RGC
+Weber test
+trigeminal nerve
+alpha-2 adrenergic receptor
+PNS
+otolithic membrane
+secondary vesicles
+pyramidal decussation
+ventral (anterior) nerve root
+intercostal nerves
+edinger-Westphal nucleus
+parietal
+spinocerebellum
+medial rectus
+somatosensation
+vertebral arteries
+superior oblique
+temporal lobe
+unipolar
+meninges
+Brodmann's areas
+internuclear ophthalmoplegia
+graded potential
+endoneurium
+collateral ganglia
+dopamine D2 receptor
+synaptic end bulb
+iris
+fourth ventricle
+posterolateral sulcus
+corticospinal tract
+direct pathway
+retinal
+hypovolemia
+enteric nervous system
+initial segment
+lumbar puncture
+disinhibition
+lateral geniculate nucleus
+postganglionic fiber

@@ -1,538 +1,538 @@
-3' end
-3' untranslated region
-3' UTR
-5' cap
-5' end
-5' untranslated region
-5' UTR
-60S ribosomal subunit
-7-methylguanosine cap
-ABC-Transporter Genes
-acrylamide
-adenine
-adenosine
+ubiquitin mediated proteolysis
+IGHA2
+linker DNA
+lac operon
 ADP
-AFLP
-agarose
-AICDA
-AID
-AIRE
-Alexa Fluor 488
-Alexa Fluor 647
-allolactose
-AluI
-aminoacyl tRNA synthetases
-aminoacyl-tRNA biosynthesis
-AMP
-ampicillin
-anticodon
-APC
-APS
-Artemis
-ATAC-seq
-ATP
-ATP-dependent chromatin remodeling
-avidin
-bacteriophage
-BamHI
-base excision repair
-BCR
-BglII
-Bicine
-bisacrylamide
-blasticidin
-BLNK
-BSA
-BsaI
-BsmBI
-BTK
-CAAT box
-calcitonin gene-related peptide
-cAMP receptor protein
-CAP
-carbenicillin
-Cas12a
-Cas13
-Cas9
-CD spectroscopy
-CD247
-CD3D
-CD3E
-CD3G
-cDNA
-CDP
-CDR1
-CDR2
-CDR3
-CellTrace Violet
-CFP
-CFSE
-CHAPS
-Chargaff's rules
-ChIP
-ChIP-seq
-chloramphenicol
-chromatin immunoprecipitation
-chromatography
-chromosomal crossover
-chromosome segregation
-chromosome territory
-chromosome walking
-cis-acting element
-CMP
-codon
-complementary DNA libraries
-constitutive heterochromatin
-Coomassie Brilliant Blue
-core histones
-CRISPR
-CRISPR-Cas9
-CRP
-crRNA
-cryo-EM
-CTP
-CUT&RUN
-CUT&Tag
-cyclic AMP-responsive DNA-binding protein
-cyclic nucleotide
-cytidine
-cytochrome B
-cytochrome c
-cytochrome P-450
-cytochrome P-450 CYP1A1
-cytoplasmic chromosome
-cytosine
-cytosolic DNA-sensing pathway
-dADP
-dAMP
-DAPI
-dATP
-dCas9
-dCDP
-dCMP
-dCTP
-ddATP
-ddCTP
-ddGTP
-ddPCR
-ddTTP
-deoxyadenosine
-deoxycholate
-deoxycytidine
-deoxyguanosine
-deoxyribonucleoprotein
-deoxyribose
-deoxythymidine
-desthiobiotin
-dGDP
-dGMP
 dGTP
-dinucleotide repeat
-DJ
-DLL1
-DLL4
-DMEM
-DNA
-DNA binding
-DNA fingerprinting
+UTR
+HA tag
+Ni-NTA
+ddTTP
+SOC medium
+CD spectroscopy
+tRNA
+sgRNA
 DNA fragmentation
-DNA methyltransferase
+non-homologous end-joining
+Ponceau S
+TFIID
+IGHA1
+messenger RNA
+HBSS
+NHEJ
+SacI
+viral oncogene protein
+dCDP
+LC-MS
+RAG2
+CHAPS
+philadelphia chromosome
+GTP
+oncogene
+nuclear chromosome
+AMP
+histone exchange
+histone acetylation
+ESI-MS
+TRAC
+TCRα
+SPR
+ITAM
+cytoplasmic chromosome
+DNA binding
+BsaI
+TRDC
+mRNA surveillance pathway
+hypoxanthine
+DAPI
+thymidine
+guanine
+Cas12a
+aminoacyl-tRNA biosynthesis
+IGHG2
+cytochrome B
+TRD
+CUT&RUN
+complementary DNA libraries
+Edman degradation
+VpreB
+5' end
+RNP
+Alexa Fluor 647
+Ribo-seq
+Tween 80
+DLL1
+TRDJ
+RNA-directed DNA polymerase
+TRBJ
+proto-oncogene proteins c-bcl-2
+FRAP
+Triton X-100
+guanosine
+TRGV
+primase
+FOXP3
+ATP-dependent chromatin remodeling
+BCR
+transfer RNA
+SmaI
+acrylamide
+TCRβ
+streptavidin
+cytidine
+proto-oncogene
+BglII
+RNA-seq
+sp1 transcription factor
+ChIP-seq
+HaeIII
+BTK
+PMSF
+adenosine
+guanidinium thiocyanate
+MERFISH
+ribosomal protein
+dTMP
+IGL
+dCTP
+parasitic DNA
+CDR3
+deoxyribose
+PTCRA
+nucleolus organizing regions
+Sanger dideoxy method
+dinucleotide repeat
+TRBC1
+eukaryotic initiation factor-2
 DNA microarrays
-DNA polymerase
-DNA Repair Enzymes
-DNA Restriction-Modification Enzymes
-DNA topology
-DNA transposable element
-DNA virus
-DNA, Catalytic
-DNA-binding protein
-DNA-PKcs
+nucleotide excision repair
+SLP-76
+Alexa Fluor 488
+SEC
+structural constituent of ribosome
+DNA methyltransferase
+proto-oncogene proteins c-mo
+HDR
+facultative heterochromatin
+RPMI 1640
+deoxyribonucleoprotein
+ribosome biogenesis
+osmium tetroxide
+rho-dependent termination
+bacteriophage
+carbenicillin
+aminoacyl tRNA synthetases
+NdeI
+VDJ
+ddPCR
+5' untranslated region
+small RNAs
+single-strand binding proteins
+TRGC1
+AIRE
+NGS
+DJ
+TRAV
+EGTA
+propidium iodide
+nitrocellulose
+anticodon
+VPREB1
+UMP
+Protein G
+internal START transfer sequence
+TRAJ
+YFP
+RNA virus
+Okazaki fragments
+SMC
+miRNA
+proto-oncogene proteins c-raf
+constitutive heterochromatin
+cyclic nucleotide
+CRISPR
+AICDA
+dTTP
+pre-TCR
+trpR
+Ku80
+mRNA processing
+CDR1
+IGHG1
+TRB
+RNA polymerase
+CTP
+nucleotide
+AluI
+MOPS
+base excision repair
+SNP
+adenine
+Fyn
+FISH
+TIRF
+ITC
+HEPES
+CAP
+STED
+avidin
+NICD
+dTDP
+nucleoside
+Hoechst 33342
+tryptophan
+RISC
+CDR2
+ribose
+HindIII
+EDTA
+pseudouridine
+IGH
+RT-PCR
+trp operon
+PCR
+reverse transcriptase
+deoxyguanosine
+Ku70
+G418
+Tricine
+Protein A
+XbaI
+TRGJ
+mRNA binding
+nucleon
+RNA, Catalytic
+chromosome walking
+initiator tRNA
+plasmid
+ribonucleoprotein
+STR
+chromatin immunoprecipitation
+operon
+nucleosome
+cytochrome P-450 CYP1A1
+microRNAs
+ATAC-seq
+shRNA
+UTP
+restriction endonuclease
+VJ
+ethidium bromide
+ZAP-70
+IPTG
+CAAT box
+poly-L-lysine
+snoRNA
+gel electrophoresis
+BamHI
+DLL4
+Sau3AI
+EcoRV
+TFIIH
+dAMP
+IGLL1
+proto-oncogene proteins
+Myc tag
+Lck
+IGHG4
+7-methylguanosine cap
+calcitonin gene-related peptide
+lacZ
+mitotic chromosome
+cDNA
+MES
+NcoI
+proteasome
+nonhistone chromatin-associated protein
+small nuclear
+deoxycytidine
+RNA-induced silencing complex
+TRIzol
+imidazole
+chromosome territory
+Cas13
+proto-oncogene proteins c-myc
+EGFP
+cytosine
+APC
+Shine-Dalgarno sequence
+ABC-Transporter Genes
+erbA gene
+post-transcriptional
+Lipofectamine
 DnaB helicase
+bisacrylamide
+glutaraldehyde
+FLAG tag
+core histones
+kanamycin
+lacI
+Taq polymerase
+deoxythymidine
+DNA-binding protein
+TCRγ
+TBP
+cytochrome P-450
 DNTT
 DpnI
-DSC
-dTDP
-dTMP
-DTT
-dTTP
-EcoRI
-EcoRV
-Edman degradation
-EDTA
-EGFP
-EGTA
-eIF-2
-ELISA
-ELISPOT
-EMSA
-endonuclease
-epigenetic
-epigenetics
-erbA gene
-erbB gene
-erbB-2 gene
-ESI-MS
-ethidium bromide
-euchromatin
-eukaryotic initiation factor-2
-exonuclease
-FACS
-FACT
-facultative heterochromatin
-FBS
-FEZF2
-FISH
-FITC
-FLAG tag
-foreign DNA
-FOXP3
-FPLC
-FRAP
-FRET
-fusion oncogene protein
-Fyn
-G-proteins (guanine nucleotide-binding proteins)
-G418
-GC-MS
-GC-rich boxes
-GCE
-GDP
-gel electrophoresis
-GFP
-glutaraldehyde
-glutathione
-GMP
-GST tag
-GTFs
-GTP
-guanidinium chloride
-guanidinium thiocyanate
-guanine
-guanosine
-guanosine triphosphate
-HA tag
-HaeIII
-HBSS
-HDR
-HEPES
-heterochromatin
-Hi-C
-HindIII
-His tag
-histone acetylation
-histone binding
-histone exchange
-hnRNA
-Hoechst 33342
-holoenzyme
-host DNA
-HpaII
-HPLC
-hygromycin
-hypoxanthine
-IGH
-IGHA1
-IGHA2
-IGHD
-IGHE
-IGHG1
-IGHG2
-IGHG3
-IGHG4
-IGHM
-IGK
-IGKC
-IGL
-IGLC
-IGLL1
-imidazole
-initiator tRNA
-inosine
-internal START transfer sequence
-intracisternal A-particle gene
-IPTG
-ITAM
-ITC
-ITIM
-junk DNA
-kanamycin
-Kozak's rules
-KpnI
-Ku70
-Ku80
-lac operon
-lacA
-lacI
-lacY
-lacZ
-LAT
-LB broth
-LC-MS
-LC-MS/MS
-Lck
-ligase
-linker DNA
-Lipofectamine
-list of gene families
-lncRNA
-MACS
-MALDI-TOF
-MBP tag
-mCherry
-MERFISH
-MES
-messenger RNA
-microRNAs
-miRNA
-mitotic chromosome
-mNeonGreen
-MOPS
-mRNA
-mRNA binding
-mRNA processing
-mRNA surveillance pathway
-MspI
-Myc tag
-NcoI
-NdeI
-NGS
-NHEJ
-Ni-NTA
-NICD
-nitrocellulose
-non-homologous end-joining
-nonhistone chromatin-associated protein
-nonsense codons
-NORs
-Notch
-NOTCH1
-NOTCH2
-NotI
-NP-40
-nuclear chromosome
-nucleocytoplasmic transport
-nucleolus organizing regions
-nucleon
-nucleophile
-nucleoside
-nucleosome
-nucleosome eviction
-nucleosome sliding
-nucleotide
-nucleotide excision repair
-Okazaki fragments
-oncogene
-oncogene protein
-oncogene proteins V-abl
-operon
-ORF
-osmium tetroxide
-PALM
-PAM
-paraformaldehyde
-parasitic DNA
-PBS
-PCR
-PE
-peptidyl transferase
 phenol-chloroform
-philadelphia chromosome
-phylogenetics
-PIPES
-piRNA
-plasmid
-PMSF
-poly-A tail
-poly-L-lysine
-polyethylenimine
-polymerase chain reaction
-Ponceau S
-post-transcriptional
-post-translational
-pre-BCR
-pre-TCR
-primase
-propidium iodide
-proteasome
-Protein A
-Protein G
-proto-oncogene
-proto-oncogene protein C-kit
-proto-oncogene proteins
-proto-oncogene proteins c-abl
-proto-oncogene proteins c-bcl-2
-proto-oncogene proteins c-fos
-proto-oncogene proteins c-jun
-proto-oncogene proteins c-mo
-proto-oncogene proteins c-myc
-proto-oncogene proteins c-raf
-pseudouridine
-PstI
-PTCRA
-pTα
-puromycin
-PVDF
-qPCR
-RAG
-RAG1
-RAG2
-Ramachandran plot
-recombinant DNA
-regulatory DNA sequences
-restriction endonuclease
-reverse transcriptase
-reverse transcriptase PCR
-RFLP
-RFP
-rho-dependent termination
-rho-independent termination
-Ribo-seq
-ribonucleoprotein
-ribonucleoprotein complex assembly
-ribose
-ribosomal protein
-ribosomal RNA
-ribosome biogenesis
-ribosome biogenesis in eukaryotes
-riboswitch
-ribozyme
-RISC
-RNA
-RNA binding
 RNA capping (5' cap)
+codon
+AFLP
+Artemis
+endonuclease
+qPCR
 RNA degradation
-RNA editing
-RNA polymerase
-RNA polymerase II
-RNA virus
-RNA, Catalytic
-RNA-binding protein
-RNA-binding proteins
-RNA-directed DNA polymerase
-RNA-induced silencing complex
-RNA-seq
-RNase H
-RNP
-RPMI 1640
-rRNA
-rRNA binding
-RSS
-RT-PCR
-RT-qPCR
-SacI
-SalI
-Sanger dideoxy method
-Sanger sequencing
-satellite DNA
-Sau3AI
-SDS
-SDS-PAGE
-SEC
-sgRNA
-Shine-Dalgarno sequence
-shRNA
-single-cell RNA sequencing
-single-strand binding proteins
-siRNA
-SLP-76
-SmaI
-small nuclear
-small RNAs
-SMC
-smFISH
-snoRNA
-SNP
-snRNA
-SOC medium
-sp1 transcription factor
-SPR
-start codon
-STED
-STORM
-STR
-streptavidin
-streptomycin
-structural constituent of ribosome
-SYBR Green
-SYK
-TAPS
-Taq polymerase
-TATA box
-TBP
+DNA virus
+Cas9
+XhoI
+oncogene protein
+cryo-EM
+DNA Restriction-Modification Enzymes
 TCEP
-TCR
-TCRα
-TCRβ
-TCRγ
-TCRδ
-TdT
-telomerase
-TEMED
-TES
-tetracycline
-TFIID
-TFIIH
-thymidine
+ELISPOT
+poly-A tail
 thymine
-TIRF
-TRA
-TRAC
-tracrRNA
-TRAJ
-transcription factor AP-1
-transfer RNA
-TRAV
-TRB
-TRBC1
-TRBC2
-TRBD
-TRBJ
-TRBV
-TRD
-TRDC
-TRDD
-TRDJ
+DNA
+foreign DNA
+Bicine
+pTα
+BsmBI
+ribosome biogenesis in eukaryotes
+60S ribosomal subunit
+TAPS
+junk DNA
+nucleosome eviction
+LC-MS/MS
+rRNA
+guanidinium chloride
+ChIP
+IGHD
+STORM
+FACS
+agarose
+HpaII
+TEMED
+mCherry
+BSA
+deoxyadenosine
+deoxycholate
 TRDV
+MBP tag
+ribozyme
+CFSE
+IGHG3
+holoenzyme
+nucleophile
+crRNA
+inosine
+CD247
+MALDI-TOF
+Tween 20
+LB broth
+erbB gene
+CD3E
+Western blot
+RNA-binding proteins
+nonsense codons
+SYK
+GTFs
+reverse transcriptase PCR
+heterochromatin
+paraformaldehyde
+His tag
+DNA transposable element
+uracil
+GST tag
+ribonucleoprotein complex assembly
+IGK
+ELISA
+uridine
+SalI
+recombinant DNA
+RT-qPCR
+NORs
+FITC
+lacA
+transcription factor AP-1
+cAMP receptor protein
+FACT
+IGHM
+CD3D
+lacY
+intracisternal A-particle gene
+NotI
+TRBD
+CFP
+guanosine triphosphate
+CMP
+GC-MS
+xanthine
+Kozak's rules
+peptidyl transferase
+IGKC
+FRET
+exonuclease
+Sanger sequencing
+PAM
+Y chromosome
+hygromycin
+PIPES
+GMP
+TRA
+DTT
+5' UTR
+lncRNA
+start codon
+Ramachandran plot
+proto-oncogene protein C-kit
+FEZF2
+RNA editing
+tetracycline
+telomerase
+CRP
+DNA Repair Enzymes
+cis-acting element
+CDP
+cytochrome c
+RAG1
+DNA topology
+piRNA
+single-cell RNA sequencing
+chromatography
+CRISPR-Cas9
+dGDP
+euchromatin
+dCas9
+ddATP
+BLNK
+PstI
+β-mercaptoethanol
+PE
+epigenetics
+hnRNA
+dCMP
+RNA-binding protein
+siRNA
+blasticidin
+phylogenetics
+GCE
+dATP
+proto-oncogene proteins c-abl
+NOTCH2
+rRNA binding
+glutathione
+ORF
+allolactose
+TATA box
+NOTCH1
+V(D)J recombination
+erbB-2 gene
+NP-40
+streptomycin
+RAG
+DNA fingerprinting
+post-translational
+fusion oncogene protein
 TRG
-TRGC1
-TRGC2
-TRGJ
-TRGV
-Tricine
-trinucleotide repeat
-Tris
+AID
+nucleocytoplasmic transport
+chromosome segregation
+mNeonGreen
+X-gal
+proto-oncogene proteins c-fos
+G-proteins (guanine nucleotide-binding proteins)
+histone binding
+GDP
+tryptophan (trp) operon
+RNA
+desthiobiotin
+pre-BCR
+MspI
+ddCTP
+CellTrace Violet
+EMSA
+TdT
+5' cap
+host DNA
+GC-rich boxes
 Tris-HCl
 TRITC
-Triton X-100
-TRIzol
-tRNA
-trp operon
-trpR
-tryptophan
-tryptophan (trp) operon
-Tween 20
-Tween 80
-ubiquitin mediated proteolysis
-UDP
-UMP
-uracil
-uridine
-UTP
-UTR
-V(D)J recombination
-VDJ
-viral oncogene protein
-VJ
+TRGC2
+rho-independent termination
+Chargaff's rules
+RFP
+tracrRNA
+RSS
+cyclic AMP-responsive DNA-binding protein
+satellite DNA
+TRBV
+polyethylenimine
+eIF-2
+proto-oncogene proteins c-jun
+oncogene proteins V-abl
+polymerase chain reaction
+3' untranslated region
+RNA binding
+TRBC2
+PBS
+ribosomal RNA
+list of gene families
+dGMP
+PALM
+trinucleotide repeat
+IGLC
+RFLP
+TCRδ
+Tris
+CUT&Tag
+3' end
+mRNA
+nucleosome sliding
+DNA polymerase
+3' UTR
+ITIM
+DNA, Catalytic
+LAT
+ddGTP
+Hi-C
+GFP
+smFISH
+ATP
+EcoRI
+DMEM
+RNA polymerase II
+TRDD
+APS
 VNTR
-VpreB
-VPREB1
-Western blot
-X-gal
-xanthine
-XbaI
-XhoI
-Y chromosome
-YFP
-ZAP-70
-β-mercaptoethanol
+cytosolic DNA-sensing pathway
+DSC
+MACS
+RNase H
+FPLC
+DNA-PKcs
+SDS
+riboswitch
 λ5
+Coomassie Brilliant Blue
+IGHE
+UDP
+Notch
+regulatory DNA sequences
+TCR
+CD3G
+snRNA
+TES
+FBS
+chromosomal crossover
+dADP
+epigenetic
+PVDF
+HPLC
+ampicillin
+SYBR Green
+SDS-PAGE
+KpnI
+ligase
+chloramphenicol
+puromycin

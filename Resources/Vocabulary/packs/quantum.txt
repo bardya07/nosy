@@ -1,437 +1,437 @@
-Abelian group
-absorption spectrum
-addition of Angular Momentum
-adiabatic
-adiabatic approximation
-Adiabatic quantum computing
-adiabatic theorem
-Aharonov-Bohm
-Aharonov-Bohm effect
-Airy function
-alpha decay
-Anderson localization
-angular momentum
-angular momentum eigenstate
-angular momentum operator
-annihilation operator
-anomalous Zeeman effect
-anti-commutator
-anti-Hermitian
-anti-symmetric function
-anti-symmetrization
-antisymmetric wavefunction
-Aufbau principle
-Avogadro
-azimuthal quantum number
-Balmer
-Balmer formula
-Balmer series
-BCS
-BCS theory
-Bell basis
-Bell state
-Bell test
-Bell's inequality
-Bell's theorem
-Berezinskii-Kosterlitz-Thouless transition
-Bernstein-Vazirani
-Berry phase
-Bessel function
-Bethe ansatz
-Bloch sphere
-Bloch theorem
-Blu-ray player
-Bogoliubov transformation
-Bohr
-Bohr magneton
-Bohr model
-Bohr radius of hydrogen
-Bohr-Sommerfeld
-Bohr-Sommerfeld quantization
-Boltzmann constant
-Born approximation
-Born interpretation
-Born series
-Born's rule
-Born-Oppenheimer
-Born-Oppenheimer approximation
-Bose gas
-Bose statistics
-Bose-Einstein condensate
-Bose-Einstein condensation
-Bose-Einstein distribution
-Bose-Hubbard model
-boson
-Boson sampling
-bra
-Bra-ket
-bra-ket notation
-Brillouin
-Brillouin zone
-Canonical commutation relation
-canonical quantization
-Casimir effect
-Casimir operator
-Cauchy-Schwarz
-Chandrasekhar
-charge conjugation
-Chern number
-Clebsch-Gordan
-Clebsch-Gordan coefficients
-Clifford group
-CNOT gate
-coherent state
-collapse of the wave function
-commutator
-complementarity
-complete set
-Compton
-Compton effect
-Compton shift
-Compton wavelength
-Copenhagen interpretation
-Coulomb gauge
-Coulomb potential
-Coulomb's law quantum
-creation operator
-cut-off frequency
-cut-off wavelength
-Davisson-Germer
-Davisson-Germer experiment
-De Broglie
-de Broglie hypothesis
-De Broglie wave
-de Broglie wavelength
-Debye model
-decoherence
-defining equation (physical Chemistry)
-degeneracy
-degenerate states
-density matrix
-density operator
-deuteron
-Deutsch-Jozsa algorithm
-diabatic
-diatomic molecule
-Dirac
-Dirac bra-ket
-Dirac cone
-Dirac delta
-Dirac equation
-Dirac notation
-Dirac sea
-Dirac spinor
-dispersion relation
-double-slit experiment
-double-slit interference experiment
-Ehrenfest theorem
-eigenstates
-eigenvalue equation
-Einstein model
-Einstein solid
-Einstein's photoelectric equation
-Einstein-Podolsky-Rosen
-electron spin
-electron spin resonance
-energy eigenstate
-energy-time uncertainty principle
-entangled state
-entanglement
-entropy quantum
-EPR
-EPR paradox
-ESR
-exchange energy
-exchange interaction
-exclusion principle
-expectation value
-Fermi
-Fermi energy
-Fermi liquid
-Fermi surface
-Fermi-Dirac distribution
-fermion
-Feynman
-Feynman diagram
-Feynman path integral
-Feynman propagator
-Fine structure
-fine structure constant
-fine-structure constant
-Fock space
-Fourier transform quantum
-Franck-Condon
-Franck-Condon principle
-Franck-Hertz experiment
-Fraunhofer
-Fraunhofer lines
-free particle
-Frobenius
-Galilean invariance
-gamma function
-Gamow
-Gaussian wave function
-Gaussian wave packet
+Schrödinger's equation
 Ginzburg-Landau theory
-ground state
-Grover
-Grover's algorithm
-Hadamard
-Hadamard gate
-Hamiltonian
-Hamiltonian operator
-harmonic oscillator
-Hartree-Fock method
-Heisenberg
-Heisenberg model
-Heisenberg picture
-Heisenberg uncertainty principle
-Heisenberg's uncertainty principle
-Heitler-London
-Hermite polynomial
-Hermite polynomials
-Hermitian operator
-Hertz
-Hilbert
-Hilbert space
-Hofstadter butterfly
-Holstein-Primakoff transformation
-Hubbard
-Hubbard model
-Hund
-Hund's coupling
-Hund's rules
-Hydrogen atom
-hydrogen-like ions
-hyperfine splitting
+Bethe ansatz
+diatomic molecule
+EPR paradox
+Cauchy-Schwarz
+Compton
+absorption spectrum
+spontaneous emission
+Einstein-Podolsky-Rosen
+scattering amplitude
+electron spin
+Bose statistics
 hyperfine structure
-identical particles
-infinite square well
-interaction picture
-inverse square law
-ionization energy
-Ising
-Ising model
-Jordan-Wigner transformation
-ket
-kinetic energy operator
-Klein-Gordon equation
-Kosterlitz-Thouless transition
-Kramers-Kronig relations
-Kronig
-Kronig-Penney
-ladder operator
-Lamb shift
-Landau damping
-Landau level
-Landau-Zener transition
-Lande
-Landé g-factor
-Laplace operator
-Larmor
-Larmor precession
-Lorentz force
-Lyman series
-magnetic quantum number
-Majorana fermion
-many-body problem
-Maxwell-Boltzmann
-measurement problem
-Meissner effect
-Mermin
-momentum operator
-Moseley plot
-Moseley's law
-Mott insulator
-Mott scattering
+wave function
+Franck-Condon principle
+De Broglie
+spin quantum number
+creation operator
+SEM
+spin-flip transitions
+Sommerfeld
+de Broglie wavelength
+exclusion principle
 multiplicity
-Møller
-no-cloning theorem
-normal modes
-number operator
-observable
-operator
-orbital angular momentum
-Oscillator strength
-Paschen series
-Pauli
-Pauli equation
-Pauli exclusion
-Pauli exclusion principle
-Pauli group
-Pauli matrices
-Pauli principle
-Pauli spin
-Pauli spin matrices
-Pauli spinor
-Pauli's exclusion principle
-Pauli-X gate
-Pauli-Z gate
-Peierls
-Penning trap
-period
-phase factor
-Phase gate
-phase space quantum
-photon
-photon statistics
-Planck
-Planck constant
-Planck distribution
-Planck units
-Planck's constant
-Planck's law
-Planck's quantum hypothesis
-plane wave solution
-Poisson bracket
+harmonic oscillator
+Gamow
+time-independent perturbation theory
+Hofstadter butterfly
+Landau level
+Schmidt decomposition
+Balmer formula
 position operator
-positronium
-postulates of Bohr's model
-potential barrier
-potential well
-probability current
-probability density
-projection operator
-propagator
-Quantum annealing
-quantum bit
-quantum computer
-quantum computing
-quantum cryptography
 quantum dot
+Dirac cone
+ladder operator
+gamma function
+Kronig-Penney
+BCS theory
+azimuthal quantum number
+Kronig
+Rydberg constant for hydrogen
+wave-particle duality
+Dirac sea
+Einstein solid
+resonant-tunneling diode
+spin-1
+Moseley plot
+quantum state
+Airy function
+Davisson-Germer
+Lande
+exchange interaction
+momentum operator
+energy eigenstate
+Anderson localization
+reflection coefficient
+Hamiltonian operator
+Hermite polynomials
+transmission coefficient
+Compton shift
+selection rules
+diabatic
+fine structure constant
+Dirac bra-ket
+Fermi liquid
+angular momentum eigenstate
+Planck's law
+Grover
+Rydberg formula
+superposition
+Pauli-Z gate
+Meissner effect
+Lorentz force
+coherent state
 quantum entanglement
-quantum eraser
-Quantum error correction
 quantum field theory
 quantum Fourier transform
-quantum gate
-quantum harmonic oscillator
-quantum interference
-quantum mechanics
-quantum number
-quantum state
-Quantum supremacy
-quantum teleportation
-quantum tunneling
-quantum Zeno effect
-qubit
-qudit
-Rabi
-Rabi frequency
-Rabi oscillation
-Racah
-Racah coefficient
-radial probability density function
-Raman spectroscopy
-Ramsauer
-Ramsauer-Townsend effect
-Rayleigh-Jeans law
-Rayleigh-Ritz
-reduced Planck's constant
-reflection coefficient
-relativistic quantum mechanics
-resonant-tunneling diode
-Rutherford gold foil experiment
-Rydberg
-Rydberg atom
-Rydberg constant for hydrogen
-Rydberg formula
-scattering amplitude
-scattering matrix
-Schmidt decomposition
-Schrödinger
+Hamiltonian
+angular momentum
 Schrödinger cat
-Schrödinger picture
-Schrödinger's cat
-Schrödinger's equation
-Schrödinger's time-dependent equation
-Schrödinger's time-independent equation
-Schwarzschild
 second quantization
-selection rules
-SEM
-Shor's algorithm
-singlet state
-Slater
-Slater determinant
-Slater-Condon
-Sommerfeld
-spectroscopic notation
-spectroscopic term
-spin angular momentum
-spin quantum number
-spin states
-spin-1
-spin-1/2
-spin-flip transitions
-spin-orbit
-spin-orbit coupling
-spinor
-spontaneous emission
-square-integrable
-squeezed state
-Stabilizer code
-stationary state
-Stefan's law
-Stefan-Boltzmann constant
-Stern-Gerlach experiment
-stimulated emission
-STM
-Super-Kamiokande
-superposition
-superposition principle
-Surface code
-Tamm
-TEM
-tensor operator
-tensor product
-Thomas precession
-Thomas-Fermi model
-tight-binding
-time-dependent perturbation theory
-time-independent perturbation theory
-time-Independent Schrödinger equation
-time-modulation factor
-TISE
+degeneracy
 Toffoli gate
-trace
-transition amplitude
-transition probability
-transition rate
-transmission coefficient
-triplet state
-tunneling
-two-slit interference
-Uhlenbeck-Goudsmit
-uncertainty principle
-unitary operator
-vacuum state
-variational method
-variational principle
-vector model
-Von Neumann
-von Neumann entropy
 Wannier
-Wannier function
-wave function
-wave function collapse
-wave packet
-wave-function
-wave-particle duality
-Wentzel-Kramers-Brillouin approximation
-Weyl
-Weyl semimetal
-Wien's displacement law
-Wigner 3-j symbol
+Von Neumann
+Quantum error correction
+Coulomb gauge
+Paschen series
+Racah coefficient
+Schrödinger picture
 Wigner function
-Wigner-Eckart theorem
-Wigner-Seitz
-WKB
-WKB approximation
-Young's double-slit
-Zeeman
-Zeeman effect
-zero-point energy
-zero-point motion
+double-slit experiment
+Bose gas
+Clebsch-Gordan
 β-ray
+Bernstein-Vazirani
+Bose-Einstein distribution
+Møller
+adiabatic approximation
+angular momentum operator
+stimulated emission
+Fermi
+spin angular momentum
+Pauli
+exchange energy
+Moseley's law
+Hadamard
+Compton wavelength
+no-cloning theorem
+Majorana fermion
+number operator
+Compton effect
+anti-symmetric function
+Schrödinger's time-independent equation
+Ramsauer
+quantum computing
+Zeeman
+spin-orbit
+Rabi oscillation
+electron spin resonance
+Bogoliubov transformation
+triplet state
+tensor product
+phase space quantum
+Aufbau principle
+Wannier function
+Pauli-X gate
+Pauli matrices
+inverse square law
+plane wave solution
+Chandrasekhar
+potential barrier
+Pauli's exclusion principle
+Bell state
+Born-Oppenheimer
+Super-Kamiokande
+Kramers-Kronig relations
+Kosterlitz-Thouless transition
+Galilean invariance
+Klein-Gordon equation
+Casimir effect
+Bessel function
+Hilbert space
+trace
+complete set
+ground state
+Heisenberg model
+Berezinskii-Kosterlitz-Thouless transition
+anomalous Zeeman effect
+wave packet
+EPR
+Hubbard model
+anti-symmetrization
+Balmer
+fermion
+tight-binding
+probability density
+Wentzel-Kramers-Brillouin approximation
+two-slit interference
+Weyl semimetal
+Bell's inequality
+Feynman
+eigenvalue equation
+Hartree-Fock method
+Lamb shift
+eigenstates
+TEM
+CNOT gate
+Born series
+expectation value
+density operator
+spectroscopic notation
+unitary operator
+Bohr model
+Peierls
+period
+Pauli exclusion
+Blu-ray player
+square-integrable
+Wien's displacement law
+bra-ket notation
+Bloch theorem
+Stefan's law
+Rydberg
+Quantum annealing
+Raman spectroscopy
+Fine structure
+hydrogen-like ions
+tensor operator
+Schrödinger
+Dirac equation
+Clebsch-Gordan coefficients
+Debye model
+cut-off frequency
+Feynman path integral
+Pauli principle
+Zeeman effect
+Hadamard gate
+charge conjugation
+quantum tunneling
+Hydrogen atom
+Grover's algorithm
+Abelian group
+Uhlenbeck-Goudsmit
+Bohr magneton
+wave function collapse
+Casimir operator
+Franck-Condon
+addition of Angular Momentum
+Bohr-Sommerfeld quantization
+ket
+zero-point energy
+Gaussian wave packet
+Ising model
+WKB
+alpha decay
+Shor's algorithm
+Bose-Einstein condensation
+defining equation (physical Chemistry)
+Heitler-London
+density matrix
+Rayleigh-Jeans law
+orbital angular momentum
+Bohr radius of hydrogen
+Rutherford gold foil experiment
+Pauli spinor
+photon
+zero-point motion
+Dirac delta
+Ehrenfest theorem
+Heisenberg uncertainty principle
+Planck
+quantum mechanics
+Hilbert
+Hund
+Chern number
+quantum number
+Wigner-Eckart theorem
+Mott scattering
+Brillouin zone
+Bose-Einstein condensate
+entanglement
+Mermin
+wave-function
+Surface code
+photon statistics
+qubit
+squeezed state
+commutator
+Landé g-factor
+operator
+Wigner 3-j symbol
+spin states
+variational principle
+transition probability
+Tamm
+Bose-Hubbard model
+Thomas precession
+Dirac notation
+measurement problem
+Stern-Gerlach experiment
+Avogadro
+bra
+Einstein's photoelectric equation
+Oscillator strength
+Bra-ket
+Racah
+time-modulation factor
+anti-commutator
+Boson sampling
 γ-rays
+propagator
+entangled state
+Larmor
+Holstein-Primakoff transformation
+Brillouin
+quantum cryptography
+Hund's coupling
+interaction picture
+observable
+Planck's constant
+Boltzmann constant
+quantum harmonic oscillator
+uncertainty principle
+Weyl
+Frobenius
+Heisenberg picture
+Hermite polynomial
+Davisson-Germer experiment
+spin-orbit coupling
+quantum computer
+degenerate states
+postulates of Bohr's model
+Rabi frequency
+quantum gate
+Adiabatic quantum computing
+adiabatic theorem
+Stefan-Boltzmann constant
+Heisenberg's uncertainty principle
+Wigner-Seitz
+Gaussian wave function
+Lyman series
+Stabilizer code
+energy-time uncertainty principle
+Pauli exclusion principle
+Bohr
+decoherence
+time-Independent Schrödinger equation
+singlet state
+Pauli spin
+Bell basis
+Hertz
+Copenhagen interpretation
+vacuum state
+collapse of the wave function
+Berry phase
+cut-off wavelength
+probability current
+Bell test
+De Broglie wave
+many-body problem
+Born-Oppenheimer approximation
+potential well
+transition rate
+Mott insulator
+hyperfine splitting
+Heisenberg
+Ramsauer-Townsend effect
+Coulomb's law quantum
+spectroscopic term
+Fock space
+Landau damping
+Quantum supremacy
+Born interpretation
+stationary state
+Phase gate
+Hubbard
+Planck constant
+Fraunhofer
+Franck-Hertz experiment
+Feynman propagator
+Maxwell-Boltzmann
+Jordan-Wigner transformation
+WKB approximation
+quantum Zeno effect
+antisymmetric wavefunction
+Planck distribution
+Fermi energy
+normal modes
+Thomas-Fermi model
+Bloch sphere
+Pauli group
+canonical quantization
+Deutsch-Jozsa algorithm
+TISE
+Aharonov-Bohm effect
+qudit
+superposition principle
+Feynman diagram
+Coulomb potential
+Balmer series
+variational method
+projection operator
+Bohr-Sommerfeld
+Schrödinger's time-dependent equation
+Aharonov-Bohm
+Dirac
+Penning trap
+complementarity
+radial probability density function
+relativistic quantum mechanics
+Einstein model
+Clifford group
+Rydberg atom
+Rayleigh-Ritz
+fine-structure constant
+Landau-Zener transition
+Rabi
+spin-1/2
+adiabatic
+Schwarzschild
+Born approximation
+ESR
+STM
+Dirac spinor
+boson
+scattering matrix
+Fermi-Dirac distribution
+de Broglie hypothesis
+Ising
+Slater
+tunneling
+BCS
+infinite square well
+Canonical commutation relation
+Slater determinant
+Hund's rules
+kinetic energy operator
+Fraunhofer lines
+deuteron
+phase factor
+quantum interference
+Born's rule
+Larmor precession
+Fermi surface
+transition amplitude
+vector model
+quantum teleportation
+anti-Hermitian
+Pauli equation
+ionization energy
+Young's double-slit
+Slater-Condon
+annihilation operator
+magnetic quantum number
+von Neumann entropy
+Planck units
+Hermitian operator
+double-slit interference experiment
+quantum bit
+Fourier transform quantum
+entropy quantum
+Poisson bracket
+spinor
+reduced Planck's constant
+quantum eraser
+dispersion relation
+identical particles
+Schrödinger's cat
+Laplace operator
+Planck's quantum hypothesis
+Bell's theorem
+free particle
+positronium
+Pauli spin matrices
+time-dependent perturbation theory

@@ -1,534 +1,534 @@
-ABR
-AC
-AC02
+DPCM
+deadlock
+EF
+IMAP
 ACK
-ACM
-AF
-AI
-AIMD
-ALF
-ALU
-AM
-anycast
-AP
-AP-1
-AP-2
-AP-3
-application-specific VLSI designs
-AQM
-ARP
-ARPA
-ARPANET
-ARQ
-AS
-ASCII
-ASIC
-ASM
-ASN
-ATM
-AVP
-BARRNET
-base station
-BBR
-BBU
-BER
-BFT
-BGP
-BGP-4
-BIDIR-PIM
-bidirectional PIM
-binary GCD
-BISYNC
-Bluetooth
-BNG
+STS
+EEPROM
+KISS
+SDP
+NRZI
 boot ID
 BOOTP
-broadband Base Units
-BSD
-Byzantine fault tolerance
-CA
-CAM
-CAP theorem
 CARP
-CBC-MAC
-CBRS
-CCR
-CD
-CDMA systems
-CDN
-CE
-CIDR
-CISC
-CL
-CLI
-CLOSING
-CMOS
-CNAME
-complete VM Systems
-CONNECT
-consistent hashing
-copy-on-write
-CORD
-COW
-CPI
-CPU
-CPU Scheduling
-CQI
-CRC-32
-CRC-8
-CRLF
-CS
-CS-PDU
+subnet number
 CSMA
-CSPF
-CSRC
-CTS
-CUPS
-CWND
-CWR
-DASH
-data Center TCP
-datagram
-DC
-DC coefficient
-DCE
-DCE-RPC
-DCOM
-DCT
-DCTCP
+TLS
 DDCMP
-DDR
-deadlock
-DEC
-DECNET
-DELETE
-demultiplexed
-demultiplexing key
-dense Wavelength Division Multiplexing
-DHCP
-DHCPDISCOVER
-DHT
-differential Manchester
-DLE
-DMA
-DNA
-DNS
-DOS
-DPCM
-DR
-DRAM
-DS
-DSCP
-DT
-duplicate ACK
-DVMRP
-DWDM
-EAP-TLS
-EBCDIC
-ECC
-ECE
-ECMP
-ECN
-ECT
-EDA
-EECS-2012-5
-EEPROM
-EF
-EGP
-end system multicast
-EOS
-EPC
-ESTABLISHED
-ETH
-Ethernet
-ETX
-EXI
-EXPUNGE
-extended LAN
-fault-tolerant network topologies
-FCC
-FCFS
-FDDI
-FDM
-FEC
-FETCH
-FFFF
-FFS
-FIFO
-FIFO queuing
-FIFO with tail drop
-FIN
-flash-based SSDs
-FLP impossibility
-FM
-FPU
-FQ
-FreeBSD
-frequency-division multiplexing
-FSCK and Journaling
-FTP
-futex
-generalized MPLS
-get-NEXT
-GFC
-GIF
-GMPLS
-GOAWAY
-GOP
-GPS
-gratuitous ARP
-GSM
-hash(ObjectName) → ObjectID
-hash(x) → n
-hash→ NodeID
-HDD
-HDLC
-HEADERS
-HEC
-HELO
-HERD
-HHP
-HLEN
-HLP
-HLS
-HSS
-HTML
-HTTP
-HTTP adaptive streaming
-huffman codes
-IANA
-ICANN
-ICMP
-ID
-idempotence
-IDL
-IEEE
-IETF
-IGMP
-IGP
-III-V compounds
-ILP
-IMAP
-InfiniBand
-INT
-interior BGP
-INVITE
-IP
-IP Multimedia Subsystem
-IP tunnel
-IP4
-IPAddr
-IPC
-IPv4
-IPv6
-IS-IS
-ISA
-ISO
-ISP
-ITU-T
-IXP
-JPEG
-JSON
-KB
-KISS
-L2 Network
-L2 switches
-L3 Network
-label Edge Router
-LAF
-Lamport clock
-LAN
-LAR
-LCP
-LDAP
-LER
-LFR
-LFS
-LIFO
-linearizability
-LISTEN
-livelock
-LLP
-logical / virtual topologies
-LS
-LSA
-LSP
-LSR
-LSR1
-LTE
-LZ
-MAC
-management information base
-manchester encoding
-MAXLIST
-MAXNAME
-MAXROUTES
-MB
-MEP
-MESI
-MIB
-MIB-II
-MIMD
+ARP
 MIME
-MISD
-MLD
-MME
-MMU
-MOBILE
-mobile IP
-MOESI
-MP3
-MPEG
-MPEG-1
-MPEG-2
-MPEG-4
-MPLS
-MS-DOS
-MSDP
-MSL
-MSP
-MSS
-MTA
-MTU
-multi-CPU Scheduling
-multicast
-multicast address
-multicast distribution trees
-multiplex
-multiplexing
-mutex
-MX
-NAK
-NAT
-NDR
-NETCONF
-NetWare
-network topology types
-NFE
-NFL
-NFS
-NIC
-NL
-NPU
-NRZ
-NRZI
-NS
-NSFNET
-NSFNET backbone
-NUMA
-OAM protocols
-OASIS
-OC
-OC-192
-OC-3
-OC-48
-OCP
-OFDM
-OFDMA
-OLT
-on top of HTTP
-ONC
-ONU
-orthogonal Frequency-Division Multiple Access
-OS
-OSF
-OSI
-OSPF
-PAN
-parallel prefix computation
-PATRICIA
-Paxos
-PBFT
-PC
-PCIe
-PDU
-PGW
-PHB
-physical topologies
-piconet
-PIM
-PIM-DM
-PIM-SM
-PIM-SSM
-PING
-plasmonics
-PON
-PONG
-POP
-Post
-PowerPC
-PPP
-PRACK
-PRB
-protocol Independent Multicast
-PSTN
-PVC
-QAM
-QID
-quadrature Amplitude Modulation
-QUIC
-quorum
-Raft
-RAN
-RCPT
-RCU
-RE
-RECEIVER
-reconfigurable optical Add/Drop Multiplexers
-RED
-reliable datagram protocol
-REpresentational state transfer
-RESET
-reset TTL
-REST
-RESV
-RETRANSMIT
-RGB
-RIO
-RIP
-RISC
-RISC processors
-RLE
-RMI
-ROADM
-ROM
-RON
-RP1
-RP2
-RPB
-RPC
-RPCBIND
-RPF
-RRP
-RSVP
-RTCP
-RTP
-RTS
-RTS-CTS
-RTT
-RWS
+LAR
+CBC-MAC
 SACK
-SAP
-SCCP
+UTF8
+anycast
+NFL
+FDM
+IXP
+OC
+LLP
+EBCDIC
+FFS
+statistical multiplexing
+IPv6
+ECE
 SCTP
-SD-WAN
-SDLC
-SDN
-SDP
-SDRAM
-semaphore
-SENDER
-seqlock
-SFI
-SFP
-SIGCOMM
-SIMD
-SIP
-SIP URI
-SISD
-SMP
-SMT
-SMTP
+PSTN
+SPF
+EXPUNGE
+VC
+YUV
+Bluetooth
+CNAME
+LSR1
+OCP
+ACM
+YANG
+NFS
+UDP
+PVC
+PCIe
+HTTP
+OFDMA
+reliable datagram protocol
+SVC
+URI
+ROADM
+RTS-CTS
+supernetting
+RP1
+STX
+base station
+NSFNET
+STS-N
+GMPLS
 SNMP
 SNR
-SOAP
-SOAP module
-software-Defined WAN
-SONET
-source-Specific Multicast
-SPARC
-sparse mode
-SPF
+end system multicast
+PGW
+REST
+IGMP
+RLE
+MSL
+broadband Base Units
+quadrature Amplitude Modulation
+DCOM
+idempotence
+CS
+network topology types
+PowerPC
+IP tunnel
+get-NEXT
 spinlock
+OSF
+SONET
+NSFNET backbone
+ITU-T
+EOS
+Lamport clock
+PIM-SSM
 SR
-SRAM
-SSD
-SSH
-SSH-AUTH
-SSH-CONN
-SSH-TRANS
-SSL
-SSM
-SSRC
-standard TCP
-statistical multiplexing
-STDM
-STS
-STS-1
-STS-3
-STS-768
-STS-N
-STX
-subnet mask
-subnet number
-subnets
-subnetting
-SUCCESS
-supernetting
-SVC
-switched Ethernet
-SWP
-SWS
-SYN
-TCAM
-TCP
-TDM
-TE
-three-phase commit
-TLB
-TLB shootdown
-TLD
-TLS
-TOC
+CDMA systems
+PIM-SM
+CPU Scheduling
+ONC
 TRACE
-TTCP
-TTI
-two-phase commit
-TXT
-UDDI
-UDP
-UE
-UMA
-UNI
-unicast
-UNSPEC
-URG
-URI
-URL
-USB
-user Datagram Protocol
-UTF8
-VAX
-VC
-VCI
-vector clock
-vice versa
-VID
-virtual LAN
-VLAN
-VLAN Tag
-VLIW
-VLSI packaging
-VM
-VNI
-VPI
-VPN
+ID
+ISA
+AVP
+AP-1
+HELO
+MTU
 VRFY
-VXLAN
-WAN
-WDM
-weighted RED
-WFQ
-WPA2
-WRED
-WS
-WS-I
+RTCP
+CBRS
+SIGCOMM
+INT
+LSA
+MAC
+reset TTL
+AQM
+FCC
+futex
+MS-DOS
+SUCCESS
+RAN
+plasmonics
+linearizability
 WS-Security
-WSDL
+RISC
+VLAN Tag
+DHCPDISCOVER
+PC
 XDR
-XGS-PON
-XHTML
-XID
+AS
+MAXROUTES
+PRACK
+ECN
+ATM
+Byzantine fault tolerance
+LDAP
+ESTABLISHED
+SSH-TRANS
+OS
+EDA
+CUPS
+DC coefficient
+MSDP
+switched Ethernet
+RMI
+UNI
+WAN
+protocol Independent Multicast
+multicast address
+subnetting
+CAP theorem
+CPU
+UE
+DELETE
+STDM
+EGP
+unicast
+WSDL
+SDN
+fault-tolerant network topologies
+MPEG-1
+MPEG-2
+HEADERS
+TCP
+HEC
+OAM protocols
+NDR
+TE
+RCPT
+DHT
+LS
+FCFS
+IS-IS
+SMT
+CCR
+FIN
+ICMP
+NPU
+UMA
+ASN
+BISYNC
+GIF
+generalized MPLS
+GOAWAY
+MTA
+CLI
+source-Specific Multicast
+VPI
+AP-3
+interior BGP
+RTT
+FLP impossibility
+application-specific VLSI designs
+FIFO
+SWS
+VLIW
+software-Defined WAN
+STS-1
+DDR
+UNSPEC
+OLT
+logical / virtual topologies
+FIFO with tail drop
+CA
+OC-3
+CPI
+demultiplexing key
+ASIC
+ALF
+CRC-8
+CRLF
+label Edge Router
+PDU
+RGB
+SSM
+orthogonal Frequency-Division Multiple Access
+RON
+seqlock
+manchester encoding
+CS-PDU
+MSP
+RESET
+BGP-4
+FDDI
+IGP
+VLSI packaging
+FETCH
+MLD
+MSS
+HTTP adaptive streaming
+RED
+CLOSING
+ETX
+KB
+user Datagram Protocol
+sparse mode
+AP
+TXT
+ECT
+ETH
+multiplexing
+DT
+HDD
+physical topologies
+dense Wavelength Division Multiplexing
+RIP
+FPU
+DVMRP
+NL
+RE
+VPN
+SD-WAN
+ARQ
+MPEG
+PAN
+POP
+BIDIR-PIM
+WS-I
+bidirectional PIM
+L3 Network
+PIM
+HERD
+OC-48
+HDLC
+AC02
+Raft
+IP4
+SRAM
+data Center TCP
+SISD
+SIP
+HLS
+REpresentational state transfer
+SMTP
+DEC
+RIO
+piconet
+ROM
+JPEG
+DNS
+CSPF
 XSD
-YANG
-YUV
+MIB
+MME
+CTS
+LZ
+AIMD
+LSP
+CISC
+DOS
+InfiniBand
+ARPA
+SSL
+management information base
+RPB
+on top of HTTP
+SSRC
+BBU
+DSCP
+INVITE
+ECMP
+AI
+standard TCP
+VM
+MP3
+TCAM
+QID
+IEEE
+RWS
+DNA
+WS
+NETCONF
+RPF
+FTP
+MEP
+STS-3
+HHP
+Post
+PON
+EAP-TLS
+ONU
+OSPF
+SDLC
+NUMA
+RTP
+JSON
+NS
+XGS-PON
+DHCP
+LSR
+CRC-32
+differential Manchester
+multiplex
+SIMD
+SSH
+livelock
+DCTCP
+MAXNAME
+HTML
+OASIS
+VXLAN
+ISO
+ILP
+CL
+RRP
+COW
+quorum
+multi-CPU Scheduling
+LFS
+vice versa
+BBR
+WFQ
+SPARC
+FFFF
+SAP
+gratuitous ARP
+NetWare
+HLEN
+SIP URI
+LER
+USB
+XID
+NRZ
+PRB
+RSVP
+MPLS
+XHTML
+mutex
+MESI
+AP-2
+CIDR
+LAN
+semaphore
+duplicate ACK
+BNG
+LFR
+DCE
+WDM
+SOAP
+CE
+MOESI
+weighted RED
+SWP
+MOBILE
+L2 Network
+IP Multimedia Subsystem
+DR
+VLAN
+SFI
+BER
+huffman codes
+flash-based SSDs
+CD
+DCE-RPC
+FEC
+TTCP
+QUIC
+TOC
+ICANN
+EPC
+AC
+GPS
+LTE
+CONNECT
+CSRC
+GSM
+MIMD
+RISC processors
+MISD
+BARRNET
+PPP
+EECS-2012-5
+IETF
+DLE
+LAF
+CDN
+virtual LAN
+SMP
+EXI
+vector clock
+BGP
+OFDM
+STS-768
+TDM
+QAM
+demultiplexed
+MAXLIST
+ECC
+NFE
+VNI
+IP
+PING
+multicast
+RTS
+AM
+AF
+DECNET
+CMOS
+OC-192
+MB
+III-V compounds
+consistent hashing
+SOAP module
+PIM-DM
+FreeBSD
+multicast distribution trees
+hash(ObjectName) → ObjectID
+SYN
+hash(x) → n
+RPCBIND
+IPv4
+subnet mask
+DMA
+RETRANSMIT
+DWDM
+SSD
+frequency-division multiplexing
+PONG
+ASCII
+URG
+FSCK and Journaling
+BSD
+IANA
+DCT
+L2 switches
+CWND
+DS
+PBFT
+MMU
+VCI
+UDDI
+HLP
+Ethernet
+TLB
+two-phase commit
+OSI
+IDL
+RP2
+SCCP
+HSS
+TLD
+WPA2
+subnets
+Paxos
+WRED
+IPC
+NAT
+VAX
+RECEIVER
+CORD
+ABR
+DC
+CWR
+MIB-II
+SSH-AUTH
+PHB
+GFC
+FIFO queuing
+PATRICIA
+ARPANET
+MPEG-4
+GOP
+parallel prefix computation
+NAK
+complete VM Systems
+ISP
+reconfigurable optical Add/Drop Multiplexers
+FM
+RCU
+NIC
+SENDER
+SSH-CONN
+CAM
+hash→ NodeID
+TTI
+MX
+ALU
+SFP
+FQ
+DRAM
+copy-on-write
+LCP
+BFT
+three-phase commit
+extended LAN
+mobile IP
+SDRAM
+ASM
+RESV
+RPC
+TLB shootdown
+datagram
+IPAddr
+URL
+LISTEN
+binary GCD
+LIFO
+DASH
+CQI
+VID

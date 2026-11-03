@@ -1,340 +1,340 @@
-(a,b)-tree
-2-3 tree
-2-3-4 tree
-2-choice hashing
-2-left hashing
-adaptive Huffman coding
-adaptive k-d tree
-ADT
-Aho-Corasick
-Akra-Bazzi theorem
-algorithm BSTW
-algorithm FGK
-ANSI
-antichain
-Apostolico-Crochemore
-Apostolico-Giancarlo algorithm
-arborescence
-asymptotically tight bound
-AVL tree
-B+-tree
-B-tree
-balanced quicksort
-BANG file
-barbara Liskov
-BB(α) tree
-BBP algorithm
-BD-tree
-Bellman-Ford
-Bellman-Ford algorithm
-Benford's law
-best case
-best-case cost
-big-O notation
-bipartite graph
-bipartite matching
-bitonic sort
-Blaise Pascal
-blind trie
-Bloom filter
-BMP file format
-bogosort
-Boruvka's algorithm
-Boyer-Moore
-Boyer-Moore-Horspool
-Bradford's law
-BSP-tree
-bucket trie
-burrows-Wheeler transform
-BV-tree
-BWT
-byzantine generals
-CCS
-CD-ROMs
+graph isomorphism
+Euler's formula
 Charles Babbage
+suffix tree
+Euclidean traveling salesman problem
+SBB tree
+prefix
+PCP
+quicksort
+NYSIIS
+heapify
 Charles Tandy
-CI/CD
-claude Elwood Shannon
-commentz-Walter
-compact DAWG
-compact trie
-Cooley-Tukey
-CORDIC
-CRC
-CRCW
-CREW
-CSP
-CSV
 CTL
-cuckoo hashing
-cupif-Giannini tree traversal
-DAG
+maximum bipartite matching
+little-o notation
+adaptive k-d tree
+heapsort
+LCM
+bucket trie
+prefix traversal
+Euler cycle
+algorithm FGK
+CI/CD
+PLOP-hashing
 DAG shortest paths
-DAWG
-depoissonization
-Deutsch-Jozsa algorithm
-DFS
-DFS forest
-Dijkstra
-Dijkstra's algorithm
-Dinic
-double hashing
-Douglas R. Hofstadter
-DRBG
-DSM
-dual-pivot quicksort
-DVDs
-dynamic hashing
+Moore machine
+universal hashing
+Aho-Corasick
+RNG
+BWT
+PAM
+twisted tabulation hashing
+virtual hashing
+Smith-Waterman algorithm
+external quicksort
+turbo-BM
+linear quadtree
+topological sort
+Smith algorithm
+IDE
+zhu-Takaoka
+commentz-Walter
 dynamic Huffman coding
-Edmonds-Karp
+BD-tree
+steinhaus-Johnson-Trotter
+Kruskal
+Fisher-Yates shuffle
+poset
+jaro-Winkler
+introsort
+hausdorff distance
+CCS
+morris-Pratt algorithm
+Knuth-Morris-Pratt
+BV-tree
+fast Fourier transform
+Ford-Fulkerson
+WCET
+Deutsch-Jozsa algorithm
+tabulation hashing
+multikey Quicksort
+JSort
+Euclidean Steiner tree
+Karp reduction
+bogosort
+Boyer-Moore
+2-3-4 tree
+order-preserving minimal perfect hashing
+CRC
+Levenshtein distance
+B+-tree
+Apostolico-Giancarlo algorithm
+Shor's algorithm
 elastic-bucket trie
-ERCW
+hB-tree
+Grover's algorithm
+radix tree
+VRP
+k²-tree
+splay tree
+HP-UX
+union-find
+static Huffman coding
+GBD-tree
+compact DAWG
+Tarjan
+Miller-Rabin
+prefix sums
+Douglas R. Hofstadter
+VMware
+subadditive ergodic theorem
+Euclidean distance
+SPMD
+dynamic hashing
+OFDM system
+ford-Bellman
+fibonaccian search
+recursion tree
+Munkres' assignment algorithm
+Boyer-Moore-Horspool
+linear hashing
+2-3 tree
+Hamiltonian cycle
+Bellman-Ford
+bipartite graph
+Johnson's algorithm
+quad trie
+Viterbi algorithm
+Kruskal's algorithm
+BB(α) tree
+extended Euclid's algorithm
+uniform hashing
+expandable hashing
+algorithm BSTW
+topological order
+Hopcroft-Karp
+Post machine
+Gale-Shapley
+LDS
+Edmonds-Karp
+double hashing
+symmetric binary B-tree
+polyhedron
+treap
+depoissonization
+simple uniform hashing
+worst-case minimum access
+thomas J. Watson
+ROBDD
+k-ary Huffman coding
+gordon Bell
+ivar Jacobson
+max Planck Institutes
+recursive data structure
+multi suffix tree
+isomorphic
+suffix array
+invertible Bloom lookup table
+minimal perfect hashing
+trotter-Johnson
+Dijkstra's algorithm
+transpose sequential search
+Post's correspondence problem
+Martin Fowler
+BANG file
+Bloom filter
+polytope
+universal B-tree
+subgraph isomorphism
+optimal hashing
+integer polyhedron
+orthogonal lists
+red-black tree
+secant search
+sparse graph
+CREW
+KMP
+LZW
+DSM
+KmpSkip search
+CSV
 EREW
-ernst & Young
+ρ-approximation algorithm
+xor
+tripartition
+Rabin-Karp
+UWB
+worst case
+herbert A. Simon
+balanced quicksort
+orthogonal drawing
+three-way radix quicksort
+arborescence
+polyphase merge
+topology tree
+BBP algorithm
+galil-Giancarlo
+Vitter's algorithm
+2-left hashing
+byzantine generals
+CSP
+TSP
+NC many-one reducibility
+k-d tree
+radix sort
+FFT
+extended k-d tree
+Bellman-Ford algorithm
+order-preserving hash
+Shannon-Fano coding
+SST
+schorr-Waite graph marking algorithm
+DAG
+linear hash
+Cooley-Tukey
+blind trie
+Johnson-Trotter
+Hamiltonian path
+UB-tree
+burrows-Wheeler transform
+Karp-Rabin
+Akra-Bazzi theorem
+Graham scan
+Zipf's law
+CORDIC
+barbara Liskov
+PDF
+HDTV
+octree
+finite Fourier transform
+Blaise Pascal
+Lotka's law
+SAM
+Simon's algorithm
+bipartite matching
+lempel-Ziv-Welch
+quadtree
+BSP-tree
+Floyd-Warshall
+MST
+Bradford's law
+patricia tree
+R+-tree
+Karatsuba
+Fibonacci heap
+robin Hood hashing
+worst-case execution time
+multiprefix
+big-O notation
+UMTS
+LCS
+TST
+compact trie
+CRCW
+trie
+DAWG
+Horner's rule
+UKP
+dual-pivot quicksort
+best case
+DFS
+DVDs
+Floyd-Warshall algorithm
+order-preserving Huffman coding
+optimal polyphase merge
+Pearson's hash
+Zeller's congruence
+galil-Seiferas
+ferguson-Forcade algorithm
+macintosh OS
+Knuth-Morris-Pratt algorithm
+IPTV
+Dijkstra
+adaptive Huffman coding
+memoization
+extendible hashing
+BMP file format
+(a,b)-tree
+hashbelt
+best-case cost
+XILINX
+perfect hashing
+inverse suffix array
+suffix
+bitonic sort
+MBB
+Huffman
+GCD
+ADT
+huffman coding
+radix
+Strassen
+polyphase merge sort
+CD-ROMs
+kazimierz Kuratowski
+eulerian graph
+PRNG
 Euclid's algorithm
 Euclidean algorithm
-Euclidean distance
-Euclidean Steiner tree
-Euclidean traveling salesman problem
-Euler cycle
-Euler's formula
-eulerian graph
-eulerian path
-expandable hashing
-extended Euclid's algorithm
-extended k-d tree
-extendible hashing
-external quicksort
-external radix sort
-fast Fourier transform
-ferguson-Forcade algorithm
-FFT
-Fibonacci heap
-Fibonacci number
-Fibonacci tree
-fibonaccian search
-finite Fourier transform
-Fisher-Yates shuffle
-Floyd-Warshall
-Floyd-Warshall algorithm
-ford-Bellman
-Ford-Fulkerson
-Gale-Shapley
-galil-Giancarlo
-galil-Seiferas
-GBD-tree
-GCD
-gordon Bell
-Graham scan
-graph isomorphism
-Grover's algorithm
-Hamiltonian cycle
-Hamiltonian path
-hash function
-hash heap
-hash table delete
-hash tree
-hashbelt
-hausdorff distance
-hB-tree
-HDTV
-heapify
-heapsort
-herbert A. Simon
-Hopcroft-Karp
-Horner's rule
-HP-UX
-Huffman
-huffman coding
-huge sparse array
-HyperLogLog
-IBLT
-IDE
-incremental hashing
-integer polyhedron
-introsort
-inverse suffix array
-invertible Bloom lookup table
-IPTV
-isomorphic
-ivar Jacobson
-J. H. Wilkinson
-jaro-Winkler
-Johnson's algorithm
-Johnson-Trotter
-JSort
-k-ary Huffman coding
-k-d tree
-k-d-B-tree
-Karatsuba
-Karp reduction
-Karp-Rabin
-kazimierz Kuratowski
-KMP
-KmpSkip search
-Knuth-Morris-Pratt
-Knuth-Morris-Pratt algorithm
-Kosaraju
-Kraft's inequality
-Kruskal
-Kruskal's algorithm
-kth order Fibonacci numbers
-KV diagram
-k²-tree
-LCFS hashing
-LCM
-LCS
-LDS
-Lempel-Ziv
-lempel-Ziv-Welch
-Levenshtein distance
-linear hash
-linear hashing
-linear quadtree
-little-o notation
-locality-sensitive hashing
-Lotka's law
-LZW
-LZW compression
-macintosh OS
-Martin Fowler
-max Planck Institutes
-maximum bipartite matching
-MBB
-memoization
-Miller-Rabin
-minimal perfect hashing
-Minkowski distance
-Moore machine
-morris-Pratt algorithm
-MST
-multi suffix tree
-multikey Quicksort
-multiprefix
-Munkres' assignment algorithm
-nand
-NC many-one reducibility
-NIST
-nor
-NYSIIS
-octree
-OFDM system
-optimal hashing
-optimal polyphase merge
-optimal polyphase merge sort
-order-preserving hash
-order-preserving Huffman coding
-order-preserving minimal perfect hashing
-orthogonal drawing
-orthogonal lists
-orthogonally convex rectilinear polygon
-PAM
-patricia tree
-PCP
-PDA
-PDF
-Pearson's hash
-perfect hashing
-permutation sort
 planarization
-PLOP-hashing
-poissonization
-polyhedron
-polylogarithmic
-polyphase merge
-polyphase merge sort
-polytope
-poset
-Post machine
-Post's correspondence problem
-prefix
-prefix sums
-prefix traversal
-PRNG
-pth order Fibonacci numbers
-quad trie
-quadtree
-quicksort
-R+-tree
-Rabin-Karp
-radix
-radix sort
-radix tree
-RBST
-recursion tree
-recursive data structure
-red-black tree
-rehashing
-RNG
-ROBDD
-robin Hood hashing
-SAM
-SBB tree
-schorr-Waite graph marking algorithm
-secant search
-serializability
-Shannon-Fano coding
-Shor's algorithm
-Simon's algorithm
-simple uniform hashing
-skip list
-Smith algorithm
-Smith-Waterman algorithm
-sparse graph
-splay tree
-SPMD
-SST
-SSTable
-static Huffman coding
-steinhaus-Johnson-Trotter
-Stirling's approximation
-Stirling's formula
-Strassen
-subadditive ergodic theorem
-subgraph isomorphism
-suffix
-suffix array
-suffix tree
-symmetric binary B-tree
-tabulation hashing
-Tarjan
-thomas J. Watson
-three-way radix quicksort
-top-down radix sort
-topological order
-topological sort
-topology tree
-transpose sequential search
-treap
-TREC
-trie
-tripartition
-trotter-Johnson
-TSP
-TST
-turbo-BM
-twisted tabulation hashing
-UB-tree
-UKP
-UMTS
-uniform hashing
-union-find
-universal B-tree
-universal hashing
-UWB
-virtual hashing
-Viterbi algorithm
-Vitter's algorithm
-VMware
-VRP
-WCET
-worst case
-worst-case execution time
-worst-case minimum access
-XILINX
-xor
+DFS forest
+locality-sensitive hashing
+nor
+Kosaraju
+ernst & Young
+cuckoo hashing
+Benford's law
+hash table delete
+eulerian path
 Yule distribution
-Zeller's congruence
-zhu-Takaoka
-Zipf's law
-ρ-approximation algorithm
+IBLT
+incremental hashing
+hash function
+claude Elwood Shannon
+B-tree
+ANSI
+PDA
+NIST
+Kraft's inequality
+optimal polyphase merge sort
+Boruvka's algorithm
+poissonization
+pth order Fibonacci numbers
+Stirling's approximation
+ERCW
+skip list
+DRBG
+k-d-B-tree
+rehashing
+polylogarithmic
+Dinic
+KV diagram
+orthogonally convex rectilinear polygon
+Fibonacci number
+LZW compression
+cupif-Giannini tree traversal
+AVL tree
+hash tree
+2-choice hashing
+hash heap
+Fibonacci tree
+TREC
+asymptotically tight bound
+SSTable
+LCFS hashing
+permutation sort
+nand
+huge sparse array
+antichain
+RBST
+HyperLogLog
+Apostolico-Crochemore
+top-down radix sort
+Lempel-Ziv
+Stirling's formula
+J. H. Wilkinson
+kth order Fibonacci numbers
+Minkowski distance
+external radix sort
+serializability

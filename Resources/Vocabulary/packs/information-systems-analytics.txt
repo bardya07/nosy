@@ -1,254 +1,254 @@
-A/B testing
-ACID
-advanced encryption standard
-adversarial debiasing
-AES
-Agile Manifesto
-AI
-API
-application programming interface
-artificial intelligence
-asymmetric encryption
-augmented reality
-B-tree index
+work breakdown structure
+role-based access control
+data normalization
+data minimization
+Privacy by Design
+media access control address
 bare metal server
-BI
-bitmap index
-blockchain
-BPI
-BPM
-BPO
-BPR
-BRD
-brute-force attack
-buffer overflow
-business intelligence
-business process improvement
-business process management
-business process outsourcing
-business process reengineering
-business requirements document
+Structured Query Language
+MIS
+SDLC
+virtual private network
+human-computer interaction
+peer-to-peer architecture
+SLA
+SCM
+virtualization
+global supply chain management
+Platform as a Service
+descriptive analytics
+data protection impact assessment
 California Consumer Privacy Act
-CCPA
-CEH
-Certified Ethical Hacker
-CIA triad
-CIDR
-CISM
-CISSP
+dynamic IP address
+extract-transform-load
+DBaaS
+PRINCE2
+DBMS
+phishing
+application programming interface
+Firewall as a Service
+RSA encryption
+blockchain
+Project Management Body of Knowledge
+ISO/IEC 27701
+data mining
+SDN
+BPO
+PIMS
+data dictionary
+executive information system
+packet sniffer
+user acceptance testing
+data lake
+NAS
+bitmap index
+hash index
+digital signature
+virtual reality
+database schema
+web content accessibility guidelines
+buffer overflow
+TPS
+BPR
+augmented reality
+PMBOK
 classless inter-domain routing
+advanced encryption standard
+distributed denial-of-service
+DIKW pyramid
+GDPR
+project management office
+pretexting
+rootkit
+k-means
+primary key
+WBS
+PaaS
+keylogger
+business intelligence
+Personal Information Protection and Electronic Documents Act
+IaaS
+Information Technology Infrastructure Library
+GLIS
+AI
+natural language processing
+man-in-the-middle attack
+enterprise resource planning
+CISM
+defense in depth
+General Data Protection Regulation
+interoperability
+FAIS
+requirements traceability matrix
+Internet Protocol Security
+software-defined network
+Testing as a Service
+ISO/IEC 27001
+GSCM
+CISSP
+data flow diagram
+A/B testing
+TaaS
+supply chain management
+TLS
+global logistics information system
+ETL
+information security management system
+Human Resources Information System
+IPv6
+fileless malware
+Domain Name System
+Industry 4.0
+decision support system
+business process improvement
+CRM
+federated learning
+VPN
+WCAG
+customer relationship management
+Database as a Service
+data provenance
+semistructured data
+security information and event management
+BPM
+functional area information system
+relational database
+privacy information management system
+AES
+SIEM
+HRIS
+NoSQL
+hot site storage
+prescriptive analytics
+MFA
+storage-area network
+operational technology
+data independence
+transaction processing system
+Infrastructure as a Service
+HCI
+SaaS
+CIA triad
+artificial intelligence
+SECaaS
+cryptography
+network-attached storage
+TOGAF
+ISRM
+extreme programming
+hybrid cloud
+XSS
+de-identification
+software development life cycle
+cyber espionage
+adversarial debiasing
+Transport Layer Security
+foreign key
+SSL
+NumPy
+Industrial Internet of Things
+symmetric encryption
+point-of-sale system
+BRD
+IPsec
+risk-based authentication
+denormalization
+orphaned record
+dark patterns
+data redundancy
+Certified Ethical Hacker
+Gorry and Scott Morton framework
+data governance
+Internet of Things
+zero trust
+Payment Card Industry Data Security Standard
+ERD
+machine learning
+business requirements document
+FWaaS
+least privilege principle
 client/server architecture
 cloud computing
-COBIT
-CRM
-cross-site scripting
+ACID
 cryptographic key
-cryptography
-customer relationship management
-cyber espionage
-dark patterns
-data dictionary
-data flow diagram
-data governance
-data independence
-data integrity
-data interoperability
-data lake
-data localization
-data minimization
-data mining
-data normalization
-data protection impact assessment
-data provenance
-data redundancy
-data warehouse
-Database as a Service
-database management system
-database schema
-DBaaS
-DBMS
-DDoS
-de-identification
-decision support system
-defense in depth
-denormalization
-descriptive analytics
-DFD
-diagnostic analytics
-digital signature
-DIKW pyramid
-distributed denial-of-service
-DNS
-Domain Name System
-DPIA
-DSS
-dynamic IP address
-EIS
-enterprise resource planning
-entity relationship diagram
-ERD
-ERP
-ETL
-executive information system
-extract-transform-load
-extreme programming
-FAIS
-federated learning
-fileless malware
-Firewall as a Service
-FISMA
-foreign key
-functional area information system
-functional dependency
-FWaaS
-GDPR
-General Data Protection Regulation
-GLIS
-global logistics information system
-global supply chain management
-Gorry and Scott Morton framework
-GSCM
-hash index
-hashing
-HCI
-homomorphic encryption
-hot site storage
-HRIS
-HTTP
-HTTPS
-Human Resources Information System
-human-computer interaction
-human-in-the-loop system
-hybrid cloud
-Hypertext Transfer Protocol
-IaaS
-IDPS
-IDS
-Industrial Internet of Things
-Industry 4.0
-information security management system
 information security risk management
-Information Technology Infrastructure Library
-Infrastructure as a Service
-Internet of Things
-Internet Protocol Security
-interoperability
-IoT
-IPS
-IPsec
-IPv4
-IPv6
-ISACA
-ISMS
-ISO/IEC 27001
-ISO/IEC 27701
-ISRM
-ITIL
-k-means
-Kanban
-keylogger
-least privilege principle
-machine learning
-man-in-the-middle attack
-management information system
-master data
-McKinsey 7-S Framework
-media access control address
-MFA
-MIS
-NAS
-natural language processing
-network-attached storage
-neural network
-NIST
-NoSQL
-NumPy
-object-oriented database management system
-OODBMS
-operational technology
-orphaned record
-OWASP Secure Coding Practices
-PaaS
-packet sniffer
-Pandas
-Payment Card Industry Data Security Standard
-PCI DSS
-peer-to-peer architecture
-Personal Information Protection and Electronic Documents Act
-phishing
-PIMS
-PIPEDA
-Platform as a Service
-PMBOK
-PMO
-point-of-sale system
-prescriptive analytics
-pretexting
-primary key
-PRINCE2
-Privacy by Design
-privacy information management system
-Project Management Body of Knowledge
-project management office
-ransomware
-RBAC
-RDBMS
-referential constraint
-relational database
-requirements traceability matrix
-risk-based authentication
-Robert Anthony framework
-role-based access control
-rootkit
-RSA encryption
-RTM
-SaaS
-SAN
-SCM
-scrum
-SDLC
-SDN
-SECaaS
-Secure Sockets Layer
-Security as a Service
-security information and event management
-semistructured data
-service-level agreement
-SFIA
-SIEM
-SLA
-social engineering
+DNS
 Software as a Service
-software development life cycle
-software-defined network
-SQL
+data integrity
 SQL injection
-SSL
-storage-area network
-Structured Query Language
-subnet mask
-supply chain management
-symmetric encryption
-TaaS
-TCP/IP
-Testing as a Service
-TLS
-TOGAF
-TPS
-transaction processing system
-Transport Layer Security
+homomorphic encryption
+data localization
+API
+Kanban
+CCPA
+IoT
+PCI DSS
+business process outsourcing
+SAN
+neural network
+ERP
+PMO
+HTTP
+RDBMS
+SFIA
+SQL
+referential constraint
+DSS
+RTM
+B-tree index
 UML
-user acceptance testing
-virtual private network
-virtual reality
-virtualization
-VPN
-WBS
-WCAG
-web content accessibility guidelines
+IDPS
+business process management
+ISACA
+BI
+RBAC
+ISMS
+IPS
+DFD
+entity relationship diagram
+diagnostic analytics
+cross-site scripting
+ransomware
+Security as a Service
+business process reengineering
+management information system
+IPv4
+database management system
+CIDR
+DPIA
+data interoperability
+TCP/IP
+McKinsey 7-S Framework
+COBIT
+PIPEDA
+CEH
+master data
+IDS
+functional dependency
+human-in-the-loop system
 web scraping
-work breakdown structure
 XP
-XSS
+asymmetric encryption
+hashing
+Robert Anthony framework
+scrum
+ITIL
+Hypertext Transfer Protocol
+EIS
+service-level agreement
 Zachman Framework
-zero trust
+data warehouse
+BPI
+Secure Sockets Layer
+OODBMS
+object-oriented database management system
+brute-force attack
+Pandas
+Agile Manifesto
+subnet mask
+NIST
+OWASP Secure Coding Practices
+social engineering
+FISMA
+HTTPS
+DDoS

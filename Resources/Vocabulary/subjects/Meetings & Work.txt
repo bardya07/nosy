@@ -1,2326 +1,2326 @@
-16PF
-2SLS
-3P
-4-plot
-401(k)
-403(b)
-4Ps
-6-plot
-8D
-A/B testing
-A3 report
-abnormal balance
-absolute advantage
-absorption costing
-abundance-based change
-acceptance number
-acceptance quality limit
-acceptance sampling
-acceptance sampling plan
-access economy
-access-and-legitimacy perspective
-accounting cycle
-accounting entity concept
-accounting equation
-accounting information system
-accounting profit
-accounting rate of return
-accounts payable subsidiary ledger
-accounts receivable control
-accounts receivable subsidiary ledger
-accounts receivable turnover ratio
-accrual accounting
-accrual basis accounting
-acculturation
-accumulated depletion
-ACID
-acid-test ratio
-activity network diagram
-activity-based costing
-AD
-AD/AS
-adapted global marketing strategy
-adaptive expectations
-adaptive selling
-adjusted trial balance
-administered VMS
-administrative orbiting
-advanced encryption standard
-Advanced Product Quality Planning
-adversarial debiasing
-adverse selection
-adverse selection of wage cuts argument
-AES
-AFC
-affinity audience
-affinity diagram
-after-tax cost of debt
-agency problem
-agency theory
-agglomeration
-aggregate demand
-aggregate expenditure function
-aggregate expenditures
-aggregate production function
-aggregate supply
-Agile Manifesto
-agribusiness
-AI
-AIC
-AICPA
-AIDA model
-AIS
-Akaike information criterion
-all-you-can-afford approach
-allocative efficiency
-allowance for doubtful accounts
-allowance method
-alternative hypothesis
-amortization
-analysis of means
-analysis of variance
-Anderson-Darling Test
-andon board
-angel investor
-annuities due
-annuity
-annuity due
-ANOM
-ANOVA
-ANSI ACS X12
-antitrust laws
-AOQ
-AOQL
-API
-application programming interface
-appraisal cost
-appreciative conversations
-Appreciative Inquiry
-appropriated retained earnings
-APQP
-AQL
-arbitrage
-arithmetic average return
-ARL
-ARR
-arrow diagram
-articles of formation
-articles of incorporation
-articles of partnership
-artificial intelligence
-AS
-ASC 205 Presentation of Financial Statements
-ASC 210 Balance Sheet
-ASC 220 Income Statement—Reporting Comprehensive Income
-ASC 230 Statement of Cash Flows
-ASC 260 Earnings Per Share
-ASC 320 Investments—Debt Securities
-ASC 323 Investments—Equity Method and Joint Ventures
-ASC 326 Financial Instruments—Credit Losses
-ASC 330 Inventory
-ASC 350 Intangibles—Goodwill and Other
-ASC 360 Property, Plant, and Equipment
-ASC 606 Revenue from Contracts with Customers
-ASC 715 Compensation—Retirement Benefits
-ASC 718 Compensation—Stock Compensation
-ASC 740 Income Taxes
-ASC 805 Business Combinations
-ASC 810 Consolidation
-ASC 815 Derivatives and Hedging
-ASC 820 Fair Value Measurement
-ASC 842 Leases
-ASC 860 Transfers and Servicing
-ASC 958 Not-for-Profit Entities
-ASN
-asset-liability time mismatch
-assignable cause
-asymmetric encryption
-asymmetric information
-ATI
-attainable standard
-attribute data
-attribution biases
-attribution theory
-audit committee
-audit trail
-augmented product
-augmented reality
-autocorrelated errors
-autocorrelation
-autocorrelation plot
-automatic stabilizers
-autonomation
-autoregressive
-AVC
-average cost curve
-average cost method
-average outgoing quality
-average outgoing quality limit
-average run lengths
-average sample number
-average total cost
-average total inspection
-average variable cost
-avoidable cost
-avoidance learning
-B-tree index
-B2B
-B2C
-baka-yoke
-balance of payments
-balance sheet aging of receivables method
-balanced design
-balanced plant
-balanced scorecard
-balancing the line
-Baldrige award
-bank capital
-bank reconciliation
-bank run
-bare metal server
-barriers to entry
-Bartlett's Test
-Basel III
-baselining
-bases of power
-basic incongruity thesis
-basic quantity equation of money
-batch and queue
-batch-level cost
-BATNA
-Bayes information criterion
-Bayes' theorem
-BB
-behavior modification
-behavioral criteria
-behavioral dilemmas
-behavioral economics
-behavioral justification
-behavioral observation scale
-behavioral self-management
-behaviorally anchored rating scale
-benefit corporation
-Bernoulli trial
-Bertrand
-BI
-BIC
-Big Q, little q
-bihistogram
-bilateral monopoly
-bill of lading
-binomial distribution
-bitmap index
-bivariate
-Black Belt
-Black–Scholes formula
-blockchain
-BMC
-BOGO
-bond indenture
-bond laddering
-book of original entry
-bootstrap
-bootstrap plot
-bootstrapping
-born global
-born globals
-Box-Cox Linearity Plot
-Box-Cox Normality Plot
-Box-Jenkins approach
-Box-Jenkins model estimation
-Box-Jenkins model identification
-Box-Jenkins model validation
-BPI
-BPM
-BPO
-BPR
-brand positioning
-BRD
-breakeven point
-brute-force attack
-BSC
-budget constraint
-budget line
-buffer overflow
-build-measure-learn loop
-bundling
-bureaucratic gamesmanship
-bureaucratic model
-burn rate
-business intelligence
-business judgment rule
-business model canvas
-business process improvement
-business process management
-business process outsourcing
-business process patent
-business process reengineering
-business purpose exception
-business requirements document
-business-level strategy
-business-to-business
-business-to-consumer
-buyer persona
-buyer power
-buyer's black box
-buying center
-c-chart
-CAD
-CAE
-California Consumer Privacy Act
-call option
-callable bond
-Canada Business Corporations Act
-Canada's Anti-Spam Legislation
-cap and trade
-capability maturity model
-capacity constraint resources
-capital asset budget
-capital asset pricing model
-capital budgeting
-capital deepening
-capital employed
-capital expenditure budget
-capital expense
-capital gain yield
-CAPM
-CAR
-career entrepreneur
-cartel
-CAS
-case law
-cash basis accounting
-cash conversion cycle
-cash disbursements journal
-cash ratio
-cash receipts journal
-CASL
-categorical imperative
-categorical variables
-CATWOE
-causal research
-cause and effect diagram
-cause of action
-caveat emptor
-CBCA
-CCPA
-CDF
-CE
-CEH
-cellular manufacturing
-centered moving average
-Central Hudson Test for Commercial Speech
-central limit theorem
-central tendency error
-centralization
-certificate of deposit
-Certified Ethical Hacker
-ceteris paribus
-CFA
-CFE
-chain sampling plan
-change agents
-changeover time
-charismatic leaders
-chart of accounts
-chi-square distribution
-Chi-Square Goodness-of-Fit Test
-Chi-Square Test
-CIA
-CIA triad
-CIDR
-circular flow diagram
-CISA
-CISG
-CISM
-CISSP
-Citizens United v. Federal Election Commission
-class action lawsuit
-classified balance sheet
-classless inter-domain routing
-CLCA
-click-through rate
-client/server architecture
-close corporation
-closed shop
-closed-loop corrective action
-closely held corporation
-cloud computing
-clustered standard errors
-clusters
-CLV
-CMA
-CMM
-co-brand
-Coase theorem
-COBIT
-coefficient of determination
-coefficient of multiple determination
-cognitive complexity
-cognitive consistency
-cognitive dissonance
-cognitive diversity hypothesis
-COGS
-Cohen's d
-coinsurance
-COLAs
-collaborative economy
-collective bargaining
-collective bargaining agreement
-collusion
-command economy
-command-and-control regulation
-commerce clause
-commercial paper
-commercial reasonableness
-commingle
-Committee of Sponsoring Organizations
-commodity money
-common causes
-common resources
-common-carrier delivery contract
-common-size
-communication gap
-comparable company analysis
-comparable worth
-comparative advantage
-comparative negligence
-compensating balances
-competitive analysis grid
-competitive matrix
-competitive-parity approach
-complements
-completed contract method
-complex adaptive systems
-complex demodulation amplitude plot
-complex demodulation phase plot
-complex-stable environment
-complex-unstable environment
-composite unit
-compound entry
-compound growth rate
-compounding period
-comps
-comptroller
-computer aided design
-computer aided engineering
-computer-aided manufacturing
-concentration ratio
-concentric diversification
-concept testing
-concurrent controls
-concurrent engineering
-conditional probability
-conditional sales contract
-conditioned response
-confidence interval
-confirmation bias
-conformity assessment
-conjoint analysis
-consequentialism
-constant perpetuity
-constant returns to scale
-constant-cost industry
-constraints management
-constructive confrontation
-consumer adoption process
-consumer decision process
-consumer equilibrium
-consumer price index
-consumer surplus
-consumer's risk
-consumption budget constraint
-consumption demand
-consumption function
-content motivation theories
-contingency school
-contingency table
-contingency theory of leadership
-contingent liability
-continuous flow production
-continuous innovation
-continuous promotional schedule
-continuous quality improvement
-continuous reinforcement
-continuous sampling plan
-contra account
-contra-asset
-contractionary fiscal policy
-contractionary monetary policy
-contractual rights
-contractual VMS
-contributed capital
-contribution margin
-contribution margin income statement
-contribution margin ratio
-contributory negligence
-control chart
-control limits
-control plan
-convenience sampling
-converging economy
-conversion costs
-conversion price
-conversion rate
-conversion ratio
-convertible bond
-cooperative venture
-coordinate measuring machine
-coordination argument
-COPQ
-COQ
-core competency
-core inflation index
-core product
-corporate entrepreneurship
-corporate narrative
-corporate personhood
-corporate social responsibility
-corrective action recommendation
-correlation coefficient
-COSO
-cost center
-cost driver
-cost of goods sold
-cost of poor quality
-cost of quality
-cost per acquisition
-cost per click
-cost pool
-cost-leadership strategy
-cost-of-living adjustments
-cost-plus regulation
-cost-volume-profit analysis
-countercyclical
-counterpower
-coupon rate
-Cournot model
-covert discrimination
-Cp
-CPA
-CPC
-CPI
-Cpk index
-CQI
-creative destruction
-credit risk
-CRISC
-critical incident technique
-critical region
-critical values
-CRM
-cross tabulation
-cross-elasticity of demand
-cross-price elasticity of demand
-cross-site scripting
-crowdfunding
-crowding out
-crowdsourcing
-cryptographic key
-cryptography
-CSM
-CSR
-CTR
-cultural duality
-cultural intelligence
-cultural paradox
-cumulative distribution function
-cumulative relative frequency
-cumulative sum control chart
-current account balance
-current portion of a note payable
-customer acquisition cost
-customer effort score
-customer empathy map
-customer equity
-customer experience
-customer lifetime value
-customer relationship management
-customer satisfaction score
-customer value proposition
-customer value-based objective
-customer-supplier model
-CUSUM
-CVA
-CVP
-CX
-cyber espionage
-cybernetic control
-cycle time
-cyclical unemployment
-d-chart
-dark patterns
-data dictionary
-data flow diagram
-data governance
-data independence
-data integrity
-data interoperability
-data lake
-data localization
-data minimization
-data mining
-data normalization
-data protection impact assessment
-data provenance
-data redundancy
-data warehouse
-Database as a Service
-database management system
-database schema
-DBA
-DBaaS
-DBMS
-DCF
-DDM
-DDoS
-de-identification
-deadweight loss
-debenture
-debt-to-assets ratio
-debt-to-equity ratio
-decertification election
-decision support system
-decoupling
-decreasing-cost industry
-deep discount bonds
-defense in depth
-defensive strategies
-deferred revenue
-deficit in retained earnings
-deficit-based change
-deflation
-degrees of freedom
-delivery gap
-demand curve
-demand deposits
-demand schedule
-demerit chart
-Deming cycle
-demographic segmentation
-denormalization
-deontologist ethics
-deontology
-dependent variable
-depletion
-deposit in transit
-depository institutions
-derivative
-derived demand
-descriptive analytics
-descriptive approach
-descriptive statistics
-Design for Six Sigma
-design of experiments
-design patent
-designated leader
-destination contract
-devil's advocate
-df
-DFD
-DFSS
-diagnostic analytics
-DICEE
-difference-in-differences
-differential analysis
-differential cost
-differentiated marketing
-differentiated products
-differentiation strategy
-diffused stakeholder
-diffusion chasm
-diffusion of innovation
-diffusion of innovations
-digital signature
-DIKW pyramid
-diminishing marginal productivity
-diminishing marginal utility
-direct labor rate variance
-direct labor time variance
-direct materials price variance
-direct materials quantity variance
-direct write-off method
-direct-mail marketing
-discontinuous innovations
-discount bond
-discount on bonds payable
-discount window
-discounted cash flow
-discounted payback period
-discrete event simulation
-discretionary cost center
-discretionary fiscal policy
-discrimination-and-fairness perspective
-diseconomies of scale
-disparate impact
-disparate treatment
-dispositional approach
-disruptive technology
-distributed denial-of-service
-distributive bargaining
-distributive justice
-divergent thinking
-diversity dividend
-diversity marketing intelligence
-divestiture
-dividend discount model
-dividend smoothing
-division of labor
-DJIA
-DMADV
-DMAIC
-DMiQ
-DNS
-doctrine of sovereign immunity
-Dodge-Romig sampling plans
-DoE
-DOE scatter plot
-dollarize
-Domain Name System
-domain/directional planning
-dormant commerce clause
-double coincidence of wants
-double exponential smoothing
-double-blind experiment
-double-declining-balance depreciation method
-double-entry accounting system
-Dow Jones Industrial Average
-DPIA
-DSGE
-DSS
-due diligence
-due process clause
-due process nonaction
-dumping
-duopoly
-DuPont method
-duty of care
-duty of confidentiality
-duty of loyalty
-duty to aid
-dyadic negotiation
-dynamic IP address
-dynamic stochastic general equilibrium
-dynamically continuous innovation
-e-mediation
-EAR
-earned capital
-earned income tax credit
-earnings per share
-EBIT
-EBITDA
-economic efficiency
-economic nexus
-economic surplus
-economic value added
-economies of scale
-EDGAR
-EDI
-EEOC
-effective annual rate
-effective interest rate
-effective lower bound
-effective-interest method
-efficiency wage theory
-effort-performance expectancy
-EGCs
-eight disciplines model
-eight wastes
-eighty-twenty
-EIS
-EITC
-elastic demand
-elastic supply
-elasticity of savings
-ELB
-electronic data interchange
-elevator pitch
-embezzlement
-emergent or bottom-up approach
-emerging growth companies
-empirical rule
-employee life cycle
-employment at will
-enabling stakeholder
-enculturation
-encumbrance
-endogenous
-enterprise resource planning
-enterprise risk management
-enterprise value
-entity relationship diagram
-entity selection
-environmental entrepreneurship
-environmental scanning
-EPS
-equilibrium exchange rate
-equilibrium price
-equilibrium quantity
-equity financing
-equity multiples
-equity share
-equity theory
-equivalent units
-ERD
-ERG theory
-ERP
-error variance
-escalation of commitment
-ETFs
-ethical maximum
-ethical minimum
-ethical relativism
-ethnocentrism
-ETL
-eudaimonia
-EV
-EVA
-ex dividend
-excess demand
-excess reserves
-excess supply
-exchange-traded funds
-excise tax
-exclusive dealing
-exclusive remedy
-executive information system
-exogenous
-expanded accounting equation
-expansionary fiscal policy
-expansionary monetary policy
-expatriate
-expectancy theory
-expected inflation
-expenditure multiplier
-expenditure-output model
-expense recognition principle
-experimental unit
-explanatory variable
-explicit knowledge
-exponential distribution
-exponential smoothing
-express warranty
-external costs
-external locus of control
-external value proposition
-externality
-extract-transform-load
-extreme programming
-extrinsic motivation
-F distribution
-F ratio
-F-Test
-factoring
-factors of production
-factory-level cost
-fail-safe points
-FAIS
-FASB
-FCF
-FDI
-FDIC
-fear appeals
-feasibility analysis
-Federal Arbitration Act
-federal funds rate
-Federal Open Market Committee
-Federal Reserve Economic Data
-federalism
-federated learning
-fee-for-service
-fiat money
-FICA
-FICC
-fiduciary
-fiduciary duty
-FIFO
-figurehead role
-fileless malware
-Financial Accounting Standards Board
-financial capital market
-financial distress
-financial intermediary
-financial leverage
-finite population correction factor
-FINRA
-Firewall as a Service
-firm offers
-firm-specific risk
-firmographics
-fishbone diagram
-Fisher effect
-FISMA
-fixed effects regression
-fixed factory overhead variance
-fixed-income securities
-flat organization
-flexible budget
-flexible manufacturing system
-flighting promotional schedule
-floating exchange rate
-floating-rate bonds
-floor planning
-flotation costs
-focus group
-FOMC
-FOMO
-force majeure
-forced-arbitration clauses
-Foreign Commerce Clause
-foreign direct investment
-foreign financial capital
-foreign key
-Foreign Sovereign Immunities Act of 1976
-foreseeability
-Form 10-K
-Form 10-Q
-Form 8-K
-formalization
-formula selling
-forward contract
-forward guidance
-founders' agreement
-FPCI
-franchisee
-franchisor
-fraud triangle
-FRED
-free cash flow
-free cash flow to assets ratio
-free exercise clause
-free rider
-frictional unemployment
-friends and family financing
-full disclosure principle
-full-cost accounting
-full-employment GDP
-fully amortized notes
-functional area information system
-functional dependency
-functional stakeholder
-functional structure
-fundamental attribution error
-fundamental problem of causal inference
-fungible
-FUTA
-future value
-futures contract
-FV
-FWaaS
-GAAP
-gain from trade
-gain sharing
-game theory
-gap analysis
-Gap Model of Service Quality
-garnishment
-GASB
-GATT
-GDP
-GDPR
-GEM
-general adaptation syndrome
-General Data Protection Regulation
-general obligation bonds
-general partner
-general partnership
-Generalized Extreme Deviate Test
-generic business-level strategies
-geographic segmentation
-geographic structure
 geometric average return
-geometric distribution
-geometric mean
-gig economy
-glass ceiling
-GLIS
-Global Entrepreneurship Monitor
-global logistics information system
-global strategy
-global supply chain management
-GNP
-GO
-goal congruence
-goal hierarchy
-goal theory
-going concern assumption
-golden mean
-goodness-of-fit test
-goods-in-bailment contract
-Gordon growth model
-Gorry and Scott Morton framework
-grant of authority
-graphic rating scale
-great man theory of leadership
-greenwashing
-grievance arbitration
-gross domestic product
-gross margin
-gross national product
-gross profit method
-gross working capital
-group cohesiveness
-groupthink
-growing perpetuity
-growth consensus
-Grubbs Test
-GSCM
-guerrilla marketing
-HAC
-hackathon
-halo effect
-hard peg
-harm principle
-hash index
-hashing
-Hausman test
-HCD
-HCI
-hedging
-heijunka
-Herfindahl-Hirschman Index
-heteroskedasticity
-heteroskedasticity-robust standard errors
-heuristics
-HHI
-hidden unemployment
-high-low method
-hindsight bias
-historical cost principle
-Hofstede's model of national culture
-holding period percentage return
-homomorphic encryption
-horizontal conflict
-horizontal diversification
-horizontal marketing system
-horizontal organizational design
-hoshin kanri
-hostile work environment
-hot site storage
-HRIS
-HTTP
-HTTPS
-hubris
-Human Resources Information System
-human-centered design
-human-computer interaction
-human-in-the-loop system
-humanistic business model
-hurdle rate
-hybrid cloud
-hybrid control system
-hybrid planning
-hypergeometric experiment
-hyperinflation
-Hypertext Transfer Protocol
-hypothesis testing
-IaaS
-IAS 1 Presentation of Financial Statements
-IAS 10 Events after the Reporting Period
-IAS 12 Income Taxes
-IAS 16 Property, Plant and Equipment
-IAS 19 Employee Benefits
-IAS 2 Inventories
-IAS 20 Accounting for Government Grants and Disclosure of Government Assistance
-IAS 21 The Effects of Changes in Foreign Exchange Rates
-IAS 23 Borrowing Costs
-IAS 24 Related Party Disclosures
-IAS 26 Accounting and Reporting by Retirement Benefit Plans
-IAS 27 Separate Financial Statements
-IAS 28 Investments in Associates and Joint Ventures
-IAS 29 Financial Reporting in Hyperinflationary Economies
-IAS 32 Financial Instruments: Presentation
-IAS 33 Earnings per Share
-IAS 34 Interim Financial Reporting
-IAS 36 Impairment of Assets
-IAS 37 Provisions, Contingent Liabilities and Contingent Assets
-IAS 38 Intangible Assets
-IAS 39 Financial Instruments: Recognition and Measurement
-IAS 40 Investment Property
-IAS 41 Agriculture
-IAS 7 Statement of Cash Flows
-IAS 8 Accounting Policies, Changes in Accounting Estimates and Errors
-IAS 8 Basis of Preparation of Financial Statements
-iceberg principle
-ideal standard
-ideation
-identity groups
-IDPS
-IDS
-IFAC
-IFRS
-IFRS 1 First-time Adoption of International Financial Reporting Standards
-IFRS 10 Consolidated Financial Statements
-IFRS 11 Joint Arrangements
-IFRS 12 Disclosure of Interests in Other Entities
-IFRS 13 Fair Value Measurement
-IFRS 14 Regulatory Deferral Accounts
-IFRS 15 Revenue from Contracts with Customers
-IFRS 16 Leases
-IFRS 17 Insurance Contracts
-IFRS 18 Presentation and Disclosure in Financial Statements
-IFRS 19 Subsidiaries without Public Accountability: Disclosures
-IFRS 2 Share-based Payment
-IFRS 3 Business Combinations
-IFRS 5 Non-current Assets Held for Sale and Discontinued Operations
-IFRS 6 Exploration for and Evaluation of Mineral Resources
-IFRS 7 Financial Instruments: Disclosures
-IFRS 8 Operating Segments
-IFRS 9 Financial Instruments
-IMC
-imperfect information
-imperfectly competitive
-implementation lag
-implicit contract
-imprest account
-inaccessibility exception
-income effect
-income elasticity of demand
-income summary
-increasing-cost industry
-incremental innovation
-incubation
-independent events
-independent groups
-independent variable
-index number
-indifference curve
-indirect labor
-indirect material
-individual retirement accounts
-Industrial Internet of Things
-Industry 4.0
-inelastic demand
-inelastic supply
-infant industry argument
-inferential statistics
-inferior good
-inflation targeting
-inflationary gap
-informal organization
-information security management system
-information security risk management
-Information Technology Infrastructure Library
-Infrastructure as a Service
-initial public offering
-innovation accounting
-innovation flowchart
-inquiry test
-inside order taker
-insider trading
-insider-outsider model
-installment sale
-institutional advertisements
-institutional investors
-instrumental approach
-instrumental variables
-intangible assets
-integer programming
-integrated marketing communications
-integration-and-learning perspective
-integrative bargaining
-intellectual property
-interaction attentiveness
-interaction involvement
-interaction process analysis
-interbank market
-interest rate on reserve balances
-interest rate risk
-interest tax shield
-intermediate goods
-intermediate zone
-internal control system
-internal locus of control
-internal rate of return
-international capital flows
-international financial flows
-International Financial Reporting Standards
-Internet of Things
-Internet Protocol Security
-interoperability
-interorganizational conflict
-interquartile range
-intertemporal choices
-intertemporal decision making
-interval estimation
-interval scale
-intra-industry trade
-intrapreneurial
-intrapreneurs
-intrinsic motivation
-intrinsic value
-investment center
 investment function
-investment grade
-invisible hand
-invisible social identities
-involuntary arbitration
-involuntary unemployment
-IORB
-IoT
-IPO
-IPS
-IPsec
-IPv4
-IPv6
-IRAs
-IRR
-ISACA
-ISMS
-ISO 14000
-ISO 14001
-ISO 19011
-ISO 26000
-ISO 9000
-ISO 9001
-ISO/IEC 27001
-ISO/IEC 27701
-ISRM
-iterative development
-ITIL
-IV
-Jensen's alpha
-jidoka
-JIT
-job order cost system
-jobs-to-be-done theory
-joint costs
-joint venture
-journalizing
-judgment sample
-junk bonds
-junzi
-Juran trilogy
-jurisdictional ambiguities
-jury tests
-just compensation
-just-in-time manufacturing
-justice as fairness
-justice theory
-justification-suppression model
-JVs
-k-means
-KAI
-Kaizen
-Kanban
-Kano model
-key process characteristic
-key product characteristic
-keylogger
-Keynes' law
-Keynesian economic model
-Keynesian economics
-keystone pricing
-kinked demand curve
-Kirton Adaption-Innovation Inventory
-kitting
-knowledge economy
-knowledge gap
-Kolmogorov-Smirnov Test
-Kotter's change model
-Kruskal-Wallis test
-labor force participation rate
-labor-leisure budget constraint
-labor-leisure diagram
-lag order
-lag plot
-laissez-faire
-latent need
-lateral thinking
-law of demand
-law of diminishing marginal product
-law of diminishing marginal utility
-law of diminishing returns
-law of effect
-law of large numbers
-law of supply
-LCL
-LCM
-LCR
-lean enterprise
-lean manufacturing
-lean methodology
-lean model canvas
-lean pitch
-lean plan
-lean problem-solving process
-Lean Six Sigma
-lean startup
-least privilege principle
-least-preferred coworker
-legislative lag
-lender of last resort
-leniency error
-letter of credit
-level loading
-level of measurement
-Levene Test
-leverage cycle
-levered equity
-leviathan effect
-Lewin's change model
-LIBOR
-lifestyle venture
-LIFO
-limited liability company
-limited liability limited partnership
-limited liability partnership
-limited partner
+behavioral criteria
 limited partnership
-limited personal liability
-limited reserves
-limited-service wholesalers
-line of credit
-linear programming
-linking role
-Liquidity Coverage Ratio
-litigation
-LLC
-LLLP
-LLP
-load-load
-LOC
-logistical functions
-logit
-long run aggregate supply curve
-long-run average cost curve
-long-run equilibrium
-long-term relative frequency
-loose monetary policy
-loss aversion
-lot tolerance percentage defective
-lower control limit
-lower-of-cost-or-market
-LPC
-LRAC
-LRAS
-LSS
-LTPD
-lump-sum pay increase
-lurking variables
-M&A
-M1
-M2
-machine learning
-macro-organizational behavior
-macroeconomic externality
-macroenvironment
-maintained markup
-majority stake
-malpractice
-man-in-the-middle attack
-management by objectives
-management discussion and analysis
-management information system
-managerial ethics
-manifest need
-manifest needs theory
-manufacturer's agents
-manufacturing overhead costs
-manufacturing resource planning
-margin of safety
-marginal analysis
-marginal benefits
-marginal cost
-marginal cost of labor
-marginal product
-marginal propensity to consume
-marginal propensity to import
-marginal propensity to save
-marginal rate of substitution
-marginal revenue
-marginal utility
-market capitalization
-market development strategy
-market failure
-market penetration strategy
-market risk premium
-market segmentation
-market share-oriented objective
-market structure
-marketable permit program
-marketable securities
-marketing channel
-marketing dashboard
-marketing information system
-marketing metrics
-marketing mix
-marking to market
-Maslow's hierarchy of needs
-mass customization
-Master Black Belt
-master budget
-master data
-matched pairs
-matching principle
-material nonpublic information
-material requirements planning
-materiality
-matrix structure
-maximizing utility
-MBB
-MBO
-McKinsey 7-S Framework
-McKinsey 7-S model
-MD&A
-mean square
-mean time between failures
-measurement uncertainty
-mechanical observation
-mechanistic bureaucratic structure
-media access control address
-median voter theory
-medium of exchange
-member-managed LLCs
-mens rea
-mental stimulus processing
-menu costs
-mercantilism
-merchandise inventory
-merchandise trade balance
-merged currency
-mergers and acquisitions
-merit matrix
-method of least squares
-metrology
-MFA
-microenvironment
-minimum viable product
-MIRR
-mirror-image rule
-MIS
-mixed sale
-mixed stream
-MM Proposition I
-MMMFs
-model minority myth
-modern bureaucracy
-modified accrual accounting
-modified internal rate of return
-modified rebuy
-monetary measurement
-monetary policy
-money market funds
-money market mutual funds
-money multiplier
-monopolistic competition
-monopoly
-monopsony
-Monte Carlo simulation
-moral agency
-moral entrepreneur
-moral hazard
-moral minimum
-mortgage bond
-motion studies
-MPC
-MPI
-MPS
-MRP
-MRP II
-MTBF
-muda
-multi-segment marketing
-multi-step income statement
-multichannel distribution system
-multicollinearity
-multicultural identity
-multiple correlation coefficient
-multiplier effect
-multivariate
-multivariate control chart
-multivariate time series models
-municipal bonds
-munis
-mutually exclusive
-mutually exclusive projects
-MVP
-nAch
-nAff
-NAFTA
-Nagara system
-NAICS
-NAIRU
-NAS
-NASDAQ
-Nash equilibrium
-national saving and investment identity
-natural hedge
-natural language processing
-natural monopoly
-natural rate of unemployment
-NBER
-NCDs
-NCR
-NCUA
-NDA
-need/satisfaction format
-negative externality
-negative reinforcement
-negotiable certificates of deposit
-neoclassical determinants of growth
-neoclassical model
-neoclassical perspective
-neoclassical zone
-net debt
-net national product
-net present value
-Net Stable Funding Ratio
-net working capital
-network-attached storage
-neural network
-new-task buy
-NFP
-NIST
-NNP
-no-par stock
-nominal GDP
-nominal group technique
-nominal interest rate
-nominal scale
-non-binding arbitration
-non-compete agreement
-non-rival
-noncash expense
-noncompete agreement
-nonconforming record
-nonconformity
-noncurrent asset
-noncybernetic control
-nondestructive testing
-nondisclosure agreement
-nondurable goods
-nonexcludable
-nonlinear parameter estimation
-nonparametric tests
-nonprobability sample
-nonprogrammed decisions
-nonreinforcement
-nonsampling errors
-nonsolicitation clause
-nonvalue added
-NOPAT
-normal distribution
-normal good
-normal probability plot
-normative approach
-normative ethical theories
-normative power
-normative statements
-NoSQL
-note payable
-nPow
-NPV
-NSF
-NSFR
-null hypothesis
-number of days' sales in receivables ratio
-NumPy
-NYSE
-object-oriented database management system
-objective-and-task approach
-OC curve
-OD
-odd-even pricing
-OEE
-OEM
-off-price retailers
-oligopoly
-omitted variables bias
-omnichannel marketing system
-one-piece flow
-one-touch exchange of dies
-one-way ANOVA
-OODBMS
-OPEC
-open innovation
-open market operations
-open-ended NDA
-operant conditioning
-operating characteristic curve
-operating cycle
-operational reserve
-operational technology
-opportunity cost
-opportunity set
-opportunity win rate
-opportunity-identifying perspective
-option writer
-ordinal scale
-ordinary annuity
-organic bureaucratic structure
-organic statute
-organizational development
-original equipment manufacturer
-original markup
-original position
-orphaned record
-OSHA
-OTC
-out-of-control process
-output contracts
-output gap
-over-the-counter market
-overall equipment effectiveness
-overapplied overhead
-overhead rate
-overidentifying restrictions
-overreward inequity
-OWASP Secure Coding Practices
-p-chart
-p-value
-P/B
-P/CF
-P/E
-P/E TTM
-P/S
-PaaS
-packet sniffer
-pain point
-paired data set
-Pandas
-par value
-Pareto chart
-partial reinforcement
-participative pay decisions
-partnership agreement
-parts per million
-pass-through entities
-path-goal theory of leadership
-pay-for-performance
-Payment Card Industry Data Security Standard
-PCAOB
-PCI DSS
-PDCA cycle
-PDPC
-PDV
-peer-to-peer architecture
-penetration pricing
-per capita GDP
-perceived value pricing
-percentage of accounts receivable method
-percentage of completion method
-percentage-of-sales approach
-perceptual defense
-perceptual map
-perceptual organization
-perceptual selectivity
-perfect competition
-perfect elasticity
-perfect inelasticity
-perfectly competitive firm
-perfectly elastic
-performance-outcome expectancy
-period cost
-periodic inventory system
-perpetual inventory system
-perpetuity
-Personal Information Protection and Electronic Documents Act
-pervasive-regulation exception
-PESTEL
-PESTLE
-phishing
-phrónēsis
-physical capital
-PI
-piercing the corporate veil
-PIMS
-pioneering innovation
-PIPEDA
-pitch deck
-plaintiff
-plan-do-check-act cycle
-planning fallacy
-plant patent
-Platform as a Service
-PMBOK
-PMO
-point estimate
-point kaizen
-point-of-sale system
-Poisson distribution
-Poisson probability distribution
-poka-yoke
-police power
-policy gap
-pollution charge
-pooled variance
-population parameter
-population variance
-pork-barrel spending
-Porter's Five Forces
-portfolio investment
-positioning statement
-positive reinforcement
-possession processing
-post-closing trial balance
-postaction controls
-postarrival cross-cultural training
-potential GDP
-poverty trap
-power dependencies
-power distance
-power of the test
-PPAP
-PPF
-PPI
-PPM
-PPP
-pre-approach stage
-pre-arranged trading plans
-precautionary motive
-precedent transaction analysis
-precedents
-precontrols
-predatory pricing
-predeparture cross-cultural training
-predetermined overhead allocation rate
-prediction interval
-preemptive right
-preferred stock
-premium bond
-premium on bonds payable
-premium pricing
-prescriptive analytics
-present discounted value
-present value
-pretexting
-prevention cost
-price anchoring
-price cap regulation
-price ceiling
-price elasticity of demand
-price elasticity of supply
-price floor
-price taker
-price-to-book ratio
-price-to-cash-flow ratio
-price-to-earnings ratio
-price-to-sales ratio
-prima facie
-primary key
-prime rate
-PRINCE2
-prisoner's dilemma
-Privacy by Design
-privacy information management system
-private benefits
-private label
-private rates of return
-private-public partnerships
-privately held corporation
-privilege against self-incrimination
-PRIZM
-pro forma
-probability density function
-probability distribution function
-probability of rejection
-probability plot correlation coefficient
-probable cause
-probit
-problem concentration diagram
-problem-solution narrative
-process capability
-process capability index
-process costing
-process decision program chart
-process flow diagram
-process kaizen
-process motivation theories
-Producer Price Index
-producer surplus
-product differentiation
-product diversification strategy
-product life cycle
-product line filling
-product line pricing
-product line stretching
-product mix width
-product-level cost
-production cost report
-production function
-production part approval process
-production possibilities frontier
-production smoothing
-profit center
-profit-and-loss statement
-profitability index
-progressive tax
-Project Management Body of Knowledge
-project management office
-promissory estoppel
-promissory note
-promotion mix
-proportion chart
-proportional tax
-protectionism
-psychomotor abilities
-public good
-pull strategy
-pull system
-pulsing schedule
-pump-and-dump
-purchase returns and allowances
-purchasing power parity
-push strategy
-put option
-PV
-Q9000 series
-QA/QC
-QE
-QFD
-QMS
-quality assurance
-quality circle
-quality control
-quality function deployment
-quality loss function
-quality management system
-quality/new goods bias
-quantile-quantile plot
-quantitative continuous data
-quantitative discrete data
-quantitative easing
-quantum meruit
-quasi-experiments
-queue time
-qui tam provision
-quick changeover
-quick ratio
-quid pro quo
-quincunx
-quintiles
-R-chart
-race to the bottom
-radical innovations
-radio-frequency identification
-random assignment
-random sampling
-random variable
-range chart
-ransomware
-rapid penetration pricing strategy
-rapid skimming strategy
-rate of life change
-ratio scale
-rational expectations
-rational ignorance
-rational-basis test
-RBAC
-RCM
-RDBMS
-RDT
-real GDP
-real interest rate
-real options
-realized return
-reasonable accommodation
-reasonable standard of care
-reasonableness test of reliance
-recency error
-recessionary gap
-reciprocal determinism
-recognition lag
-red bead experiment
-redeemable bond
-redlining
-referent others
-referent power
-referential constraint
-regressive tax
-regressors
-regulatory capture
-rejection number
-relational database
-relationship marketing
-relative frequency
-relative wage coordination argument
-relevant range
-remittance advice
-replacement chain approach
-repo
-required rate of return
-requirements contracts
-requirements traceability matrix
-res ipsa loquitur
-reserve requirement
-residual income
-resistance price
-resource dependence
-resource dependence theory
-resource-based view
-respondeat superior
-response disposition
-response salience
-response variable
-responsibility centers
-restatement
-restraint of trade
-restrictive practices
-retail inventory method
-retained earnings
-return on ad spend
-return on customer investment
-return-on-investment approach
-revenue bonds
-revenue recognition principle
-reverse stock split
-revolvers
-revolving lines of credit
-RFID
-RI
-Risk Management Association
-risk premium
-risk-based authentication
-risk-free rate
-RMA
-ROAS
-Robert Anthony framework
-ROCI
-role ambiguity
-role conflict
-role episode
-role overload
-role perceptions
-role set
-role underutilization
-role-based access control
-rolling budget
 root cause analysis
-rootkit
-royalty payment
-RSA encryption
-RTM
-Rubin causal model
-rule of reason
-run chart
-run rate
-run sequence plot
-Runs Test
-S&P 500
-S-chart
-S/N ratio
-SaaS
-sales allowance
-sales force automation
-sales funnel
-sales mix
-sales returns and allowances
-SAM
-sample frames
-sample space
-sample standard deviation chart
-sampling bias
-sampling errors
-sampling without replacement
-SAN
-Sarbanes-Oxley Act
-Sargan test
-SASB
-satisficing
-Say's law
-SBA
-SBDCs
-scenario analysis
-schedules of reinforcement
-schema theory
-SCM
-SCORE
-scrum
-SDLC
-SDN
-SDT
-SDWT
-seasonality
-seasoned equity offering
-SEC
-SECaaS
-Secure Sockets Layer
-Secured Overnight Financing Rate
-securitization
-Security as a Service
-security information and event management
-seed-stage
-Seiban
-selective attention
-selective retention
-self-determination theory
-self-directed work team
-self-regulation
-self-regulatory organizations
-self-reinforcement
-self-serving bias
-semistructured data
-SEO
-separate entity concept
-serial bonds
-serial entrepreneur
-SERP
-service inseparability
-service mark
-service perishability
-service variability
-service-level agreement
-service-profit chain model
-serviceable available market
-seven tools of quality
-seven wastes
-SEZ
-SFIA
-Shainin System
-shareholder primacy
-sharing economy
-Sharpe ratio
-shelf registration
-Shewhart cycle
-shipment contract
-short run aggregate supply curve
-short-run average cost curves
-SHRM
-SIEM
-signal to noise ratio
-significance level
-similarity-attraction paradigm
-simple random sample
-simple-stable environment
-simple-unstable environment
-single exponential smoothing
-single moving average
-single-minute exchange of dies
-single-piece flow
-SIPC
-SIPOC diagram
-Six Sigma quality
-skimming
-SLA
-slow penetration pricing strategy
-slow skimming strategy
-Small Business Development Centers
-social benefits
-social business model canvas
-social capital
-social contract theory
-social costs
-social engineering
-social enterprises
-social entrepreneur
-social identity theory
-social loafing
-social rate of return
-social surplus
-social-information-processing approach
-societal marketing concept
-sociocultural factors
-sociodemographics
-SOFR
-soft launch
-soft peg
-Software as a Service
-software development life cycle
-software-defined network
-sole proprietorship
-source document
-SOX
-SPACs
-spaghetti diagram
-span of control
-SPC
-special causes
-special economic zones
-special purpose entities
-specific identification method
-speculative motive
-spillovers
-SPIN
-split-off point
-spoilage
-spot exchange rate
-spot rate
-SQC
-SQL
-SQL injection
-SRAC
-SRAS
-SROs
-SSCM
-SSE
-SSL
-SSR
-stability strategy
-Stackelberg
-stakeholder claim
-stakeholder prioritization
-standard deviation
-standard error
-standard error of the estimate
-standard in-process stock
-standard normal distribution
-standard of deferred payment
-standard work
-standardized employment budget
-standardized global marketing strategy
-stated value
-statement of stockholders' equity
-static budget
-stationarity
-statistical process control
-statistical quality control
-status incongruence
-status inconsistencies
-status quo bias
-stepped cost
-sticky wages and prices
-stockholders' equity
-storage-area network
-STP model
-straight product extension
-straight-line demand curve
-strategic alliance
-strategic business units
-strategic contingencies
-strategic drift
-strategic groups
-strategic inertia
-strategic positioning
-stratified random sample
-stratified sample
-strict liability
-strictness error
-strike price
-structural intervention
-structural unemployment
-structural variation
-Structured Query Language
-structured settlements
-Student's t-distribution
-subliminal advertising
-subnet mask
-suboptimization
-subprime loans
-subsidiary ledger
-substitution bias
-substitution effect
-succession planning
-sum of squared errors
-sum of squares
-sunk cost
-sunk costs
-super angels
-supply chain management
-supply curve
-supply schedule
 suppression of dissent
-supremacy clause
-sustainable supply chain management
-SUTA
-switching costs
-SWOT
-symbolic coding
-symmetric encryption
-system kaizen
-systematic risk
-systematic sample
-T-bills
-T-notes
-TaaS
-tacit knowledge
-Taguchi Methods
-takings clause
-takt time
-talent review calibration process
-TAM
-target return objective
-tariff
-task interdependencies
-task uncertainty
-tax basis accounting
-tax incidence
-Taylor rule
-TBL
-TCO
-TCP/IP
-tender of delivery
-term bonds
-test for homogeneity
-test of a single variance
-test of independence
-test statistic
-Testing as a Service
-the law of increasing opportunity cost
-theory of constraints
-thick market
-thin market
-third-party logistics provider
-Thomas-Kilmann Conflict Mode Instrument
-throughput
-TIE
-Tietjen-Moore Test
-tight monetary policy
-time deposits
-time period assumption
-time series analysis
-time tickets
-time value of money
-times interest earned ratio
-TKI
-TLS
-TOC
-TOGAF
-tolerance for ambiguity
-tortfeasor
-torts
-total available market
-total costs of ownership
-total productive maintenance
-total quality control
-total quality management
-total rewards strategy
-total surplus
-total utility
-Toyota production system
-TPM
-TPS
-TQC
-TQM
-trade credit
-trade fixtures
-trade secret
-trade-off theory
-tragedy of the commons
-transaction exposure
-transaction processing system
-transactional motive
-transfer pricing
-transformational change
-transformational leader
-translation exposure
-translation risk
-transnational firm
-Transport Layer Security
-Treasury bills
-Treasury notes
-treasury stock
-trend control chart
-tri-party repo
-trial balance
-triple bottom line
-triple exponential smoothing
-TRIZ
-turn-around document
-TVM
-twin deficits
-two-stage least squares
-type I error
-type II error
-u-chart
-UCC
-UCL
-ultra vires
-UML
-unadjusted trial balance
-unaided awareness
-unaided recall
-uncertainty avoidance
-unconditioned response
-unconscionable
-underapplied overhead
-underground economies
-underreward inequity
-undifferentiated marketing
-undue hardship
-unilateral transfers
-union security agreement
-union shop
-unique selling proposition
-unit of account
-unit-level cost
-United Nations Convention on Contracts for the International Sale of Goods
-units-of-production depreciation method
+brute-force attack
+problem concentration diagram
 unity of command
-univariate time series models
-unlevered equity
-upper control limit
-Uppsala model
-user acceptance testing
-USPTO
-usury laws
-utilitarianism
-utility patent
-utility-maximizing choice
-value analysis
-value chain
-value engineering
-value proposition canvas
-value stream loops
-value stream mapping
-variable data
-variable overhead efficiency variance
-variable overhead rate variance
-veil of ignorance
-velocity
-vendee
-Venn diagram
-venture capitalist
-verbatims
-vertical conflict
-vertical integration
-vertical marketing system
-vertical thinking
-vesting
-vicarious liability
-viral marketing
-virtual private network
-virtual reality
-virtualization
-virtue ethics
-virtue theory
-vital few, useful many
-voice of the customer
-voidable
-voluntary arbitration
-voting cycle
-VPN
+hoshin kanri
+integrative bargaining
+CVA
+open innovation
+social entrepreneur
+COSO
+physical capital
+interorganizational conflict
+DIKW pyramid
+IFRS
+dollarize
+ASC 230 Statement of Cash Flows
+RCM
+Tietjen-Moore Test
 VRIO
-WACC
-wage elasticity of labor supply
-waiting line models
-WARN
-warranty against infringement
-warranty of merchantability
-WBS
-WCAG
-web content accessibility guidelines
-web scraping
-Weibull plot
-weighted average cost of capital
-weighted-average cost method
-Wilcoxon Mann-Whitney test
-wireframing
-WOM
-word-of-mouth marketing
-work breakdown structure
-work centrality
-work in process
-work in process inventory
-work to rule
-work-for-hire agreement
+IFRS 11 Joint Arrangements
+Poisson distribution
+information security risk management
+d-chart
+Kano model
+transaction processing system
+Kanban
+Infrastructure as a Service
+Central Hudson Test for Commercial Speech
+PESTEL
+talent review calibration process
+TOGAF
+dynamic stochastic general equilibrium
+double-entry accounting system
+commercial reasonableness
+PV
+coupon rate
+NumPy
+revolvers
+ANOM
+intangible assets
+Q9000 series
+transnational firm
+ransomware
+TIE
+regressive tax
+symbolic coding
+DOE scatter plot
+CAD
+gap analysis
+Box-Cox Normality Plot
+AICPA
+LCR
+statistical process control
+TVM
+cost-plus regulation
+IFRS 9 Financial Instruments
+nonprobability sample
+strategic inertia
+mass customization
+selective retention
+requirements contracts
+opportunity-identifying perspective
+arithmetic average return
+IAS 29 Financial Reporting in Hyperinflationary Economies
+master budget
+Information Technology Infrastructure Library
+imprest account
+franchisor
+interest rate risk
+premium bond
+correlation coefficient
+Chi-Square Goodness-of-Fit Test
+ASC 810 Consolidation
+changeover time
+seed-stage
+hot site storage
+error variance
+labor force participation rate
+elevator pitch
+credit risk
+disparate treatment
+status quo bias
+FCF
+no-par stock
+average sample number
+IAS 39 Financial Instruments: Recognition and Measurement
+semistructured data
+term bonds
+concurrent engineering
+federal funds rate
+strategic positioning
+moral agency
+content motivation theories
+goal hierarchy
+core competency
+stakeholder prioritization
+product-level cost
+Box-Jenkins model validation
+COQ
+transformational leader
+average total inspection
+interval scale
+coefficient of determination
+role episode
+due process clause
+rolling budget
+key product characteristic
+mixed stream
+intra-industry trade
+iterative development
+enterprise resource planning
+deferred revenue
+non-binding arbitration
+elastic supply
+T-notes
+marginal utility
+imperfect information
+group cohesiveness
+SDLC
+emergent or bottom-up approach
+customer empathy map
+efficiency wage theory
+risk premium
+price elasticity of supply
+appreciative conversations
+intermediate goods
+OD
+IFRS 13 Fair Value Measurement
+corporate personhood
+escalation of commitment
+just-in-time manufacturing
+GAAP
+corporate narrative
+perpetual inventory system
+market risk premium
+lean startup
+price cap regulation
+IFRS 5 Non-current Assets Held for Sale and Discontinued Operations
+minimum viable product
+artificial intelligence
+assignable cause
+2SLS
+guerrilla marketing
+separate entity concept
+floor planning
+coordination argument
+product line filling
+unconditioned response
+union shop
+Kolmogorov-Smirnov Test
+CISG
+independent groups
+trend control chart
+cognitive complexity
+customer effort score
+packet sniffer
+FOMC
+ASC 815 Derivatives and Hedging
+economies of scale
+machine learning
+aggregate demand
+vertical marketing system
+contributory negligence
+task interdependencies
+mean square
+managerial ethics
+cost driver
+incremental innovation
+unadjusted trial balance
+fixed factory overhead variance
+OPEC
+SaaS
+external value proposition
+equilibrium exchange rate
+flexible manufacturing system
+product line stretching
+ethical minimum
+inelastic supply
+EV
 Worker Adjustment and Retraining Notification Act
-workflow immediacy
+type II error
+flat organization
+Box-Jenkins model identification
+geometric distribution
+frictional unemployment
+capital asset pricing model
+categorical variables
+shelf registration
+satisficing
+joint costs
+Bartlett's Test
+measurement uncertainty
+IAS 40 Investment Property
+Gorry and Scott Morton framework
+annuity
+straight-line demand curve
+marketing mix
+comparable worth
+progressive tax
+PPP
+IAS 26 Accounting and Reporting by Retirement Benefit Plans
+diminishing marginal productivity
+business-to-consumer
+deontologist ethics
+slow penetration pricing strategy
+blockchain
+contribution margin income statement
+geometric mean
+NIST
+game theory
+IAS 7 Statement of Cash Flows
+equilibrium price
+quality loss function
+marketing channel
+present discounted value
+Kaizen
+closed-loop corrective action
+API
+logistical functions
+descriptive analytics
+enabling stakeholder
+implicit contract
 workflow pervasiveness
-World Trade Organization
-WTO
-x-bar chart
-XP
-XSS
-yellow-dog contracts
+social capital
+royalty payment
+key process characteristic
+informal organization
+split-off point
+slow skimming strategy
+accounting profit
+vertical integration
+differentiation strategy
+precautionary motive
+cartel
+manifest needs theory
+ATI
+IFRS 14 Regulatory Deferral Accounts
+preemptive right
+LTPD
+MFA
+twin deficits
+NBER
+integer programming
+EBITDA
+ISACA
+virtualization
+aggregate expenditure function
+contractionary fiscal policy
+IAS 19 Employee Benefits
+manufacturing overhead costs
+database management system
+Project Management Body of Knowledge
+Black–Scholes formula
+double-blind experiment
+attribution theory
+long run aggregate supply curve
+profit-and-loss statement
+nonsolicitation clause
+NDA
+innovation accounting
+confirmation bias
+simple-unstable environment
+debt-to-assets ratio
+IAS 8 Basis of Preparation of Financial Statements
+differential analysis
+implementation lag
+social benefits
+prediction interval
+rational ignorance
+normal probability plot
+DMADV
+functional dependency
+institutional investors
+Toyota production system
+general obligation bonds
+access economy
+limited personal liability
+privately held corporation
+equity theory
+IAS 37 Provisions, Contingent Liabilities and Contingent Assets
+UML
+MMMFs
+homomorphic encryption
+MVP
+point kaizen
+generic business-level strategies
+income summary
+gross domestic product
+service-profit chain model
+over-the-counter market
+one-piece flow
+Anderson-Darling Test
+goal congruence
+behaviorally anchored rating scale
+andon board
 yield curve
-yield to maturity
-Youden plot
-YTM
-z-score
-Zachman Framework
-zero defects
+private-public partnerships
+preferred stock
+cryptographic key
 zero trust
-zero-coupon bonds
+triple bottom line
+power distance
+LIFO
+deep discount bonds
+Gap Model of Service Quality
+bihistogram
+market penetration strategy
+subsidiary ledger
+replacement chain approach
+relevant range
+extrinsic motivation
+knowledge economy
+P/S
+HHI
+Form 8-K
+accounting rate of return
+monetary policy
+founders' agreement
+BI
+allowance for doubtful accounts
+certificate of deposit
+Form 10-Q
+perceptual selectivity
+maintained markup
+stability strategy
+McKinsey 7-S Framework
+F-Test
+ROAS
+SDN
+legislative lag
+insider trading
+tight monetary policy
+relative frequency
+SSR
+behavioral justification
+work breakdown structure
+wage elasticity of labor supply
+intellectual property
+prime rate
+exogenous
+total rewards strategy
+adverse selection
+BIC
+KAI
+Platform as a Service
+recessionary gap
+sustainable supply chain management
+Runs Test
+Cp
+ISO 26000
+gross profit method
+seven tools of quality
+unilateral transfers
+redlining
+PIMS
+mechanical observation
+LLC
+keylogger
+behavioral dilemmas
+cap and trade
+co-brand
+growing perpetuity
+balancing the line
+agency problem
+fishbone diagram
+Foreign Commerce Clause
+limited-service wholesalers
+usury laws
+build-measure-learn loop
+modified rebuy
+born globals
+LPC
+heteroskedasticity
+omitted variables bias
+tri-party repo
+inferior good
+EBIT
+HTTPS
+Nash equilibrium
+command economy
+self-regulatory organizations
+special causes
+sum of squared errors
+convenience sampling
+diagnostic analytics
+SEZ
+Testing as a Service
+PIPEDA
+Industry 4.0
+DBA
+DCF
+spillovers
+individual retirement accounts
+perfect competition
+law of effect
+cost pool
+COBIT
+LCL
+opportunity win rate
+neoclassical perspective
+population parameter
+batch-level cost
+common-carrier delivery contract
+ethical relativism
+CISA
+IPv4
+cause of action
+Global Entrepreneurship Monitor
+CAR
+supply chain management
+indifference curve
+factoring
+IAS 28 Investments in Associates and Joint Ventures
+policy gap
+IFRS 17 Insurance Contracts
+pro forma
+process decision program chart
+sum of squares
+cognitive consistency
+EGCs
+Industrial Internet of Things
+matched pairs
+Venn diagram
+computer-aided manufacturing
+vertical thinking
+upper control limit
+CMM
+average outgoing quality limit
+administrative orbiting
+Net Stable Funding Ratio
+manifest need
+Coase theorem
+deflation
+baka-yoke
+total quality management
+master data
+nonconforming record
+lender of last resort
+Youden plot
+option writer
+ACID
+PCAOB
+SSL
+cross-price elasticity of demand
+CAE
+unlevered equity
+Big Q, little q
+mutually exclusive
+problem-solution narrative
+exponential distribution
+express warranty
+Pareto chart
+Fisher effect
+price-to-cash-flow ratio
+STP model
+natural monopoly
+gig economy
+behavioral self-management
+SASB
+contingency table
+triple exponential smoothing
+voting cycle
+federalism
+open market operations
+Human Resources Information System
+virtue ethics
+Cpk index
+underground economies
+dormant commerce clause
+defense in depth
+price floor
+Student's t-distribution
+veil of ignorance
+self-reinforcement
+customer equity
+lower control limit
+TKI
+u-chart
+consumption budget constraint
+imperfectly competitive
+MIRR
+devil's advocate
+comptroller
+relational database
+encumbrance
+production possibilities frontier
+functional stakeholder
+law of demand
+risk-based authentication
+Thomas-Kilmann Conflict Mode Instrument
+automatic stabilizers
+General Data Protection Regulation
+franchisee
+ASC 260 Earnings Per Share
+just compensation
+fixed-income securities
+majority stake
+antitrust laws
+enculturation
+consumer equilibrium
+foreign direct investment
+empirical rule
+ASC 820 Fair Value Measurement
+common resources
+LRAS
+venture capitalist
+balance of payments
+quality control
+plan-do-check-act cycle
+avoidable cost
+Transport Layer Security
+economic nexus
+PMO
+FUTA
+contractual rights
+process capability index
+poverty trap
+IDS
+cloud computing
+keystone pricing
+aggregate production function
+average cost method
+corporate entrepreneurship
+concept testing
+jidoka
+PDPC
+limited liability limited partnership
+price-to-earnings ratio
+complements
+quantitative discrete data
+behavior modification
+probability plot correlation coefficient
+social loafing
+media access control address
+Porter's Five Forces
+spot exchange rate
+Box-Cox Linearity Plot
+revenue recognition principle
+kinked demand curve
+IRR
+duty of confidentiality
+IAS 8 Accounting Policies, Changes in Accounting Estimates and Errors
+soft peg
+CRM
+standard work
+PaaS
+nonconformity
+MPC
+CX
+harm principle
+nAch
+SOFR
+strictness error
+cost per click
+conditional sales contract
+member-managed LLCs
+PDV
+standardized global marketing strategy
+F ratio
+GLIS
+mortgage bond
+original position
+MRP
+collective bargaining agreement
+type I error
+spot rate
+forward contract
+advanced encryption standard
+service-level agreement
+indirect material
+material requirements planning
+conditional probability
+translation exposure
+omnichannel marketing system
+cost-leadership strategy
+direct write-off method
+IAS 38 Intangible Assets
+bank run
+de-identification
+nPow
+monopoly
+central tendency error
+Certified Ethical Hacker
+social surplus
+gross working capital
+path-goal theory of leadership
+covert discrimination
+interval estimation
+business process outsourcing
+accrual accounting
+RI
+inflation targeting
+business requirements document
+Basel III
+FIFO
+DBaaS
+converging economy
+capital gain yield
+e-mediation
+average total cost
+junzi
+remittance advice
+brand positioning
+firm offers
+revolving lines of credit
+Shewhart cycle
+output gap
+SCM
+federated learning
+direct materials price variance
+performance-outcome expectancy
+multi-segment marketing
+gross national product
+TLS
+resource dependence theory
+consumption function
+ASC 220 Income Statement—Reporting Comprehensive Income
+Bayes' theorem
+full disclosure principle
+customer relationship management
+centralization
+social rate of return
+RSA encryption
+yield to maturity
+contra account
+Hofstede's model of national culture
+free rider
+manufacturing resource planning
+value proposition canvas
+grievance arbitration
+data interoperability
+Producer Price Index
+customer acquisition cost
+Advanced Product Quality Planning
+penetration pricing
+IAS 12 Income Taxes
+self-serving bias
+power of the test
+nonreinforcement
+random variable
+objective-and-task approach
+Master Black Belt
+realized return
+dark patterns
+free cash flow to assets ratio
+weighted average cost of capital
+constant perpetuity
+entity relationship diagram
+instrumental variables
+simple-stable environment
+internal rate of return
+stationarity
+ratio scale
+cognitive dissonance
+MPI
+control limits
+behavioral observation scale
+AFC
+balanced plant
+S/N ratio
+p-value
+normal distribution
+operational reserve
+value engineering
+autocorrelated errors
+destination contract
+capacity constraint resources
+continuous innovation
+software development life cycle
+VPN
+DNS
+work centrality
+Dodge-Romig sampling plans
+job order cost system
+activity-based costing
+work in process
+business judgment rule
+cost of poor quality
+point-of-sale system
+RDBMS
+direct materials quantity variance
+referent power
+ISO 14001
+participative pay decisions
+seven wastes
+model minority myth
+time tickets
+commercial paper
+difference-in-differences
+comps
+Lean Six Sigma
+arrow diagram
+overapplied overhead
+metrology
+sales allowance
+organizational development
+vendee
+DFD
+intrinsic motivation
+referent others
+rapid penetration pricing strategy
+accrual basis accounting
+torts
+factory-level cost
+lag order
+affinity diagram
+project management office
+Uppsala model
+mirror-image rule
+pulsing schedule
+waiting line models
+marginal cost
+law of diminishing marginal utility
+friends and family financing
+strategic groups
+Internet of Things
+NYSE
+contra-asset
+quintiles
+law of supply
+grant of authority
+capital asset budget
+negative reinforcement
+leniency error
+pass-through entities
+MRP II
+supply schedule
+sunk cost
+hyperinflation
+DBMS
+deficit-based change
+cost-of-living adjustments
+cost center
+change agents
+IAS 23 Borrowing Costs
+underreward inequity
+accounts receivable subsidiary ledger
+price-to-sales ratio
+SLA
+median voter theory
+cybernetic control
+ASC 205 Presentation of Financial Statements
+speculative motive
+stepped cost
+WARN
+linking role
+APQP
+differential cost
+SIPOC diagram
+Deming cycle
+expenditure multiplier
+expected inflation
+compensating balances
+WCAG
+BOGO
+financial intermediary
+flotation costs
+seasoned equity offering
+CLV
+societal marketing concept
+pump-and-dump
+SAN
+dependent variable
+PCI DSS
+PESTLE
+SFIA
+security information and event management
+mergers and acquisitions
+GDPR
+SIPC
+responsibility centers
+goal theory
+dumping
+mercantilism
+bureaucratic model
+law of diminishing returns
+periodic inventory system
+DSS
+TQC
+Herfindahl-Hirschman Index
+accounts receivable turnover ratio
+data mining
+garnishment
+status incongruence
+k-means
+single-minute exchange of dies
+NAFTA
+breakeven point
+augmented product
+dispositional approach
+expatriate
+sales force automation
+service inseparability
+eight wastes
+fear appeals
+net national product
+competitive analysis grid
+storage-area network
+tender of delivery
+self-determination theory
+product diversification strategy
+probability distribution function
+probit
+mechanistic bureaucratic structure
+conversion ratio
+time series analysis
+Maslow's hierarchy of needs
+UCC
+increasing-cost industry
+career entrepreneur
+clustered standard errors
+barriers to entry
+depletion
+soft launch
+labor-leisure budget constraint
+P/E
+ordinary annuity
+restraint of trade
+portfolio investment
+AS
+asymmetric encryption
+suboptimization
+double-declining-balance depreciation method
+DMiQ
+high-low method
+NAIRU
+single exponential smoothing
+DMAIC
+IFRS 3 Business Combinations
+divestiture
+nominal group technique
+full-employment GDP
+delivery gap
+8D
+Wilcoxon Mann-Whitney test
+prescriptive analytics
+cost of goods sold
+M&A
+debenture
+privacy information management system
+effort-performance expectancy
+Poisson probability distribution
+IAS 27 Separate Financial Statements
+YTM
+deontology
+marketing dashboard
+stakeholder claim
+primary key
+eudaimonia
+duty to aid
+cyber espionage
+Federal Open Market Committee
+economic surplus
+target return objective
+control plan
+CPA
+graphic rating scale
+price ceiling
+pay-for-performance
+NNP
+chart of accounts
+QE
+capability maturity model
+expanded accounting equation
+pitch deck
+ASC 718 Compensation—Stock Compensation
+levered equity
+NASDAQ
+figurehead role
+financial capital market
+horizontal organizational design
+phrónēsis
+DoE
+batch and queue
+marginal benefits
+bond laddering
+articles of incorporation
+contributed capital
+electronic data interchange
+deficit in retained earnings
+straight product extension
+goods-in-bailment contract
+perfectly competitive firm
+absolute advantage
+merit matrix
+MIS
+inflationary gap
+inaccessibility exception
+ultra vires
 zero-sum negotiation
+sampling errors
+open-ended NDA
+radio-frequency identification
+intertemporal decision making
+long-run average cost curve
+asymmetric information
+Lewin's change model
+data dictionary
+vertical conflict
+creative destruction
+NSF
+planning fallacy
+succession planning
+production function
+CASL
+object-oriented database management system
+cash basis accounting
+derived demand
+lifestyle venture
+FRED
+foreseeability
+ITIL
+time period assumption
+prima facie
+force majeure
+monopsony
+HAC
+standard error of the estimate
+articles of formation
+average cost curve
+ISO/IEC 27701
+accumulated depletion
+specific identification method
+NPV
+Rubin causal model
+lean pitch
+systematic sample
+B2C
+MPS
+nonlinear parameter estimation
+chi-square distribution
+cause and effect diagram
+lean methodology
+baselining
+due diligence
+feasibility analysis
+IFRS 7 Financial Instruments: Disclosures
+uncertainty avoidance
+interbank market
+purchasing power parity
+value stream loops
+Kotter's change model
+involuntary unemployment
+population variance
+SRAS
+systematic risk
+viral marketing
+accounting information system
+positioning statement
+requirements traceability matrix
+knowledge gap
+accounting cycle
+turn-around document
+Financial Accounting Standards Board
+SDT
+dyadic negotiation
+CPC
+transformational change
+Hypertext Transfer Protocol
+the law of increasing opportunity cost
+interest tax shield
+service mark
+total surplus
+counterpower
+quantitative continuous data
+marginal analysis
+Structured Query Language
+entity selection
+menu costs
+probability density function
+verbatims
+TAM
+test for homogeneity
+appropriated retained earnings
+PDCA cycle
+adaptive selling
+neoclassical determinants of growth
+revenue bonds
+AD/AS
+CBCA
+multicollinearity
+management information system
+T-bills
+jury tests
+descriptive statistics
+ASC 330 Inventory
+price taker
+warranty against infringement
+word-of-mouth marketing
+income elasticity of demand
+business purpose exception
+noncompete agreement
+4-plot
+Taylor rule
+production smoothing
+FDIC
+retail inventory method
+acceptance sampling
+FDI
+SCORE
+capital deepening
+normal good
+special purpose entities
+compounding period
+sales mix
+central limit theorem
+plant patent
+x-bar chart
+Liquidity Coverage Ratio
+complex-stable environment
+selective attention
+fully amortized notes
+pork-barrel spending
+general adaptation syndrome
+human-in-the-loop system
+strategic drift
+original equipment manufacturer
+postaction controls
+international financial flows
+attribution biases
+latent need
+agency theory
+book of original entry
+domain/directional planning
+kitting
+normative approach
+value analysis
+pull system
+multivariate time series models
+marginal revenue
+EEOC
+IAS 16 Property, Plant and Equipment
+CQI
+ASC 805 Business Combinations
+long-run equilibrium
+period cost
+denormalization
+attainable standard
+nondurable goods
+fee-for-service
+proportion chart
+cognitive diversity hypothesis
+adaptive expectations
+earned income tax credit
+centered moving average
+privilege against self-incrimination
+market segmentation
+intermediate zone
+perfect inelasticity
+weighted-average cost method
+horizontal conflict
+marketable permit program
+bilateral monopoly
+standardized employment budget
+special economic zones
+res ipsa loquitur
+tortfeasor
+design patent
+4Ps
+dynamically continuous innovation
+lag plot
+administered VMS
+investment center
+compound growth rate
+allowance method
+product differentiation
+total available market
+tragedy of the commons
+joint venture
+Levene Test
+ASC 740 Income Taxes
+cross tabulation
+IFRS 18 Presentation and Disclosure in Financial Statements
+return on customer investment
+strategic business units
+total utility
+predatory pricing
+decision support system
+matrix structure
+hubris
+number of days' sales in receivables ratio
+command-and-control regulation
+multicultural identity
+digital signature
+quality/new goods bias
+excise tax
+externality
+OTC
+asset-liability time mismatch
+IFRS 8 Operating Segments
+BPO
+stratified sample
+human-centered design
+partnership agreement
+customer value-based objective
+agglomeration
+budget line
+underapplied overhead
+perfect elasticity
+opportunity cost
+MD&A
+horizontal marketing system
+predetermined overhead allocation rate
+limited liability partnership
+decoupling
+voluntary arbitration
+client/server architecture
+unique selling proposition
+ordinal scale
+coefficient of multiple determination
+fiduciary
+computer aided design
+web scraping
+NCUA
+customer-supplier model
+percentage of accounts receivable method
+multivariate
+duty of loyalty
+S&P 500
+debt-to-equity ratio
+response salience
+deadweight loss
+tax basis accounting
+voidable
+marketing metrics
+CIA
+moral minimum
+audit committee
+cost of quality
+potential GDP
+ASC 323 Investments—Equity Method and Joint Ventures
+SOX
+negotiable certificates of deposit
+audit trail
+DuPont method
+BSC
+PPAP
+user acceptance testing
+trial balance
+original markup
+ethical maximum
+classless inter-domain routing
+present value
+BRD
+explicit knowledge
+quantum meruit
+TBL
+multi-step income statement
+cumulative distribution function
+WTO
+average variable cost
+production part approval process
+ASC 350 Intangibles—Goodwill and Other
+diversity dividend
+sociocultural factors
+A/B testing
+chain sampling plan
+absorption costing
+jobs-to-be-done theory
+COGS
+Zachman Framework
+shareholder primacy
+World Trade Organization
+span of control
+AOQL
+velocity
+justification-suppression model
+cross-site scripting
+conversion rate
+paired data set
+referential constraint
+business intelligence
+serial bonds
+schedules of reinforcement
+reasonable standard of care
+one-way ANOVA
+stockholders' equity
+Hausman test
+B2B
+business model canvas
+S-chart
+standard normal distribution
+contingency theory of leadership
+marking to market
+Appreciative Inquiry
+utility-maximizing choice
+constant-cost industry
+inquiry test
+access-and-legitimacy perspective
+duty of care
+IRAs
+DDoS
+IORB
+SERP
+acceptance sampling plan
+exponential smoothing
+discounted payback period
+great man theory of leadership
+logit
+resistance price
+bootstrap
+mixed sale
+dividend discount model
+labor-leisure diagram
+overall equipment effectiveness
+natural hedge
+system kaizen
+decreasing-cost industry
+multivariate control chart
+PPM
+PRIZM
+process motivation theories
+DSGE
+reasonableness test of reliance
+stated value
+environmental entrepreneurship
+process flow diagram
+run sequence plot
+humanistic business model
+neural network
+null hypothesis
+BMC
+zero-coupon bonds
+greenwashing
+adapted global marketing strategy
+serviceable available market
+ERP
+CSM
+angel investor
+multiple correlation coefficient
+variable overhead rate variance
+RTM
+California Consumer Privacy Act
+gain sharing
+trade-off theory
+nominal interest rate
+fundamental problem of causal inference
+closely held corporation
+control chart
+iceberg principle
+ISO 19011
+price elasticity of demand
+par value
+USPTO
+halo effect
+autonomation
+muda
+NSFR
+materiality
+excess demand
+value stream mapping
+mens rea
+quality circle
+direct labor rate variance
+shipment contract
+social-information-processing approach
+Form 10-K
+fungible
+balance sheet aging of receivables method
+modified accrual accounting
+FAIS
+stratified random sample
+customer satisfaction score
+SQL injection
+OWASP Secure Coding Practices
+ASC 860 Transfers and Servicing
+response disposition
+growth consensus
+experimental unit
+CFA
+postarrival cross-cultural training
+A3 report
+times interest earned ratio
+fraud triangle
+autoregressive
+effective-interest method
+clusters
+conformity assessment
+pain point
+TQM
+exchange-traded funds
+social engineering
+throughput
+prisoner's dilemma
+Generalized Extreme Deviate Test
+MM Proposition I
+income effect
+production cost report
+customer experience
+TCP/IP
+ERG theory
+P/CF
+Foreign Sovereign Immunities Act of 1976
+division of labor
+real GDP
+EPS
+geographic structure
+munis
+capital budgeting
+nonprogrammed decisions
+single moving average
+scrum
+sole proprietorship
+HRIS
+cumulative sum control chart
+OSHA
+Bernoulli trial
+seasonality
+consequentialism
+third-party logistics provider
+restrictive practices
+required rate of return
+future value
+Weibull plot
+laissez-faire
+coordinate measuring machine
+double exponential smoothing
+social contract theory
+social business model canvas
+cash disbursements journal
+securitization
+peer-to-peer architecture
+Secure Sockets Layer
+data governance
+cellular manufacturing
+core inflation index
+AI
+p-chart
+business process patent
+qui tam provision
+identity groups
+interest rate on reserve balances
+management by objectives
+SEC
+Design for Six Sigma
+Jensen's alpha
+post-closing trial balance
+SSCM
+structural unemployment
+data flow diagram
+GASB
+discretionary fiscal policy
+distributive bargaining
+employment at will
+401(k)
+BPM
+management discussion and analysis
+one-touch exchange of dies
+opportunity set
+IAS 24 Related Party Disclosures
+distributed denial-of-service
+supremacy clause
+sociodemographics
+business process management
+direct-mail marketing
+lean enterprise
+IFRS 16 Leases
+data lake
+annuity due
+leverage cycle
+odd-even pricing
+continuous flow production
+Kruskal-Wallis test
+complex adaptive systems
+MBB
+amortization
+cross-elasticity of demand
+bootstrapping
+market failure
+composite unit
+external locus of control
+parts per million
+Federal Arbitration Act
+self-regulation
+repo
+data minimization
+IaaS
+vicarious liability
+depository institutions
+quid pro quo
+red bead experiment
+TPS
+demand schedule
+demographic segmentation
+case law
+DPIA
+IAS 32 Financial Instruments: Presentation
+CUSUM
+oligopoly
+strategic alliance
+loss aversion
+core product
+marginal propensity to save
+cost per acquisition
+need/satisfaction format
+initial public offering
+TRIZ
+leviathan effect
+signal to noise ratio
+M2
+SBA
+crowdsourcing
+point estimate
+Secured Overnight Financing Rate
+expansionary monetary policy
+fail-safe points
+lump-sum pay increase
+yellow-dog contracts
+environmental scanning
+elasticity of savings
+standard in-process stock
+lean plan
+subnet mask
+total productive maintenance
+commingle
+df
+least privilege principle
+marketable securities
+Sargan test
+finite population correction factor
+unaided awareness
+accounts receivable control
+installment sale
+interaction process analysis
+ASC 326 Financial Instruments—Credit Losses
+foreign financial capital
+accounts payable subsidiary ledger
+rate of life change
+precedents
+Black Belt
+web content accessibility guidelines
+floating exchange rate
+Sarbanes-Oxley Act
+quick changeover
+consumer decision process
+marginal cost of labor
+FWaaS
+intrapreneurs
+corporate social responsibility
+justice as fairness
+normative power
+run chart
+IFRS 6 Exploration for and Evaluation of Mineral Resources
+ideation
+data provenance
+OC curve
+data redundancy
+organic statute
+due process nonaction
+commerce clause
+random sampling
+negative externality
+profitability index
+NoSQL
+product mix width
+spaghetti diagram
+communication gap
+junk bonds
+going concern assumption
+material nonpublic information
+piercing the corporate veil
+Firewall as a Service
+hybrid cloud
+F distribution
+Database as a Service
+return on ad spend
+CTR
+MTBF
+appraisal cost
+international capital flows
+SPIN
+equity financing
+natural language processing
+effective interest rate
+put option
+simple random sample
+SIEM
+forward guidance
+deposit in transit
+substitution effect
+Bertrand
+Stackelberg
+ASC 210 Balance Sheet
+percentage-of-sales approach
+NCDs
+vital few, useful many
+FICC
+futures contract
+justice theory
+TPM
+EDGAR
+common causes
+ceteris paribus
+PRINCE2
+conditioned response
+resource dependence
+natural rate of unemployment
+consumer surplus
+flighting promotional schedule
+lean problem-solving process
+ethnocentrism
+modified internal rate of return
+producer surplus
+process kaizen
+EDI
+Cohen's d
+business-level strategy
+ideal standard
+pollution charge
+interquartile range
+data protection impact assessment
+least-preferred coworker
+quantile-quantile plot
+discrete event simulation
+perceptual organization
+real interest rate
+dynamic IP address
+consumer price index
+Citizens United v. Federal Election Commission
+operating cycle
+FISMA
+proportional tax
+Treasury notes
+hybrid planning
+similarity-attraction paradigm
+IFRS 19 Subsidiaries without Public Accountability: Disclosures
+sample space
+c-chart
+social identity theory
+invisible social identities
+functional area information system
+market share-oriented objective
+Privacy by Design
+pull strategy
+binomial distribution
+GNP
+discretionary cost center
+vesting
+Grubbs Test
+nondestructive testing
+Risk Management Association
+perceptual defense
+univariate time series models
+ISO 14000
+cash receipts journal
+LLP
+probable cause
+AES
+WACC
+OEE
+discounted cash flow
+perpetuity
+duopoly
+global strategy
+bare metal server
+fiduciary duty
+AIDA model
+foreign key
+constructive confrontation
+variable overhead efficiency variance
+buffer overflow
+attribute data
+zero defects
+hybrid control system
+R-chart
+exclusive remedy
+subliminal advertising
+IV
+purchase returns and allowances
+nAff
+switching costs
+CVP
+CIA triad
+macroenvironment
+explanatory variable
+CISSP
+intertemporal choices
+diffusion chasm
+IFRS 15 Revenue from Contracts with Customers
+capital employed
+SQL
+ETFs
+expense recognition principle
+orphaned record
+treasury stock
+403(b)
+free exercise clause
+ETL
+IAS 21 The Effects of Changes in Foreign Exchange Rates
+SRAC
+money multiplier
+information security management system
+unconscionable
+perceptual map
+prevention cost
+Dow Jones Industrial Average
+loose monetary policy
+net working capital
+private rates of return
+MBO
+ANOVA
+elastic demand
+P/E TTM
+endogenous
+promissory estoppel
+limited partner
+phishing
+TCO
+insider-outsider model
+distributive justice
+inside order taker
+horizontal diversification
+WOM
+consumer's risk
+fiat money
+cycle time
+promissory note
+allocative efficiency
+litigation
+caveat emptor
+mean time between failures
+rule of reason
+conversion costs
+substitution bias
+CPI
+cooperative venture
+sunk costs
+rational expectations
+pooled variance
+psychomotor abilities
+compound entry
+marketing information system
+municipal bonds
+undifferentiated marketing
+private label
+M1
+demerit chart
+factors of production
+geographic segmentation
+BPR
+ex dividend
+ROCI
+closed shop
+capital expense
+relative wage coordination argument
+BATNA
+letter of credit
+malpractice
+ISO 9000
+service perishability
+discontinuous innovations
+continuous quality improvement
+comparative negligence
+ASN
+customer value proposition
+workflow immediacy
+return-on-investment approach
+Treasury bills
+sales funnel
+SECaaS
+XP
+radical innovations
+statement of stockholders' equity
+market development strategy
+disparate impact
+McKinsey 7-S model
+demand deposits
+social enterprises
+quincunx
+ERD
+balanced design
+categorical imperative
+IoT
+CIDR
+all-you-can-afford approach
+rapid skimming strategy
+status inconsistencies
+database schema
+constraints management
+computer aided engineering
+bond indenture
+hackathon
+microenvironment
+respondeat superior
+autocorrelation plot
+tariff
+diseconomies of scale
+mutually exclusive projects
+z-score
+NAICS
+Six Sigma quality
+intrapreneurial
+acceptance number
+hedging
+residual income
+level loading
+CLCA
+sharing economy
+SPC
+Say's law
+convertible bond
+Baldrige award
+excess reserves
+nonsampling errors
+16PF
+data normalization
+SPACs
+Akaike information criterion
+descriptive approach
+pre-arranged trading plans
+RMA
+complex demodulation amplitude plot
+NOPAT
+human-computer interaction
+enterprise risk management
+bureaucratic gamesmanship
+out-of-control process
+Cournot model
+historical cost principle
+QFD
+AIS
+EITC
+aggregate supply
+ANSI ACS X12
+holding period percentage return
+arbitrage
+self-directed work team
+money market mutual funds
+structured settlements
+spoilage
+CCPA
+marginal product
+inelastic demand
+crowding out
+diffused stakeholder
+GDP
+nonparametric tests
+IAS 33 Earnings per Share
+quality assurance
+ISO/IEC 27001
+time value of money
+FINRA
+total costs of ownership
+LSS
+interaction involvement
+new-task buy
+mental stimulus processing
+critical incident technique
+general partner
+method of least squares
+reverse stock split
+undue hardship
+test of a single variance
+union security agreement
+product life cycle
+statistical quality control
+risk-free rate
+CDF
+reserve requirement
+probability of rejection
+causal research
+lower-of-cost-or-market
+pretexting
+Chi-Square Test
+possession processing
+response variable
+total quality control
+DFSS
+double coincidence of wants
+noncybernetic control
+bivariate
+percentage of completion method
+charismatic leaders
+derivative
+pervasive-regulation exception
+load-load
+designated leader
+plaintiff
+ASC 320 Investments—Debt Securities
+bootstrap plot
+SEO
+price-to-book ratio
+manufacturer's agents
+excess supply
+Small Business Development Centers
+CRISC
+race to the bottom
+TaaS
+normative statements
+collusion
+EAR
+differentiated products
+retained earnings
+line of credit
+thin market
+discount window
+service variability
+symmetric encryption
+OEM
+floating-rate bonds
+resource-based view
+off-price retailers
+trade fixtures
+decertification election
+PMBOK
+completed contract method
+product line pricing
+level of measurement
+unit-level cost
+noncurrent asset
+HTTP
+LCM
+lean model canvas
+QMS
+PPI
+CE
+ASC 715 Compensation—Retirement Benefits
+discount bond
+IPO
+equity share
+IFRS 12 Disclosure of Interests in Other Entities
+AQL
+linear programming
+corrective action recommendation
+consumption demand
+positive reinforcement
+role perceptions
+law of large numbers
+equivalent units
+perceived value pricing
+role underutilization
+behavioral economics
+sampling bias
+regulatory capture
+contribution margin ratio
+data independence
+forced-arbitration clauses
+United Nations Convention on Contracts for the International Sale of Goods
+eighty-twenty
+motion studies
+class action lawsuit
+adverse selection of wage cuts argument
+integration-and-learning perspective
+non-rival
+hashing
+margin of safety
+bundling
+precedent transaction analysis
+cryptography
+redeemable bond
+national saving and investment identity
+competitive matrix
+formalization
+concentric diversification
+contribution margin
+contractual VMS
+tax incidence
+close corporation
+reasonable accommodation
+moral entrepreneur
+GO
+Robert Anthony framework
+indirect labor
+two-stage least squares
+coinsurance
+role conflict
+multiplier effect
+schema theory
+hostile work environment
+general partnership
+buying center
+bank capital
+Internet Protocol Security
+augmented reality
+click-through rate
+trade credit
+real options
+International Financial Reporting Standards
+effective lower bound
+IAS 34 Interim Financial Reporting
+strike price
+NAS
+data localization
+cultural duality
+Keynesian economic model
+institutional advertisements
+Keynes' law
+PPF
+cost-volume-profit analysis
+Shainin System
+OODBMS
+degrees of freedom
+Juran trilogy
+economic efficiency
+heijunka
+normative ethical theories
+ISMS
+lot tolerance percentage defective
+global logistics information system
+warranty of merchantability
+expansionary fiscal policy
+budget constraint
+unit of account
+process costing
+non-compete agreement
+firmographics
+CMA
+discount on bonds payable
+SROs
+range chart
+ASC 842 Leases
+commodity money
+money market funds
+free cash flow
+noncash expense
+recency error
+translation risk
+UCL
+GATT
+ISO 9001
+IAS 41 Agriculture
+CSR
+acculturation
+SUTA
+integrated marketing communications
+LIBOR
+6-plot
+test statistic
+random assignment
+protectionism
+diversity marketing intelligence
+bill of lading
+analysis of means
+employee life cycle
+data warehouse
+IFRS 1 First-time Adoption of International Financial Reporting Standards
+discrimination-and-fairness perspective
+time deposits
+sticky wages and prices
+role-based access control
+Canada's Anti-Spam Legislation
+incubation
+marginal rate of substitution
+hindsight bias
+fixed effects regression
+quantitative easing
+nominal scale
+rejection number
+collective bargaining
+WBS
+ASC 360 Property, Plant, and Equipment
+man-in-the-middle attack
+monopolistic competition
+sample frames
+standard error
+overidentifying restrictions
+direct labor time variance
+RFID
+innovation flowchart
+born global
+interoperability
+organic bureaucratic structure
+transaction exposure
+expenditure-output model
+TOC
+basic quantity equation of money
+long-term relative frequency
+benefit corporation
+BB
+Personal Information Protection and Electronic Documents Act
+hidden unemployment
+role overload
+disruptive technology
+marginal propensity to import
+wireframing
+network-attached storage
+demand curve
+investment grade
+Committee of Sponsoring Organizations
+operational technology
+extreme programming
+eight disciplines model
+macroeconomic externality
+standard deviation
+AIC
+quality management system
+task uncertainty
+IDPS
+neoclassical zone
+strict liability
+design of experiments
+crowdfunding
+predeparture cross-cultural training
+premium pricing
+police power
+confidence interval
+role set
+operant conditioning
+agribusiness
+rational-basis test
+inferential statistics
+social costs
+application programming interface
+EVA
+effective annual rate
+market structure
+CEH
+IPS
+contingent liability
+internal control system
+IAS 36 Impairment of Assets
+Software as a Service
+acceptance quality limit
+avoidance learning
+average outgoing quality
+index number
+interaction attentiveness
+Domain Name System
+P/B
+CAS
+basic incongruity thesis
+buyer's black box
+IPv6
+SHRM
+static budget
+SWOT
+activity network diagram
+infant industry argument
+jurisdictional ambiguities
+software-defined network
+firm-specific risk
+heteroskedasticity-robust standard errors
+virtue theory
+alternative hypothesis
+DDM
+emerging growth companies
+EIS
+focus group
+LRAC
+average run lengths
+multichannel distribution system
+RBAC
+collaborative economy
+FV
+reciprocal determinism
+doctrine of sovereign immunity
+comparable company analysis
+dividend smoothing
+earned capital
+law of diminishing marginal product
+tacit knowledge
+regressors
+hash index
+executive information system
+merged currency
+Keynesian economics
+power dependencies
+Federal Reserve Economic Data
+internal locus of control
+gross margin
+IFRS 10 Consolidated Financial Statements
+countercyclical
+bitmap index
+QA/QC
+process capability
+GSCM
+gain from trade
+LOC
+Taguchi Methods
+XSS
+current account balance
+Seiban
+partial reinforcement
+hypergeometric experiment
+lean manufacturing
+price anchoring
+HCD
+takt time
+lateral thinking
+instrumental approach
+thick market
+competitive-parity approach
+ISRM
+voice of the customer
+poka-yoke
+RDT
+FICA
+short run aggregate supply curve
+diffusion of innovations
+accounting entity concept
+buyer power
+invisible hand
+variable data
+DICEE
+source document
+judgment sample
+constant returns to scale
+IFRS 2 Share-based Payment
+role ambiguity
+premium on bonds payable
+current portion of a note payable
+cumulative relative frequency
+financial leverage
+hypothesis testing
+SQC
+diffusion of innovation
+FASB
+PI
+IMC
+divergent thinking
+modern bureaucracy
+contingency school
+concentration ratio
+independent variable
+public good
+exclusive dealing
+private benefits
+B-tree index
+skimming
+defensive strategies
+Payment Card Industry Data Security Standard
+overreward inequity
+value chain
+GEM
+CFE
+restatement
+cultural intelligence
 zone of indifference
+affinity audience
+abnormal balance
+bases of power
+IAS 2 Inventories
+COLAs
+business-to-business
+IPsec
+BPI
+merchandise inventory
+NFP
+diminishing marginal utility
+consumer adoption process
+Gordon growth model
+quality function deployment
+ASC 958 Not-for-Profit Entities
+accounting equation
+transfer pricing
+IAS 20 Accounting for Government Grants and Disclosure of Government Assistance
+involuntary arbitration
+CAPM
+overhead rate
+DJIA
+JIT
+HCI
+balanced scorecard
+FPCI
+nonexcludable
+work to rule
+equity multiples
+formula selling
+complex-unstable environment
+hurdle rate
+limited liability company
+promotion mix
+virtual reality
+data integrity
+IAS 1 Presentation of Financial Statements
+3P
+burn rate
+neoclassical model
+subprime loans
+Bayes information criterion
+Canada Business Corporations Act
+conversion price
+IAS 10 Events after the Reporting Period
+monetary measurement
+Monte Carlo simulation
+operating characteristic curve
+call option
+continuous promotional schedule
+per capita GDP
+concurrent controls
+enterprise value
+sampling without replacement
+ARL
+independent events
+limited reserves
+golden mean
+Kirton Adaption-Innovation Inventory
+pioneering innovation
+fileless malware
+unaided recall
+Agile Manifesto
+lurking variables
+earnings per share
+recognition lag
+adjusted trial balance
+adversarial debiasing
+continuous sampling plan
+serial entrepreneur
+medium of exchange
+Security as a Service
+analysis of variance
+run rate
+circular flow diagram
+classified balance sheet
+capital expenditure budget
+net present value
+utility patent
+hard peg
+glass ceiling
+nominal GDP
+heuristics
+autocorrelation
+contractionary monetary policy
+CISM
+quasi-experiments
+structural intervention
+Nagara system
+theory of constraints
+CATWOE
+work-for-hire agreement
+test of independence
+critical region
+abundance-based change
+expectancy theory
+extract-transform-load
+moral hazard
+global supply chain management
+transactional motive
+maximizing utility
+NCR
+external costs
+annuities due
+virtual private network
+net debt
+conjoint analysis
+takings clause
+units-of-production depreciation method
+marginal propensity to consume
+Box-Jenkins model estimation
+comparative advantage
+full-cost accounting
+economic value added
+macro-organizational behavior
+Pandas
+sales returns and allowances
+continuous reinforcement
+cyclical unemployment
+Box-Jenkins approach
+merchandise trade balance
+equilibrium quantity
+critical values
+sample standard deviation chart
+precontrols
+SAM
+bank reconciliation
+after-tax cost of debt
+flexible budget
+functional structure
+JVs
+significance level
+trade secret
+nonvalue added
+structural variation
+SBDCs
+perfectly elastic
+articles of partnership
+tolerance for ambiguity
+AVC
+Sharpe ratio
+single-piece flow
+acid-test ratio
+ELB
+super angels
+cultural paradox
+utilitarianism
+queue time
+FOMO
+AD
+market capitalization
+pre-approach stage
+standard of deferred payment
+aggregate expenditures
+COPQ
+quick ratio
+strategic contingencies
+short-run average cost curves
+cash ratio
+intrinsic value
+AOQ
+embezzlement
+fundamental attribution error
+work in process inventory
+supply curve
+differentiated marketing
+IFAC
+relationship marketing
+ASC 606 Revenue from Contracts with Customers
+ARR
+output contracts
+push strategy
+business process improvement
+customer lifetime value
+common-size
+SDWT
+scenario analysis
+matching principle
+profit center
+nondisclosure agreement
+financial distress
+complex demodulation phase plot
+goodness-of-fit test
+journalizing
+business process reengineering
+buyer persona
+SSE
+groupthink
+rootkit
+cash conversion cycle
+callable bond
+LLLP
+note payable

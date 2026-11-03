@@ -1,198 +1,198 @@
-2SLS
-4-plot
-6-plot
-AIC
-Akaike information criterion
-alternative hypothesis
-analysis of variance
-Anderson-Darling Test
-ANOVA
-autocorrelated errors
-autocorrelation
-autocorrelation plot
-autoregressive
-balanced design
-Bartlett's Test
-Bayes information criterion
-Bayes' theorem
-Bernoulli trial
-BIC
-bihistogram
-binomial distribution
-bivariate
-bootstrap
-bootstrap plot
-Box-Cox Linearity Plot
-Box-Cox Normality Plot
-Box-Jenkins approach
-Box-Jenkins model estimation
-Box-Jenkins model identification
-Box-Jenkins model validation
-categorical variables
-CDF
-centered moving average
-central limit theorem
-chi-square distribution
-Chi-Square Goodness-of-Fit Test
-Chi-Square Test
-clustered standard errors
-coefficient of determination
-coefficient of multiple determination
-Cohen's d
-complex demodulation amplitude plot
-complex demodulation phase plot
-conditional probability
-confidence interval
-contingency table
-convenience sampling
-correlation coefficient
-critical region
-critical values
-cumulative distribution function
-cumulative relative frequency
-cumulative sum control chart
-CUSUM
-degrees of freedom
-dependent variable
-descriptive statistics
-design of experiments
-df
-difference-in-differences
-discrete event simulation
-DoE
-DOE scatter plot
-double exponential smoothing
-double-blind experiment
-empirical rule
-endogenous
-error variance
-exogenous
-experimental unit
-explanatory variable
-exponential distribution
-exponential smoothing
-F distribution
-F ratio
-F-Test
-finite population correction factor
-fixed effects regression
-FPCI
-fundamental problem of causal inference
-Generalized Extreme Deviate Test
-geometric distribution
-goodness-of-fit test
-Grubbs Test
-HAC
-Hausman test
-heteroskedasticity
-heteroskedasticity-robust standard errors
-hypergeometric experiment
-hypothesis testing
-independent events
-independent groups
-independent variable
-inferential statistics
-instrumental variables
-interquartile range
-interval estimation
-interval scale
-IV
-Kolmogorov-Smirnov Test
-Kruskal-Wallis test
-lag order
-lag plot
-law of large numbers
-level of measurement
-Levene Test
-logit
-long-term relative frequency
-lurking variables
-matched pairs
-mean square
-Monte Carlo simulation
-multicollinearity
-multiple correlation coefficient
-multivariate
-multivariate time series models
-mutually exclusive
-nominal scale
-nonlinear parameter estimation
-nonparametric tests
-nonsampling errors
-normal distribution
-normal probability plot
-null hypothesis
-OC curve
-omitted variables bias
 one-way ANOVA
-operating characteristic curve
-ordinal scale
-overidentifying restrictions
-p-value
-paired data set
+regressors
 Pareto chart
-point estimate
-Poisson probability distribution
+operating characteristic curve
+BIC
+SSR
+normal distribution
+Bayes information criterion
+bihistogram
+inferential statistics
+sample space
+prediction interval
+Box-Jenkins model identification
+quasi-experiments
+Grubbs Test
+correlation coefficient
+single moving average
+df
+bootstrap plot
+mean square
+quantitative discrete data
+simple random sample
+bootstrap
+exogenous
+goodness-of-fit test
+RCM
+test statistic
+type II error
+Kruskal-Wallis test
+triple exponential smoothing
+seasonality
+difference-in-differences
+F distribution
+sum of squared errors
+quantile-quantile plot
+degrees of freedom
+double-blind experiment
+centered moving average
+binomial distribution
+DoE
+sampling errors
+autocorrelation plot
+Monte Carlo simulation
+F-Test
+bivariate
+Box-Jenkins model validation
+overidentifying restrictions
+z-score
+autocorrelation
+type I error
+cumulative sum control chart
+null hypothesis
+Box-Jenkins approach
+lag plot
+analysis of variance
+confidence interval
+interval scale
+standard normal distribution
+nonsampling errors
+Cohen's d
+heteroskedasticity-robust standard errors
+nonlinear parameter estimation
+two-stage least squares
+conditional probability
+complex demodulation phase plot
+convenience sampling
+test of independence
+standard error of the estimate
+fundamental problem of causal inference
+Wilcoxon Mann-Whitney test
+mutually exclusive
+critical values
+SSE
+4-plot
+categorical variables
+exponential smoothing
+random variable
+multicollinearity
+Runs Test
+test of a single variance
+Box-Cox Linearity Plot
+omitted variables bias
+autocorrelated errors
+FPCI
+multivariate
+experimental unit
+critical region
+Rubin causal model
+Anderson-Darling Test
+design of experiments
+sampling without replacement
+stratified sample
+Kolmogorov-Smirnov Test
+Levene Test
+6-plot
+interval estimation
+test for homogeneity
+coefficient of multiple determination
+probability distribution function
+CUSUM
+Box-Jenkins model estimation
+explanatory variable
+interquartile range
+power of the test
+coefficient of determination
 pooled variance
+Box-Cox Normality Plot
+univariate time series models
+IV
+2SLS
+single exponential smoothing
+double exponential smoothing
+chi-square distribution
+p-value
+hypothesis testing
+Youden plot
+descriptive statistics
+ANOVA
+ratio scale
+Sargan test
+balanced design
+Hausman test
+Chi-Square Goodness-of-Fit Test
+dependent variable
+exponential distribution
+paired data set
+level of measurement
+Venn diagram
+Generalized Extreme Deviate Test
+empirical rule
+instrumental variables
+relative frequency
+complex demodulation amplitude plot
+run sequence plot
+DOE scatter plot
+Tietjen-Moore Test
+independent groups
+time series analysis
+cumulative relative frequency
+probability density function
+lag order
+significance level
+central limit theorem
+sum of squares
+multivariate time series models
+cumulative distribution function
 population parameter
 population variance
-power of the test
-prediction interval
-probability density function
-probability distribution function
-probability plot correlation coefficient
-probit
+ordinal scale
+nominal scale
+OC curve
 process capability index
-quantile-quantile plot
-quantitative continuous data
-quantitative discrete data
-quasi-experiments
-random assignment
-random sampling
-random variable
-ratio scale
-RCM
-regressors
-relative frequency
-response variable
-Rubin causal model
-run sequence plot
-Runs Test
-sample space
-sampling bias
-sampling errors
-sampling without replacement
-Sargan test
-seasonality
-significance level
-simple random sample
-single exponential smoothing
-single moving average
-SSE
-SSR
-standard deviation
-standard error
-standard error of the estimate
-standard normal distribution
-stationarity
-stratified sample
-Student's t-distribution
-sum of squared errors
-sum of squares
-systematic sample
-test for homogeneity
-test of a single variance
-test of independence
-test statistic
-Tietjen-Moore Test
-time series analysis
-triple exponential smoothing
-two-stage least squares
-type I error
-type II error
-univariate time series models
-Venn diagram
 Weibull plot
-Wilcoxon Mann-Whitney test
-Youden plot
-z-score
+standard error
+autoregressive
+law of large numbers
+random assignment
+Chi-Square Test
+heteroskedasticity
+quantitative continuous data
+AIC
+multiple correlation coefficient
+systematic sample
+probit
+F ratio
+clustered standard errors
+lurking variables
+random sampling
+Poisson probability distribution
+nonparametric tests
+response variable
+Bartlett's Test
+discrete event simulation
+error variance
+matched pairs
+Akaike information criterion
+independent variable
+endogenous
+alternative hypothesis
+HAC
+Bayes' theorem
+normal probability plot
+logit
+probability plot correlation coefficient
+long-term relative frequency
+standard deviation
+geometric distribution
+contingency table
+point estimate
+Bernoulli trial
+finite population correction factor
+CDF
+sampling bias
+Student's t-distribution
+independent events
+hypergeometric experiment
+fixed effects regression
+stationarity

@@ -1,157 +1,157 @@
-Acinetobacter baumannii
-Actinomyces israelii
-Agrobacterium tumefaciens
-ammonification
-Anabaena
-anoxic
-arbuscular mycorrhizae
-ascocarp
-Ascomycota
-Aspergillus fumigatus
-aspergillus nidulans
-Aspergillus niger
-autotrophic
-Bacillus anthracis
-Bacillus cereus
-Bacillus subtilis
-Bacteroides fragilis
-basidiocarp
-Basidiomycota
-biofilm
-bioluminescence
-bioremediation
-Bordetella pertussis
-Borrelia burgdorferi
-Brucella abortus
-CA-MRSA
-Campylobacter jejuni
-Candida albicans
-capsid
-capsomeres
-chemotroph
-Chlamydia pneumoniae
-Chlamydia trachomatis
-chytridiomycetes
-Clostridioides difficile
-Clostridium botulinum
-Clostridium perfringens
-Clostridium tetani
-commensalism
-conidiospores
-Corynebacterium diphtheriae
 Coxiella burnetii
-Cryptococcus neoformans
-Cryptosporidium parvum
-cyanobacteria
-cytopathic effects
-Deinococcus radiodurans
+Acinetobacter baumannii
+Shigella flexneri
+Synechocystis
 deuteromycota
-dikaryon
-ectomycorrhizae
-endomycorrhizae
-endosymbiosis
-endosymbiotic theory
-Entamoeba histolytica
-Enterococcus faecalis
-Enterococcus faecium
-Escherichia coli
-Francisella tularensis
-Giardia duodenalis
-Giardia lamblia
-Glomeromycota
-Gram negative
-Gram positive
-Haemophilus influenzae
-halobacterium salinarum
-haustoria
-Helicobacter pylori
-heterothallic
-heterotrophic
-Histoplasma capsulatum
-HIV
-homothallic
-human immunodeficiency virus
-hyperplasia
-hypoplasia
-imperfect Fungi
-karyogamy
-Klebsiella pneumoniae
-Koch's postulates
-Lactobacillus acidophilus
-Lactococcus lactis
-Legionella pneumophila
-Leishmania donovani
-Leptospira interrogans
-Listeria monocytogenes
-Methanobrevibacter smithii
-methicillin-resistant Staphylococcus aureus
-mixotrophs
-MRSA
-Mycobacterium leprae
-Mycobacterium smegmatis
-Mycobacterium tuberculosis
-Mycoplasma pneumoniae
-mycorrhiza
-mycorrhizae
-mycosis
-mycotoxicosis
-Naegleria fowleri
-Neisseria gonorrhoeae
 Neisseria meningitidis
-neurospora crassa
-Nocardia asteroides
-noncellular
-Nostoc
-oncogenic viruses
-Pasteurella multocida
-Penicillium chrysogenum
-peptidoglycan
-phagolysosome
-phototrophs
-Plasmodium falciparum
-Plasmodium vivax
-plastid
-Pneumocystis jirovecii
-polyphyletic
-prions
-prophage
-Proteus mirabilis
-Pseudomonas aeruginosa
-pseudopeptidoglycan
-Pyrococcus furiosus
-reverse transcriptase
-Rhizobium leguminosarum
-Rickettsia rickettsii
-Saccharomyces cerevisiae
-Salmonella enterica
+virions
 saprobes
 schizosaccharomyces pombe
-Serratia marcescens
-Shigella dysenteriae
-Shigella flexneri
-sporangium
+Lactobacillus acidophilus
+Giardia lamblia
+Trypanosoma brucei
+prions
+Chlamydia trachomatis
+methicillin-resistant Staphylococcus aureus
+Pasteurella multocida
+chemotroph
+Plasmodium vivax
+Listeria monocytogenes
+Clostridium perfringens
+anoxic
+Naegleria fowleri
+Rhizobium leguminosarum
+arbuscular mycorrhizae
+karyogamy
+Corynebacterium diphtheriae
+Bacillus anthracis
+Mycobacterium leprae
+Plasmodium falciparum
+plastid
+endosymbiotic theory
+capsomeres
+haustoria
+Histoplasma capsulatum
+imperfect Fungi
+Zygomycota
+aspergillus nidulans
+heterotrophic
+oncogenic viruses
+Toxoplasma gondii
+Aspergillus fumigatus
+peptidoglycan
+mycorrhizae
+tobacco mosaic disease
+reverse transcriptase
+Sulfolobus solfataricus
+Borrelia burgdorferi
+Clostridium tetani
+Brucella abortus
+Salmonella enterica
+Campylobacter jejuni
+hyperplasia
+biofilm
+halobacterium salinarum
+chytridiomycetes
+cyanobacteria
 Staphylococcus aureus
-Staphylococcus epidermidis
+Bacillus cereus
+Trichomonas vaginalis
+Methanobrevibacter smithii
+Serratia marcescens
+Thermus aquaticus
+endosymbiosis
+endomycorrhizae
+Clostridioides difficile
+ectomycorrhizae
+Shigella dysenteriae
+phagolysosome
+sporangium
+mycorrhiza
+Vibrio cholerae
+Penicillium chrysogenum
+Entamoeba histolytica
+Basidiomycota
+Giardia duodenalis
+Leptospira interrogans
+Candida albicans
+Bacteroides fragilis
+mixotrophs
+Bacillus subtilis
+basidiocarp
+heterothallic
+Francisella tularensis
+autotrophic
+Ascomycota
+Leishmania donovani
+Chlamydia pneumoniae
+Gram positive
+noncellular
+ascocarp
+Cryptosporidium parvum
+bioremediation
+tetrahymena thermophila
+viable-but-non-culturable
+Cryptococcus neoformans
+Agrobacterium tumefaciens
+Bordetella pertussis
+pseudopeptidoglycan
+Streptococcus pyogenes
+Haemophilus influenzae
+Helicobacter pylori
 Streptococcus mutans
 Streptococcus pneumoniae
-Streptococcus pyogenes
-Sulfolobus solfataricus
-symbiosis
-symbiotic nitrogen fixation
-Synechocystis
-tetrahymena thermophila
-Thermus aquaticus
-tobacco mosaic disease
-Toxoplasma gondii
-Treponema pallidum
-Trichomonas vaginalis
-Trypanosoma brucei
+capsid
+Lactococcus lactis
+ammonification
+Mycobacterium tuberculosis
+Pseudomonas aeruginosa
+HIV
+Proteus mirabilis
+Klebsiella pneumoniae
+Aspergillus niger
+mycosis
+Nocardia asteroides
+Rickettsia rickettsii
+Clostridium botulinum
+neurospora crassa
 Trypanosoma cruzi
-Ureaplasma urealyticum
-viable-but-non-culturable
-Vibrio cholerae
-virions
+polyphyletic
+CA-MRSA
+Pyrococcus furiosus
+Anabaena
+Mycobacterium smegmatis
+dikaryon
 viroids
-Yersinia enterocolitica
+Treponema pallidum
+Koch's postulates
+symbiotic nitrogen fixation
+bioluminescence
+Saccharomyces cerevisiae
+Staphylococcus epidermidis
+homothallic
+commensalism
+Gram negative
+MRSA
+Glomeromycota
+hypoplasia
+Legionella pneumophila
+Pneumocystis jirovecii
+human immunodeficiency virus
+Actinomyces israelii
+Ureaplasma urealyticum
+phototrophs
+Enterococcus faecalis
+Escherichia coli
+mycotoxicosis
+Enterococcus faecium
+Mycoplasma pneumoniae
+cytopathic effects
 Yersinia pestis
-Zygomycota
+symbiosis
+Deinococcus radiodurans
+prophage
+Nostoc
+Neisseria gonorrhoeae
+Yersinia enterocolitica
+conidiospores

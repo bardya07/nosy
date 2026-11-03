@@ -1,302 +1,302 @@
-absolute zero
-absorptivity
-adiabatic compressions
-adiabatic constant
+Nernst
+Joule expansion
+Maxwell
+critical temperature
+Stirling approximation
+Carnot
+Rankine scale
+zeroth law of thermodynamics
+phonon
+Boltzmann factor
+Einstein relation
+Hess's law
+Tolman
+Amontons's law
+Stefan's constant
+heat transfer
+Kelvin statement
+dissipation
+thermal wavelength
+osmotic pressure
+Dalton's law
+Clausius entropy
+hydrostatic equilibrium
+Brayton cycle
+endothermic
+Helmholtz
+degrees of freedom
+triple point
+Stefan-Boltzmann law of radiation
+Clapeyron equation
+equipartition theorem
+Joule's law
+Eyring equation
+pressure coefficient
+diatomic gas
+second law of thermodynamics
+mean free path
+Clausius statement
+Rayleigh number
+entropy of mixing
+coefficient of performance
+Boltzmann's constant
+Mollier diagram
+isobaric process
+lever rule
+Fourier's law
+Riemann zeta function
+phase space
+enthalpy of formation
+Joule-Thomson effect
+thermal equilibrium
+heat of vaporization
+Joule-Thomson coefficient
+isentropic compression
+Nernst heat theorem
+Onsager
+Biot
+Maxwell relations
+molar mass
+Gibbs entropy
+Kelvin-Planck statement
+van der Waals gas
+Gibbs-Helmholtz equation
+Poisson adiabat
+Seebeck effect
+Boltzmann distribution
+Joule's experiment
+degeneracy
+Joule-Thomson
+kinetic theory of gases
+specific heat
+Clausius inequality
+Born-Haber cycle
+thermal efficiency
+pV diagram
+Stefan-Boltzmann
+Gibbs-Duhem equation
+Stirling engine
+critical volume
+calorimetry
+heat reservoir
+Planck's radiation law
+bomb calorimeter
+irreversible process
+latent heat of fusion
+Kinetic energy
+Diesel cycle
+Maxwell's demon
+Brownian motion
+Carnot engine
+Planck mean
+Le Chatelier's principle
+Celsius scale
+Thermal conductivity
+Kelvin temperature
+van der Waals equation
+Boltzmann's H-theorem
+Reynolds number
+Mayer's relation
+heat of formation
+latent heat of vaporization
+Gibbs function
+isentropic expansion
+thermal expansion
+Mole
+Gay-Lussac
+Rankine temperature
+Gibbs paradox
+Boyle's law
+degree Celsius
+Nernst distribution
+thermoelectric
+Otto engine
+Joule
+Celsius
+Rankine cycle
+Gay-Lussac's law
+Mie-Grüneisen equation
+Gibbs free energy
+Lennard-Jones potential
+Nusselt number
+entropy change
+specific entropy
+emissivity
+phase diagram
+Debye model
+quantum statistics
+Petit
+Vapor-liquid equilibrium
+Boltzmann
+ideal gas constant
+Fourier's law of heat conduction
+Liouville's theorem
 adiabatic expansion
-adiabatic heating
-adiabatic index
-adiabatic lapse rate
+monatomic gas
+virial coefficient
+view factor
+Sackur
+first law of thermodynamics
+Stefan
+Gibbs-Boltzmann distribution
+reversible process
+heat engine
+Wien approximation
+ergodic hypothesis
+grand canonical ensemble
+Carnot cycle
+enthalpy
+Lewis number
+Debye temperature
+Wien
+polytropic process
+Stanton number
+Redlich-Kwong equation
+Boyle temperature
+Bose
+universal gas constant
+Raoult's law
+Planck distribution
+free energy
+Carnot efficiency
+Otto cycle
+adiabatic compressions
+thermal energy
+Carnot refrigerator
+specific volume
+Avogadro's law
+thermal radiation
+reflectivity
+heat of combustion
+Dalton's law of partial pressures
+transmissivity
+Helmholtz free energy
+Fahrenheit
 adiabatic process
 Amagat's law
-Amontons's law
-Arrhenius equation
-Avogadro
-Avogadro's law
-Avogadro's number
-Bernoulli
-Biot
-Biot number
-blackbody
-Boltzmann
-Boltzmann constant
-Boltzmann distribution
-Boltzmann entropy
-Boltzmann equation
-Boltzmann factor
-Boltzmann's constant
-Boltzmann's H-theorem
-bomb calorimeter
-Born-Haber cycle
-Bose
-Bose condensation
-Bose-Einstein distribution
-Bose-Einstein statistics
-Boyle
-Boyle temperature
-Boyle's law
-Brayton cycle
-Brownian motion
-calorimeter
-calorimetry
 canonical ensemble
-Carnot
-Carnot cycle
-Carnot efficiency
-Carnot engine
-Carnot refrigerator
-Carnot's principle
-Celsius
-Celsius scale
-Charles
-Charles's law
-Clapeyron equation
-Clausius
-Clausius entropy
-Clausius inequality
-Clausius statement
-Clausius theorem
-Clausius-Clapeyron equation
-coefficient of performance
-coefficient of thermal expansion
-compressibility
-conduction
-constant-volume gas thermometer
-convection
-Cp
-critical point
-critical pressure
-critical temperature
-critical volume
-cryogenics
-Cv
-Dalton's law
-Dalton's law of partial pressures
-Debye
-Debye model
-Debye temperature
-degeneracy
-degree Celsius
-degrees of freedom
-density of states
-diatomic gas
-Diesel cycle
-Dieterici equation
-dissipation
-Dulong
-Dulong-Petit law
-Einstein coefficients
-Einstein model
-Einstein relation
-Einstein solid
-emissivity
-endothermic
-enthalpy
-enthalpy change
-enthalpy of formation
-enthalpy of reaction
-entropy change
-entropy of mixing
-Equation of state
-equipartition theorem
-ergodic hypothesis
-Ericsson cycle
-exergy
-extensive property
-Eyring equation
-Fahrenheit
-Fermi-Dirac distribution
-Fermi-Dirac statistics
-first law of thermodynamics
-Fourier's law
-Fourier's law of heat conduction
-free energy
-fugacity
-gas constant
-Gay-Lussac
-Gay-Lussac's law
-Gibbs
-Gibbs distribution
-Gibbs energy
-Gibbs entropy
-Gibbs free energy
-Gibbs function
-Gibbs paradox
-Gibbs phase rule
 Gibbs-Boltzmann
-Gibbs-Boltzmann distribution
-Gibbs-Duhem equation
-Gibbs-Helmholtz equation
-Graham's law
-grand canonical ensemble
-Grashof number
-heat capacity
-heat engine
-heat exchanger
-heat flux
-heat of combustion
-heat of formation
-heat of fusion
-heat of vaporization
-heat pump
-heat reservoir
-heat transfer
-Helmholtz
-Helmholtz free energy
-Henry's law
-Hess's law
-hydrostatic equilibrium
-Ideal gas
-ideal gas constant
-ideal gas law
-intensive property
 Internal energy
-irreversible process
-isenthalpic process
-isentropic
-isentropic compression
-isentropic expansion
-isobaric process
-isochoric process
-isometric process
-isothermal compression
-isothermal expansion
-isothermal process
-Joule
-Joule expansion
-Joule's experiment
-Joule's law
-Joule-Thomson
-Joule-Thomson coefficient
-Joule-Thomson effect
-Kelvin
-Kelvin scale
-Kelvin statement
-Kelvin temperature
-Kelvin-Planck statement
-Kinetic energy
-kinetic theory of gases
-Kirchhoff's law of thermal radiation
-Landau
-latent heat
-latent heat of fusion
-latent heat of vaporization
-Le Chatelier's principle
-Lennard-Jones potential
-lever rule
-Lewis number
-Liouville's theorem
+Equation of state
+compressibility
 macrostate
-Massieu function
-Maxwell
-Maxwell relations
-Maxwell's demon
-Maxwell's speed distribution
+Boltzmann equation
+adiabatic heating
 Maxwell-Boltzmann distribution
-Maxwell-Boltzmann speed distribution
-Mayer's relation
-mean free path
-microcanonical ensemble
-microstate
-Mie-Grüneisen equation
-molar heat capacity
-molar mass
-Mole
-Mollier diagram
-monatomic gas
-Nernst
-Nernst distribution
-Nernst heat theorem
-Newton's law of cooling
+Cv
+Gibbs
+heat of fusion
+Ericsson cycle
+Boltzmann constant
+convection
+Avogadro
 non-quasi-static processes
-number density
-Nusselt number
-Onnes
-Onsager
-osmotic pressure
-Otto cycle
-Otto engine
-partition function
-Peltier effect
-Petit
-phase diagram
-phase space
-phonon
-Planck
-Planck distribution
-Planck mean
-Planck's radiation law
-Poisson adiabat
-polytropic process
-Prandtl number
-pressure coefficient
-Prigogine
-pV diagram
-quantum statistics
-quasi-static process
-radiative heat transfer
-Rankine cycle
-Rankine scale
-Rankine temperature
-Raoult's law
-Rayleigh number
-Rayleigh-Jeans law
-Redlich-Kwong equation
-reflectivity
-reversible process
-Reynolds number
-Riemann zeta function
-root-mean-square (rms) speed
-Sackur
-Sackur-Tetrode equation
-Sadi Carnot
-Schottky anomaly
-second law of thermodynamics
-Seebeck effect
-Sommerfeld expansion
-specific entropy
-specific heat
-specific volume
-Stanton number
-Stefan
-Stefan's constant
-Stefan-Boltzmann
-Stefan-Boltzmann law of radiation
-Stirling approximation
-Stirling cycle
-Stirling engine
-Stirling's approximation
-STP
-Thermal conductivity
-thermal diffusivity
-thermal efficiency
-thermal energy
-thermal equilibrium
-thermal expansion
-thermal gradient
-thermal radiation
 thermal resistance
-thermal runaway
-thermal wavelength
-thermodynamic potential
-thermodynamic temperature
-thermoelectric
-third law of thermodynamics
-Thomson effect
-throttling
-Tolman
-transmissivity
-triple point
-universal gas constant
-van 't Hoff equation
-van der Waals equation
-van der Waals gas
+intensive property
+coefficient of thermal expansion
 vapor pressure
-Vapor-liquid equilibrium
-view factor
-virial coefficient
+exergy
+Planck
+adiabatic index
+enthalpy of reaction
+Henry's law
+Grashof number
+adiabatic constant
+cryogenics
+heat pump
+Fermi-Dirac distribution
+third law of thermodynamics
+conduction
+Cp
+critical pressure
+thermodynamic temperature
+Clausius-Clapeyron equation
+microcanonical ensemble
+Boltzmann entropy
+Rayleigh-Jeans law
+Sadi Carnot
+constant-volume gas thermometer
 virial expansion
-Wien
-Wien approximation
+Landau
+Carnot's principle
+latent heat
+isothermal compression
+Onnes
+radiative heat transfer
+Einstein solid
+Ideal gas
+Newton's law of cooling
+Bose condensation
+absorptivity
+Gibbs phase rule
+Dieterici equation
+Charles's law
+thermal diffusivity
+Stirling cycle
+Kelvin
+microstate
+Thomson effect
+van 't Hoff equation
+isothermal expansion
+Dulong-Petit law
+isochoric process
+throttling
+gas constant
+Einstein coefficients
+isometric process
+ideal gas law
+quasi-static process
+Prandtl number
+Prigogine
 Wien's constant
+isentropic
+Fermi-Dirac statistics
+root-mean-square (rms) speed
+blackbody
+partition function
+Schottky anomaly
+Dulong
+absolute zero
+thermal gradient
+fugacity
+Kelvin scale
+heat flux
+Einstein model
+heat exchanger
+Kirchhoff's law of thermal radiation
 work done
-zeroth law of thermodynamics
+Sackur-Tetrode equation
+Peltier effect
+extensive property
+Bose-Einstein distribution
+Debye
+number density
+Bernoulli
+Boyle
+Bose-Einstein statistics
+Gibbs energy
+Arrhenius equation
+density of states
+thermodynamic potential
+Stirling's approximation
+Massieu function
+isenthalpic process
+critical point
+calorimeter
+heat capacity
+Gibbs distribution
+thermal runaway
+Avogadro's number
+Clausius theorem
+adiabatic lapse rate
+STP
+Maxwell-Boltzmann speed distribution
+Charles
+Biot number
+Clausius
+Graham's law
+Maxwell's speed distribution
+molar heat capacity
+enthalpy change
+isothermal process
+Sommerfeld expansion

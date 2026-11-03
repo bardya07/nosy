@@ -1,122 +1,122 @@
-abscisic acid
-abscission
-amyloplasts
-androecium
-antheridium
-Anthophyta
-apical meristems
-Arabidopsis thaliana
-archegonium
-auxins
-axillary bud
-bryophytes
-Calvin cycle
-calyx
-carotenoids
-charophytes
-chemoautotrophs
-chlamydomonas reinhardtii
-chlorophyll a
-chlorophyll b
-chlorophytes
-chloroplast
-chromophore
-coleoptile
-coleorhiza
-collenchyma cells
-cotyledons
-cross-pollination
-cryptochromes
-cytokinin
-dermal tissue
-diplontic
-embryophytes
-endocarp
-endodermis
-endosperm
-endospermic dicots
-epidermis
-ethylene
-exocarp
-gametangia
-gametophyte
-gibberellins
-ginkgophytes
-gnetophytes
-granum
-guard cells
-gymnosperms
-gynoecium
-haplodiplontic
-haplontic
-hypocotyl
-integument
-intercalary meristems
-jasmonates
-lamina
-lateral meristems
-lenticels
-light-dependent reactions
-light-harvesting complex
-light-independent reactions
-lignin
-lycophyta
-megagametogenesis
-megasporangium
-megasporocyte
-megasporogenesis
-megasporophylls
-meristematic tissue
-meristems
-mesocarp
-mesophyll
-microsporangium
-microsporocytes
-microsporophylls
-monocarpic
-negative gravitropism
-nicotiana benthamiana
-nitrogenase
-non-endospermic dicots
-non-vascular plants
-oligosaccharins
-P680
-P700
-parenchyma cells
-pericarp
-pericycle
-periderm
-Permanent tissue
-phloem
-photoautotrophs
-photomorphogenesis
-photoperiodism
-photosystem II
-phototropins
-phototropism
-phyllotaxy
-phytochromes
-polar nuclei
-polycarpic
-positive gravitropism
-rhizobia
-rhizome
-rhizosphere
-saprophyte
-sclerenchyma cells
 self-pollination
-sieve-tube cells
-spectrophotometer
-sporocytes
-sporophylls
+chromophore
+non-vascular plants
+gynoecium
+chlorophyll a
 sporopollenin
-stomata
-strigolactones
-symbiont
-thigmomorphogenesis
+abscisic acid
+exocarp
+saprophyte
+Anthophyta
+antheridium
+gibberellins
+chlorophytes
+monocarpic
+microsporophylls
+photoperiodism
+megasporocyte
+phototropism
+haplodiplontic
+lateral meristems
+nicotiana benthamiana
+hypocotyl
+spectrophotometer
+chlamydomonas reinhardtii
+mesophyll
+dermal tissue
 thigmonastic
 thigmotropism
-thylakoid lumen
-tracheids
 trichomes
+lignin
+ginkgophytes
+embryophytes
+megasporogenesis
+chlorophyll b
+carotenoids
+Arabidopsis thaliana
+diplontic
+light-dependent reactions
+axillary bud
+meristems
+sporocytes
+auxins
+gnetophytes
+oligosaccharins
+photosystem II
+Calvin cycle
+meristematic tissue
+phytochromes
+rhizome
+thylakoid lumen
+endosperm
+gametophyte
+microsporocytes
+ethylene
+negative gravitropism
+P700
+light-harvesting complex
+parenchyma cells
+cotyledons
+tracheids
+lamina
+endospermic dicots
+microsporangium
+abscission
+polycarpic
+guard cells
+phototropins
+granum
+rhizosphere
+gymnosperms
+cytokinin
+cross-pollination
+collenchyma cells
+intercalary meristems
+light-independent reactions
+photomorphogenesis
+periderm
+gametangia
+apical meristems
+bryophytes
+lenticels
+pericycle
+sporophylls
+pericarp
+phyllotaxy
+jasmonates
+coleoptile
+mesocarp
+positive gravitropism
+non-endospermic dicots
+nitrogenase
+charophytes
+coleorhiza
+stomata
+symbiont
+megagametogenesis
+strigolactones
+archegonium
+androecium
+haplontic
+endocarp
+P680
+thigmomorphogenesis
+calyx
+chloroplast
+sclerenchyma cells
+chemoautotrophs
+phloem
+Permanent tissue
+epidermis
+lycophyta
+photoautotrophs
+integument
+polar nuclei
+rhizobia
+amyloplasts
+cryptochromes
 xylem
+endodermis
+megasporangium
+sieve-tube cells
+megasporophylls

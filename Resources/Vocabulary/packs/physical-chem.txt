@@ -1,334 +1,334 @@
-acetyl
-acid anhydride
-acid dissociation constant
-acid ionization
-acid-base extraction
-acid-base indicators
-acid-ionization constant, Ka
-adsorption hysteresis
-aldehyde
-alkene
-alkyl
-alkyne
-allotrope
-amide
-Amontons's law
-amount-of-substance concentration
-amount-of-substance fraction
-analytical Chemistry
-anti-thixotropy
-Arrhenius
-Arrhenius acid
-Arrhenius base
-Arrhenius equation
-aryl
-atom-molecule complex mechanism
-atomic radius
-attractive potential-energy surface
-attractive-mixed-repulsive classification
-Aufbau principle
-Avogadro constant
-Avogadro number
-Avogadro's law
-Avogadro's number
-azeotrope
-B3LYP
-Balmer
-band-to-band recombination
-base anhydride
-base ionization
-base-ionization constant
-BCC
-body-centered cubic solid
-body-centered cubic unit cell
-Bohr
-Bohr model
-Bohr's model
-Boltzmann
-Born-Oppenheimer approximation
-Boyle's law
-Bragg
-Bragg equation
-Bragg's law
-Brønsted-Lowry acid
-Brønsted-Lowry acid-base reaction
-Brønsted-Lowry base
-BSSE
-butyl
-Büchner flask
-calorimetry
-capillary action
-carbonyl
-carboxyl
-carboxylic acid
-Carnot
-CASSCF
-CCP
-CCSD
-CCSD(T)
-cell schematics
-Charles's law
-chelating agent
-Clausius
-Clausius-Clapeyron equation
-Compton rule
-conjugate acid
-conjugate base
-constitutional isomer
-covalent radius
-Crick
-crystallography
-d-block
-Dalton's law of partial pressures
-De Broglie
-deuteriation
-deuterium
-deuteron
-DFT
-diastereomer
-diatomic
-diatomic molecule
-Dipolar bond
-dipole-dipole attraction
-diprotic base
-direct-injection enthalpimetry
-dispersed phase
-diterpenes
-dose equivalent
-double-focusing mass spectrograph
-double-focusing mass spectrometer
-dynamic Fields mass spectrometer
-effective nuclear charge, Zeff
-Electrochemical cell
-electron neutrino
-electron paramagnetic resonance
-electronvolt
-electrophoresis
-EN
-enantiomorph
-end-group
-endothermic reaction
-enthalpimetric analysis
-enthalpogram
-enthalpy (H)
-enthalpy change (ΔH)
-enthalpy of activation
-enthalpy of fusion
-enthalpy of immersion
-enthalpy of wetting
 entropy (S)
-entropy of activation
-entropy unit
-environmental Chemistry
-Erlenmeyer flask
-esin and Markov coefficient
-ester
-even-electron ion
+langmuir-Rideal mechanism
+ion-free layer
+X-ray crystallography
+pH
+enthalpy of fusion
+carboxylic acid
+alkyne
+atomic radius
+DFT
+time-independent stoichiometry
+Amontons's law
+standard entropy change (ΔS°)
+deuterium
 EX
-exciton absorption
-f-block
-face-centered cubic solid
+UN number
+organic base
+spectator-stripping reaction
+direct-injection enthalpimetry
+surface excess isotherm
+structural isomer
+Hertz
+Clausius
+thermoanalytical
+Born-Oppenheimer approximation
+Arrhenius
+thermospectrometry
+X-ray
+Henderson
+Gibbs surface
+effective nuclear charge, Zeff
+Van 't Hoff factor
+standard entropy of activation
+attractive-mixed-repulsive classification
+standard entropies (S°)
+heat-flow differential scanning calorimetry
+hypertonic
+time-dependent stoichiometry
+Pauli exclusion principle
+monoterpenes
+stoichiometric mean molal
+Erlenmeyer flask
+GTO
+transactinides
+langmuir-Hinshelwood mechanism
+organic Chemistry
+Bohr
+Dalton's law of partial pressures
+conjugate base
+STO
+Hund's rule
+aldehyde
+Bragg equation
+Gay-Lussac's law
+rare-earth element
+dose equivalent
+Nernst equation
+enthalpy of wetting
+physical Chemistry
+ester
+spectroscopy
+Lewis acid-base Chemistry
+osmotic pressure (Π)
+ketone
+MP2
+isosteric enthalpy of adsorption
+keto acid
+Avogadro's law
+gradual potential-energy surface
+stoichiometric factors
+Boyle's law
+dispersed phase
+newton
+acid-ionization constant, Ka
+even-electron ion
+light-atom anomaly
+atom-molecule complex mechanism
+free energy change (ΔG)
+quark
+Faraday's laws of electrolysis
+Brønsted-Lowry acid-base reaction
+isomorphous
+X-ray photoelectron spectroscopy
+Büchner flask
+mass-volume percent
+Bragg
+Hartree
+electron paramagnetic resonance
+aryl
+nuclear magnetic resonance spectroscopy
+α-cleavage
+tandem mass spectrometer
+Gaussian-type orbital
+double-focusing mass spectrometer
+spin-spin coupling constant
+nucleon
+diprotic base
+methyl
+hard acid
+static Fields mass spectrometer
+environmental Chemistry
+dipole-dipole attraction
+nutritional calorie
+HCP
+alkyl
+Balmer
+per-
+base-ionization constant
+body-centered cubic unit cell
+thermogravimetric analysis
+dynamic Fields mass spectrometer
+CCP
+London dispersion force
+Lewis structure
+p-block
+spatial isomer
+band-to-band recombination
+entropy unit
+Helmholtz energy
+terpene
+oxoacid
+Dipolar bond
+Lewis acid
+enthalpy change (ΔH)
+le Châtelier's principle
+radionuclide
+B3LYP
+propyl
+diatomic
+CCSD(T)
+constitutional isomer
+peroxy
+isomerization
+lead acid battery
+stereoisomer
+Hartree-Fock
+hydroxy
+Henderson-Hasselbalch equation
+Thiol
+Boltzmann
+Gibbs
+SCF
+covalent radius
+analytical Chemistry
+deuteron
+geminate recombination
+enthalpy of activation
+adsorption hysteresis
+least-squares technique
+wave-particle duality
+Gibbs adsorption
+Avogadro constant
+Compton rule
+PKA
+Gauss
+butyl
+diterpenes
+Hückel
+Charles's law
+acetyl
+work-up
+Gibbs energy of activation
+general acid-base catalysis
 face-centered cubic unit cell
 Faraday constant
-Faraday's laws of electrolysis
-FCC
-Fick's laws of diffusion
-flow injection enthalpimetry
-free energy change (ΔG)
-freeze-drying
-fugacity
-fugacity coefficient
-Gauss
-Gaussian-type orbital
-Gay-Lussac's law
-geminate recombination
-general acid-base catalysis
-generalized transition-state theory
-Gibbs
-Gibbs adsorption
-Gibbs energy diagram
-Gibbs energy of activation
-Gibbs energy of repulsion
-Gibbs film elasticity
-Gibbs free energy (G)
-Gibbs surface
-gradual potential-energy surface
+esin and Markov coefficient
+enthalpy of immersion
 Graham's law of effusion
-Gram
-Gram-atom
-GTO
-hadron
-half-cells
-half-reaction
-Hamiltonian operator
-hard acid
-Hartree
-Hartree-Fock
-HCP
-heat-flow differential scanning calorimetry
-Heisenberg uncertainty principle
-helium dead-space
-Helmholtz energy
-hemolysis
-Henderson
-Henderson-Hasselbalch equation
-Henry's law
-Henry's law constant
-Henry's law solubility constant
-Henry's law volatility constant
-Hertz
-Hess's law
-HOMO
-Hund's rule
-Huygens
-hydroxy
-hypertonic
-hypotonic
-Hückel
-Hückel rule
-inorganic Chemistry
-ion trap mass spectrometer
-ion-dipole attraction
-ion-free layer
-ion-pair formation
-isoelectric
-isoelectric point
-isoelectronic
-isoelectronicity
-isomer shift
-isomerization
-isomorphous
-isosteric enthalpy of adsorption
-isothermal technique
-isotonic
-Joule (J)
-keto acid
-ketone
-langmuir-Hinshelwood mechanism
-langmuir-Rideal mechanism
-laser ionization
-le Châtelier's principle
-lead acid battery
-least-squares technique
-Lewis
-Lewis acid
-Lewis acid-base adduct
-Lewis acid-base Chemistry
-Lewis base
-Lewis structure
-ligand
-light-atom anomaly
-line-of-centres model
-London
-London dispersion force
-mass spectrometry
-mass-volume percent
-Maxwell
-methyl
-methylene blue
-monoterpenes
-MP2
-Nernst equation
-newton
-nickel-cadmium
-non-metal
-nuclear
-nuclear magnetic resonance spectroscopy
-nucleon
-nutritional calorie
-organic base
-organic Chemistry
-osmotic pressure (Π)
-oxidation-reduction (redox) reactions
-oxoacid
-p-block
-Pauli exclusion principle
-PBE
-per-
-peracid
-peroxy
-pH
-physical Chemistry
-PKA
-pnictogen
-pOH
-polymerization
-propyl
-pyrolysis
-quark
-radionuclide
-Raoult's law
-rare-earth element
-rate-limiting step
-round-bottom flask
-Rydberg
-s-block
-SCF
-Schrödinger equation
-SHE
-single-displacement (replacement) reactions
-Slater-type orbital
-solid-phase extraction
-SOMO
-spatial isomer
-spectator-stripping reaction
-spectrochemistry
-spectrometry
-spectroscopy
-spin-orbit coupling constant
-spin-spin coupling constant
-standard enthalpy of combustion
-standard entropies (S°)
-standard entropy change (ΔS°)
-standard entropy of activation
-state-to-state kinetics
-static Fields mass spectrometer
-stereogenic center
-stereoisomer
-Stern layer
-STO
-stochastic theories
-stockholm convention
-stoichiometric factors
-stoichiometric mean molal
-stoichiometry
-Stokes
-structural isomer
-surface excess entropy
-surface excess Gibbs energy
-surface excess Helmholtz energy
-surface excess isotherm
-surface of a phase
-surfactant
-tandem mass spectrometer
-temperature-programmed desorption
-temperature-programmed oxidation
-temperature-programmed reduction
-terpene
-thermo- technique
-thermoanalytical
-thermogravimetric analysis
-thermospectrometry
-Thiol
-time-dependent stoichiometry
-time-independent stoichiometry
-time-of-flight mass spectrometer
-titrant
-transactinides
-transient phase
-translational spectroscopy
-triprotic acid
-UN number
-Van 't Hoff factor
-Van't Hoff factor (i)
-Watson
-wave-particle duality
 wet Chemistry
-work-up
-X-ray
-X-ray crystallography
-X-ray diffraction
-X-ray photoelectron spectroscopy
+Slater-type orbital
+London
+acid anhydride
+f-block
+SHE
+fugacity
+Watson
+hypotonic
+PBE
+azeotrope
+Arrhenius equation
+stoichiometry
+cell schematics
+line-of-centres model
 ångström
-α-cleavage
+Clausius-Clapeyron equation
+pOH
+time-of-flight mass spectrometer
+nuclear
+HOMO
+body-centered cubic solid
+conjugate acid
+diastereomer
+amount-of-substance concentration
+methylene blue
+face-centered cubic solid
+chelating agent
+anti-thixotropy
+Brønsted-Lowry acid
+Gram
+X-ray diffraction
+single-displacement (replacement) reactions
+s-block
+Hückel rule
+laser ionization
+enthalpogram
+nickel-cadmium
+rate-limiting step
+spectrometry
+isoelectric
+d-block
+exciton absorption
+carbonyl
+isoelectronic
+CASSCF
+Gram-atom
+capillary action
+Henry's law volatility constant
+BSSE
+enthalpy (H)
+electron neutrino
+fugacity coefficient
+base ionization
+electrophoresis
+Avogadro number
+Henry's law
+Huygens
+Heisenberg uncertainty principle
+surface excess Gibbs energy
+state-to-state kinetics
+ion-dipole attraction
+Gibbs energy diagram
+isomer shift
+Bragg's law
+Hess's law
+spectrochemistry
+Van't Hoff factor (i)
+temperature-programmed oxidation
+Gibbs free energy (G)
+titrant
+round-bottom flask
+enthalpimetric analysis
+stereogenic center
+transient phase
+spin-orbit coupling constant
+pnictogen
+Gibbs energy of repulsion
+Lewis acid-base adduct
+amide
+hadron
+Stern layer
+Avogadro's number
+freeze-drying
+inorganic Chemistry
+diatomic molecule
+Lewis
+Electrochemical cell
+isothermal technique
+Aufbau principle
+ion-pair formation
+acid ionization
+Gibbs film elasticity
+base anhydride
+half-cells
+temperature-programmed desorption
+attractive potential-energy surface
+enantiomorph
+acid dissociation constant
+amount-of-substance fraction
+acid-base indicators
+SOMO
+Arrhenius base
+EN
+FCC
+Carnot
+stochastic theories
+Crick
+Raoult's law
+ion trap mass spectrometer
+mass spectrometry
+Bohr model
+alkene
+allotrope
+Henry's law solubility constant
+triprotic acid
+helium dead-space
+surface excess entropy
+carboxyl
+hemolysis
+Joule (J)
+Schrödinger equation
+Hamiltonian operator
+end-group
+polymerization
+De Broglie
+Rydberg
+non-metal
+acid-base extraction
+double-focusing mass spectrograph
+Fick's laws of diffusion
+Bohr's model
+Stokes
+translational spectroscopy
+oxidation-reduction (redox) reactions
+peracid
+CCSD
+thermo- technique
+Arrhenius acid
+Brønsted-Lowry base
+flow injection enthalpimetry
 α-particle
+solid-phase extraction
+half-reaction
+crystallography
+isoelectric point
+electronvolt
+standard enthalpy of combustion
+entropy of activation
+endothermic reaction
+generalized transition-state theory
+stockholm convention
+ligand
+Maxwell
+surface excess Helmholtz energy
+BCC
+Lewis base
+isotonic
+calorimetry
+deuteriation
+temperature-programmed reduction
+Henry's law constant
+surfactant
+isoelectronicity
+pyrolysis
+surface of a phase

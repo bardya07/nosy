@@ -1,190 +1,190 @@
-4Ps
-adapted global marketing strategy
-adaptive selling
-administered VMS
-affinity audience
-AIDA model
-all-you-can-afford approach
-augmented product
-B2B
-B2C
-BOGO
-brand positioning
-business-to-business
-business-to-consumer
-buyer persona
-buyer's black box
-buying center
-CASL
-causal research
-click-through rate
-CLV
-co-brand
-cognitive dissonance
-communication gap
-competitive-parity approach
-concentric diversification
-concept testing
-conjoint analysis
-consumer adoption process
-consumer decision process
-continuous innovation
-continuous promotional schedule
-contractual VMS
-conversion rate
-core product
-cost per acquisition
-cost per click
-CPA
-CPC
-CRM
-cross tabulation
-cross-elasticity of demand
-CSR
-CTR
-cultural duality
-customer acquisition cost
-customer effort score
-customer empathy map
-customer equity
-customer experience
-customer lifetime value
-customer relationship management
-customer satisfaction score
-customer value-based objective
-CX
-delivery gap
 demographic segmentation
-derived demand
-differentiated marketing
-diffusion chasm
-diffusion of innovation
-direct-mail marketing
-discontinuous innovations
-diversity marketing intelligence
-DMiQ
-dynamically continuous innovation
-ethnocentrism
-external value proposition
-fear appeals
-firmographics
-flighting promotional schedule
-focus group
-formula selling
-gap analysis
-Gap Model of Service Quality
-geographic segmentation
-guerrilla marketing
-horizontal conflict
-horizontal diversification
-horizontal marketing system
-IMC
-inquiry test
-inside order taker
-institutional advertisements
-integrated marketing communications
-jobs-to-be-done theory
-joint venture
-judgment sample
-jury tests
-keystone pricing
-knowledge gap
-limited-service wholesalers
-logistical functions
-macroenvironment
-maintained markup
-manufacturer's agents
-market development strategy
-market penetration strategy
-market segmentation
-market share-oriented objective
-marketing channel
-marketing dashboard
-marketing information system
-marketing metrics
-marketing mix
-Maslow's hierarchy of needs
-mechanical observation
-mental stimulus processing
-microenvironment
-modified rebuy
-multi-segment marketing
-multichannel distribution system
-multicultural identity
-need/satisfaction format
-new-task buy
-nonprobability sample
-objective-and-task approach
-odd-even pricing
-off-price retailers
-omnichannel marketing system
-opportunity win rate
-original markup
-penetration pricing
-perceived value pricing
-percentage-of-sales approach
-perceptual map
-PESTLE
-policy gap
-positioning statement
-possession processing
-pre-approach stage
-price anchoring
-PRIZM
-product differentiation
-product diversification strategy
-product life cycle
-product line filling
-product line pricing
-product line stretching
-product mix width
-promotion mix
-pull strategy
-pulsing schedule
-push strategy
-rapid penetration pricing strategy
-rapid skimming strategy
-relationship marketing
+service variability
+brand positioning
 return on ad spend
-return on customer investment
+consumer decision process
+adaptive selling
+undifferentiated marketing
+perceptual map
+multi-segment marketing
+marketing channel
+SPIN
+market segmentation
+original markup
+marketing information system
+customer value-based objective
+cross-elasticity of demand
+judgment sample
+stratified random sample
+4Ps
+jobs-to-be-done theory
+market share-oriented objective
+jury tests
+PESTLE
+co-brand
+pulsing schedule
+inquiry test
+customer acquisition cost
+customer satisfaction score
+multichannel distribution system
+horizontal diversification
+derived demand
+product life cycle
+market penetration strategy
+direct-mail marketing
+positioning statement
+CTR
+mechanical observation
+diffusion of innovation
+joint venture
+nonprobability sample
+verbatims
+B2B
+vertical marketing system
+pull strategy
+rapid skimming strategy
+augmented product
+customer relationship management
+pre-approach stage
+strategic alliance
+off-price retailers
+inside order taker
+product mix width
+serviceable available market
+modified rebuy
+flighting promotional schedule
+market development strategy
+conjoint analysis
+integrated marketing communications
+ethnocentrism
+target return objective
+DMiQ
+vertical conflict
+penetration pricing
+CASL
+slow skimming strategy
+microenvironment
 return-on-investment approach
+competitive-parity approach
+focus group
+objective-and-task approach
+AIDA model
+administered VMS
+PRIZM
+marketing metrics
+cost per acquisition
+unaided recall
+policy gap
+sociodemographics
+horizontal marketing system
+opportunity win rate
+external value proposition
+click-through rate
+sales force automation
+horizontal conflict
+diffusion chasm
+third-party logistics provider
+SERP
+customer lifetime value
+possession processing
+diversity marketing intelligence
+return on customer investment
+transnational firm
+differentiated marketing
+CPC
+logistical functions
+business-to-consumer
+communication gap
+affinity audience
+need/satisfaction format
+selective retention
+contractual VMS
+adapted global marketing strategy
+total available market
+SAM
+word-of-mouth marketing
+CX
+customer experience
+strategic business units
 ROAS
 ROCI
-sales force automation
-sales funnel
-SAM
-sample frames
-selective attention
-selective retention
-SERP
-service inseparability
-service perishability
-service variability
-service-profit chain model
-serviceable available market
-slow penetration pricing strategy
-slow skimming strategy
-societal marketing concept
-sociodemographics
-SPIN
-standardized global marketing strategy
 STP model
-straight product extension
-strategic alliance
-strategic business units
-stratified random sample
-TAM
-target return objective
-third-party logistics provider
-total available market
-transnational firm
-unaided awareness
-unaided recall
-undifferentiated marketing
-unique selling proposition
-verbatims
-vertical conflict
-vertical marketing system
-viral marketing
+service-profit chain model
+CSR
+service inseparability
+all-you-can-afford approach
+marketing dashboard
+percentage-of-sales approach
+buyer persona
+marketing mix
+causal research
+sales funnel
+societal marketing concept
+manufacturer's agents
+cultural duality
+consumer adoption process
 WOM
-word-of-mouth marketing
+concept testing
+service perishability
+cross tabulation
+straight product extension
+discontinuous innovations
+dynamically continuous innovation
+maintained markup
+slow penetration pricing strategy
+relationship marketing
+knowledge gap
+product differentiation
+institutional advertisements
+product line stretching
+standardized global marketing strategy
+buyer's black box
+cognitive dissonance
+conversion rate
+business-to-business
+mental stimulus processing
+omnichannel marketing system
+firmographics
+gap analysis
+CPA
+IMC
+buying center
+BOGO
+viral marketing
+Gap Model of Service Quality
+formula selling
+odd-even pricing
+Maslow's hierarchy of needs
+delivery gap
+continuous promotional schedule
+continuous innovation
+fear appeals
+unaided awareness
+product diversification strategy
+core product
+promotion mix
+geographic segmentation
+CRM
+price anchoring
+push strategy
+selective attention
+customer effort score
+customer equity
+product line pricing
+concentric diversification
+sample frames
+CLV
+new-task buy
+TAM
+unique selling proposition
+macroenvironment
+guerrilla marketing
+multicultural identity
+keystone pricing
+product line filling
+B2C
+rapid penetration pricing strategy
+cost per click
+limited-service wholesalers
+customer empathy map
+perceived value pricing

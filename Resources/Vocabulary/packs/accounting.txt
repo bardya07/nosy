@@ -1,307 +1,307 @@
-401(k)
-403(b)
 abnormal balance
-absorption costing
-accounting cycle
-accounting entity concept
-accounting equation
-accounting information system
-accounting rate of return
-accounts payable subsidiary ledger
-accounts receivable control
-accounts receivable subsidiary ledger
-accounts receivable turnover ratio
-accrual accounting
-accrual basis accounting
-accumulated depletion
-activity-based costing
-adjusted trial balance
-AFC
-AIS
-allowance for doubtful accounts
-allowance method
-amortization
-annuities due
-appropriated retained earnings
-ARR
-ASC 205 Presentation of Financial Statements
-ASC 210 Balance Sheet
-ASC 220 Income Statement—Reporting Comprehensive Income
-ASC 230 Statement of Cash Flows
-ASC 260 Earnings Per Share
-ASC 320 Investments—Debt Securities
-ASC 323 Investments—Equity Method and Joint Ventures
-ASC 326 Financial Instruments—Credit Losses
-ASC 330 Inventory
-ASC 350 Intangibles—Goodwill and Other
-ASC 360 Property, Plant, and Equipment
-ASC 606 Revenue from Contracts with Customers
-ASC 715 Compensation—Retirement Benefits
-ASC 718 Compensation—Stock Compensation
-ASC 740 Income Taxes
-ASC 805 Business Combinations
-ASC 810 Consolidation
-ASC 815 Derivatives and Hedging
-ASC 820 Fair Value Measurement
-ASC 842 Leases
-ASC 860 Transfers and Servicing
-ASC 958 Not-for-Profit Entities
-attainable standard
-audit trail
-AVC
-average cost method
-avoidable cost
-balance sheet aging of receivables method
-balanced scorecard
-bank reconciliation
-batch-level cost
-bond indenture
-book of original entry
-BSC
-callable bond
-capital asset budget
-capital expenditure budget
-cash basis accounting
-cash disbursements journal
-cash receipts journal
-CFA
-CFE
-chart of accounts
-CIA
-CISA
-classified balance sheet
-CMA
-COGS
-Committee of Sponsoring Organizations
-completed contract method
-composite unit
-compound entry
-contingent liability
-contra account
-contributed capital
-contribution margin income statement
-contribution margin ratio
-conversion costs
-convertible bond
-COSO
-cost center
-cost driver
-cost of goods sold
-cost pool
-cost-volume-profit analysis
-coupon rate
-CPA
-CRISC
-current portion of a note payable
-CVP
-debenture
-deferred revenue
-deficit in retained earnings
-depletion
-deposit in transit
-differential analysis
-differential cost
-direct labor rate variance
-direct labor time variance
-direct materials price variance
-direct materials quantity variance
-direct write-off method
-discount on bonds payable
-discretionary cost center
-dividend smoothing
-double-declining-balance depreciation method
-double-entry accounting system
-earned capital
-economic value added
-EDGAR
-effective-interest method
-enterprise resource planning
-EPS
-equivalent units
-ERP
-EVA
-ex dividend
-expanded accounting equation
-expense recognition principle
-factory-level cost
-FASB
-FICA
-fiduciary duty
-FIFO
-Financial Accounting Standards Board
-fixed factory overhead variance
-flexible budget
-fraud triangle
-free cash flow to assets ratio
-full disclosure principle
-full-cost accounting
-fully amortized notes
-FUTA
-GAAP
-GASB
-goal congruence
-going concern assumption
-gross margin
-gross profit method
-high-low method
-historical cost principle
-hurdle rate
-IAS 1 Presentation of Financial Statements
-IAS 10 Events after the Reporting Period
-IAS 12 Income Taxes
-IAS 16 Property, Plant and Equipment
-IAS 19 Employee Benefits
-IAS 2 Inventories
-IAS 20 Accounting for Government Grants and Disclosure of Government Assistance
-IAS 21 The Effects of Changes in Foreign Exchange Rates
-IAS 23 Borrowing Costs
-IAS 24 Related Party Disclosures
-IAS 26 Accounting and Reporting by Retirement Benefit Plans
-IAS 27 Separate Financial Statements
-IAS 28 Investments in Associates and Joint Ventures
-IAS 29 Financial Reporting in Hyperinflationary Economies
-IAS 32 Financial Instruments: Presentation
-IAS 33 Earnings per Share
-IAS 34 Interim Financial Reporting
-IAS 36 Impairment of Assets
-IAS 37 Provisions, Contingent Liabilities and Contingent Assets
-IAS 38 Intangible Assets
-IAS 39 Financial Instruments: Recognition and Measurement
-IAS 40 Investment Property
-IAS 41 Agriculture
-IAS 7 Statement of Cash Flows
-IAS 8 Accounting Policies, Changes in Accounting Estimates and Errors
-IAS 8 Basis of Preparation of Financial Statements
-ideal standard
 IFRS
-IFRS 1 First-time Adoption of International Financial Reporting Standards
-IFRS 10 Consolidated Financial Statements
-IFRS 11 Joint Arrangements
-IFRS 12 Disclosure of Interests in Other Entities
-IFRS 13 Fair Value Measurement
-IFRS 14 Regulatory Deferral Accounts
-IFRS 15 Revenue from Contracts with Customers
-IFRS 16 Leases
-IFRS 17 Insurance Contracts
-IFRS 18 Presentation and Disclosure in Financial Statements
-IFRS 19 Subsidiaries without Public Accountability: Disclosures
-IFRS 2 Share-based Payment
-IFRS 3 Business Combinations
-IFRS 5 Non-current Assets Held for Sale and Discontinued Operations
-IFRS 6 Exploration for and Evaluation of Mineral Resources
-IFRS 7 Financial Instruments: Disclosures
-IFRS 8 Operating Segments
-IFRS 9 Financial Instruments
-imprest account
-income summary
-indirect labor
-indirect material
-installment sale
-intangible assets
-internal control system
-internal rate of return
-International Financial Reporting Standards
-investment center
-IRR
-JIT
-job order cost system
-joint costs
-journalizing
-LCM
-Lean Six Sigma
-LIFO
-lower-of-cost-or-market
-LSS
-manufacturing overhead costs
-margin of safety
-master budget
-matching principle
-materiality
-merchandise inventory
-modified accrual accounting
+activity-based costing
 monetary measurement
-multi-step income statement
-net present value
-NFP
-no-par stock
-noncash expense
-noncurrent asset
-note payable
-NPV
-NSF
-number of days' sales in receivables ratio
-ordinary annuity
-overapplied overhead
-overhead rate
-par value
-PCAOB
-percentage of accounts receivable method
-percentage of completion method
-period cost
-periodic inventory system
-perpetual inventory system
+accounting entity concept
+IAS 20 Accounting for Government Grants and Disclosure of Government Assistance
+appropriated retained earnings
+IAS 24 Related Party Disclosures
+ASC 360 Property, Plant, and Equipment
+allowance method
+average cost method
+attainable standard
+goal congruence
+hurdle rate
+imprest account
 post-closing trial balance
-predetermined overhead allocation rate
-preemptive right
-premium on bonds payable
-process costing
-product-level cost
-production cost report
-profit center
-promissory note
-purchase returns and allowances
-radio-frequency identification
-redeemable bond
-relevant range
-remittance advice
+accounting cycle
+accounts receivable control
+IAS 2 Inventories
 residual income
-responsibility centers
-restatement
+IAS 39 Financial Instruments: Recognition and Measurement
+expense recognition principle
+dividend smoothing
+sales allowance
+ASC 323 Investments—Equity Method and Joint Ventures
+IAS 29 Financial Reporting in Hyperinflationary Economies
+specific identification method
+AVC
+double-declining-balance depreciation method
+CRISC
+transfer pricing
+IAS 23 Borrowing Costs
+product-level cost
+Financial Accounting Standards Board
+manufacturing overhead costs
+radio-frequency identification
+relevant range
+cost center
+IFRS 11 Joint Arrangements
+margin of safety
+full-cost accounting
+stepped cost
+RFID
+serial bonds
+statement of stockholders' equity
+enterprise resource planning
+IAS 37 Provisions, Contingent Liabilities and Contingent Assets
+promissory note
+accounts receivable subsidiary ledger
+EDGAR
 retail inventory method
 retained earnings
-revenue recognition principle
-reverse stock split
-RFID
-RI
-rolling budget
-sales allowance
-sales mix
-sales returns and allowances
-Sarbanes-Oxley Act
-SASB
-separate entity concept
-serial bonds
-source document
-SOX
-special purpose entities
-specific identification method
-split-off point
+debenture
+IAS 21 The Effects of Changes in Foreign Exchange Rates
+high-low method
+ordinary annuity
+periodic inventory system
+noncash expense
+CFE
+401(k)
 spoilage
-stated value
-statement of stockholders' equity
-static budget
-stepped cost
-stockholders' equity
-subsidiary ledger
-sunk cost
-SUTA
-tax basis accounting
-term bonds
-theory of constraints
-time period assumption
-time tickets
-TOC
-transfer pricing
-treasury stock
-trial balance
-triple bottom line
-turn-around document
+IFRS 8 Operating Segments
+IFRS 14 Regulatory Deferral Accounts
+overhead rate
+remittance advice
+process costing
+earned capital
+ASC 326 Financial Instruments—Credit Losses
+fraud triangle
+batch-level cost
+ASC 820 Fair Value Measurement
 unadjusted trial balance
-underapplied overhead
-unit-level cost
+IAS 38 Intangible Assets
+modified accrual accounting
+ARR
+Sarbanes-Oxley Act
+job order cost system
+effective-interest method
+IAS 19 Employee Benefits
+ex dividend
+capital asset budget
+accounting rate of return
+NSF
+cost of goods sold
+number of days' sales in receivables ratio
+AIS
+EPS
+IFRS 10 Consolidated Financial Statements
 units-of-production depreciation method
-variable overhead efficiency variance
-variable overhead rate variance
-WACC
+SUTA
+IFRS 5 Non-current Assets Held for Sale and Discontinued Operations
+turn-around document
+direct write-off method
+adjusted trial balance
+Committee of Sponsoring Organizations
+contingent liability
+completed contract method
+split-off point
+ASC 220 Income Statement—Reporting Comprehensive Income
+indirect material
+sunk cost
+matching principle
+ASC 958 Not-for-Profit Entities
+IAS 8 Accounting Policies, Changes in Accounting Estimates and Errors
+chart of accounts
+ASC 718 Compensation—Stock Compensation
+IAS 32 Financial Instruments: Presentation
+CFA
+multi-step income statement
+IFRS 12 Disclosure of Interests in Other Entities
+special purpose entities
+tax basis accounting
+time period assumption
+master budget
+differential analysis
+composite unit
+AFC
+term bonds
+expanded accounting equation
+accounts payable subsidiary ledger
+static budget
+IFRS 15 Revenue from Contracts with Customers
+cash basis accounting
+SOX
+callable bond
+CIA
+BSC
+internal control system
+materiality
+IFRS 19 Subsidiaries without Public Accountability: Disclosures
+fully amortized notes
+IAS 8 Basis of Preparation of Financial Statements
+contribution margin income statement
+IAS 26 Accounting and Reporting by Retirement Benefit Plans
+reverse stock split
+LCM
+ASC 715 Compensation—Retirement Benefits
+sales returns and allowances
+differential cost
+FICA
+contra account
+free cash flow to assets ratio
+NPV
+balance sheet aging of receivables method
+bond indenture
+ASC 606 Revenue from Contracts with Customers
+rolling budget
+double-entry accounting system
+responsibility centers
+going concern assumption
+percentage of accounts receivable method
+gross profit method
+IFRS 16 Leases
+accumulated depletion
+factory-level cost
+RI
+ASC 205 Presentation of Financial Statements
+FIFO
+IAS 7 Statement of Cash Flows
+installment sale
+TOC
+cash receipts journal
+IRR
+IAS 41 Agriculture
+bank reconciliation
+conversion costs
+gross margin
+CMA
+IFRS 1 First-time Adoption of International Financial Reporting Standards
+IFRS 13 Fair Value Measurement
+IAS 36 Impairment of Assets
+compound entry
+GAAP
+coupon rate
+IAS 33 Earnings per Share
+403(b)
 weighted-average cost method
+ASC 860 Transfers and Servicing
+revenue recognition principle
+PCAOB
+purchase returns and allowances
+ASC 320 Investments—Debt Securities
+IAS 34 Interim Financial Reporting
+stockholders' equity
+income summary
+EVA
+redeemable bond
+annuities due
+preemptive right
+production cost report
+flexible budget
+noncurrent asset
+indirect labor
+stated value
+allowance for doubtful accounts
+theory of constraints
+WACC
+discount on bonds payable
+accounting information system
+ERP
+historical cost principle
+COGS
+unit-level cost
+direct labor rate variance
+IFRS 7 Financial Instruments: Disclosures
+IFRS 9 Financial Instruments
+overapplied overhead
+lower-of-cost-or-market
+CVP
+ASC 810 Consolidation
+classified balance sheet
+contribution margin ratio
 work in process inventory
+intangible assets
+period cost
+internal rate of return
+treasury stock
+Lean Six Sigma
+ASC 842 Leases
+ideal standard
+ASC 805 Business Combinations
+profit center
+journalizing
+economic value added
+deferred revenue
+absorption costing
+LSS
+IAS 1 Presentation of Financial Statements
+IFRS 6 Exploration for and Evaluation of Mineral Resources
+predetermined overhead allocation rate
+cash disbursements journal
+IAS 12 Income Taxes
+direct materials quantity variance
+FUTA
+accrual accounting
+accounts receivable turnover ratio
+perpetual inventory system
+variable overhead efficiency variance
+GASB
+IFRS 3 Business Combinations
+merchandise inventory
+time tickets
+International Financial Reporting Standards
+IFRS 2 Share-based Payment
+CISA
+deficit in retained earnings
+ASC 350 Intangibles—Goodwill and Other
+convertible bond
+ASC 230 Statement of Cash Flows
+investment center
+subsidiary ledger
+direct labor time variance
+underapplied overhead
+trial balance
+premium on bonds payable
+balanced scorecard
+amortization
+ASC 210 Balance Sheet
+capital expenditure budget
+separate entity concept
+ASC 330 Inventory
+IFRS 18 Presentation and Disclosure in Financial Statements
+ASC 815 Derivatives and Hedging
+ASC 260 Earnings Per Share
+cost pool
+triple bottom line
+CPA
+audit trail
+accrual basis accounting
+avoidable cost
+LIFO
+IAS 27 Separate Financial Statements
+FASB
+IAS 28 Investments in Associates and Joint Ventures
+book of original entry
+note payable
+fixed factory overhead variance
+fiduciary duty
+current portion of a note payable
+joint costs
+par value
+IFRS 17 Insurance Contracts
+cost driver
+deposit in transit
+no-par stock
+depletion
+percentage of completion method
+cost-volume-profit analysis
+COSO
+variable overhead rate variance
+sales mix
+NFP
+ASC 740 Income Taxes
+contributed capital
+IAS 10 Events after the Reporting Period
+accounting equation
+full disclosure principle
+source document
+restatement
+IAS 40 Investment Property
+direct materials price variance
+IAS 16 Property, Plant and Equipment
+equivalent units
+JIT
+SASB
+discretionary cost center
+net present value

@@ -1,267 +1,267 @@
-2-SAT
-3-SAT
-AC0
-AC1
-Ackermann
-Ackermann function
-Alan Turing
-algorithmic complexity
-Alonzo Church
-alphabet
-alternating Turing machine
-ambiguous grammar
-amortized analysis
-approximation algorithm
-approximation ratio
-Arden's rule
-Arithmetic coding
-automata
-automaton
-Backus-Naur form
-BDD
-Berry's paradox
-Boolean circuit
-Boolean formula
-Boolean function
-Boolean satisfiability
-bounded-error probabilistic polynomial time
-BPP
-BQP
-Buchi automaton
-business process Execution Language
-Büchi automaton
-CFG
-CFL
-Chaitin
-Chaitin's constant
-Channel capacity
-Chomsky hierarchy
-Chomsky normal form
-Church encoding
-Church's thesis
-Church-Rosser theorem
-Church-Turing thesis
-circuit complexity
-clique problem
-CNF
-co-NP
-co-NP-complete
-co-RP
-Coding theorem
-complexity class
-computability theory
-computable function
-context-free grammar
-context-free language
-Context-sensitive grammar
-context-sensitive language
-Cook
-Cook reduction
-Cook's theorem
-Cook-Levin
-Cook-Levin theorem
-counting problem
-cryptographic primitives
-cryptographic protocols
-CSG
-CYK
-DCFL
-decidability
-decidable language
-decision problem
-deterministic finite automaton
-deterministic pushdown automaton
-DFA
-DFTA
-diagonal argument
-diagonalization
-Diophantine equation
-DPDA
-Dyck
-Dyck language
-Emil Post
-Error-correcting code
-EXP
-EXPSPACE
-EXPTIME
-Fagin's theorem
-Floyd-Warshall
-formal grammar
-formal language
-generating random combinatorial structures
-GNF
-Gödel numbering
-Gödel's incompleteness
-Gödel's incompleteness theorem
-Gödel's theorem
-halting problem
-Hamiltonian cycle
-Hamiltonian path
-Hamming code
-Hamming distance
-Hash function theory
-hierarchy theorem
-Hilbert
-Hilbert's problems
-Hilbert's tenth problem
-Huffman coding
-Immerman
-Immerman-Szelepcsényi theorem
-independent set
-Information theory
-IP
-Karp reduction
-Karp's 21 NP-complete problems
-Kleene
-Kleene closure
-Kleene star
-Kleene's theorem
-Kolmogorov
-Kolmogorov complexity
-Kolmogorov-Chaitin complexity
-Kraft inequality
-Kraft-McMillan inequality
-Kruskal's algorithm
-L
-lambda calculus
-Lamport
-Language class
-LBA
-LDPC
-leftmost derivation
-Lempel-Ziv
-Lempel-Ziv-Welch
-Levin
-Levin reduction
-Levin's theorem
-linear bounded automaton
-linear time
-LOGSPACE
-Lovász
-lower bound
-Markov's inequality
-Michael Sipser
-Myhill
-Myhill-Nerode theorem
-NC
-neural Turing machine
-NEXPTIME
-NFA
-NFTA
-NL
-Noam Chomsky
-non-deterministic polynomial time
-Nondeterministic finite automaton
-nondeterministic polynomial
-nondeterministic Turing machine
-NP
-NP-complete
-NP-complete language
-NP-completeness
-NP-hard
-NP-hardness
-NP-intermediate
-NP-problem
-NP/poly
-NTIME
-Nyquist theorem
-OBDD
-oracle
-Oracle machine
-oracle Turing machine
-P-complete
-P/poly
-Parikh's theorem
-parity game
-PDA
-Polynomial hierarchy
-polynomial space
-polynomial time
-polynomial-time reduction
-Post
-Post correspondence problem
-Post's correspondence problem
-Post-Turing
-PP
-PRAM
-probabilistic Turing machine
-PSPACE
-PTAS
-Pumping lemma
-pumping lemma for context-free languages
 pumping lemma for regular languages
-Pushdown
-Pushdown automaton
-QBF
-quadtree complexity theorem
-quantum complexity
-Quantum Turing machine
-R
-Rabin Scott
-Rabin-Scott
-Random oracle
-randomized algorithm
-RE
-recursive functions
-recursive language
-recursively enumerable language
-reduction
-Reed-Solomon code
-regular expression
-regular grammar
-regular language
-Rice theorem
-Rice's theorem
-Richard Karp
-right-linear grammar
-RP
-Russell's paradox
-SAT
-Savitch theorem
-Savitch's theorem
-Schaefer's dichotomy theorem
-Shannon
-Shannon entropy theory
-Shannon-Hartley theorem
-Shor
-Sipser
-Sipser-Lautemann
-Source coding theorem
-space complexity
-State machine
-Stephen Cook
-Stephen Kleene
-stochastic approximation
-string matching
-strongly NP-hard
-suffix automaton
-Tarski
-Tarski's undefinability theorem
 TC0
-time complexity
-TQBF
-Trakhtenbrot
-Turbo code
-Turing
 Turing complete
-Turing completeness
-Turing degree
-Turing jump
-Turing machine
-Turing reduction
-Turing test
-Turing transducer
-Turing's thesis
-Turing-complete
-undecidable language
+Cook reduction
+Kleene's theorem
+Random oracle
+NC
+DFA
+BPP
+decidable language
+Kleene closure
+algorithmic complexity
+neural Turing machine
+linear time
+3-SAT
+Lempel-Ziv-Welch
+Cook-Levin
+Hilbert's problems
+Markov's inequality
+NP-hardness
+oracle Turing machine
+Floyd-Warshall
+NP-problem
+generating random combinatorial structures
 undecidable problem
-universal Turing machine
-Vertex cover
-Vertex cover problem
-von Neumann
-Wang tiles
+NP-intermediate
+Lamport
+Levin reduction
+BQP
+AC1
+SAT
+Church's thesis
 Zeno
-Zeno's paradox
-Zero-knowledge
+Kolmogorov-Chaitin complexity
+Rice theorem
+Büchi automaton
+Huffman coding
+Dyck language
+DFTA
+Michael Sipser
+undecidable language
+Turing transducer
+Chomsky hierarchy
+diagonalization
+oracle
+co-NP-complete
+LDPC
+PRAM
+co-RP
+Kraft inequality
+Sipser
+Gödel's incompleteness
+Diophantine equation
+alphabet
+QBF
+von Neumann
+Church-Turing thesis
+halting problem
+P/poly
+Levin's theorem
+bounded-error probabilistic polynomial time
+stochastic approximation
+Kraft-McMillan inequality
+NP-completeness
+NL
+non-deterministic polynomial time
+EXPTIME
+PP
+Alonzo Church
+Information theory
+Coding theorem
+Shannon-Hartley theorem
+space complexity
+Church encoding
+Savitch's theorem
+BDD
+diagonal argument
+alternating Turing machine
+Nyquist theorem
+Hilbert's tenth problem
+Hash function theory
+Pushdown automaton
+Shannon entropy theory
+co-NP
+Pushdown
+Sipser-Lautemann
+Berry's paradox
+circuit complexity
 Zero-knowledge proof
+Post
+pumping lemma for context-free languages
+Kolmogorov
+approximation ratio
+Gödel numbering
+Chomsky normal form
+Kruskal's algorithm
+Myhill-Nerode theorem
+Lovász
+Turing machine
+AC0
+NEXPTIME
+Shor
+Fagin's theorem
+decision problem
+formal language
+NP-complete
+regular language
+recursive language
+quadtree complexity theorem
+polynomial-time reduction
+amortized analysis
+TQBF
+RP
+lower bound
+Cook's theorem
+EXP
+IP
+NP
+Emil Post
+Buchi automaton
+Channel capacity
+Hamiltonian path
+automaton
+Gödel's incompleteness theorem
+regular grammar
+Parikh's theorem
+computability theory
+nondeterministic Turing machine
+Error-correcting code
+deterministic pushdown automaton
+Turing degree
+Pumping lemma
+Stephen Cook
+Hamming code
+Myhill
+EXPSPACE
+CNF
+Karp reduction
+Turing jump
+Shannon
+independent set
+2-SAT
+DPDA
+polynomial time
+nondeterministic polynomial
+Rabin-Scott
+Source coding theorem
+polynomial space
+Chaitin
+Vertex cover
+Turing's thesis
+P-complete
+NFTA
+Cook
+Arden's rule
+linear bounded automaton
+Tarski
+Oracle machine
+DCFL
 ZPP
+Noam Chomsky
+Kleene
+right-linear grammar
+Turing
+Stephen Kleene
+formal grammar
+Boolean satisfiability
+time complexity
+computable function
+hierarchy theorem
+Tarski's undefinability theorem
+CFG
+ambiguous grammar
+probabilistic Turing machine
+Trakhtenbrot
+Russell's paradox
+NTIME
+Levin
+Quantum Turing machine
+recursively enumerable language
+Zeno's paradox
+NP/poly
+recursive functions
+Richard Karp
+Turing test
+Immerman-Szelepcsényi theorem
+Hamming distance
+deterministic finite automaton
+Post's correspondence problem
+automata
+leftmost derivation
+CFL
+randomized algorithm
+Boolean circuit
+reduction
+NFA
+Hilbert
+cryptographic primitives
+clique problem
+Church-Rosser theorem
+Chaitin's constant
+string matching
+complexity class
+Hamiltonian cycle
+cryptographic protocols
+Post correspondence problem
+Dyck
+quantum complexity
+Turing completeness
+context-sensitive language
+suffix automaton
+Immerman
+L
+Turing reduction
+Language class
+Karp's 21 NP-complete problems
+RE
+Rice's theorem
+Kleene star
+context-free language
+Reed-Solomon code
+Turbo code
+Boolean function
+PSPACE
+LBA
+Rabin Scott
+PTAS
+Boolean formula
+Ackermann
+Backus-Naur form
+counting problem
+strongly NP-hard
+Arithmetic coding
+Vertex cover problem
+approximation algorithm
+GNF
+parity game
+LOGSPACE
+decidability
+business process Execution Language
+Lempel-Ziv
+State machine
+regular expression
+NP-complete language
+Post-Turing
+Turing-complete
+Kolmogorov complexity
+Nondeterministic finite automaton
+PDA
+Zero-knowledge
+Wang tiles
+Context-sensitive grammar
+Ackermann function
+Polynomial hierarchy
+Schaefer's dichotomy theorem
+NP-hard
+CSG
+OBDD
+context-free grammar
+CYK
+Savitch theorem
+universal Turing machine
+Gödel's theorem
+Cook-Levin theorem
+Alan Turing
+lambda calculus
+R

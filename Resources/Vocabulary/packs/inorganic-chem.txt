@@ -1,161 +1,161 @@
-18-electron rule
-acetonides
-acetylides
-aci-nitro compounds
-actinide series
-actinides
-actinoid series
-acyl carbenes
-aglycon
-aldazines
-aldimines
-alkoxyamines
-alkyl radicals
-alkylenes
-alkylidene groups
-alkylideneaminoxyl radicals
-alkylideneaminyl radicals
-alkylidenes
-alkylidynes
-Allylic groups
-Allylic intermediates
+osotriazoles
+leukotrienes
+sigma bonds (σ bonds)
+Ostwald process
+glycoses
+nitrimines
+Millikan
+superoxide
+Main-group elements
+glycosamines
+nitrilium betaines
+lariat ethers
+nitrosimines
+Meisenheimer adduct
 alpha particles (α particles)
-amide oximes
-amine imides
+hetarenes
+monoterpenoids
+hetaryl groups
+LCAO
+Lewis symbol
+Meyer
 amine oxides
-amine ylides
-aminoxides
-aminoxyl radicals
-ammonium ylides
-anhydro bases
-annulenylidenes
-anthocyanidins
-anthocyanins
-arene epoxides
+Grignard reagent
+ortho amides
+alkoxyamines
+glycosylamines
+alkylidene groups
+peptidoglycan
 arsanylidenes
-arsine oxides
+π* antibonding molecular orbital
+high-spin complexes
 Bartlett
-bicarbonate anion
-bidentate ligands
-binary acid
-Born-Haber cycle
+aminoxides
+anthocyanidins
+heteroalkenes
+spin-orbit coupling
 CFSE
+sp3d hybrid orbitals
+lipoprotein
+héroult
+number of pseudo-generations
+bicarbonate anion
+LS coupling
+nitrile sulfides
+acyl carbenes
+annulenylidenes
+lignin
+Rutherford
+Thomson
+sp3d2 hybrid orbitals
+coordination isomers
+binary acid
+f-block elements
+alkylidenes
+low-spin complexes
+strong-field ligands
+acetonides
+nitrosamines
+Racah parameter
+anthocyanins
+oxonium ylides
+Allylic intermediates
+alkyl radicals
+d-block elements
+hemoglobin
+alkylidynes
+ligand field stabilization energy
+leuco bases
+lanthanides
+actinoid series
+molecular orbital (Ψ2)
+actinides
+lanthanide series
+nitrile oxides
+glycosyl group
+amine ylides
+Born-Haber cycle
+Herz compounds
+t2g orbitals
+aci-nitro compounds
+aldazines
+ammonium ylides
+18-electron rule
+arsine oxides
+polydentate ligand
+Dalton's atomic theory
+nitrile ylides
+diamagnetic
+metallocenes
 chalcogens
+pi bond (π bond)
+metal-carbyne complexes
+germylidenes
 chelate
-chelate effect
+nitrilium ions
+Russell-Saunders coupling
+peroxides
+ketazines
+arene epoxides
+alkylenes
+amide oximes
+alkylideneaminoxyl radicals
+spectrochemical series
+weak-field ligands
+LFSE
+heteroaryl groups
 chelating ligands
 chlor-alkali process
-coordination isomers
-d-block elements
-Dalton
-Dalton's atomic theory
-diamagnetic
-electron-pair geometry
-f-block elements
-germylidenes
-glycosamines
-glycoses
-glycosyl group
-glycosylamines
-Grignard reagent
-Haber process
-hall-Héroult cell
-hapticity
-hemoglobin
-Herz compounds
-hetarenes
-hetaryl groups
-heteroalkenes
-heteroarenes
-heteroaryl groups
-high-spin complexes
-homonuclear diatomic molecules
-héroult
-inert gases
-ionization isomers
-Jahn-Teller effect
-ketazines
-ketenimines
-ketimines
-keto carbenes
-lanthanide series
-lanthanides
-lanthanoid series
-lariat ethers
 lattice energy (ΔHlattice)
-LCAO
-leuco bases
-leukotrienes
-Lewis symbol
-LFSE
-ligand field stabilization energy
-lignin
-linkage isomers
-lipopolysaccharides
-lipoprotein
-low-spin complexes
-LS coupling
-Main-group elements
-mancude-ring systems
-Meisenheimer adduct
-metal-carbene complexes
-metal-carbyne complexes
-metallocenes
-Meyer
-Millikan
-molecular orbital (Ψ2)
-monoterpenoids
-mucopolysaccharides
-neoflavones
-nitramines
-nitrenes
-nitrile imides
-nitrile oxides
-nitrile sulfides
-nitrile ylides
-nitrilium betaines
-nitrilium ions
-nitrimines
-nitrosamides
-nitrosamines
-nitrosimines
-nucleoproteins
-number of pseudo-generations
-optical isomers
+ketenimines
 Orgel diagram
-ortho amides
-ortho esters
-osotriazoles
-Ostwald process
-oxime O-ethers
-Oxo carboxylic acids
-oxonium ylides
-paramagnetism
-peptidoglycan
-Periodic law
-peroxides
-peroxy acids
-pi bond (π bond)
+inert gases
 pi bonding molecular orbital
-polydentate ligand
-polymorphs
-Racah parameter
-Russell-Saunders coupling
-Rutherford
-s-p mixing
-sigma bonds (σ bonds)
-sp2 hybrid orbitals
-sp3 hybrid orbitals
-sp3d hybrid orbitals
-sp3d2 hybrid orbitals
-spectrochemical series
-spin-orbit coupling
-strong-field ligands
-superoxide
-t2g orbitals
-Tanabe-Sugano diagram
-Thomson
-weak-field ligands
-Δoct
-π* antibonding molecular orbital
+mancude-ring systems
+alkylideneaminyl radicals
+nitramines
+ionization isomers
+Allylic groups
+peroxy acids
+nitrile imides
 σs molecular orbital
+Oxo carboxylic acids
+bidentate ligands
+Haber process
+s-p mixing
+oxime O-ethers
+sp2 hybrid orbitals
+hall-Héroult cell
+Δoct
+aminoxyl radicals
+heteroarenes
+nucleoproteins
+lipopolysaccharides
+mucopolysaccharides
+sp3 hybrid orbitals
+amine imides
+nitrosamides
+chelate effect
+metal-carbene complexes
+keto carbenes
+electron-pair geometry
+actinide series
+nitrenes
+polymorphs
+Jahn-Teller effect
+anhydro bases
+paramagnetism
+homonuclear diatomic molecules
+Tanabe-Sugano diagram
+acetylides
+lanthanoid series
+ketimines
+ortho esters
+optical isomers
+Dalton
+neoflavones
+aldimines
+aglycon
+Periodic law
+hapticity
+linkage isomers
