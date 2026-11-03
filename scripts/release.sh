@@ -13,11 +13,13 @@ export NOSY_CODESIGN_IDENTITY="${NOSY_CODESIGN_IDENTITY:-Developer ID Applicatio
 }
 NOTARY_PROFILE="${NOSY_NOTARY_PROFILE:-nosy-notary}"
 # Keep release builds separate from local builds and entirely in this checkout.
-export BUILD_DIR="$ROOT/build/release"
+# Build and package outside the checkout: iCloud Drive (Desktop/Documents sync)
+# adds FinderInfo/file-provider attributes to bundles, which breaks code signatures.
+export BUILD_DIR="$HOME/Library/Caches/Nosy Release"
 APP="$BUILD_DIR/Nosy.app"
 DIST="$ROOT/dist"
 mkdir -p "$DIST"
-STAGING=$(mktemp -d "$DIST/.release.XXXXXX")
+STAGING=$(mktemp -d "${TMPDIR:-/tmp}/nosy-release.XXXXXX")
 MOUNTED=false
 cleanup() {
     local status=$?
@@ -27,7 +29,11 @@ cleanup() {
             exit 1
         fi
     fi
-    rm -rf "$STAGING"
+    if [[ "$status" -ne 0 ]]; then
+        printf 'Release failed; staging retained at %s\n' "$STAGING" >&2
+    else
+        rm -rf "$STAGING"
+    fi
     exit "$status"
 }
 trap cleanup EXIT
@@ -115,7 +121,10 @@ MOUNTED=true
 # A read-only HFS+ mount can carry system-added attributes that strict codesign
 # rejects; verify the copy a user gets by dragging Nosy to Applications instead.
 ditto "$STAGING/mount/Nosy.app" "$STAGING/installed/Nosy.app"
-codesign --verify --strict --deep "$STAGING/installed/Nosy.app"
+codesign --verify --strict --deep "$STAGING/installed/Nosy.app" || {
+    xattr -lrs "$STAGING/mount/Nosy.app" | grep -v provenance >&2 || true
+    exit 1
+}
 xcrun stapler validate "$STAGING/installed/Nosy.app"
 spctl -a -vv "$STAGING/installed/Nosy.app" 2>&1 | tee "$STAGING/app-assessment.txt"
 grep -q 'source=Notarized Developer ID' "$STAGING/app-assessment.txt"
