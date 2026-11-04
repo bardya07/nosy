@@ -421,19 +421,22 @@ struct TitlebarIconButtonStyle: ButtonStyle {
 
         var body: some View {
             configuration.label
-                .foregroundStyle(hovering && enabled ? Theme.accentText : Theme.muted)
-                .frame(width: 24, height: 24)
-                .background(configuration.isPressed && enabled ? Theme.line :
-                    (hovering && enabled ? Theme.surface : (ring ? Theme.surface.opacity(0.35) : .clear)), in: Circle())
-                .overlay(Circle().strokeBorder(ring ? Theme.line : .clear, lineWidth: 1).allowsHitTesting(false))
+                .foregroundStyle(ring ? Theme.accent : (hovering && enabled ? Theme.accentText : Theme.muted))
+                .frame(width: ring ? 28 : 24, height: ring ? 28 : 24)
+                .background(ring ? Theme.accent.opacity(configuration.isPressed && enabled ? 0.32 : (hovering && enabled ? 0.28 : 0.2)) :
+                    (configuration.isPressed && enabled ? Theme.line : (hovering && enabled ? Theme.surface : .clear)), in: Circle())
+                .overlay(Circle().strokeBorder(ring ? Theme.accent.opacity(0.65) : .clear, lineWidth: ring ? 1.5 : 1).allowsHitTesting(false))
                 .contentShape(Circle())
                 .overlay(Circle().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2)
                     .padding(-2).allowsHitTesting(false))
+                .opacity(ring && !enabled ? 0.45 : 1)
                 .brightness(hovering && enabled ? 0.025 : 0)
                 .shadow(color: .black.opacity(!reduceMotion && hovering && enabled ? 0.14 : 0),
                         radius: hovering ? 3 : 1, y: hovering ? 2 : 0)
+                .shadow(color: Theme.accent.opacity(ring && hovering && enabled ? 0.35 : 0), radius: 6)
                 .offset(y: !reduceMotion && hovering && enabled && !configuration.isPressed ? -2 : 0)
                 .scaleEffect(!reduceMotion && enabled ? (configuration.isPressed ? 0.985 : (hovering ? 1.06 : 1)) : 1)
+                .frame(width: 24, height: 24)
                 .onHover { hovering = $0 && enabled }
                 .onChange(of: enabled) { _, isEnabled in
                     if !isEnabled { hovering = false }

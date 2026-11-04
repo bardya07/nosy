@@ -237,7 +237,7 @@ struct WorkspaceTitlebar: View {
                         else if let onHome { onHome() }
                         else { navigation.requestHome() }
                     } label: {
-                        Image(systemName: "house").font(.system(size: 13, weight: .medium))
+                        Image(systemName: "house.fill").font(.system(size: 13, weight: .semibold))
                             .frame(width: 14, height: 14)
                     }
                     .buttonStyle(TitlebarIconButtonStyle(ring: true))
