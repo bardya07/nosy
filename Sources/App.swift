@@ -1405,10 +1405,21 @@ private struct DropdownRegionKey: PreferenceKey {
 
 private struct ModePickerButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .contentShape(Capsule())
-            .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
-                                        pressed: configuration.isPressed, shape: .capsule))
+        ModePickerButtonBody(configuration: configuration)
+    }
+
+    private struct ModePickerButtonBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.isFocused) private var focused
+
+        var body: some View {
+            configuration.label
+                .contentShape(Capsule())
+                .overlay(Capsule().strokeBorder(focused ? Theme.accentText : .clear, lineWidth: 2)
+                    .padding(-2).allowsHitTesting(false))
+                .modifier(ButtonChrome(tier: .secondary, tint: Theme.accent,
+                                       pressed: configuration.isPressed, shape: .capsule))
+        }
     }
 }
 
