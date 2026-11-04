@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Darwin
 
 // Durable storage for Find key moments. New files use the transcript identity in their name and
 // contents. Older name-based files are readable but are never overwritten, moved or trashed.
@@ -74,12 +75,32 @@ struct KeyMomentsFile: Codable, Sendable, Equatable {
 
 enum KeyMomentStore {
     static let suffix = ".key-moments.json"
-    // One lock protects complete sidecar read/modify/write operations. It is separate from
-    // TranscriptCoordination and never acquires it; callers may already hold that lock.
+    // Lock ordering is transcript coordination, then sidecar coordination. The latter
+    // also uses a separate support file so a headless process cannot race the GUI.
     private static let sidecarLock = NSRecursiveLock()
-    static func withSidecarLock<T>(_ body: () throws -> T) rethrows -> T {
+    nonisolated(unsafe) private static var sidecarDepth = 0 // guarded by sidecarLock
+    static func withSidecarLock<T>(_ body: () throws -> T) throws -> T {
         sidecarLock.lock()
         defer { sidecarLock.unlock() }
+        if sidecarDepth > 0 { return try body() }
+        let paths = AppPaths()
+        try paths.createSupportDirectory(paths.support)
+        let file = paths.support.appendingPathComponent("key-moment-mutation.lock")
+        let fd = open(file.path, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard fd >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        defer { close(fd) }
+        var info = stat()
+        guard fstat(fd, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG,
+              info.st_uid == getuid(), info.st_nlink == 1,
+              paths.safeSupportItem(file, directory: false) else {
+            throw LectureError.message("Unsafe key moment coordination storage.")
+        }
+        while flock(fd, LOCK_EX) != 0 {
+            guard errno == EINTR else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        }
+        defer { _ = flock(fd, LOCK_UN) }
+        sidecarDepth = 1
+        defer { sidecarDepth = 0 }
         return try body()
     }
 
@@ -121,7 +142,7 @@ enum KeyMomentStore {
     }
     // Unbound legacy text and stale anchors are never trusted, even if rewriting fails.
     static func read(_ transcript: URL) -> KeyMomentsFile? {
-        return withSidecarLock {
+        return try? withSidecarLock {
             guard let stored = rawRead(transcript) else { return nil }
             var file = stored.file
             let current = try? String(contentsOf: transcript, encoding: .utf8)
@@ -276,7 +297,7 @@ enum KeyMomentStore {
     // The stored file. When this transcript has none yet, a recording sidecar from before this store is
     // read once and copied across. Nothing here needs the recording to still exist.
     static func file(for transcript: URL, paths: AppPaths) -> KeyMomentsFile? {
-        return withSidecarLock {
+        return try? withSidecarLock {
             if let stored = read(transcript) { return stored }
             guard let record = Core.record(forTranscript: transcript, paths: paths),
                   let legacy = legacyFile(record: record, paths: paths) else { return nil }
