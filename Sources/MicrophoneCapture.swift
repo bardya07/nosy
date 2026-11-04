@@ -188,8 +188,10 @@ private final class InputCallback: @unchecked Sendable {
         if buffer == nil { active = false }
         lock.unlock()
         guard let buffer else { changed(); return }
-        let hostTime = time.mFlags.contains(.hostTimeValid) ? time.mHostTime : mach_absolute_time()
-        receive(buffer, AVAudioTime(hostTime: hostTime))
+        let audioTime = time.mFlags.contains(.hostTimeValid)
+            ? AVAudioTime(hostTime: time.mHostTime)
+            : AVAudioTime(sampleTime: 0, atRate: buffer.format.sampleRate)
+        receive(buffer, audioTime)
         #else
         lock.unlock()
         #endif
