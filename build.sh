@@ -96,23 +96,68 @@ if [[ "${1:-}" == install ]]; then
     # A later completed recording can be newer than an earlier active job.
     # Check every sidecar, including unmigrated legacy and overridden support paths.
     python3 - <<'PYTHON'
-import json, os, pathlib, sys
+import datetime, json, math, os, pathlib, re, sys, uuid
 home = pathlib.Path.home() / 'Library/Application Support'
 roots = {home / 'Nosy', home / 'Lecture Transcriber'}
 if os.environ.get('NOSY_SUPPORT_DIR'):
     roots.add(pathlib.Path(os.environ['NOSY_SUPPORT_DIR']))
+def is_record_name(name):
+    if not name.endswith('.json') or name.endswith('.segments.json'):
+        return False
+    stem = name[:-5]
+    # Core.recover recognizes only this exact helper scratch naming scheme.
+    if stem.startswith('.whisper-') and len(stem) > 46 and stem[-37] == '-':
+        try:
+            uuid.UUID(stem[-36:])
+            return False
+        except ValueError:
+            pass
+    # SessionRecord.read rejects IDs containing '..' or a slash.
+    return '..' not in stem and '/' not in stem
+
 for root in roots:
     audio = root / 'audio'
     try:
         with os.scandir(audio) as entries:
-            sidecars = [pathlib.Path(entry.path) for entry in entries if entry.name.endswith('.json')]
+            sidecars = [pathlib.Path(entry.path) for entry in entries if is_record_name(entry.name)]
     except FileNotFoundError:
         continue
     except OSError:
         sys.exit(f'INSTALL BLOCKED: could not inspect recording sidecars in {audio}.')
     for sidecar in sidecars:
         try:
-            status = json.loads(sidecar.read_text())['status']
+            record = json.loads(sidecar.read_text())
+            if (not isinstance(record, dict) or record.get('id') != sidecar.stem
+                    or any(not isinstance(record.get(key), str) for key in ('lecture', 'session', 'startedAt'))):
+                raise ValueError('invalid recording')
+            for key in ('startedAt', 'endedAt', 'transcribedAt'):
+                value = record.get(key)
+                if value is not None:
+                    if not isinstance(value, str) or not re.fullmatch(
+                            r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})', value):
+                        raise ValueError('invalid date')
+                    parsed = datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
+                    if parsed.tzinfo is None:
+                        raise ValueError('date has no timezone')
+            for key in ('transcriptPath', 'transcriptID', 'error'):
+                if record.get(key) is not None and not isinstance(record[key], str):
+                    raise ValueError('invalid optional field')
+            if record.get('dismissed') is not None and not isinstance(record['dismissed'], bool):
+                raise ValueError('invalid dismissed flag')
+            terms = record.get('vocabularyTerms')
+            if terms is not None and (not isinstance(terms, list) or any(not isinstance(term, str) for term in terms)):
+                raise ValueError('invalid vocabulary')
+            markers = record.get('markers')
+            if markers is not None:
+                if not isinstance(markers, list):
+                    raise ValueError('invalid markers')
+                for marker in markers:
+                    if not isinstance(marker, dict) or not isinstance(marker.get('label'), str):
+                        raise ValueError('invalid marker')
+                    t = marker.get('t')
+                    if isinstance(t, bool) or not isinstance(t, (int, float)) or not math.isfinite(t) or not 0 <= t < 2**63:
+                        raise ValueError('invalid marker timestamp')
+            status = record['status']
             if status not in ('recording', 'transcribing', 'done', 'failed'):
                 raise ValueError('invalid status')
         except (OSError, ValueError, KeyError, TypeError):

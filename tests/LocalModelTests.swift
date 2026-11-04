@@ -113,6 +113,7 @@ enum LocalModelTests {
         #!/bin/sh
         echo called >> '\(calls.path)'
         printf '## Short notes\\n• ATP supplies energy [01:02].\\n'
+        echo NOSY_LLAMA_COMPLETE >&2
         """
         try fake.write(to: helper, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: helper.path)
@@ -127,7 +128,7 @@ enum LocalModelTests {
         try check(count == 4, "Changing sections maps again without persistent notes")
         try check(!FileManager.default.fileExists(atPath: root.appendingPathComponent("notes").path), "No persistent notes are written")
         // Force a hierarchical reduce with many bounded map outputs.
-        let verbose = "#!/bin/sh\necho called >> '\(calls.path)'\nprintf '" + String(repeating: "source note ", count: 160) + "'\n"
+        let verbose = "#!/bin/sh\necho called >> '\(calls.path)'\nprintf '" + String(repeating: "source note ", count: 160) + "'\necho NOSY_LLAMA_COMPLETE >&2\n"
         try verbose.write(to: helper, atomically: true, encoding: .utf8)
         try Data().write(to: calls)
         let longTranscript = "## Transcript\n" + String(repeating: "[01:02] ATP supplies energy.\n", count: 2300)
@@ -141,6 +142,7 @@ enum LocalModelTests {
         echo called >> '\(calls.path)'
         if [ "$(wc -c < "$4")" -gt 7000 ]; then exit 3; fi
         printf '## Short notes\\n• ATP supplies energy [01:02].\\n'
+        echo NOSY_LLAMA_COMPLETE >&2
         """
         try limited.write(to: helper, atomically: true, encoding: .utf8)
         try Data().write(to: calls)
@@ -152,7 +154,7 @@ enum LocalModelTests {
         let pause = LlamaPauseState(); pause.set(true)
         let started = root.appendingPathComponent("started")
         var pausedRequest = request; pausedRequest.timeout = 0.4; pausedRequest.pauseState = pause
-        try "#!/bin/sh\ntouch '\(started.path)'\n/bin/sleep 0.8\nprintf 'A complete supported answer.'\n".write(to: helper, atomically: true, encoding: .utf8)
+        try "#!/bin/sh\ntouch '\(started.path)'\n/bin/sleep 0.8\nprintf 'A complete supported answer.'\necho NOSY_LLAMA_COMPLETE >&2\n".write(to: helper, atomically: true, encoding: .utf8)
         let pausedTask = Task { try await SummaryRunner.run("test", request: pausedRequest, job: TranscriptionJob()) }
         try await eventually("paused helper launch") { FileManager.default.fileExists(atPath: started.path) }
         try await Task.sleep(for: .milliseconds(650)); pause.set(false)

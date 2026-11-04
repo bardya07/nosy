@@ -50,9 +50,9 @@ swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-l
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/AudioImportTests.swift -o "$BUILD_DIR/AudioImportTests"
 "$BUILD_DIR/AudioImportTests"
-swiftc -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
-    -module-cache-path "$BUILD_DIR/module-cache" Connector/MCPServer.swift Connector/TranscriptStore.swift \
-    Sources/ClaudeConnector.swift tests/ConnectorTests.swift -o "$BUILD_DIR/ConnectorTests"
+swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
+    -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift Connector/MCPServer.swift Connector/TranscriptStore.swift \
+    tests/ConnectorTests.swift -o "$BUILD_DIR/ConnectorTests"
 "$BUILD_DIR/ConnectorTests"
 swiftc -D NOSY_UI_TEST -swift-version 6 -strict-concurrency=complete -parse-as-library -target arm64-apple-macos14.0 \
     -module-cache-path "$BUILD_DIR/module-cache" "${AUDIO_SHIM[@]}" Sources/*.swift tests/MainControlsTests.swift -o "$BUILD_DIR/MainControlsTests"

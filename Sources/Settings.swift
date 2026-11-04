@@ -338,10 +338,15 @@ struct SettingsView: View {
                 Text("Connector access is separate from AI features. Connected apps can read the entire allowed library and may send its contents elsewhere. Changing libraries requires a new grant.")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
+                Text("After upgrading Nosy, quit and reopen every connected client, including Claude Desktop, Cursor, and command-line clients. Older connectors can keep reading transcripts after access is turned off or the library changes. Nosy cannot verify that every client has restarted.")
+                    .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Check for running connectors") { checkConnectorProcesses() }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                 Text("Library: \(abbreviated(model.paths.transcripts))")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .textSelection(.enabled)
-                Button(connectorAccessAllowed ? "Revoke connector access" : "Allow connector access to this library") {
+                Button(connectorAccessAllowed ? "Turn off access for updated connectors" : "Allow connector access to this library") {
                     changeConnectorAccess(!connectorAccessAllowed)
                 }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
@@ -455,13 +460,26 @@ struct SettingsView: View {
     private func changeConnectorAccess(_ allowed: Bool) {
         do {
             try ConnectorAccess.setAllowed(allowed, paths: model.paths)
-            connectionMessage = allowed ? "Connector access allowed for this library." : "Connector access revoked."
+            connectionMessage = allowed ? "Connector access allowed for this library. Restart all clients after upgrading Nosy." : "Access turned off for updated connectors. Quit and reopen every connected client to stop older connectors."
             connectionFailed = false
         } catch {
             connectionMessage = error.localizedDescription
             connectionFailed = true
         }
         refreshConnection()
+    }
+    private func checkConnectorProcesses() {
+        switch ConnectorProcessCheck.check() {
+        case .running:
+            connectionMessage = "A nosy-mcp process is still running. Quit all connected clients and check again."
+            connectionFailed = true
+        case .noneFound:
+            connectionMessage = "No nosy-mcp process found now. Reopen clients using the updated Nosy connector; older copies can still bypass access controls."
+            connectionFailed = false
+        case .unavailable:
+            connectionMessage = "Could not check running connectors. Quit all connected clients; access from older connectors cannot be verified."
+            connectionFailed = true
+        }
     }
     private func changeConnection(adding: Bool) {
         do {

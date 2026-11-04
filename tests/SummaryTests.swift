@@ -175,6 +175,22 @@ enum SummaryTests {
         check(SummaryRunner.parseReply(data(#"{"content":[{"type":"thinking","thinking":""},{"type":"text","text":"C"}]}"#), provider: .anthropic) == "C",
               "anthropic reply skips thinking blocks")
         check(SummaryRunner.parseReply(data(#"{"candidates":[{"content":{"parts":[{"text":"D"},{"text":"E"}]}}]}"#), provider: .gemini) == "DE", "gemini reply")
+        let complete: [(SummaryProvider, String)] = [
+            (.ollama, #"{"done":true,"done_reason":"stop"}"#),
+            (.openAI, #"{"choices":[{"finish_reason":"stop"}]}"#),
+            (.anthropic, #"{"stop_reason":"end_turn"}"#),
+            (.gemini, #"{"candidates":[{"finishReason":"STOP"}]}"#),
+        ]
+        for (provider, response) in complete {
+            try SummaryRunner.checkCompletion(data(response), provider: provider)
+            var rejected = false
+            do { try SummaryRunner.checkCompletion(data("{}"), provider: provider) } catch { rejected = true }
+            check(rejected, "missing completion reason rejected for \(provider.title)")
+        }
+        do {
+            try SummaryRunner.checkCompletion(data(#"{"choices":[{"finish_reason":"length"}]}"#), provider: .openAI)
+            check(false, "truncated output must fail")
+        } catch SummaryError.truncated { }
         check(SummaryRunner.parseError(data(#"{"error":{"message":"bad key"}}"#)) == "bad key", "error messages are read")
         check(SummaryDetector.parseOllamaModels(data(#"{"models":[{"name":"b"},{"name":"a"}]}"#)) == ["a", "b"], "ollama model list")
         check(SummaryDetector.parseOpenAIModels(data(#"{"data":[{"id":"m1"}]}"#)) == ["m1"], "lm studio model list")

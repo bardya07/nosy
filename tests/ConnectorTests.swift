@@ -2,7 +2,7 @@ import Foundation
 
 // Tests for the Claude connector: JSON-RPC handling of nosy-mcp, path safety on the transcripts folder,
 // and the Claude Desktop config merge. Compiled with Connector/MCPServer.swift, Connector/TranscriptStore.swift
-// and Sources/ClaudeConnector.swift. Uses only temporary folders.
+// and the app sources. Uses only temporary folders.
 @main
 enum ConnectorTests {
     static func main() throws {

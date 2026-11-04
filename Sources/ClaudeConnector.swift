@@ -30,6 +30,40 @@ enum ConnectorAccess {
     }
 }
 
+// A conservative restart check: any process named nosy-mcp blocks verification,
+// regardless of its client or executable path. No process is signaled. The check
+// is a snapshot, so clients must remain closed until restarted with an updated helper.
+enum ConnectorProcessCheck {
+    enum Result { case running, noneFound, unavailable }
+
+    static func check() -> Result {
+        var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
+        for _ in 0..<3 {
+            var size = 0
+            guard sysctl(&mib, 4, nil, &size, nil, 0) == 0 else { return .unavailable }
+            // Leave room for processes started between the two sysctl calls.
+            size += 32 * MemoryLayout<kinfo_proc>.stride
+            let capacity = (size + MemoryLayout<kinfo_proc>.stride - 1) / MemoryLayout<kinfo_proc>.stride
+            let buffer = UnsafeMutablePointer<kinfo_proc>.allocate(capacity: capacity)
+            defer { buffer.deallocate() }
+            guard sysctl(&mib, 4, buffer, &size, nil, 0) == 0 else {
+                if errno == ENOMEM { continue }
+                return .unavailable
+            }
+            guard size % MemoryLayout<kinfo_proc>.stride == 0 else { return .unavailable }
+            for index in 0..<(size / MemoryLayout<kinfo_proc>.stride) {
+                var name = buffer[index].kp_proc.p_comm
+                let matches = withUnsafeBytes(of: &name) { bytes in
+                    String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self) == "nosy-mcp"
+                }
+                if matches { return .running }
+            }
+            return .noneFound
+        }
+        return .unavailable
+    }
+}
+
 // Adds or removes Nosy's transcript server in Claude Desktop's config. Only the mcpServers.nosy
 // entry changes; every other key is kept. Nothing is written when the file is not valid JSON.
 enum ClaudeDesktopConfig {
