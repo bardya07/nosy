@@ -68,9 +68,10 @@ int main(int argc, char **argv) {
         if (llama_process(ctx, LLAMA_PROCESS_TYPE_DECODE, batch)) { status = 1; break; }
     }
     llama_sampler *sampler = llama_sampler_init_greedy();
+    bool finished = false;
     for (int i = 0; status == 0 && i < predict; ++i) {
         llama_token token = llama_sampler_sample(sampler, ctx, -1);
-        if (llama_vocab_is_eog(vocab, token)) break;
+        if (llama_vocab_is_eog(vocab, token)) { finished = true; break; }
         char piece[512];
         int n = llama_token_to_piece(vocab, token, piece, sizeof(piece), 0, false);
         if (n < 0) { status = 1; break; }
@@ -80,6 +81,10 @@ int main(int argc, char **argv) {
         llama_batch_ext_set_pos(batch, idx, &pos); ++pos;
         llama_batch_ext_set_output_logits(batch, idx, true);
         if (llama_process(ctx, LLAMA_PROCESS_TYPE_DECODE, batch)) status = 1;
+    }
+    if (status == 0 && !finished) {
+        fprintf(stderr, "Summary output reached the token limit before finishing.\n");
+        status = 4;
     }
     fflush(stdout);
     llama_sampler_free(sampler); llama_batch_ext_free(batch);
