@@ -108,10 +108,13 @@ struct LibrarySnapshot: Sendable {
             // A summary sits next to its transcript; it is read from the transcript, not listed.
             let names = Set(markdown.map(\.lastPathComponent))
             return markdown.filter { Core.isContained($0, in: root)
-                && (written.contains($0.standardizedFileURL.path) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
+                && (written.contains($0.standardizedFileURL.path) || TranscriptIdentity.indexed($0) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
                 // Only files Nosy wrote: never the owner's other notes that share the folder.
                 guard let text = try? String(contentsOf: url, encoding: .utf8),
-                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) else { return nil }
+                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) || TranscriptIdentity.indexed(url) else { return nil }
+                // Migrate existing transcripts while their recording still identifies them. No legacy
+                // recording is bound for retention, since a path alone cannot prove ownership.
+                if !TranscriptIdentity.indexed(url) { try? TranscriptIdentity.index(url) }
                 // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
                 return TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
                                       recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
@@ -483,11 +486,18 @@ final class TranscriptLibrary: ObservableObject {
         let list = ordered
         let index = list.firstIndex(where: { $0.url == url })
         do {
-            if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
-            try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-            // Key moments go with their transcript. A leftover hidden file is harmless and is replaced if the name comes back.
-            try? KeyMomentStore.trash(transcript: url)
-            paths.purgeLegacyNotes()
+            try TranscriptCoordination.withLock(paths: paths) {
+                let indexID = TranscriptIdentity.indexID(url)
+                let expectedID = indexID == TranscriptIdentity.attributeValue(url) ? indexID : nil
+                try Core.detachTranscripts(in: url, folder: false, paths: paths)
+                if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                // Sidecars go with their transcript; leftover names are reserved if Trash fails.
+                try? KeyMomentStore.trash(transcript: url, expectedID: expectedID)
+                try? TranscriptIdentity.trash(url)
+                paths.purgeLegacyNotes()
+                paths.purgeLegacyRouting()
+            }
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -506,6 +516,7 @@ final class TranscriptLibrary: ObservableObject {
     // A folder that the shared Trash path just moved: drop it from the tree and keep the reader on a nearby session.
     func folderRemoved(_ lecture: String, paths: AppPaths) {
         paths.purgeLegacyNotes()
+        paths.purgeLegacyRouting()
         guard loadedRoot == paths.transcripts else { return }
         let list = ordered
         let oldSelection = selection
@@ -548,6 +559,11 @@ final class TranscriptLibrary: ObservableObject {
         }
     }
     func rename(_ item: TranscriptItem, to name: String, paths: AppPaths) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try renameLocked(item, to: name, paths: paths)
+        }
+    }
+    private func renameLocked(_ item: TranscriptItem, to name: String, paths: AppPaths) throws {
         guard items.contains(item), Core.isContained(item.url, in: paths.transcripts) else {
             throw LectureError.message("This transcript is outside the selected library.")
         }
@@ -557,11 +573,14 @@ final class TranscriptLibrary: ObservableObject {
         let hasMoments = FileManager.default.fileExists(atPath: KeyMomentStore.url(for: item.url).path)
         try FileManager.default.moveItem(at: item.url, to: target)
         var movedMoments = false
+        var movedIdentity = false
         do {
             if let summary { try FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
             if hasMoments { try KeyMomentStore.move(from: item.url, to: target); movedMoments = true }
+            if TranscriptIdentity.indexed(item.url) { try TranscriptIdentity.move(from: item.url, to: target); movedIdentity = true }
             if var record { record.transcriptPath = target.path; try record.save(in: paths) }
         } catch {
+            if movedIdentity { try? TranscriptIdentity.move(from: target, to: item.url) }
             if movedMoments { try? KeyMomentStore.move(from: target, to: item.url) }
             if let summary, FileManager.default.fileExists(atPath: SummaryFiles.url(for: target).path) {
                 try? FileManager.default.moveItem(at: SummaryFiles.url(for: target), to: summary)
@@ -586,11 +605,17 @@ final class TranscriptLibrary: ObservableObject {
     }
     @discardableResult func save(_ text: String, to url: URL, paths: AppPaths, expectedText: String? = nil) -> Bool {
         do {
-            guard Core.isContained(url, in: paths.transcripts) else { throw LectureError.message("This transcript is outside the selected library.") }
-            guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
-                throw LectureError.message("Reload this transcript before editing it.")
+            try TranscriptCoordination.withLock(paths: paths) {
+                guard Core.isContained(url, in: paths.transcripts) else { throw LectureError.message("This transcript is outside the selected library.") }
+                guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
+                    throw LectureError.message("Reload this transcript before editing it.")
+                }
+                guard try String(contentsOf: url, encoding: .utf8) == expected else {
+                    throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+                }
+                try KeyMomentStore.invalidateLegacyForEdit(url, paths: paths)
+                try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             }
-            try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             didChange?(url, url)
             changeItems { rows in
                 if let index = rows.firstIndex(where: { $0.url == url }) {

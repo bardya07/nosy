@@ -162,6 +162,11 @@ enum LectureFolderTrash {
     }
 
     static func move(_ lecture: String, paths: AppPaths, mover: Mover = LectureFolderTrash.systemTrash) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try moveLocked(lecture, paths: paths, mover: mover)
+        }
+    }
+    private static func moveLocked(_ lecture: String, paths: AppPaths, mover: Mover) throws {
         try paths.validateLectureFolder(lecture)
         let folder = paths.lectureFolder(lecture)
         // Compare normalized paths only; the mover gets the folder exactly as the library spells it.
@@ -173,6 +178,7 @@ enum LectureFolderTrash {
               FileManager.default.fileExists(atPath: folder.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             throw LectureError.message("That folder is no longer in your transcript library.")
         }
+        try Core.detachTranscripts(in: folder, folder: true, paths: paths)
         try mover(folder)
     }
 

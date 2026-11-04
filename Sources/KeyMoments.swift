@@ -34,6 +34,7 @@ struct KeyMomentPlan: Sendable {
     let duration: TimeInterval?
     let manualTimes: [TimeInterval]
     let title: String
+    let transcriptHash: String
 }
 
 struct PlacedMarker: Equatable, Sendable {
@@ -79,6 +80,26 @@ enum KeyMoments {
             guard text.contains(where: { $0.isLetter || $0.isNumber }), !isSoundTag(text) else { return nil }
             return KeyMomentUnit(id: index, start: Double(max(0, item.from)) / 1000, text: text, approximate: false)
         }
+    }
+    // Segment text is only an alignment hint. Model input is sliced from the current document.
+    static func timedUnits(_ saved: SavedSegments, markdown: String) -> [KeyMomentUnit]? {
+        guard saved.transcriptHash == KeyMomentStore.hash(markdown) else { return nil }
+        let current = spokenParagraphs(markdown).joined(separator: " ")
+        let hints = saved.segments.map { Core.collapseWhitespace($0.text) }
+        guard hints.joined(separator: " ") == current else { return nil }
+        var position = current.startIndex
+        var units: [KeyMomentUnit] = []
+        for (index, item) in saved.segments.enumerated() {
+            let hint = hints[index]
+            let end = current.index(position, offsetBy: hint.count)
+            let text = String(current[position..<end])
+            if text.contains(where: { $0.isLetter || $0.isNumber }), !isSoundTag(text) {
+                units.append(KeyMomentUnit(id: index, start: Double(max(0, item.from)) / 1000, text: text, approximate: false))
+            }
+            position = end
+            if index + 1 < saved.segments.count { position = current.index(after: position) }
+        }
+        return units
     }
     // Whisper writes sounds such as [BLANK_AUDIO] or (music) as segments of their own. They are not speech.
     static func isSoundTag(_ text: String) -> Bool {
@@ -417,8 +438,9 @@ enum KeyMoments {
         guard Core.wordCount(markdown) > 0 else { throw KeyMomentError.noSpeech }
         let duration = lectureDuration(transcript: transcript, markdown: markdown, paths: paths)
         let units: [KeyMomentUnit]
-        if let saved = KeyMomentStore.segments(for: transcript, paths: paths) {
-            units = timedUnits(saved)
+        if let saved = KeyMomentStore.segments(for: transcript, paths: paths),
+           let timed = timedUnits(saved, markdown: markdown) {
+            units = timed
         } else {
             guard let duration else { throw KeyMomentError.noLength }
             units = approximateUnits(markdown: markdown, duration: duration)
@@ -429,7 +451,15 @@ enum KeyMoments {
         let folder = transcript.deletingLastPathComponent().lastPathComponent
         let session = transcript.deletingPathExtension().lastPathComponent
         let title = record.map { "\($0.lecture) · \($0.session)" } ?? "\(folder) · \(session)"
-        return KeyMomentPlan(units: units, duration: duration, manualTimes: manual, title: title)
+        return KeyMomentPlan(units: units, duration: duration, manualTimes: manual, title: title,
+                             transcriptHash: KeyMomentStore.hash(markdown))
+    }
+
+    static func requireUnchanged(_ transcript: URL, hash: String) throws {
+        guard let current = try? String(contentsOf: transcript, encoding: .utf8),
+              KeyMomentStore.hash(current) == hash else {
+            throw LectureError.message("The transcript changed while finding key moments. Try again.")
+        }
     }
 
     // Manual markers as the transcript writes them ("> [1:02] Label"), for transcripts whose recording is gone.

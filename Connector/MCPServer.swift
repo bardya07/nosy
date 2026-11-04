@@ -39,6 +39,8 @@ struct MCPServer: Sendable {
     static let instructions = "Read only access to the transcripts Nosy saved from the user's lectures. Start with list_folders, or use search_transcripts to find a topic."
 
     let store: TranscriptStore
+    // The bundled helper supplies a live grant check; isolated stores can be used independently.
+    var authorized: @Sendable () -> Bool = { true }
 
     // The reply for one input line, or nil when the message needs none (a notification or a blank line).
     func respond(to line: String) -> String? {
@@ -104,6 +106,9 @@ struct MCPServer: Sendable {
     }
 
     private func toolCall(id: Any, params: [String: Any]) -> [String: Any] {
+        guard authorized() else {
+            return Self.success(id: id, result: ["content": [Self.textBlock("Connector access is off or the selected library has changed. Allow access to this library in Nosy Settings.")], "isError": true])
+        }
         guard let name = params["name"] as? String else {
             return Self.failure(id: id, code: -32602, message: "Missing tool name.")
         }

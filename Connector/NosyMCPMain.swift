@@ -8,8 +8,13 @@ enum NosyMCPMain {
     static func main() {
         signal(SIGPIPE, SIG_IGN)
         func respond(_ line: String) -> Bool {
-            // Resolved for each message, so a folder change in Settings applies without restarting the helper.
-            let server = MCPServer(store: TranscriptStore(root: TranscriptRoot.resolve()))
+            // Resolve the current library per message, and recheck its grant for each tool call,
+            // including each member of a JSON-RPC batch.
+            let store = TranscriptStore(root: TranscriptRoot.resolve())
+            let server = MCPServer(store: store, authorized: {
+                let current = TranscriptRoot.resolve().resolvingSymlinksInPath().standardizedFileURL
+                return current == store.root && ConnectorGrant.allows(root: current)
+            })
             guard let reply = server.respond(to: line) else { return true }
             do { try FileHandle.standardOutput.write(contentsOf: Data((reply + "\n").utf8)); return true }
             catch { return false } // A disconnected client is a normal shutdown.

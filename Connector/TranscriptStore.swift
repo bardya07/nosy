@@ -83,7 +83,7 @@ struct TranscriptStore: Sendable {
         let folderURL = try existingFolder(folder)
         let stem = try Self.stem(from: name)
         let file = folderURL.appendingPathComponent(stem + ".md")
-        guard isFile(file), isContained(file), Self.isTranscript(at: file) else {
+        guard isFile(file), isContained(file), (Self.isTranscript(at: file) || Self.hasIdentity(file)) else {
             throw Failure.notFound("transcript \"\(stem)\" in folder \"\(folderURL.lastPathComponent)\"")
         }
         let summaryFile = folderURL.appendingPathComponent(stem + " summary.md")
@@ -125,8 +125,8 @@ struct TranscriptStore: Sendable {
     }
 
     private static func stem(from name: String) throws -> String {
-        let bare = name.lowercased().hasSuffix(".md") ? String(name.dropLast(3)) : name
-        return try component(bare, kind: "transcript")
+        // Names returned by list/search are exact filename stems, including any .md suffix.
+        return try component(name, kind: "transcript")
     }
 
     private func existingFolder(_ name: String) throws -> URL {
@@ -148,7 +148,19 @@ struct TranscriptStore: Sendable {
             .filter { !$0.hasPrefix(".") && $0.lowercased().hasSuffix(".md") }
         return names
             .map { folder.appendingPathComponent($0) }
-            .filter { isFile($0) && isContained($0) && Self.isTranscript(at: $0) }
+            .filter { isFile($0) && isContained($0) && (Self.isTranscript(at: $0) || Self.hasIdentity($0)) }
+    }
+
+    // The app maintains this index independently of the editable transcript header and audio.
+    private struct Identity: Decodable { let version: Int; let id: String }
+    private static func hasIdentity(_ transcript: URL) -> Bool {
+        let file = transcript.deletingLastPathComponent().appendingPathComponent(
+            "." + transcript.deletingPathExtension().lastPathComponent + ".nosy-identity.json")
+        var info = stat()
+        guard file.path.withCString({ lstat($0, &info) }) == 0, (info.st_mode & S_IFMT) == S_IFREG,
+              let data = try? Data(contentsOf: file), let identity = try? JSONDecoder().decode(Identity.self, from: data),
+              identity.version == 1, UUID(uuidString: identity.id) != nil else { return false }
+        return true
     }
 
     // The header Nosy writes ("# Course — Session", "- Date:", "- Length:", "## Transcript").
@@ -265,6 +277,7 @@ enum TranscriptRoot {
     }
 
     static func storedFolder() -> String? {
-        CFPreferencesCopyAppValue(preferenceKey as CFString, appDomain as CFString) as? String
+        CFPreferencesAppSynchronize(appDomain as CFString)
+        return CFPreferencesCopyAppValue(preferenceKey as CFString, appDomain as CFString) as? String
     }
 }

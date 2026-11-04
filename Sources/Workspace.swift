@@ -83,6 +83,7 @@ struct WorkspaceView: View {
                     (previewLibrary ?? LibraryView(model: model,
                         telemetryVisible: navigation.mode == .library && navigation.panel == nil))
                     if navigation.mode == .library && model.recording {
+                        LibraryCaptureWarnings(model: model)
                         LibraryRecordingBar(model: model, telemetryVisible: navigation.panel == nil)
                     }
                 }
@@ -273,6 +274,40 @@ struct WorkspaceTitlebar: View {
         }
         .overlay(alignment: .bottom) { Rectangle().fill(Theme.line).frame(height: 1) }
         .interactionTarget("workspace-titlebar")
+    }
+}
+
+private struct LibraryCaptureWarnings: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(spacing: 6) {
+            if let error = model.errorMessage, model.macAudioDenied || model.microphoneDenied {
+                Banner(symbol: "exclamationmark.circle.fill", tint: Theme.coral, text: error) {
+                    HStack(spacing: 14) {
+                        if model.macAudioDenied {
+                            Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                        }
+                        if model.microphoneDenied {
+                            Button("Open Microphone Settings") { model.openMicrophoneSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                        }
+                    }
+                }
+            }
+            if !model.paused, model.macAudioQuiet, !model.macAudioDenied {
+                Banner(symbol: "speaker.wave.2", tint: Theme.muted,
+                       text: "Mac audio is silent. If other apps are playing or you denied access, enable Nosy in System Settings → Privacy & Security → Screen & System Audio Recording.") {
+                    Button("Open Mac Audio Settings") { model.openMacAudioSettings() }.buttonStyle(LinkButtonStyle(tint: Theme.ink))
+                }
+            }
+            if model.stalled {
+                Banner(symbol: "waveform.slash", tint: Theme.coral,
+                       text: model.recordingSource.usesMacAudio ? "Nosy lost a recording source. Check Mac audio access and your connected microphone; Nosy is trying to reconnect." : "Nosy isn't receiving any audio. Check that your microphone is connected.") { EmptyView() }
+            } else if model.silenceWarning {
+                Banner(symbol: "mic.slash.fill", tint: Theme.coral, text: "Nosy can't hear anything. Check your microphone.") { EmptyView() }
+            }
+        }
+        .padding(.horizontal, 18)
     }
 }
 

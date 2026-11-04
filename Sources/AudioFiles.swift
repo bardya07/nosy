@@ -186,6 +186,7 @@ enum AudioFiles {
     }
 
     static func deleteAudio(id: String, paths: AppPaths) throws {
+        paths.purgeLegacyRouting()
         guard paths.safeSupportItem(paths.audio, directory: true) else { return }
         for url in try FileManager.default.contentsOfDirectory(at: paths.audio, includingPropertiesForKeys: nil)
             where url.lastPathComponent.hasPrefix(id + ".") {

@@ -544,6 +544,9 @@ final class AppModel: ObservableObject {
             stalled = false
         case .macAudioQuiet(let quiet):
             guard recording, recordingSource.usesMacAudio else { return }
+            if quiet && !macAudioQuiet && !paused {
+                notify("Mac audio is silent. Check Mac audio access and playback.")
+            }
             macAudioQuiet = quiet
         case .silence:
             guard recording, !paused, !completing else { return }
@@ -894,6 +897,7 @@ final class AppModel: ObservableObject {
     func refreshSavedTranscript() { savedSummary = SavedSummary(record: current, model: self) }
     func transcriptChanged(from old: URL, to new: URL?) {
         libraryRevision += 1
+        if old == new { summaries.cancelMoments(old) }
         guard current?.transcriptPath == old.path else { return }
         current?.transcriptPath = new?.path
         refreshSavedTranscript()
@@ -1052,6 +1056,10 @@ final class AppModel: ObservableObject {
         let folder = AppPaths.dedicatedTranscripts(for: url)
         do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
         catch { showError("Couldn't create \(folder.lastPathComponent): \(error.localizedDescription)"); return false }
+        if folder.resolvingSymlinksInPath().standardizedFileURL != paths.transcripts.resolvingSymlinksInPath().standardizedFileURL {
+            do { try ConnectorAccess.setAllowed(false, paths: paths) }
+            catch { showError("Couldn't revoke connector access: \(error.localizedDescription)"); return false }
+        }
         rememberLibrary(paths.transcripts)
         UserDefaults.standard.set(folder.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
