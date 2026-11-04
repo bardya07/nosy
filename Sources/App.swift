@@ -2045,6 +2045,8 @@ enum EntryPoint {
             let code = await Headless.run(Array(CommandLine.arguments.dropFirst()))
             exit(code)
         }
+        _ = NSApplication.shared
+        AppAppearance.apply(UserDefaults.standard.string(forKey: AppAppearance.storageKey) ?? AppAppearance.system.rawValue)
         NosyApp.main()
     }
 }

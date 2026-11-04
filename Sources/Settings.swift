@@ -1,6 +1,21 @@
 import SwiftUI
 import AppKit
 
+enum AppAppearance: String, CaseIterable {
+    case system, light, dark
+
+    static let storageKey = "settings-appearance"
+
+    @MainActor static func apply(_ rawValue: String) {
+        guard !Snapshot.isRunning else { return }
+        switch AppAppearance(rawValue: rawValue) ?? .system {
+        case .system: NSApp.appearance = nil
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+}
+
 enum SettingsFocusTarget: String, Equatable, Hashable, Identifiable {
     case aiFeatures = "settings-ai-features"
     case provider = "settings-summary-provider"
@@ -28,6 +43,7 @@ struct SettingsView: View {
     @AppStorage("compressAudio") private var compressAudio = true
     @AppStorage(TranscriptionQuality.storageKey) private var transcriptionQualityRaw = TranscriptionQuality.detailed.rawValue
     @AppStorage(AIFeatures.storageKey) private var aiFeaturesEnabled = false
+    @AppStorage(AppAppearance.storageKey) private var appearanceRaw = AppAppearance.system.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var customReminder = false
     @State private var connection: ClaudeConnector.Status = .notAdded
@@ -143,6 +159,26 @@ struct SettingsView: View {
     }
 
     @ViewBuilder private var generalPane: some View {
+        section("General") {
+            HStack(spacing: 12) {
+                Text("Appearance").font(Theme.text(13)).foregroundStyle(Theme.muted)
+                Spacer(minLength: 0)
+                Picker("Appearance", selection: Binding(
+                    get: { AppAppearance(rawValue: appearanceRaw) ?? .system },
+                    set: { choice in
+                        appearanceRaw = choice.rawValue
+                        AppAppearance.apply(choice.rawValue)
+                    }
+                )) {
+                    ForEach(AppAppearance.allCases, id: \.self) { choice in
+                        Text(choice.rawValue.capitalized).tag(choice)
+                    }
+                }
+                .labelsHidden().pickerStyle(.segmented).fixedSize()
+            }
+            .padding(.horizontal, 12).frame(height: 38)
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 10))
+        }
         section("Updates") {
             VStack(alignment: .leading, spacing: 10) {
                 settingToggle("Check for updates automatically", isOn: Binding(
