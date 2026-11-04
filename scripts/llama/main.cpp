@@ -82,9 +82,12 @@ int main(int argc, char **argv) {
         llama_batch_ext_set_output_logits(batch, idx, true);
         if (llama_process(ctx, LLAMA_PROCESS_TYPE_DECODE, batch)) status = 1;
     }
-    if (status == 0 && !finished) {
-        fprintf(stderr, "Summary output reached the token limit before finishing.\n");
-        status = 4;
+    if (status == 0) {
+        if (finished) fprintf(stderr, "NOSY_LLAMA_COMPLETE\n");
+        else {
+            fprintf(stderr, "Summary output reached the token limit before finishing.\n");
+            status = 4;
+        }
     }
     fflush(stdout);
     llama_sampler_free(sampler); llama_batch_ext_free(batch);

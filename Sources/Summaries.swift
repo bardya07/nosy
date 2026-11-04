@@ -615,6 +615,13 @@ enum SummaryRunner {
             let detail = trimmed.isEmpty ? stdout.trimmingCharacters(in: .whitespacesAndNewlines) : trimmed
             throw SummaryError.failed(provider.title, detail.isEmpty ? "exited with status \(process.terminationStatus)" : detail)
         }
+        if provider.builtInModel != nil {
+            // Older helpers exit successfully even when they exhaust the output budget.
+            let stderr = try read(errorURL)
+            guard stderr.split(whereSeparator: \.isNewline).contains("NOSY_LLAMA_COMPLETE") else {
+                throw SummaryError.failed(provider.title, "Could not verify that the built-in model finished. Rebuild the summary engine and try again.")
+            }
+        }
         let last = (try? read(lastMessage)) ?? ""
         let reply = SummaryFiles.clean(last.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? stdout : last)
         guard !reply.isEmpty else { throw SummaryError.empty }
