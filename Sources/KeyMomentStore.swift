@@ -77,7 +77,7 @@ enum KeyMomentStore {
     // One lock protects complete sidecar read/modify/write operations. It is separate from
     // TranscriptCoordination and never acquires it; callers may already hold that lock.
     private static let sidecarLock = NSRecursiveLock()
-    private static func withSidecarLock<T>(_ body: () throws -> T) rethrows -> T {
+    static func withSidecarLock<T>(_ body: () throws -> T) rethrows -> T {
         sidecarLock.lock()
         defer { sidecarLock.unlock() }
         return try body()
@@ -105,7 +105,7 @@ enum KeyMomentStore {
         return try? JSONDecoder().decode(KeyMomentsFile.self, from: data)
     }
     private static func rawRead(_ transcript: URL) -> (file: KeyMomentsFile, owned: Bool)? {
-        if let id = TranscriptIdentity.indexID(transcript) {
+        if let id = TranscriptIdentity.indexID(transcript), TranscriptIdentity.attributeValue(transcript) == id {
             let destination = ownedURL(transcript, id: id)
             if entryExists(destination) {
                 guard let file = decode(destination), file.ownerID == id else { return nil }
@@ -156,10 +156,35 @@ enum KeyMomentStore {
         
         }
     }
+    // Only a recording bound by both the document attribute and index can authorize
+    // changes to its old timing files. Ambiguous name-based files remain untouched.
+    static func cleanupLegacyTiming(transcript: URL, paths: AppPaths) throws {
+        try withSidecarLock {
+            guard let id = TranscriptIdentity.indexID(transcript),
+                  TranscriptIdentity.attributeValue(transcript) == id else { return }
+            // Some legacy-name files carry an explicit owner. Older files without one
+            // are ambiguous and must not be overwritten merely because of their name.
+            let legacyURL = url(for: transcript)
+            if var legacy = decode(legacyURL), legacy.version == 1, legacy.ownerID == id {
+                let original = legacy
+                scrub(&legacy)
+                if legacy != original {
+                    let encoder = JSONEncoder()
+                    encoder.outputFormatting = [.sortedKeys]
+                    try encoder.encode(legacy).write(to: legacyURL, options: .atomic)
+                }
+            }
+            try invalidateLegacyForEdit(transcript, paths: paths)
+        }
+    }
     // Older versions kept segments and AI anchors with the recording instead.
     static func invalidateLegacyForEdit(_ transcript: URL, paths: AppPaths) throws {
         return try withSidecarLock {
-            guard let record = Core.record(forTranscript: transcript, paths: paths) else { return }
+            guard let id = TranscriptIdentity.indexID(transcript),
+                  TranscriptIdentity.attributeValue(transcript) == id,
+                  let record = Core.record(forTranscript: transcript, paths: paths),
+                  record.transcriptID == id,
+                  paths.safeSupportItem(paths.audioFile(record.id, "json"), directory: false) else { return }
             let segmentsURL = paths.audioFile(record.id, "segments.json")
             if FileManager.default.fileExists(atPath: segmentsURL.path) {
                 guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
@@ -174,7 +199,8 @@ enum KeyMomentStore {
             guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
             let data = try Data(contentsOf: recordURL)
             if var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-               var markers = object["aiMarkers"] as? [[String: Any]] {
+               var markers = object["aiMarkers"] as? [[String: Any]],
+               markers.contains(where: { ($0["anchor"] as? String).map { !$0.isEmpty } ?? false }) {
                 for index in markers.indices { markers[index]["anchor"] = "" }
                 object["aiMarkers"] = markers
                 try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: recordURL, options: .atomic)
