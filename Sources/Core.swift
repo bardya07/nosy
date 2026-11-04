@@ -845,7 +845,15 @@ enum Core {
         return subfolders.contains { sub in
             guard isContained(sub, in: folder), (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
             let files = (try? manager.contentsOfDirectory(at: sub, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
-            return files.contains { isContained($0, in: folder) && isTranscript(at: $0) }
+            return files.contains { file in
+                guard isContained(file, in: folder), file.pathExtension.lowercased() == "md" else { return false }
+                var info = stat()
+                guard file.path.withCString({ lstat($0, &info) }) == 0,
+                      (info.st_mode & S_IFMT) == S_IFREG else { return false }
+                if isTranscript(at: file) { return true }
+                guard let id = TranscriptIdentity.indexID(file) else { return false }
+                return TranscriptIdentity.attributeValue(file) == id
+            }
         }
     }
     static func markdown(record: SessionRecord, duration: TimeInterval, text: String, body: String? = nil) -> String {

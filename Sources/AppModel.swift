@@ -242,17 +242,8 @@ final class AppModel: ObservableObject {
            UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) == nil {
             UserDefaults.standard.set(paths.transcripts.path, forKey: AppPaths.transcriptsKey)
         }
-        // A folder chosen before dedicated folders (e.g. ~/Downloads itself) moves to its own
-        // "Nosy Transcripts" inside it. Nothing is moved; a folder that holds transcripts stays.
-        if ProcessInfo.processInfo.environment["NOSY_TRANSCRIPTS_DIR"] == nil,
-           let stored = UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) {
-            let dedicated = AppPaths.dedicatedTranscripts(for: URL(fileURLWithPath: stored, isDirectory: true))
-            if dedicated.path != URL(fileURLWithPath: stored).standardizedFileURL.path {
-                rememberLibrary(paths.transcripts)
-                UserDefaults.standard.set(dedicated.path, forKey: AppPaths.transcriptsKey)
-                paths = AppPaths()
-            }
-        }
+        // A saved root is already established, even when it is empty or temporarily unavailable.
+        // Dedicated subfolders are chosen only when the user selects a new location.
         summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
         rememberedLecture = UserDefaults.standard.string(forKey: "lastLecture")
