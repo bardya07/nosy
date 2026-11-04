@@ -79,24 +79,89 @@ codesign --verify --strict "$APP/Contents/Helpers/nosy-llama"
 codesign --verify --deep --strict "$APP"
 printf 'BUILD PASS: %s\n' "$APP"
 if [[ "${1:-}" == install ]]; then
-    # Recheck after compilation, immediately before quitting/replacing the installed app.
-    python3 - <<'PY'
-import json, pathlib, sys
-audio = pathlib.Path.home() / 'Library/Application Support/Nosy/audio'
-sidecars = list(audio.glob('*.json'))
-if sidecars:
-    latest = max(sidecars, key=lambda path: path.stat().st_mtime_ns)
+    # Stage on the destination volume before asking the running app to quit.
+    INSTALL_STAGE=$(mktemp -d '/Applications/.Nosy-install.XXXXXX')
+    KEEP_INSTALL_STAGE=false
+    cleanup_install() {
+        if [[ "$KEEP_INSTALL_STAGE" == true ]]; then
+            printf 'Install backup retained at %s\n' "$INSTALL_STAGE" >&2
+        else
+            rm -rf "$INSTALL_STAGE"
+        fi
+    }
+    trap cleanup_install EXIT
+    ditto "$APP" "$INSTALL_STAGE/Nosy.app"
+    codesign --verify --deep --strict "$INSTALL_STAGE/Nosy.app"
+
+    # A later completed recording can be newer than an earlier active job.
+    # Check every sidecar, including unmigrated legacy and overridden support paths.
+    python3 - <<'PYTHON'
+import json, os, pathlib, sys
+home = pathlib.Path.home() / 'Library/Application Support'
+roots = {home / 'Nosy', home / 'Lecture Transcriber'}
+if os.environ.get('NOSY_SUPPORT_DIR'):
+    roots.add(pathlib.Path(os.environ['NOSY_SUPPORT_DIR']))
+for root in roots:
+    audio = root / 'audio'
     try:
-        status = json.loads(latest.read_text())['status']
-    except (OSError, ValueError, KeyError):
-        sys.exit('INSTALL BLOCKED: the newest recording sidecar could not be checked.')
-    if status in ('recording', 'transcribing'):
-        sys.exit('INSTALL BLOCKED: Nosy is still recording or transcribing. Finish that work first.')
-PY
-    osascript -e 'quit app "Nosy"' 2>/dev/null || true
-    osascript -e 'quit app "Lecture Transcriber"' 2>/dev/null || true
+        with os.scandir(audio) as entries:
+            sidecars = [pathlib.Path(entry.path) for entry in entries if entry.name.endswith('.json')]
+    except FileNotFoundError:
+        continue
+    except OSError:
+        sys.exit(f'INSTALL BLOCKED: could not inspect recording sidecars in {audio}.')
+    for sidecar in sidecars:
+        try:
+            status = json.loads(sidecar.read_text())['status']
+            if status not in ('recording', 'transcribing', 'done', 'failed'):
+                raise ValueError('invalid status')
+        except (OSError, ValueError, KeyError, TypeError):
+            sys.exit(f'INSTALL BLOCKED: recording sidecar could not be checked: {sidecar}')
+        if status in ('recording', 'transcribing'):
+            sys.exit('INSTALL BLOCKED: Nosy has unfinished recording or transcription work. Finish that work first.')
+PYTHON
+    # NSRunningApplication sends a normal quit request without launching the app.
+    # A canceled request or a process that does not exit must leave the install alone.
+    swift - <<'SWIFT'
+import AppKit
+import Foundation
+
+let identifiers: Set<String> = ["com.bardya.nosy", "com.bardya.lecturetranscriber"]
+func running() -> [NSRunningApplication] {
+    NSWorkspace.shared.runningApplications.filter {
+        !$0.isTerminated && $0.bundleIdentifier.map(identifiers.contains) == true
+    }
+}
+let apps = running()
+for app in apps where !app.terminate() && !app.isTerminated {
+    fputs("INSTALL BLOCKED: could not ask the running app to quit.\n", stderr)
+    exit(1)
+}
+let deadline = Date().addingTimeInterval(30)
+while !running().isEmpty && Date() < deadline {
+    RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+}
+guard running().isEmpty else {
+    fputs("INSTALL BLOCKED: the app did not quit; installation was canceled.\n", stderr)
+    exit(1)
+}
+SWIFT
+    # Keep the old bundle until the staged replacement has been installed. If
+    # the final move fails, restore it; never delete an unrestored backup.
+    if [[ -e '/Applications/Nosy.app' || -L '/Applications/Nosy.app' ]]; then
+        mv '/Applications/Nosy.app' "$INSTALL_STAGE/previous-Nosy.app"
+        KEEP_INSTALL_STAGE=true
+    fi
+    if ! mv "$INSTALL_STAGE/Nosy.app" '/Applications/Nosy.app'; then
+        if [[ -e "$INSTALL_STAGE/previous-Nosy.app" || -L "$INSTALL_STAGE/previous-Nosy.app" ]]; then
+            if mv "$INSTALL_STAGE/previous-Nosy.app" '/Applications/Nosy.app'; then
+                KEEP_INSTALL_STAGE=false
+            fi
+        fi
+        printf 'INSTALL BLOCKED: could not install the staged bundle.\n' >&2
+        exit 1
+    fi
+    KEEP_INSTALL_STAGE=false
     rm -rf '/Applications/Lecture Transcriber.app'
-    rm -rf '/Applications/Nosy.app'
-    ditto "$APP" '/Applications/Nosy.app'
     printf 'Installed /Applications/Nosy.app\n'
 fi
