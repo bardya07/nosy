@@ -96,7 +96,7 @@ if [[ "${1:-}" == install ]]; then
     # A later completed recording can be newer than an earlier active job.
     # Check every sidecar, including unmigrated legacy and overridden support paths.
     python3 - <<'PYTHON'
-import datetime, json, math, os, pathlib, sys, uuid
+import datetime, json, math, os, pathlib, re, sys, uuid
 home = pathlib.Path.home() / 'Library/Application Support'
 roots = {home / 'Nosy', home / 'Lecture Transcriber'}
 if os.environ.get('NOSY_SUPPORT_DIR'):
@@ -133,7 +133,8 @@ for root in roots:
             for key in ('startedAt', 'endedAt', 'transcribedAt'):
                 value = record.get(key)
                 if value is not None:
-                    if not isinstance(value, str):
+                    if not isinstance(value, str) or not re.fullmatch(
+                            r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})', value):
                         raise ValueError('invalid date')
                     parsed = datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
                     if parsed.tzinfo is None:
