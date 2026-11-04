@@ -369,14 +369,26 @@ enum KeyMomentStore {
             guard old.deletingLastPathComponent().standardizedFileURL == new.deletingLastPathComponent().standardizedFileURL else {
                 throw LectureError.message("Key moments can only be renamed within their folder.")
             }
-            guard let stored = rawRead(old), !stored.owned, var file = read(old) else { return }
             guard let id = TranscriptIdentity.indexID(old), TranscriptIdentity.attributeValue(new) == id else { return }
-            // `old` has already moved; its current contents are at `new`.
-            if let text = try? String(contentsOf: new, encoding: .utf8), stored.file.transcriptHash == hash(text) {
-                file = stored.file
+            let destination = ownedURL(old, id: id)
+            // The document has moved already, so rawRead(old) cannot authenticate it.
+            // An existing owned file always wins over any older name-based snapshot.
+            if entryExists(destination) {
+                guard let owned = decode(destination), owned.version == 1, owned.ownerID == id else {
+                    throw LectureError.message("A different item already occupies the key moments file name.")
+                }
+                return
             }
-            try writeOwned(file, for: old, id: id)
-        
+            guard var file = decode(url(for: old)), file.ownerID == nil else { return }
+            if (try? String(contentsOf: new, encoding: .utf8)).map(hash) != file.transcriptHash || file.transcriptHash == nil {
+                scrub(&file)
+            }
+            file.ownerID = id
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.sortedKeys]
+            guard try Core.exclusiveWrite(encoder.encode(file), to: destination) else {
+                throw LectureError.message("A different item already occupies the key moments file name.")
+            }
         }
     }
     // Trash moves the file to the Trash beside its transcript, so restoring either restores both.
