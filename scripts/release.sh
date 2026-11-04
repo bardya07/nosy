@@ -63,6 +63,43 @@ SPARKLE_KEY="${NOSY_SPARKLE_KEY:-$HOME/Library/Application Support/Nosy Release/
 [[ -f "$SPARKLE_KEY" ]] || { printf 'Missing Sparkle signing key: %s\n' "$SPARKLE_KEY" >&2; exit 1; }
 EXPECTED_KEY=$(plutil -extract SUPublicEDKey raw -o - "$APP/Contents/Info.plist")
 [[ -n "$EXPECTED_KEY" ]] || { printf 'Info.plist has no SUPublicEDKey.\n' >&2; exit 1; }
+# Sparkle stores either an Ed25519 seed or the legacy expanded private key
+# followed by its public key. Never import the release secret into Keychain.
+SIGNING_PUBLIC_KEY=$(swift - "$SPARKLE_KEY" <<'SWIFT'
+import CryptoKit
+import Foundation
+
+do {
+    let encoded = try String(contentsOfFile: CommandLine.arguments[1], encoding: .utf8)
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let secret = Data(base64Encoded: encoded) else { throw CocoaError(.fileReadCorruptFile) }
+    let publicKey: Data
+    switch secret.count {
+    case 32:
+        publicKey = try Curve25519.Signing.PrivateKey(rawRepresentation: secret).publicKey.rawRepresentation
+    case 96:
+        publicKey = Data(secret.suffix(32))
+    default:
+        throw CocoaError(.fileReadCorruptFile)
+    }
+    print(publicKey.base64EncodedString())
+} catch {
+    fputs("Could not derive Sparkle public key from signing key file.\n", stderr)
+    exit(1)
+}
+SWIFT
+)
+[[ "$SIGNING_PUBLIC_KEY" == "$EXPECTED_KEY" ]] || {
+    printf 'Sparkle signing key does not match SUPublicEDKey in the built app.\n' >&2
+    exit 1
+}
+# This also checks that a legacy file's embedded public key matches its private key.
+printf 'Nosy Sparkle signing key check\n' > "$STAGING/key-check"
+KEY_CHECK_SIGNATURE=$(vendor/sparkle/bin/sign_update --ed-key-file "$SPARKLE_KEY" -p "$STAGING/key-check")
+vendor/sparkle/bin/sign_update --ed-key-file "$SPARKLE_KEY" --verify "$STAGING/key-check" "$KEY_CHECK_SIGNATURE" || {
+    printf 'Sparkle signing key failed the signing/verification check.\n' >&2
+    exit 1
+}
 [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]] || {
     printf 'Invalid release version in Info.plist: %s\n' "$VERSION" >&2
     exit 1
