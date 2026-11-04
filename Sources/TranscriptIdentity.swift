@@ -25,10 +25,10 @@ enum TranscriptIdentity {
         guard try Core.exclusiveWrite(data, to: url(for: transcript)) else {
             throw LectureError.message("A different item already occupies the transcript identity file name.")
         }
+        try setAttribute(id, on: transcript)
     }
     static func bind(_ transcript: URL, id: String) throws {
         try index(transcript, id: id)
-        try setAttribute(id, on: transcript)
     }
     static func attributeValue(_ transcript: URL) -> String? {
         let size = getxattr(transcript.path, attribute, nil, 0, 0, XATTR_NOFOLLOW)
