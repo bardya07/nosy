@@ -177,6 +177,84 @@ enum KeyMomentStore {
         
         }
     }
+    // Identity repair is explicitly confirmed by the user. The old index identifies
+    // this owned sidecar even though the document can no longer prove that identity.
+    // Keep markers, but remove recoverable speech before abandoning the old ID.
+    static func scrubObsoleteIdentity(transcript: URL, id: String) throws {
+        try withSidecarLock {
+            let destination = ownedURL(transcript, id: id)
+            guard entryExists(destination) else { return }
+            guard let file = decode(destination), file.version == 1, file.ownerID == id else {
+                throw LectureError.message("The old key moments file could not be verified; it was kept unchanged. Repair could not clear its text.")
+            }
+            try scrubKeyMomentJSON(url: destination)
+        }
+    }
+
+    // The owner selects this exact sidecar, including an ambiguous legacy file.
+    // Recognize its format and preserve unknown fields as well as all markers.
+    static func scrubSelectedOwnedFile(url: URL, paths: AppPaths) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try withSidecarLock {
+                let name = url.lastPathComponent
+                guard Core.isContained(url, in: paths.transcripts), name.hasPrefix("."),
+                      name.hasSuffix(suffix), let file = decode(url), file.version == 1 else {
+                    throw LectureError.message("Choose a recognizable Nosy key moments file in this library.")
+                }
+                if name.hasPrefix(".nosy-") {
+                    let id = String(name.dropFirst(".nosy-".count).dropLast(suffix.count))
+                    guard UUID(uuidString: id) != nil, file.ownerID == id else {
+                        throw LectureError.message("This key moments file could not be verified and was kept unchanged.")
+                    }
+                } else if file.ownerID != nil {
+                    throw LectureError.message("This key moments file has an unexpected owner and was kept unchanged.")
+                }
+                try scrubKeyMomentJSON(url: url)
+            }
+        }
+    }
+
+    private static func scrubKeyMomentJSON(url: URL) throws {
+        let data = try Data(contentsOf: url)
+        guard var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              object["segments"] != nil || object["markers"] != nil else {
+            throw LectureError.message("This key moments file is unrecognized and was kept unchanged.")
+        }
+        object.removeValue(forKey: "transcriptHash")
+        if let raw = object["segments"], !(raw is NSNull) {
+            guard var timings = raw as? [String: Any], var segments = timings["segments"] as? [[String: Any]] else {
+                throw LectureError.message("The timing data is unrecognized and was kept unchanged.")
+            }
+            timings.removeValue(forKey: "transcriptHash")
+            for index in segments.indices { segments[index]["text"] = "" }
+            timings["segments"] = segments
+            object["segments"] = timings
+        }
+        if let raw = object["markers"], !(raw is NSNull) {
+            guard var markers = raw as? [[String: Any]] else {
+                throw LectureError.message("The marker data is unrecognized and was kept unchanged.")
+            }
+            for index in markers.indices { markers[index]["anchor"] = "" }
+            object["markers"] = markers
+        }
+        try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: url, options: .atomic)
+    }
+
+    // The user explicitly selected this unverified recording for privacy cleanup.
+    // This does not link it to a document or confer audio deletion authority.
+    static func scrubUnverifiedRecording(record: SessionRecord, paths: AppPaths) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try withSidecarLock {
+                let recordURL = paths.audioFile(record.id, "json")
+                guard paths.safeSupportItem(recordURL, directory: false),
+                      try SessionRecord.read(recordURL) == record, record.status == .done else {
+                    throw LectureError.message("The recording changed. Reload before clearing its timing text.")
+                }
+                try scrubRecordingTiming(record: record, paths: paths)
+            }
+        }
+    }
+
     // Only a recording bound by both the document attribute and index can authorize
     // changes to its old timing files. Ambiguous name-based files remain untouched.
     static func cleanupLegacyTiming(transcript: URL, paths: AppPaths) throws {
@@ -206,27 +284,39 @@ enum KeyMomentStore {
                   let record = Core.record(forTranscript: transcript, paths: paths),
                   record.transcriptID == id,
                   paths.safeSupportItem(paths.audioFile(record.id, "json"), directory: false) else { return }
-            let segmentsURL = paths.audioFile(record.id, "segments.json")
-            if FileManager.default.fileExists(atPath: segmentsURL.path) {
-                guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
-                let data = try Data(contentsOf: segmentsURL)
-                if var segments = try? JSONDecoder().decode(SavedSegments.self, from: data) {
-                    segments.transcriptHash = nil
-                    for index in segments.segments.indices { segments.segments[index].text = "" }
-                    try JSONEncoder().encode(segments).write(to: segmentsURL, options: .atomic)
-                }
+            try scrubRecordingTiming(record: record, paths: paths)
+        }
+    }
+    private static func scrubRecordingTiming(record: SessionRecord, paths: AppPaths) throws {
+        let segmentsURL = paths.audioFile(record.id, "segments.json")
+        if entryExists(segmentsURL) {
+            guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+            let data = try Data(contentsOf: segmentsURL)
+            guard let decoded = try? JSONDecoder().decode(SavedSegments.self, from: data), decoded.version == 1,
+                  var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  var segments = object["segments"] as? [[String: Any]] else {
+                throw LectureError.message("The timing file is unrecognized and was kept unchanged.")
             }
-            let recordURL = paths.audioFile(record.id, "json")
-            guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
-            let data = try Data(contentsOf: recordURL)
-            if var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-               var markers = object["aiMarkers"] as? [[String: Any]],
-               markers.contains(where: { ($0["anchor"] as? String).map { !$0.isEmpty } ?? false }) {
+            object.removeValue(forKey: "transcriptHash")
+            for index in segments.indices { segments[index]["text"] = "" }
+            object["segments"] = segments
+            try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: segmentsURL, options: .atomic)
+        }
+        let recordURL = paths.audioFile(record.id, "json")
+        guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+        let data = try Data(contentsOf: recordURL)
+        guard var object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw LectureError.message("The recording metadata is unrecognized and was kept unchanged.")
+        }
+        if object["aiMarkers"] != nil {
+            guard var markers = object["aiMarkers"] as? [[String: Any]] else {
+                throw LectureError.message("The recording markers are unrecognized and were kept unchanged.")
+            }
+            if markers.contains(where: { ($0["anchor"] as? String).map { !$0.isEmpty } ?? false }) {
                 for index in markers.indices { markers[index]["anchor"] = "" }
                 object["aiMarkers"] = markers
                 try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: recordURL, options: .atomic)
             }
-        
         }
     }
     static func write(_ file: KeyMomentsFile, for transcript: URL) throws {

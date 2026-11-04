@@ -79,19 +79,20 @@ enum TranscriptIdentity {
     // User-initiated repair deliberately allocates a new identity. A missing attribute
     // cannot authenticate the old index or reauthorize any associated recording.
     static func repairMissingAttribute(_ transcript: URL) throws {
-        guard let oldID = indexID(transcript) else {
-            throw LectureError.message("This transcript has no usable identity to repair.")
+        try KeyMomentStore.withSidecarLock {
+            guard let oldID = indexID(transcript) else {
+                throw LectureError.message("This transcript has no usable identity to repair.")
+            }
+            guard attributeValue(transcript) == nil, indexID(transcript) == oldID else {
+                throw LectureError.message("The transcript identity changed during repair. Try again.")
+            }
+            try KeyMomentStore.scrubObsoleteIdentity(transcript: transcript, id: oldID)
+            let id = UUID().uuidString
+            let data = try JSONEncoder().encode(Index(version: 1, id: id))
+            // A missing attribute never authorizes a recording under this new identity.
+            try data.write(to: url(for: transcript), options: .atomic)
+            try createAttribute(id, on: transcript)
         }
-        guard attributeValue(transcript) == nil, indexID(transcript) == oldID else {
-            throw LectureError.message("The transcript identity changed during repair. Try again.")
-        }
-        let id = UUID().uuidString
-        let data = try JSONEncoder().encode(Index(version: 1, id: id))
-        // Replace the old index first. If interrupted or attribute creation fails, the
-        // document still has no attribute and the explicit repair can be retried. No
-        // recording can acquire authority from this newly generated index alone.
-        try data.write(to: url(for: transcript), options: .atomic)
-        try createAttribute(id, on: transcript)
     }
     private static func createAttribute(_ id: String, on transcript: URL) throws {
         let bytes = Array(id.utf8)

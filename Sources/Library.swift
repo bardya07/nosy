@@ -522,7 +522,7 @@ final class TranscriptLibrary: ObservableObject {
         guard panel.runModal() == .OK, let url = panel.url, Core.isContained(url, in: paths.transcripts) else { return }
         let alert = NSAlert()
         alert.messageText = "Repair this transcript’s identity?"
-        alert.informativeText = "Only continue if you recognize this file as your transcript. Repair gives it a new identity. Existing recordings will remain unverified, and key moments tied to the old identity will remain stored separately."
+        alert.informativeText = "Only continue if you recognize this file as your transcript. Repair gives it a new identity. Existing recordings will remain unverified. Key moments tied to the old identity will remain stored separately, with their timing text and anchors cleared."
         alert.addButton(withTitle: "Repair Identity")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
@@ -534,6 +534,75 @@ final class TranscriptLibrary: ObservableObject {
                 }
                 try TranscriptIdentity.repairMissingAttribute(url)
             }
+            invalidate(paths: paths)
+        } catch { NSAlert(error: error).runModal() }
+    }
+
+    // An old recording path is only a hint. The owner chooses the document and
+    // confirms it independently; adoption does not link or authorize any audio.
+    func adoptLegacyTranscript(paths: AppPaths) {
+        let panel = NSOpenPanel()
+        panel.message = "Choose an older transcript to add to the library."
+        panel.directoryURL = paths.transcripts
+        panel.allowedContentTypes = [.plainText]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            guard Core.isContained(url, in: paths.transcripts),
+                  url.deletingLastPathComponent().deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL == paths.transcripts.resolvingSymlinksInPath().standardizedFileURL,
+                  url.pathExtension.lowercased() == "md", values.isRegularFile == true, values.isSymbolicLink != true else {
+                throw LectureError.message("Choose a Markdown file in a library lecture folder.")
+            }
+            let text = try String(contentsOf: url, encoding: .utf8)
+            let alert = NSAlert()
+            alert.messageText = "Add this older transcript?"
+            alert.informativeText = "Confirm that \(url.lastPathComponent) in \(url.deletingLastPathComponent().lastPathComponent) is your transcript. Nosy will give it a new identity. Recordings will remain unverified until you separately link one."
+            alert.addButton(withTitle: "Add Transcript")
+            alert.addButton(withTitle: "Cancel")
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+            try TranscriptCoordination.withLock(paths: paths) {
+                let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+                guard Core.isContained(url, in: paths.transcripts),
+                      url.deletingLastPathComponent().deletingLastPathComponent().resolvingSymlinksInPath().standardizedFileURL == paths.transcripts.resolvingSymlinksInPath().standardizedFileURL,
+                      url.pathExtension.lowercased() == "md", values.isRegularFile == true, values.isSymbolicLink != true,
+                      try String(contentsOf: url, encoding: .utf8) == text,
+                      TranscriptIdentity.indexID(url) == nil, TranscriptIdentity.attributeValue(url) == nil else {
+                    throw LectureError.message("Choose an unchanged Markdown file in a library lecture folder without an existing identity.")
+                }
+                try TranscriptIdentity.index(url, id: UUID().uuidString)
+            }
+            invalidate(paths: paths)
+        } catch { NSAlert(error: error).runModal() }
+    }
+
+    func clearUnverifiedTiming(_ record: SessionRecord, paths: AppPaths) {
+        let alert = NSAlert()
+        alert.messageText = "Clear old timing text?"
+        alert.informativeText = "Clear saved speech text and AI marker anchors from the timing metadata for \(record.lecture) · \(record.session). The recording and transcript will be kept, and the recording will remain unverified."
+        alert.addButton(withTitle: "Clear Timing Text")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try KeyMomentStore.scrubUnverifiedRecording(record: record, paths: paths)
+            invalidate(paths: paths)
+        } catch { NSAlert(error: error).runModal() }
+    }
+
+    func clearOldKeyMomentText(paths: AppPaths) {
+        let panel = NSOpenPanel()
+        panel.message = "Choose an older Nosy key-moment file (identity-named or legacy) to clear its saved speech text."
+        panel.directoryURL = paths.transcripts
+        panel.allowedContentTypes = [.json]
+        panel.showsHiddenFiles = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let alert = NSAlert()
+        alert.messageText = "Clear old key-moment text?"
+        alert.informativeText = "Clear timing text and AI marker anchors from \(url.lastPathComponent). Marker entries will remain. Transcripts and audio will not be changed."
+        alert.addButton(withTitle: "Clear Key-Moment Text")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try KeyMomentStore.scrubSelectedOwnedFile(url: url, paths: paths)
             invalidate(paths: paths)
         } catch { NSAlert(error: error).runModal() }
     }
@@ -556,11 +625,12 @@ final class TranscriptLibrary: ObservableObject {
         let selected = unverifiedAudio[selector.indexOfSelectedItem]
         let confirm = NSAlert()
         confirm.messageText = "Have you verified this recording?"
-        confirm.informativeText = "You are linking \(selected.lecture) · \(selected.session) (\(selected.id)) to \(item.lecture) · \(item.session). Audio may be deleted automatically when its retention period expires."
+        confirm.informativeText = "You are linking \(selected.lecture) · \(selected.session) (\(selected.id)) to \(item.lecture) · \(item.session). Old timing text and AI marker anchors will be cleared. Audio may be deleted automatically when its retention period expires."
         confirm.addButton(withTitle: "I Verified This Recording")
         confirm.addButton(withTitle: "Cancel")
         guard confirm.runModal() == .alertFirstButtonReturn else { return }
         do {
+            try KeyMomentStore.scrubUnverifiedRecording(record: selected, paths: paths)
             try TranscriptCoordination.withLock(paths: paths) {
                 guard Core.isContained(item.url, in: paths.transcripts),
                       try String(contentsOf: item.url, encoding: .utf8) == item.text,
@@ -914,6 +984,12 @@ struct LibraryView: View {
             Button("Repair transcript identity…") { library.repairIdentity(paths: libraryPaths) }
                 .buttonStyle(LinkButtonStyle(tint: Theme.navy))
                 .tip("Repair a transcript after an editor removes its identity")
+            Button("Add older transcript…") { library.adoptLegacyTranscript(paths: libraryPaths) }
+                .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                .tip("Add an older transcript after confirming it belongs to you")
+            Button("Clear old key-moment text…") { library.clearOldKeyMomentText(paths: libraryPaths) }
+                .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                .tip("Clear saved speech text from an older Nosy key-moment file")
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Theme.muted).font(.system(size: 12, weight: .semibold))
                     .accessibilityHidden(true)
@@ -1112,6 +1188,9 @@ struct LibraryView: View {
                     } label: { Image(systemName: "folder") }
                     .buttonStyle(IconButtonStyle(size: 26)).tip("Show audio in Finder")
                     .accessibilityLabel("Show audio for \(record.lecture) \(record.session) in Finder")
+                    Button { library.clearUnverifiedTiming(record, paths: libraryPaths) } label: { Image(systemName: "text.badge.minus") }
+                        .buttonStyle(IconButtonStyle(size: 26)).tip("Clear old timing text")
+                        .accessibilityLabel("Clear old timing text for \(record.lecture) \(record.session)")
                 }.padding(.horizontal, 10).padding(.vertical, 4)
             }
             Text("Select a transcript and choose Link recording after listening to the audio.")
