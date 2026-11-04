@@ -7,12 +7,16 @@ enum Snapshot {
     static var isRunning = false
     private static var transcriptRoot: String?
 
+    private static var temporaryDirectory: URL {
+        FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Caches", isDirectory: true)
+    }
+
     // Focused built in model previews; no other preview, real file, or preference is touched.
     private static func runLocalModels(_ out: String) -> Int32 {
         _ = NSApplication.shared
         isRunning = true
         defer { isRunning = false }
-        let root = FileManager.default.temporaryDirectory.appendingPathComponent("nosy-local-previews-\(UUID().uuidString)")
+        let root = temporaryDirectory.appendingPathComponent("nosy-local-previews-\(UUID().uuidString)")
         let scratchPaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": root.path])
         guard (try? scratchPaths.createSupportDirectory(root)) != nil else { return 1 }
         defer { if scratchPaths.safeSupportTree(root) { try? FileManager.default.removeItem(at: root) } }
@@ -61,7 +65,7 @@ enum Snapshot {
         _ = NSApplication.shared
         isRunning = true
         let manager = FileManager.default
-        let fixture = manager.temporaryDirectory.appendingPathComponent("Nosy-preview-\(UUID().uuidString)")
+        let fixture = temporaryDirectory.appendingPathComponent("Nosy-preview-\(UUID().uuidString)")
         let fixturePaths = AppPaths(environment: ["NOSY_SUPPORT_DIR": fixture.path])
         guard (try? fixturePaths.createSupportDirectory(fixture)) != nil else { return 1 }
         let transcripts = fixture.appendingPathComponent("transcripts")
