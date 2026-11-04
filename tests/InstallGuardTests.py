@@ -39,4 +39,10 @@ with tempfile.TemporaryDirectory(prefix='nosy-install-guard-') as directory:
     run(True)
     latest.write_text(json.dumps({'status': 'done'}))
     run(True)
+    latest.write_text(json.dumps({'id': 'record', 'lecture': 'L', 'session': 'S',
+                                  'startedAt': 'bad date', 'status': 'done'}))
+    run(True)
+    latest.write_text(json.dumps({'id': 'record', 'lecture': 'L', 'session': 'S',
+                                  'startedAt': '2026-01-01T00:00:00Z', 'status': 'done', 'markers': 'bad'}))
+    run(True)
 print('INSTALL GUARD PASS: records, malformed candidates, legacy timing and scratch; sidecars unchanged')
