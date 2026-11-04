@@ -201,9 +201,11 @@ enum KeyMomentStore {
                       name.hasSuffix(suffix), let file = decode(url), file.version == 1 else {
                     throw LectureError.message("Choose a recognizable Nosy key moments file in this library.")
                 }
-                if name.hasPrefix(".nosy-") {
-                    let id = String(name.dropFirst(".nosy-".count).dropLast(suffix.count))
-                    guard UUID(uuidString: id) != nil, file.ownerID == id else {
+                let identityPrefix = ".nosy-"
+                let id = name.hasPrefix(identityPrefix)
+                    ? String(name.dropFirst(identityPrefix.count).dropLast(suffix.count)) : ""
+                if UUID(uuidString: id) != nil {
+                    guard file.ownerID == id else {
                         throw LectureError.message("This key moments file could not be verified and was kept unchanged.")
                     }
                 } else if file.ownerID != nil {
