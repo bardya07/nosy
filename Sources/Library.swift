@@ -605,15 +605,17 @@ final class TranscriptLibrary: ObservableObject {
     }
     @discardableResult func save(_ text: String, to url: URL, paths: AppPaths, expectedText: String? = nil) -> Bool {
         do {
-            guard Core.isContained(url, in: paths.transcripts) else { throw LectureError.message("This transcript is outside the selected library.") }
-            guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
-                throw LectureError.message("Reload this transcript before editing it.")
+            try TranscriptCoordination.withLock(paths: paths) {
+                guard Core.isContained(url, in: paths.transcripts) else { throw LectureError.message("This transcript is outside the selected library.") }
+                guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
+                    throw LectureError.message("Reload this transcript before editing it.")
+                }
+                guard try String(contentsOf: url, encoding: .utf8) == expected else {
+                    throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+                }
+                try KeyMomentStore.invalidateLegacyForEdit(url, paths: paths)
+                try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             }
-            guard try String(contentsOf: url, encoding: .utf8) == expected else {
-                throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
-            }
-            try KeyMomentStore.invalidateLegacyForEdit(url, paths: paths)
-            try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             didChange?(url, url)
             changeItems { rows in
                 if let index = rows.firstIndex(where: { $0.url == url }) {
