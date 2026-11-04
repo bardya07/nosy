@@ -125,8 +125,8 @@ struct TranscriptStore: Sendable {
     }
 
     private static func stem(from name: String) throws -> String {
-        let bare = name.lowercased().hasSuffix(".md") ? String(name.dropLast(3)) : name
-        return try component(bare, kind: "transcript")
+        // Names returned by list/search are exact filename stems, including any .md suffix.
+        return try component(name, kind: "transcript")
     }
 
     private func existingFolder(_ name: String) throws -> URL {
