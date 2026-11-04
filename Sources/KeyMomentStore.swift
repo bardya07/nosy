@@ -240,12 +240,22 @@ enum KeyMomentStore {
     static func move(from old: URL, to new: URL) throws {
         let source = url(for: old)
         guard FileManager.default.fileExists(atPath: source.path) else { return }
+        var info = stat()
+        guard source.path.withCString({ lstat($0, &info) }) == 0,
+              (info.st_mode & S_IFMT) == S_IFREG, rawRead(old) != nil else {
+            throw LectureError.message("A different item occupies the key moments file name.")
+        }
         try FileManager.default.moveItem(at: source, to: url(for: new))
     }
     // Trash moves the file to the Trash beside its transcript, so restoring either restores both.
     static func trash(transcript: URL) throws {
         let file = url(for: transcript)
         guard FileManager.default.fileExists(atPath: file.path) else { return }
+        var info = stat()
+        guard file.path.withCString({ lstat($0, &info) }) == 0,
+              (info.st_mode & S_IFMT) == S_IFREG, rawRead(transcript) != nil else {
+            throw LectureError.message("A different item occupies the key moments file name.")
+        }
         try FileManager.default.trashItem(at: file, resultingItemURL: nil)
     }
 }
