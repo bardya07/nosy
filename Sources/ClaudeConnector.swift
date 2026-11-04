@@ -36,6 +36,18 @@ enum ConnectorAccess {
 enum ConnectorProcessCheck {
     enum Result { case running, noneFound, unavailable }
 
+    // This is only a snapshot of the standard process name. Renamed helpers or
+    // copies launched later are not ruled out, so callers must still warn users.
+    static func requireStopped() throws {
+        switch check() {
+        case .noneFound: return
+        case .running:
+            throw LectureError.message("Quit all connected clients and their nosy-mcp processes, then try again. Older connectors may ignore access settings.")
+        case .unavailable:
+            throw LectureError.message("Couldn't check for running connectors. Quit all connected clients, then try again.")
+        }
+    }
+
     static func check() -> Result {
         var mib: [Int32] = [CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0]
         for _ in 0..<3 {

@@ -1054,8 +1054,13 @@ final class AppModel: ObservableObject {
             return false
         }
         if folder.resolvingSymlinksInPath().standardizedFileURL != paths.transcripts.resolvingSymlinksInPath().standardizedFileURL {
-            do { try ConnectorAccess.setAllowed(false, paths: paths) }
-            catch { showError("Couldn't revoke connector access: \(error.localizedDescription)"); return false }
+            do {
+                try ConnectorAccess.setAllowed(false, paths: paths)
+                try ConnectorProcessCheck.requireStopped()
+            } catch {
+                showError("Couldn't change libraries. Connector access for updated helpers may have been turned off. \(error.localizedDescription)")
+                return false
+            }
         }
         rememberLibrary(paths.transcripts)
         UserDefaults.standard.set(folder.path, forKey: AppPaths.transcriptsKey)

@@ -338,7 +338,7 @@ struct SettingsView: View {
                 Text("Connector access is separate from AI features. Connected apps can read the entire allowed library and may send its contents elsewhere. Changing libraries requires a new grant.")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("After upgrading Nosy, quit and reopen every connected client, including Claude Desktop, Cursor, and command-line clients. Older connectors can keep reading transcripts after access is turned off or the library changes. Nosy cannot verify that every client has restarted.")
+                Text("After upgrading Nosy, quit every connected client, including Claude Desktop, Cursor, and command-line clients. Reopen them using this copy of Nosy's connector. Older or renamed copies can keep reading transcripts after access is turned off or the library changes; Nosy cannot verify that every client uses an updated connector.")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Check for running connectors") { checkConnectorProcesses() }
@@ -459,9 +459,24 @@ struct SettingsView: View {
     }
     private func changeConnectorAccess(_ allowed: Bool) {
         do {
+            if allowed { try ConnectorProcessCheck.requireStopped() }
             try ConnectorAccess.setAllowed(allowed, paths: model.paths)
-            connectionMessage = allowed ? "Connector access allowed for this library. Restart all clients after upgrading Nosy." : "Access turned off for updated connectors. Quit and reopen every connected client to stop older connectors."
-            connectionFailed = false
+            if allowed {
+                connectionMessage = "Connector access allowed for this library. Reopen clients using this copy of Nosy's connector."
+                connectionFailed = false
+            } else {
+                switch ConnectorProcessCheck.check() {
+                case .running:
+                    connectionMessage = "Access is off for updated connectors, but a connector is still running. Quit all connected clients to stop older connectors."
+                    connectionFailed = true
+                case .noneFound:
+                    connectionMessage = "Access is off for updated connectors. No nosy-mcp process was found now; renamed or later-launched older copies can still read transcripts."
+                    connectionFailed = false
+                case .unavailable:
+                    connectionMessage = "Access is off for updated connectors, but running connectors could not be checked. Quit all connected clients to stop older connectors."
+                    connectionFailed = true
+                }
+            }
         } catch {
             connectionMessage = error.localizedDescription
             connectionFailed = true
