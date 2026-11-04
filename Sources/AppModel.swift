@@ -897,6 +897,7 @@ final class AppModel: ObservableObject {
     func refreshSavedTranscript() { savedSummary = SavedSummary(record: current, model: self) }
     func transcriptChanged(from old: URL, to new: URL?) {
         libraryRevision += 1
+        if old == new { summaries.cancelMoments(old) }
         guard current?.transcriptPath == old.path else { return }
         current?.transcriptPath = new?.path
         refreshSavedTranscript()

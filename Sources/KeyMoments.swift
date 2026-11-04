@@ -34,6 +34,7 @@ struct KeyMomentPlan: Sendable {
     let duration: TimeInterval?
     let manualTimes: [TimeInterval]
     let title: String
+    let transcriptHash: String
 }
 
 struct PlacedMarker: Equatable, Sendable {
@@ -450,7 +451,15 @@ enum KeyMoments {
         let folder = transcript.deletingLastPathComponent().lastPathComponent
         let session = transcript.deletingPathExtension().lastPathComponent
         let title = record.map { "\($0.lecture) · \($0.session)" } ?? "\(folder) · \(session)"
-        return KeyMomentPlan(units: units, duration: duration, manualTimes: manual, title: title)
+        return KeyMomentPlan(units: units, duration: duration, manualTimes: manual, title: title,
+                             transcriptHash: KeyMomentStore.hash(markdown))
+    }
+
+    static func requireUnchanged(_ transcript: URL, hash: String) throws {
+        guard let current = try? String(contentsOf: transcript, encoding: .utf8),
+              KeyMomentStore.hash(current) == hash else {
+            throw LectureError.message("The transcript changed while finding key moments. Try again.")
+        }
     }
 
     // Manual markers as the transcript writes them ("> [1:02] Label"), for transcripts whose recording is gone.

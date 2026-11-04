@@ -998,10 +998,17 @@ final class SummaryCenter: ObservableObject {
                 try await self?.waitUntilReady(provider, lane: .moments, key: key)
                 await self?.reportMoments(key, job: job, current: current, total: total)
             },
-            complete: { prompt in try await SummaryRunner.run(prompt, request: finalRequest, job: job) })
+            complete: { prompt in
+                try job.checkCancellation()
+                try KeyMoments.requireUnchanged(transcript, hash: plan.transcriptHash)
+                try job.checkCancellation()
+                return try await SummaryRunner.run(prompt, request: finalRequest, job: job)
+            })
         try Task.checkCancellation()
         guard AIFeatures.enabled(defaults) else { throw CancellationError() }
-        try await Task.detached(priority: .utility) { try KeyMomentStore.replace(markers, transcript: transcript, paths: paths) }.value
+        // Check and publish on the main actor so an in-app edit cannot interleave here.
+        try KeyMoments.requireUnchanged(transcript, hash: plan.transcriptHash)
+        try KeyMomentStore.replace(markers, transcript: transcript, paths: paths)
         momentNotes[key] = markers.isEmpty ? Note(text: "No clear key moments found.", failed: false) : nil
         revision += 1
     }
