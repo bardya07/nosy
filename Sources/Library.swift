@@ -489,9 +489,9 @@ final class TranscriptLibrary: ObservableObject {
             try Core.detachTranscripts(in: url, folder: false, paths: paths)
             if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-            try? TranscriptIdentity.trash(url)
             // Sidecars go with their transcript; leftover names are reserved if Trash fails.
             try? KeyMomentStore.trash(transcript: url)
+            try? TranscriptIdentity.trash(url)
             paths.purgeLegacyNotes()
             paths.purgeLegacyRouting()
         } catch {
