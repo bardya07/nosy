@@ -116,7 +116,7 @@ enum KeyMomentStore {
         guard let stored = rawRead(transcript) else { return nil }
         var file = stored.file
         let current = try? String(contentsOf: transcript, encoding: .utf8)
-        if file.transcriptHash != current.map(hash) {
+        if current == nil || file.transcriptHash == nil || file.transcriptHash != current.map(hash) {
             let original = file
             scrub(&file)
             if stored.owned && file != original { try? write(file, for: transcript) }
