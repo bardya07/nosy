@@ -86,6 +86,8 @@ struct LibrarySnapshot: Sendable {
     let items: [TranscriptItem]
     let unfiltered: TranscriptResults
     let unfinished: [SessionRecord]
+    let unverifiedAudio: [SessionRecord]
+    let identityIssue: String?
     // Keyed by standardized transcript path. The first recording for a transcript (newest first) wins, as Core.record(forTranscript:) does.
     let readers: [String: ReaderRecord]
     let recordingLengths: [String: TimeInterval]
@@ -98,8 +100,7 @@ struct LibrarySnapshot: Sendable {
         let lectures = (try? manager.contentsOfDirectory(at: root, includingPropertiesForKeys: keys, options: [])) ?? []
         // The recordings are listed once; everything that needs them is derived from this one list.
         let records = Core.records(in: paths)
-        // Transcripts Nosy wrote stay listed even if their header was edited away.
-        let written = Set(records.compactMap(\.transcriptPath).map { URL(fileURLWithPath: $0).standardizedFileURL.path })
+        var identityIssue: String?
         let items = lectures.flatMap { folder -> [TranscriptItem] in
             guard Core.isContained(folder, in: root),
                   (try? folder.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return [] }
@@ -108,13 +109,28 @@ struct LibrarySnapshot: Sendable {
             // A summary sits next to its transcript; it is read from the transcript, not listed.
             let names = Set(markdown.map(\.lastPathComponent))
             return markdown.filter { Core.isContained($0, in: root)
-                && (written.contains($0.standardizedFileURL.path) || TranscriptIdentity.indexed($0) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
-                // Only files Nosy wrote: never the owner's other notes that share the folder.
-                guard let text = try? String(contentsOf: url, encoding: .utf8),
-                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) || TranscriptIdentity.indexed(url) else { return nil }
-                // Migrate existing transcripts while their recording still identifies them. No legacy
-                // recording is bound for retention, since a path alone cannot prove ownership.
-                if !TranscriptIdentity.indexed(url) { try? TranscriptIdentity.index(url) }
+                && (((TranscriptIdentity.indexID($0) != nil) && TranscriptIdentity.indexID($0) == TranscriptIdentity.attributeValue($0)) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
+                // An adjacent index alone does not identify the file now at this path.
+                guard let text = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+                let owned = TranscriptIdentity.indexID(url).map { $0 == TranscriptIdentity.attributeValue(url) } ?? false
+                guard Core.isTranscript(text) || owned else { return nil }
+                // Publication and migration share this lock, so a scan cannot claim a newly
+                // published transcript before its recording is bound.
+                do {
+                    try TranscriptCoordination.withLock(paths: paths) {
+                        if TranscriptIdentity.indexID(url) == nil,
+                           (try? String(contentsOf: url, encoding: .utf8)).map(Core.isTranscript) == true {
+                            try TranscriptIdentity.index(url)
+                        }
+                        if let id = TranscriptIdentity.indexID(url), TranscriptIdentity.attributeValue(url) == id {
+                            try? KeyMomentStore.cleanupLegacyTiming(transcript: url, paths: paths)
+                        }
+                    }
+                } catch {
+                    if identityIssue == nil {
+                        identityIssue = "Couldn't set up identity for \(url.lastPathComponent): \(error.localizedDescription)"
+                    }
+                }
                 // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
                 return TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
                                       recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
@@ -127,13 +143,24 @@ struct LibrarySnapshot: Sendable {
             let length = Core.audioDuration(id: record.id, paths: paths)
             lengths[record.id] = length
             guard let path = record.transcriptPath else { continue }
-            let key = URL(fileURLWithPath: path).standardizedFileURL.path
+            let document = URL(fileURLWithPath: path)
+            let key = document.standardizedFileURL.path
+            guard let id = record.transcriptID, TranscriptIdentity.indexID(document) == id,
+                  TranscriptIdentity.attributeValue(document) == id else { continue }
             if readers[key] == nil {
                 readers[key] = ReaderRecord(record: record, audio: AudioFiles.playable(id: record.id, paths: paths), duration: length)
             }
         }
         let unfinished = records.filter { record in
             record.status != .done && ["pcm", "wav", "m4a"].contains { manager.fileExists(atPath: paths.audioFile(record.id, $0).path) }
+        }
+        let unverifiedAudio = records.filter { record in
+            guard record.status == .done, ["m4a", "wav", "pcm"].contains(where: {
+                paths.safeSupportItem(paths.audioFile(record.id, $0), directory: false)
+            }) else { return false }
+            guard let path = record.transcriptPath, let id = record.transcriptID else { return true }
+            let document = URL(fileURLWithPath: path)
+            return TranscriptIdentity.indexID(document) != id || TranscriptIdentity.attributeValue(document) != id
         }
         let metadata = Dictionary(uniqueKeysWithValues: items.map { item in
             let reader = readers[item.url.standardizedFileURL.path]
@@ -143,6 +170,7 @@ struct LibrarySnapshot: Sendable {
                     "\(Core.dateString(start, format: "MMM d, yyyy")) · \(Core.dateString(start, format: "HH:mm")) · \(Core.minutes(duration)) min")
         })
         return LibrarySnapshot(paths: paths, items: items, unfiltered: TranscriptResults(items, needle: ""), unfinished: unfinished,
+                               unverifiedAudio: unverifiedAudio, identityIssue: identityIssue,
                                readers: readers, recordingLengths: lengths, metadata: metadata)
     }
 }
@@ -200,6 +228,8 @@ struct ReaderDetails: Equatable, Sendable {
 final class TranscriptLibrary: ObservableObject {
     @Published private(set) var items: [TranscriptItem] = []
     @Published private(set) var unfinished: [SessionRecord] = []
+    @Published private(set) var unverifiedAudio: [SessionRecord] = []
+    @Published private(set) var identityIssue: String?
     @Published private(set) var readers: [String: ReaderRecord] = [:]
     @Published private(set) var recordingLengths: [String: TimeInterval] = [:]
     @Published private(set) var metadata: [String: String] = [:]
@@ -359,6 +389,8 @@ final class TranscriptLibrary: ObservableObject {
         loadedPaths = loaded.paths
         items = loaded.items
         unfinished = loaded.unfinished
+        unverifiedAudio = loaded.unverifiedAudio
+        identityIssue = loaded.identityIssue
         readers = loaded.readers
         recordingLengths = loaded.recordingLengths
         metadata = loaded.metadata
@@ -478,6 +510,83 @@ final class TranscriptLibrary: ObservableObject {
         guard !list.isEmpty else { return }
         let index = list.firstIndex { $0.url == selection } ?? (step > 0 ? -1 : list.count)
         _ = select(list[min(list.count - 1, max(0, index + step))].url)
+    }
+
+    // Repair is explicit: a missing attribute may mean an editor replaced the file, or
+    // that an unrelated file took its name. A fresh identity never revives old audio authority.
+    func repairIdentity(paths: AppPaths) {
+        let panel = NSOpenPanel()
+        panel.message = "Choose the transcript whose missing identity you want to repair."
+        panel.directoryURL = paths.transcripts
+        panel.allowedContentTypes = [.plainText]
+        guard panel.runModal() == .OK, let url = panel.url, Core.isContained(url, in: paths.transcripts) else { return }
+        let alert = NSAlert()
+        alert.messageText = "Repair this transcript’s identity?"
+        alert.informativeText = "Only continue if you recognize this file as your transcript. Repair gives it a new identity. Existing recordings will remain unverified, and key moments tied to the old identity will remain stored separately."
+        alert.addButton(withTitle: "Repair Identity")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try TranscriptCoordination.withLock(paths: paths) {
+                guard Core.isContained(url, in: paths.transcripts), url.pathExtension.lowercased() == "md",
+                      TranscriptIdentity.indexID(url) != nil, TranscriptIdentity.attributeValue(url) == nil else {
+                    throw LectureError.message("This file does not have an identity with a missing attribute.")
+                }
+                try TranscriptIdentity.repairMissingAttribute(url)
+            }
+            invalidate(paths: paths)
+        } catch { NSAlert(error: error).runModal() }
+    }
+
+    // The owner chooses and verifies the recording; a stored path is only a hint and
+    // is never used as proof for granting automatic retention authority.
+    func linkRecording(to item: TranscriptItem, paths: AppPaths) {
+        guard !unverifiedAudio.isEmpty else { return }
+        let selector = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 420, height: 26), pullsDown: false)
+        for record in unverifiedAudio {
+            selector.addItem(withTitle: "\(record.lecture) · \(record.session) · \(Core.dateString(record.startedAt, format: "yyyy-MM-dd HH:mm")) · \(record.id)")
+        }
+        let alert = NSAlert()
+        alert.messageText = "Link a recording to this transcript"
+        alert.informativeText = "Choose the recording you have checked against \(item.lecture) · \(item.session). Use Show in Finder in Unverified Audio to listen first. Once linked, Nosy may automatically delete its audio under your retention setting."
+        alert.accessoryView = selector
+        alert.addButton(withTitle: "Continue")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn, unverifiedAudio.indices.contains(selector.indexOfSelectedItem) else { return }
+        let selected = unverifiedAudio[selector.indexOfSelectedItem]
+        let confirm = NSAlert()
+        confirm.messageText = "Have you verified this recording?"
+        confirm.informativeText = "You are linking \(selected.lecture) · \(selected.session) (\(selected.id)) to \(item.lecture) · \(item.session). Audio may be deleted automatically when its retention period expires."
+        confirm.addButton(withTitle: "I Verified This Recording")
+        confirm.addButton(withTitle: "Cancel")
+        guard confirm.runModal() == .alertFirstButtonReturn else { return }
+        do {
+            try TranscriptCoordination.withLock(paths: paths) {
+                guard Core.isContained(item.url, in: paths.transcripts),
+                      try String(contentsOf: item.url, encoding: .utf8) == item.text,
+                      let id = TranscriptIdentity.indexID(item.url), TranscriptIdentity.attributeValue(item.url) == id,
+                      ["m4a", "wav", "pcm"].contains(where: {
+                          paths.safeSupportItem(paths.audioFile(selected.id, $0), directory: false)
+                      }) else {
+                    throw LectureError.message("The transcript or recording changed. Reload before linking.")
+                }
+                let sidecar = paths.audioFile(selected.id, "json")
+                guard paths.safeSupportItem(sidecar, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+                var record = try SessionRecord.read(sidecar)
+                guard record == selected, record.status == .done else {
+                    throw LectureError.message("The recording changed. Reload before linking.")
+                }
+                guard !Core.records(in: paths).contains(where: { $0.id != record.id && $0.transcriptID == id }) else {
+                    throw LectureError.message("This transcript is already linked to another recording.")
+                }
+                // Preserve old marker metadata before rewriting a legacy recording sidecar.
+                try KeyMomentStore.preserveLegacy(record: record, transcript: item.url, paths: paths)
+                record.transcriptPath = item.url.path
+                record.transcriptID = id
+                try record.save(in: paths)
+            }
+            invalidate(paths: paths)
+        } catch { NSAlert(error: error).runModal() }
     }
 
     // Moves a transcript to the Trash (recoverable) and selects its neighbour.
@@ -802,6 +911,9 @@ struct LibraryView: View {
             .accessibilityLabel("Import audio")
             .disabled(model.busy)
             importActivity
+            Button("Repair transcript identity…") { library.repairIdentity(paths: libraryPaths) }
+                .buttonStyle(LinkButtonStyle(tint: Theme.navy))
+                .tip("Repair a transcript after an editor removes its identity")
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Theme.muted).font(.system(size: 12, weight: .semibold))
                     .accessibilityHidden(true)
@@ -814,7 +926,12 @@ struct LibraryView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 8) {
+                        if let issue = library.identityIssue {
+                            Text(issue).font(Theme.text(11)).foregroundStyle(Theme.coral)
+                                .padding(.horizontal, 10)
+                        }
                         if library.unfinished.contains(where: { !model.isLive($0.id) }), library.query.isEmpty { unfinishedSection }
+                        if !library.unverifiedAudio.isEmpty, library.query.isEmpty { unverifiedAudioSection }
                         ForEach(library.groups, id: \.lecture) { group in
                             folderGroup(group.lecture, group.items)
                         }
@@ -973,6 +1090,35 @@ struct LibraryView: View {
         .padding(.bottom, 6)
     }
 
+    private var unverifiedAudioSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("UNVERIFIED AUDIO").font(Theme.label).kerning(0.8).foregroundStyle(Theme.coral)
+                .padding(.horizontal, 10).accessibilityAddTraits(.isHeader)
+            Text("These recordings are kept beyond the retention limit until you verify their transcripts.")
+                .font(Theme.text(11)).foregroundStyle(Theme.muted).padding(.horizontal, 10)
+            ForEach(library.unverifiedAudio, id: \.id) { record in
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(record.lecture) · \(record.session)").font(Theme.text(11.5, .semibold)).lineLimit(1)
+                        Text(Core.dateString(record.startedAt, format: "yyyy-MM-dd HH:mm"))
+                            .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    }
+                    Spacer(minLength: 0)
+                    Button {
+                        if let audio = ["m4a", "wav", "pcm"].map({ libraryPaths.audioFile(record.id, $0) })
+                            .first(where: { libraryPaths.safeSupportItem($0, directory: false) }) {
+                            NSWorkspace.shared.activateFileViewerSelecting([audio])
+                        }
+                    } label: { Image(systemName: "folder") }
+                    .buttonStyle(IconButtonStyle(size: 26)).tip("Show audio in Finder")
+                    .accessibilityLabel("Show audio for \(record.lecture) \(record.session) in Finder")
+                }.padding(.horizontal, 10).padding(.vertical, 4)
+            }
+            Text("Select a transcript and choose Link recording after listening to the audio.")
+                .font(Theme.text(11)).foregroundStyle(Theme.muted).padding(.horizontal, 10)
+        }.padding(.bottom, 6)
+    }
+
     // MARK: Reader
 
     @ViewBuilder private var reader: some View {
@@ -1075,6 +1221,11 @@ struct LibraryView: View {
                 }
                 .buttonStyle(IconButtonStyle(size: 32, active: copied))
                 .tip(copied ? "Copied" : "Copy").accessibilityLabel(showingSummary ? "Copy summary" : "Copy transcript")
+                if !library.unverifiedAudio.isEmpty {
+                    Button { library.linkRecording(to: item, paths: libraryPaths) } label: { Image(systemName: "link") }
+                        .buttonStyle(IconButtonStyle(size: 32)).tip("Link a verified recording")
+                        .accessibilityLabel("Link a verified recording")
+                }
                 ExportMenu(item: item)
                 Button { NSWorkspace.shared.activateFileViewerSelecting([item.url]) } label: { Image(systemName: "folder") }
                 .buttonStyle(IconButtonStyle(size: 32)).tip("Show in Finder").accessibilityLabel("Show in Finder")
