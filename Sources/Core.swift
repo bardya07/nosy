@@ -369,6 +369,8 @@ struct SessionRecord: Codable, Sendable, Equatable {
     var endedAt: Date?
     var status: RecordStatus
     var transcriptPath: String?
+    // Independent of the editable Markdown and recording file name.
+    var transcriptID: String?
     var error: String?
     var dismissed: Bool?
     // When the transcript was saved; retention counts from here (imports can have old start dates).
@@ -381,7 +383,7 @@ struct SessionRecord: Codable, Sendable, Equatable {
 
     // Old sidecars predate markers; keep recovery and Retry compatible with them.
     enum CodingKeys: String, CodingKey {
-        case id, lecture, session, startedAt, endedAt, status, transcriptPath, error, dismissed, transcribedAt, markers, vocabularyTerms
+        case id, lecture, session, startedAt, endedAt, status, transcriptPath, transcriptID, error, dismissed, transcribedAt, markers, vocabularyTerms
     }
 
     func save(in paths: AppPaths) throws {
@@ -417,6 +419,7 @@ extension SessionRecord {
         status = try c.decode(RecordStatus.self, forKey: .status)
         endedAt = try c.decodeIfPresent(Date.self, forKey: .endedAt)
         transcriptPath = try c.decodeIfPresent(String.self, forKey: .transcriptPath)
+        transcriptID = try c.decodeIfPresent(String.self, forKey: .transcriptID)
         error = try c.decodeIfPresent(String.self, forKey: .error)
         dismissed = try c.decodeIfPresent(Bool.self, forKey: .dismissed)
         transcribedAt = try c.decodeIfPresent(Date.self, forKey: .transcribedAt)
@@ -638,7 +641,8 @@ enum Core {
             let url = folder.appendingPathComponent(name).appendingPathExtension("md")
             let summary = folder.appendingPathComponent(name + " summary.md")
             if !pathEntryExists(at: url), !pathEntryExists(at: summary),
-               !pathEntryExists(at: KeyMomentStore.url(for: url)) { return url }
+               !pathEntryExists(at: KeyMomentStore.url(for: url)),
+               !pathEntryExists(at: TranscriptIdentity.url(for: url)) { return url }
             number += 1
         }
     }
@@ -686,7 +690,10 @@ enum Core {
         guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
             throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
         }
+        try KeyMomentStore.invalidateForEdit(url)
+        let identity = TranscriptIdentity.attributeValue(url)
         try Data(text.utf8).write(to: url, options: .atomic)
+        if let identity { try? TranscriptIdentity.setAttribute(identity, on: url) }
     }
     static func duration(pcmBytes: Int64) -> TimeInterval { Double(max(0, pcmBytes)) / Double(bytesPerSecond) }
     static func audioDuration(id: String, paths: AppPaths) -> TimeInterval {
@@ -866,6 +873,18 @@ enum Core {
             return URL(fileURLWithPath: path).standardizedFileURL.path == url.standardizedFileURL.path
         }
     }
+    // Detach before a Trash operation, so even a reused pathname can never authorize deletion.
+    static func detachTranscripts(in url: URL, folder: Bool, paths: AppPaths) throws {
+        let path = url.standardizedFileURL.path
+        for var record in records(in: paths) {
+            guard let stored = record.transcriptPath else { continue }
+            let candidate = URL(fileURLWithPath: stored).standardizedFileURL.path
+            guard candidate == path || (folder && candidate.hasPrefix(path + "/")) else { continue }
+            record.transcriptPath = nil
+            record.transcriptID = nil
+            try record.save(in: paths)
+        }
+    }
     static func unfinished(paths: AppPaths) -> [SessionRecord] {
         records(in: paths).filter { record in
             record.status != .done && ["pcm", "wav", "m4a"].contains {
@@ -888,8 +907,10 @@ enum Core {
             guard let record = try? SessionRecord.read(sidecar),
                   !retentionCandidates([record], now: now, days: paths.retentionDays).isEmpty else { continue }
             // A lost or trashed transcript must never cost the owner the only remaining audio.
-            guard let transcript = record.transcriptPath,
-                  FileManager.default.isReadableFile(atPath: transcript) else { continue }
+            guard let transcript = record.transcriptPath, let identity = record.transcriptID,
+                  FileManager.default.isReadableFile(atPath: transcript),
+                  TranscriptIdentity.indexID(URL(fileURLWithPath: transcript)) == identity,
+                  TranscriptIdentity.attributeValue(URL(fileURLWithPath: transcript)) == identity else { continue }
             // AI markers and timings from before KeyMomentStore move beside the transcript first. If that fails, keep the audio.
             do { try KeyMomentStore.preserveLegacy(record: record, transcript: URL(fileURLWithPath: transcript), paths: paths) }
             catch { continue }

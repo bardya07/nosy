@@ -108,10 +108,13 @@ struct LibrarySnapshot: Sendable {
             // A summary sits next to its transcript; it is read from the transcript, not listed.
             let names = Set(markdown.map(\.lastPathComponent))
             return markdown.filter { Core.isContained($0, in: root)
-                && (written.contains($0.standardizedFileURL.path) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
+                && (written.contains($0.standardizedFileURL.path) || TranscriptIdentity.indexed($0) || !SummaryFiles.isSummary($0, siblings: names)) }.compactMap { url in
                 // Only files Nosy wrote: never the owner's other notes that share the folder.
                 guard let text = try? String(contentsOf: url, encoding: .utf8),
-                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) else { return nil }
+                      Core.isTranscript(text) || written.contains(url.standardizedFileURL.path) || TranscriptIdentity.indexed(url) else { return nil }
+                // Migrate existing transcripts while their recording still identifies them. No legacy
+                // recording is bound for retention, since a path alone cannot prove ownership.
+                if !TranscriptIdentity.indexed(url) { try? TranscriptIdentity.index(url) }
                 // Creation date stays put when a transcript is edited elsewhere, so the order doesn't jump.
                 return TranscriptItem(url: url, lecture: folder.lastPathComponent, session: url.deletingPathExtension().lastPathComponent,
                                       recorded: (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast,
@@ -483,9 +486,11 @@ final class TranscriptLibrary: ObservableObject {
         let list = ordered
         let index = list.firstIndex(where: { $0.url == url })
         do {
+            try Core.detachTranscripts(in: url, folder: false, paths: paths)
             if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-            // Key moments go with their transcript. A leftover hidden file is harmless and is replaced if the name comes back.
+            try? TranscriptIdentity.trash(url)
+            // Sidecars go with their transcript; leftover names are reserved if Trash fails.
             try? KeyMomentStore.trash(transcript: url)
             paths.purgeLegacyNotes()
             paths.purgeLegacyRouting()
@@ -559,11 +564,14 @@ final class TranscriptLibrary: ObservableObject {
         let hasMoments = FileManager.default.fileExists(atPath: KeyMomentStore.url(for: item.url).path)
         try FileManager.default.moveItem(at: item.url, to: target)
         var movedMoments = false
+        var movedIdentity = false
         do {
             if let summary { try FileManager.default.moveItem(at: summary, to: SummaryFiles.url(for: target)) }
             if hasMoments { try KeyMomentStore.move(from: item.url, to: target); movedMoments = true }
+            if TranscriptIdentity.indexed(item.url) { try TranscriptIdentity.move(from: item.url, to: target); movedIdentity = true }
             if var record { record.transcriptPath = target.path; try record.save(in: paths) }
         } catch {
+            if movedIdentity { try? TranscriptIdentity.move(from: target, to: item.url) }
             if movedMoments { try? KeyMomentStore.move(from: target, to: item.url) }
             if let summary, FileManager.default.fileExists(atPath: SummaryFiles.url(for: target).path) {
                 try? FileManager.default.moveItem(at: SummaryFiles.url(for: target), to: summary)

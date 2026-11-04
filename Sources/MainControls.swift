@@ -173,6 +173,7 @@ enum LectureFolderTrash {
               FileManager.default.fileExists(atPath: folder.path, isDirectory: &isDirectory), isDirectory.boolValue else {
             throw LectureError.message("That folder is no longer in your transcript library.")
         }
+        try Core.detachTranscripts(in: folder, folder: true, paths: paths)
         try mover(folder)
     }
 

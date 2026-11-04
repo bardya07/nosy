@@ -203,6 +203,8 @@ enum Transcriber {
             let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text, body: body)
             try job.checkCancellation()
             let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)
+            let transcriptID = UUID().uuidString
+            if (try? TranscriptIdentity.bind(target, id: transcriptID)) != nil { record.transcriptID = transcriptID }
             // Timings sit beside the transcript for later key moments, so they outlive the audio. A failure never fails the transcript.
             try? KeyMomentStore.start(transcript: target, segments: segments?.transcription, text: text)
             record.transcriptPath = target.path
