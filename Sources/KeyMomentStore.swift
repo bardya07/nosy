@@ -116,6 +116,29 @@ enum KeyMomentStore {
         scrub(&file)
         try write(file, for: transcript)
     }
+    // Older versions kept segments and AI anchors with the recording instead.
+    static func invalidateLegacyForEdit(_ transcript: URL, paths: AppPaths) throws {
+        guard let record = Core.record(forTranscript: transcript, paths: paths) else { return }
+        let segmentsURL = paths.audioFile(record.id, "segments.json")
+        if FileManager.default.fileExists(atPath: segmentsURL.path) {
+            guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+            let data = try Data(contentsOf: segmentsURL)
+            if var segments = try? JSONDecoder().decode(SavedSegments.self, from: data) {
+                segments.transcriptHash = nil
+                for index in segments.segments.indices { segments.segments[index].text = "" }
+                try JSONEncoder().encode(segments).write(to: segmentsURL, options: .atomic)
+            }
+        }
+        let recordURL = paths.audioFile(record.id, "json")
+        guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+        let data = try Data(contentsOf: recordURL)
+        if var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+           var markers = object["aiMarkers"] as? [[String: Any]] {
+            for index in markers.indices { markers[index]["anchor"] = "" }
+            object["aiMarkers"] = markers
+            try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: recordURL, options: .atomic)
+        }
+    }
     static func write(_ file: KeyMomentsFile, for transcript: URL) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]

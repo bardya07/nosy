@@ -600,6 +600,10 @@ final class TranscriptLibrary: ObservableObject {
             guard let expected = expectedText ?? items.first(where: { $0.url == url })?.text else {
                 throw LectureError.message("Reload this transcript before editing it.")
             }
+            guard try String(contentsOf: url, encoding: .utf8) == expected else {
+                throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+            }
+            try KeyMomentStore.invalidateLegacyForEdit(url, paths: paths)
             try Core.saveTranscriptEdits(text, to: url, expectedText: expected)
             didChange?(url, url)
             changeItems { rows in
