@@ -53,20 +53,16 @@ enum TranscriptIdentity {
         guard let oldID = indexID(transcript) else {
             throw LectureError.message("This transcript has no usable identity to repair.")
         }
-        let id = UUID().uuidString
-        try createAttribute(id, on: transcript)
-        do {
-            guard indexID(transcript) == oldID else {
-                throw LectureError.message("The transcript identity changed during repair. Try again.")
-            }
-            let data = try JSONEncoder().encode(Index(version: 1, id: id))
-            try data.write(to: url(for: transcript), options: .atomic)
-        } catch {
-            if attributeValue(transcript) == id {
-                _ = removexattr(transcript.path, attribute, XATTR_NOFOLLOW)
-            }
-            throw error
+        guard attributeValue(transcript) == nil, indexID(transcript) == oldID else {
+            throw LectureError.message("The transcript identity changed during repair. Try again.")
         }
+        let id = UUID().uuidString
+        let data = try JSONEncoder().encode(Index(version: 1, id: id))
+        // Replace the old index first. If interrupted or attribute creation fails, the
+        // document still has no attribute and the explicit repair can be retried. No
+        // recording can acquire authority from this newly generated index alone.
+        try data.write(to: url(for: transcript), options: .atomic)
+        try createAttribute(id, on: transcript)
     }
     private static func createAttribute(_ id: String, on transcript: URL) throws {
         let bytes = Array(id.utf8)
