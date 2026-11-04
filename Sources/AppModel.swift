@@ -719,6 +719,7 @@ final class AppModel: ObservableObject {
             let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
             let outcome = markdown.map { Core.wordCount($0) == 0 } == true ? "No speech detected" : "Transcript saved"
             notify("\(outcome). \(result.lecture) · \(result.session)", path: result.transcriptPath)
+            if let warning = result.error { showError(warning) }
             if let path = result.transcriptPath, markdown.map({ Core.wordCount($0) > 0 }) == true {
                 summaries.transcriptSaved(URL(fileURLWithPath: path))
             }
