@@ -341,10 +341,12 @@ struct SettingsView: View {
                 Text("After upgrading Nosy, quit and reopen every connected client, including Claude Desktop, Cursor, and command-line clients. Older connectors can keep reading transcripts after access is turned off or the library changes. Nosy cannot verify that every client has restarted.")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
+                Button("Check for running connectors") { checkConnectorProcesses() }
+                    .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                 Text("Library: \(abbreviated(model.paths.transcripts))")
                     .font(Theme.text(10)).foregroundStyle(Theme.muted)
                     .textSelection(.enabled)
-                Button(connectorAccessAllowed ? "Revoke connector access" : "Allow connector access to this library") {
+                Button(connectorAccessAllowed ? "Turn off access for updated connectors" : "Allow connector access to this library") {
                     changeConnectorAccess(!connectorAccessAllowed)
                 }
                 .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
@@ -465,6 +467,19 @@ struct SettingsView: View {
             connectionFailed = true
         }
         refreshConnection()
+    }
+    private func checkConnectorProcesses() {
+        switch ConnectorProcessCheck.check() {
+        case .running:
+            connectionMessage = "A nosy-mcp process is still running. Quit all connected clients and check again."
+            connectionFailed = true
+        case .noneFound:
+            connectionMessage = "No nosy-mcp process found now. Reopen clients using the updated Nosy connector; older copies can still bypass access controls."
+            connectionFailed = false
+        case .unavailable:
+            connectionMessage = "Could not check running connectors. Quit all connected clients; access from older connectors cannot be verified."
+            connectionFailed = true
+        }
     }
     private func changeConnection(adding: Bool) {
         do {
