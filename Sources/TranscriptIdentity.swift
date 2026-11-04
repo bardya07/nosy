@@ -19,6 +19,35 @@ enum TranscriptIdentity {
         return value.id
     }
     static func indexed(_ transcript: URL) -> Bool { indexID(transcript) != nil }
+    // Probe the actual attribute used by transcripts before accepting a new library.
+    // The exclusive name belongs to this probe; only remove it if it still names the
+    // same regular file, so an independently replaced item is left alone.
+    static func checkStorage(at folder: URL) throws {
+        let probe = folder.appendingPathComponent(".nosy-identity-check-\(UUID().uuidString)")
+        let fd = open(probe.path, O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW, 0o600)
+        guard fd >= 0 else {
+            throw LectureError.message("Nosy could not create a file in this folder (error \(errno)). Choose a writable library on storage that supports extended attributes.")
+        }
+        defer {
+            var opened = stat(), named = stat()
+            if fstat(fd, &opened) == 0, lstat(probe.path, &named) == 0,
+               (named.st_mode & S_IFMT) == S_IFREG,
+               opened.st_dev == named.st_dev, opened.st_ino == named.st_ino {
+                _ = unlink(probe.path)
+            }
+            close(fd)
+        }
+        let id = UUID().uuidString
+        let bytes = Array(id.utf8)
+        guard bytes.withUnsafeBytes({ fsetxattr(fd, attribute, $0.baseAddress, $0.count, 0, XATTR_CREATE) }) == 0 else {
+            throw LectureError.message("Nosy could not save transcript identity attributes in this folder (error \(errno)). Choose a writable library on storage that supports extended attributes.")
+        }
+        var result = [UInt8](repeating: 0, count: bytes.count)
+        let count = fgetxattr(fd, attribute, &result, result.count, 0, 0)
+        guard count == bytes.count, result == bytes else {
+            throw LectureError.message("Nosy could not read transcript identity attributes in this folder. Choose a writable library on storage that supports extended attributes.")
+        }
+    }
     // Install the attribute first. An orphaned UUID attribute can be reused after an
     // interrupted initialization; an index alone is never proof of document ownership.
     static func index(_ transcript: URL, id requestedID: String? = nil) throws {
