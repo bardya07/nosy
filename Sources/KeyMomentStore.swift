@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 // Durable storage for Find key moments. Each transcript gets a hidden file beside it, named
 // `.<transcript name>.key-moments.json`. It moves with the transcript on rename, goes to the Trash with
@@ -39,6 +40,7 @@ struct SavedSegments: Codable, Sendable, Equatable {
         var text: String
     }
     var version = 1
+    var transcriptHash: String? = nil
     var segments: [Item]
 }
 
@@ -51,17 +53,20 @@ private struct Lossy<Value: Decodable & Sendable>: Decodable, Sendable {
 // Everything one transcript keeps for Find key moments.
 struct KeyMomentsFile: Codable, Sendable, Equatable {
     var version = 1
+    var transcriptHash: String?
     var segments: SavedSegments?
     var markers: [AIMarker] = []
 
-    init(segments: SavedSegments? = nil, markers: [AIMarker] = []) {
+    init(transcriptHash: String? = nil, segments: SavedSegments? = nil, markers: [AIMarker] = []) {
+        self.transcriptHash = transcriptHash
         self.segments = segments
         self.markers = markers
     }
-    private enum CodingKeys: String, CodingKey { case version, segments, markers }
+    private enum CodingKeys: String, CodingKey { case version, transcriptHash, segments, markers }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = try c.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        transcriptHash = try c.decodeIfPresent(String.self, forKey: .transcriptHash)
         segments = try? c.decodeIfPresent(SavedSegments.self, forKey: .segments)
         markers = (try c.decodeIfPresent([Lossy<AIMarker>].self, forKey: .markers) ?? []).compactMap(\.value).filter(\.isUsable)
     }
@@ -78,9 +83,38 @@ enum KeyMomentStore {
     // Files from before this store are named `<id>.segments.json` in the audio folder.
     static func isLegacySegmentsFile(_ url: URL) -> Bool { url.lastPathComponent.hasSuffix(".segments.json") }
 
-    static func read(_ transcript: URL) -> KeyMomentsFile? {
+    private static func rawRead(_ transcript: URL) -> KeyMomentsFile? {
         guard let data = try? Data(contentsOf: url(for: transcript)) else { return nil }
         return try? JSONDecoder().decode(KeyMomentsFile.self, from: data)
+    }
+    static func hash(_ text: String) -> String {
+        SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+    // Unbound legacy text and stale anchors are never trusted, even if rewriting fails.
+    static func read(_ transcript: URL) -> KeyMomentsFile? {
+        guard var file = rawRead(transcript) else { return nil }
+        let current = try? String(contentsOf: transcript, encoding: .utf8)
+        if file.transcriptHash != current.map(hash) {
+            let original = file
+            scrub(&file)
+            if file != original { try? write(file, for: transcript) }
+        }
+        return file
+    }
+    private static func scrub(_ file: inout KeyMomentsFile) {
+        file.transcriptHash = nil
+        file.segments?.transcriptHash = nil
+        if var segments = file.segments {
+            for index in segments.segments.indices { segments.segments[index].text = "" }
+            file.segments = segments
+        }
+        for index in file.markers.indices { file.markers[index].anchor = "" }
+    }
+    // Invalidate before committing an edit, so old speech is not retained by the sidecar.
+    static func invalidateForEdit(_ transcript: URL) throws {
+        guard var file = rawRead(transcript) else { return }
+        scrub(&file)
+        try write(file, for: transcript)
     }
     static func write(_ file: KeyMomentsFile, for transcript: URL) throws {
         let encoder = JSONEncoder()
@@ -91,7 +125,7 @@ enum KeyMomentStore {
         // Never replace a directory, link, or unrecognised file at the reserved name.
         var info = stat()
         guard destination.path.withCString({ lstat($0, &info) }) == 0,
-              (info.st_mode & S_IFMT) == S_IFREG, read(transcript) != nil else {
+              (info.st_mode & S_IFMT) == S_IFREG, rawRead(transcript) != nil else {
             throw LectureError.message("A different item already occupies the key moments file name.")
         }
         try data.write(to: destination, options: .atomic)
@@ -99,7 +133,8 @@ enum KeyMomentStore {
 
     // Called once a transcript is written. Never replace a file that took the name in the meantime.
     static func start(transcript: URL, segments: [TranscriptSegments.Segment]?, text: String) throws {
-        guard let segments else { return try create(KeyMomentsFile(), for: transcript) }
+        let markdown = try String(contentsOf: transcript, encoding: .utf8)
+        guard let segments else { return try create(KeyMomentsFile(transcriptHash: hash(markdown)), for: transcript) }
         var lines = text.components(separatedBy: "\n")
         if lines.last == "" { lines.removeLast() }
         // Lines match Whisper's segments one to one, so later anchors match the text the reader shows.
@@ -108,7 +143,7 @@ enum KeyMomentStore {
             SavedSegments.Item(from: segment.offsets.from, to: segment.offsets.to,
                                text: Core.collapseWhitespace(aligned ? lines[index] : (segment.text ?? "")))
         }
-        try create(KeyMomentsFile(segments: SavedSegments(segments: items)), for: transcript)
+        try create(KeyMomentsFile(transcriptHash: hash(markdown), segments: SavedSegments(transcriptHash: hash(markdown), segments: items)), for: transcript)
     }
 
     private static func create(_ file: KeyMomentsFile, for transcript: URL) throws {
@@ -140,7 +175,9 @@ enum KeyMomentStore {
         let segments = (try? Data(contentsOf: paths.audioFile(record.id, "segments.json")))
             .flatMap { try? JSONDecoder().decode(SavedSegments.self, from: $0) }
         guard !markers.isEmpty || segments != nil else { return nil }
-        return KeyMomentsFile(segments: segments, markers: markers)
+        var file = KeyMomentsFile(segments: segments, markers: markers)
+        scrub(&file)
+        return file
     }
     private static func legacyMarkers(id: String, paths: AppPaths) -> [AIMarker] {
         guard let data = try? Data(contentsOf: paths.audioFile(id, "json")),
@@ -161,6 +198,7 @@ enum KeyMomentStore {
         let before = file.markers
         change(&file.markers)
         guard file.markers != before else { return }
+        if let text = try? String(contentsOf: transcript, encoding: .utf8) { file.transcriptHash = hash(text) }
         try write(file, for: transcript)
     }
     static func replace(_ markers: [AIMarker], transcript: URL, paths: AppPaths) throws {
