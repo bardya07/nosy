@@ -544,6 +544,9 @@ final class AppModel: ObservableObject {
             stalled = false
         case .macAudioQuiet(let quiet):
             guard recording, recordingSource.usesMacAudio else { return }
+            if quiet && !macAudioQuiet && !paused {
+                notify("Mac audio is silent. Check Mac audio access and playback.")
+            }
             macAudioQuiet = quiet
         case .silence:
             guard recording, !paused, !completing else { return }
