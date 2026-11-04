@@ -63,6 +63,8 @@ final class Recorder: @unchecked Sendable {
     private var mixLatency = CaptureMixer.latency
     private var lastMacBuffer: TimeInterval = 0
     private var lastRenderTime: TimeInterval = 0
+    // End of accepted samples from the current uninterrupted mixer timeline.
+    private var lastMixedEnd: TimeInterval?
     private var lastTapCheck: TimeInterval = 0
     private var tapStalled = false
     private var lastMacSignal: TimeInterval = 0
@@ -178,6 +180,7 @@ final class Recorder: @unchecked Sendable {
             if source.usesMacAudio {
                 lock.lock()
                 mixer = CaptureMixer(origin: Self.audioTime)
+                lastMixedEnd = nil
                 mixLatency = CaptureMixer.latency
                 lastRenderTime = Self.audioTime
                 tapStalled = false
@@ -272,6 +275,7 @@ final class Recorder: @unchecked Sendable {
                 }
             }
             mixer?.push(samples, mic: false, time: time)
+            noteMixedEnd(time: time, sampleCount: samples.count)
         }
         catch { lock.unlock(); scheduleFailure(error.localizedDescription); return }
         lock.unlock()
@@ -282,19 +286,22 @@ final class Recorder: @unchecked Sendable {
             lock.unlock(); return
         }
         let now = allowStopped ? (stoppedAt ?? Self.audioTime) : Self.audioTime
-        // A suspended process/sleep is a gap, never minutes of synthetic silence.
-        if now - lastRenderTime > 1 {
+        // Drain only samples accepted before a long gap, then start a new timeline.
+        // A callback arriving after wake cannot extend the old timeline into sleep.
+        let gap = now - lastRenderTime > 1
+        let deadline = gap ? min(now, lastMixedEnd ?? lastRenderTime) : now - (flush ? 0 : mixLatency)
+        var samples = mixer?.render(until: deadline, both: source == .both) ?? []
+        if flush || gap {
+            while let tail = mixer?.render(until: deadline, both: source == .both), !tail.isEmpty { samples += tail }
+        }
+        if gap {
             mixer = CaptureMixer(origin: now)
+            lastMixedEnd = nil
             micConverter?.reset(); macConverter?.reset()
             lastBuffer = Date.timeIntervalSinceReferenceDate
             lastMacBuffer = now
         }
         lastRenderTime = now
-        let deadline = now - (flush ? 0 : mixLatency)
-        var samples = mixer?.render(until: deadline, both: source == .both) ?? []
-        if flush {
-            while let tail = mixer?.render(until: deadline, both: source == .both), !tail.isEmpty { samples += tail }
-        }
         guard !samples.isEmpty else { lock.unlock(); return }
         samples.withUnsafeBufferPointer { writeLocked($0.baseAddress!, frameCount: $0.count) }
     }
@@ -308,6 +315,7 @@ final class Recorder: @unchecked Sendable {
             self.stallTimer?.cancel()
             self.stallTimer = nil
             self.stopSources()
+            self.renderMacAudio(flush: true)
             do {
                 try self.startSources()
                 self.startStallTimer()
@@ -475,7 +483,9 @@ final class Recorder: @unchecked Sendable {
                     mixLatency = max(mixLatency, Double(input.frameLength) / input.format.sampleRate + 0.1)
                     let host = time.isHostTimeValid ? AVAudioTime.seconds(forHostTime: time.hostTime)
                         : Self.audioTime - Double(input.frameLength) / input.format.sampleRate
-                    mixer?.push(try micConverter.convert(input), mic: true, time: host)
+                    let samples = try micConverter.convert(input)
+                    mixer?.push(samples, mic: true, time: host)
+                    noteMixedEnd(time: host, sampleCount: samples.count)
                 }
             } catch { lock.unlock(); scheduleFailure(error.localizedDescription); return }
             lock.unlock(); return
@@ -501,6 +511,12 @@ final class Recorder: @unchecked Sendable {
         let frameCount = Int(output.frameLength)
         guard frameCount > 0, let samples = output.int16ChannelData?[0] else { lock.unlock(); return }
         writeLocked(samples, frameCount: frameCount)
+    }
+    // Caller holds lock. Exclude post-gap callbacks from the old timeline's cutoff.
+    private func noteMixedEnd(time: TimeInterval, sampleCount: Int) {
+        guard sampleCount > 0, time.isFinite, time <= lastRenderTime + 1 else { return }
+        let end = min(time + Double(sampleCount) / 16_000, lastRenderTime + 1)
+        lastMixedEnd = max(lastMixedEnd ?? end, end)
     }
     // Caller holds lock; always releases it, including failures. The tap never touches the file: it
     // copies the samples, updates bounded counters and queues the copy for the writer. Queuing stays
@@ -633,6 +649,7 @@ final class Recorder: @unchecked Sendable {
                 self.pauseGeneration &+= 1
                 self.paused = false
                 self.mixer = self.source.usesMacAudio ? CaptureMixer(origin: Self.audioTime) : nil
+                self.lastMixedEnd = nil
                 self.lastRenderTime = Self.audioTime
                 self.lastMacBuffer = Self.audioTime
                 self.tapStalled = false
@@ -687,6 +704,7 @@ final class Recorder: @unchecked Sendable {
         self.paused = paused
         // Pause already flushed its tail. Leave no empty timeline for Stop to pad with silence.
         mixer = source.usesMacAudio && !paused ? CaptureMixer(origin: Self.audioTime) : nil
+        lastMixedEnd = nil
         micConverter?.reset(); macConverter?.reset()
         lastRenderTime = Self.audioTime
         lastMacBuffer = Self.audioTime

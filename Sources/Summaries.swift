@@ -460,7 +460,7 @@ private final class LockedFlag: @unchecked Sendable {
 // MARK: Running
 
 enum SummaryError: LocalizedError, Equatable {
-    case off, notInstalled(String), noKey(String), noModel, serverDown(String), timedOut, empty, contextLimit, failed(String, String)
+    case off, notInstalled(String), noKey(String), noModel, serverDown(String), timedOut, empty, contextLimit, truncated, failed(String, String)
     var errorDescription: String? {
         switch self {
         case .off: "Turn on summaries in Settings."
@@ -471,6 +471,7 @@ enum SummaryError: LocalizedError, Equatable {
         case .timedOut: "The summary took too long. Try again."
         case .empty: "The provider sent back an empty summary."
         case .contextLimit: "This excerpt exceeds the summary model context. Try a shorter transcript."
+        case .truncated: "The model reached its output limit before finishing. Try again with a shorter transcript or another model."
         case .failed(let name, let detail): "\(name): \(SummaryError.short(detail))"
         }
     }
@@ -608,10 +609,18 @@ enum SummaryRunner {
         let stdout = try read(outputURL)
         guard process.terminationStatus == 0 else {
             if provider.builtInModel != nil, process.terminationStatus == 3 { throw SummaryError.contextLimit }
+            if provider.builtInModel != nil, process.terminationStatus == 4 { throw SummaryError.truncated }
             let stderr = try read(errorURL, limit: 8192)
             let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
             let detail = trimmed.isEmpty ? stdout.trimmingCharacters(in: .whitespacesAndNewlines) : trimmed
             throw SummaryError.failed(provider.title, detail.isEmpty ? "exited with status \(process.terminationStatus)" : detail)
+        }
+        if provider.builtInModel != nil {
+            // Older helpers exit successfully even when they exhaust the output budget.
+            let stderr = try read(errorURL)
+            guard stderr.split(whereSeparator: \.isNewline).contains("NOSY_LLAMA_COMPLETE") else {
+                throw SummaryError.failed(provider.title, "Could not verify that the built-in model finished. Rebuild the summary engine and try again.")
+            }
         }
         let last = (try? read(lastMessage)) ?? ""
         let reply = SummaryFiles.clean(last.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? stdout : last)
@@ -687,6 +696,44 @@ enum SummaryRunner {
             return nil
         }
     }
+    // Only a known, normal stop proves that the returned text is complete. In
+    // particular, non-streaming HTTP success alone does not imply completion.
+    static func checkCompletion(_ data: Data, provider: SummaryProvider) throws {
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            throw SummaryError.failed(provider.title, "Could not verify that the response finished.")
+        }
+        let reason: String?
+        let success: Set<String>
+        let limits: Set<String>
+        switch provider {
+        case .ollama:
+            guard json["done"] as? Bool == true else {
+                throw SummaryError.failed(provider.title, "Could not verify that the response finished.")
+            }
+            reason = json["done_reason"] as? String
+            success = ["stop"]
+            limits = ["length"]
+        case .lmStudio, .openAI:
+            let choice = (json["choices"] as? [[String: Any]])?.first
+            reason = choice?["finish_reason"] as? String
+            success = ["stop"]
+            limits = ["length"]
+        case .anthropic:
+            reason = json["stop_reason"] as? String
+            success = ["end_turn", "stop_sequence"]
+            limits = ["max_tokens", "model_context_window_exceeded"]
+        case .gemini:
+            let candidate = (json["candidates"] as? [[String: Any]])?.first
+            reason = candidate?["finishReason"] as? String
+            success = ["STOP"]
+            limits = ["MAX_TOKENS"]
+        default:
+            throw SummaryError.failed(provider.title, "Could not verify that the response finished.")
+        }
+        if let reason, success.contains(reason) { return }
+        if let reason, limits.contains(reason) { throw SummaryError.truncated }
+        throw SummaryError.failed(provider.title, "The provider did not return a complete response. Try again.")
+    }
     static func parseError(_ data: Data) -> String? {
         guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return nil }
         if let error = json["error"] as? [String: Any] { return error["message"] as? String }
@@ -717,6 +764,7 @@ enum SummaryRunner {
             let detail = redacted(parseError(data) ?? HTTPURLResponse.localizedString(forStatusCode: status), key: request.apiKey)
             throw SummaryError.failed(request.provider.title, detail)
         }
+        try checkCompletion(data, provider: request.provider)
         guard let reply = parseReply(data, provider: request.provider).map(SummaryFiles.clean), !reply.isEmpty else { throw SummaryError.empty }
         return reply
     }
