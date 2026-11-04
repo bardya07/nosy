@@ -56,10 +56,12 @@ cp THIRD_PARTY_NOTICES.md "$APP/Contents/Resources/"
 xattr -cr "$APP"
 # Set NOSY_CODESIGN_IDENTITY to use a local signing identity; default to ad-hoc.
 IDENTITY="${NOSY_CODESIGN_IDENTITY:--}"
-SIGN_OPTIONS=(--force --options runtime --sign "$IDENTITY")
-if [[ "$IDENTITY" != - ]]; then SIGN_OPTIONS+=(--timestamp); fi
-# Sign nested code first with the same identity and hardened runtime. An explicit
-# identity must succeed: silently falling back to ad-hoc would break notarization.
+SIGN_OPTIONS=(--force --sign "$IDENTITY")
+# Ad-hoc signatures have no Team ID, so hardened runtime's library validation
+# rejects even the re-signed Sparkle framework. Keep runtime for signed releases.
+if [[ "$IDENTITY" != - ]]; then SIGN_OPTIONS+=(--options runtime --timestamp); fi
+# Sign nested code first with the same identity. An explicit identity must
+# succeed: silently falling back to ad-hoc would break notarization.
 SPARKLE_VERSION="$APP/Contents/Frameworks/Sparkle.framework/Versions/B"
 for service in "$SPARKLE_VERSION"/XPCServices/*.xpc; do
     codesign "${SIGN_OPTIONS[@]}" --preserve-metadata=entitlements "$service"
