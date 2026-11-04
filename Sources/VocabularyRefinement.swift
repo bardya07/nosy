@@ -99,15 +99,4 @@ enum VocabularyRefinement {
         guard preservesBoundaries else { return Output(text: original, edits: [], route: route) }
         return Output(text: refined, edits: edits, route: route)
     }
-    static func save(_ output: Output, baseline: String, id: String, paths: AppPaths) throws {
-        let directory = paths.support.appendingPathComponent("routing", isDirectory: true)
-        try paths.createSupportDirectory(directory)
-        let record: [String: Any] = ["baseline": baseline, "edits": try JSONSerialization.jsonObject(with: JSONEncoder().encode(output.edits)),
-                                     "packs": output.route.selected, "schemaVersion": 1]
-        let file = directory.appendingPathComponent(id + ".json")
-        guard paths.safeSupportDestination(file) else { throw LectureError.message("Unsafe routing storage.") }
-        try JSONSerialization.data(withJSONObject: record, options: [.sortedKeys]).write(to: file, options: .atomic)
-        guard paths.safeSupportItem(file, directory: false) else { throw LectureError.message("Unsafe routing storage.") }
-        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
-    }
 }

@@ -186,7 +186,6 @@ enum Transcriber {
                                                                  subjects: resolvedSubjects, userTerms: userTerms,
                                                                  router: flags?.contains("router") ?? true, substitute: flags?.contains("substitute") ?? true, job: job)
                     try job.checkCancellation()
-                    try VocabularyRefinement.save(refined, baseline: text, id: record.id, paths: paths)
                     text = refined.text
                 }
                 catch is CancellationError { throw CancellationError() }

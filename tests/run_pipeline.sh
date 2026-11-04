@@ -206,9 +206,7 @@ NOSY_VOCAB_STAGES=router,substitute NOSY_VOCABULARY_DIR="$PWD/Resources/Vocabula
 python3 - "$ID" <<'PY'
 import json, os, pathlib, sys
 support = pathlib.Path(os.environ['NOSY_SUPPORT_DIR'])
-ledger = json.loads((support/'routing'/f'{sys.argv[1]}.json').read_text())
-assert ledger['schemaVersion'] == 1 and ledger['baseline'].strip()
-assert isinstance(ledger['packs'], list) and isinstance(ledger['edits'], list)
+assert not (support/'routing'/f'{sys.argv[1]}.json').exists(), 'Refinement persisted a transcript ledger'
 assert not list((support/'audio').glob('.whisper-*')), 'Refinement leaked temporary files'
-print('VOCABULARY PIPELINE PASS: real Whisper confidence JSON, local baseline/edit ledger, cleanup')
+print('VOCABULARY PIPELINE PASS: real Whisper confidence JSON, no persistent transcript ledger, cleanup')
 PY

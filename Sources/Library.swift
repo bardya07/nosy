@@ -488,6 +488,7 @@ final class TranscriptLibrary: ObservableObject {
             // Key moments go with their transcript. A leftover hidden file is harmless and is replaced if the name comes back.
             try? KeyMomentStore.trash(transcript: url)
             paths.purgeLegacyNotes()
+            paths.purgeLegacyRouting()
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -506,6 +507,7 @@ final class TranscriptLibrary: ObservableObject {
     // A folder that the shared Trash path just moved: drop it from the tree and keep the reader on a nearby session.
     func folderRemoved(_ lecture: String, paths: AppPaths) {
         paths.purgeLegacyNotes()
+        paths.purgeLegacyRouting()
         guard loadedRoot == paths.transcripts else { return }
         let list = ordered
         let oldSelection = selection
