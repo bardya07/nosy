@@ -263,7 +263,11 @@ struct AppPaths: Sendable {
         for file in files where file.pathExtension == "json" {
             let id = Array(file.deletingPathExtension().lastPathComponent.utf8)
             guard id.count == 15, id[8] == 45,
-                  id.enumerated().allSatisfy({ $0.offset == 8 || (48...57).contains($0.element) }) else { continue }
+                  id.enumerated().allSatisfy({ $0.offset == 8 || (48...57).contains($0.element) }),
+                  safeSupportItem(file, directory: false),
+                  let data = try? Data(contentsOf: file),
+                  let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  object["schemaVersion"] as? Int == 1, object["baseline"] is String else { continue }
             try? removeSupportFile(file)
         }
     }
