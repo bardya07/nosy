@@ -418,8 +418,8 @@ enum KeyMomentsTests {
         try Core.applyRetention(paths: paths)
         check(manager.fileExists(atPath: paths.audioFile("20260801-100000", "json").path), "retention keeps an unbound legacy sidecar")
         check(manager.fileExists(atPath: paths.audioFile("20260801-100000", "segments.json").path), "retention keeps unbound legacy segments")
-        check(KeyMomentStore.markers(for: legacyTranscript, paths: paths).map(\.label) == ["Legacy AI marker"], "legacy AI markers survive retention, damaged ones dropped")
-        check(KeyMomentStore.segments(for: legacyTranscript, paths: paths)?.segments.map(\.text) == [""], "unbound legacy timing text is scrubbed in memory")
+        check(KeyMomentStore.markers(for: legacyTranscript, paths: paths).isEmpty, "unbound legacy markers are not associated by pathname")
+        check(KeyMomentStore.segments(for: legacyTranscript, paths: paths) == nil, "unbound legacy timings are not associated by pathname")
 
         // A damaged marker in the file is dropped, and the rest still load.
         let damaged = Data(#"{"version":1,"markers":[{"t":"soon","label":"Broken"},{"t":-4,"label":"Negative"},{"t":50,"label":"Kept marker","anchor":"kept words"}]}"#.utf8)
