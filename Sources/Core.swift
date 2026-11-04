@@ -692,8 +692,23 @@ enum Core {
         }
         try KeyMomentStore.invalidateForEdit(url)
         let identity = TranscriptIdentity.attributeValue(url)
-        try Data(text.utf8).write(to: url, options: .atomic)
-        if let identity { try? TranscriptIdentity.setAttribute(identity, on: url) }
+        let temporary = url.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).tmp")
+        guard try exclusiveWrite(Data(text.utf8), to: temporary) else {
+            throw LectureError.message("Could not prepare the transcript edit.")
+        }
+        defer { try? FileManager.default.removeItem(at: temporary) }
+        if let mode = try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions] {
+            try FileManager.default.setAttributes([.posixPermissions: mode], ofItemAtPath: temporary.path)
+        }
+        // Establish the identity on the replacement before publishing it. If the volume
+        // rejects attributes, leave the current transcript and its identity intact.
+        if let identity { try TranscriptIdentity.setAttribute(identity, on: temporary) }
+        guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
+            throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+        }
+        guard rename(temporary.path, url.path) == 0 else {
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+        }
     }
     static func duration(pcmBytes: Int64) -> TimeInterval { Double(max(0, pcmBytes)) / Double(bytesPerSecond) }
     static func audioDuration(id: String, paths: AppPaths) -> TimeInterval {
