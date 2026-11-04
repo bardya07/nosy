@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 
 // Read-only access to the transcripts folder Nosy writes: one folder per course, one markdown
 // file per session, and an optional "<session> summary.md" beside it. Every file it opens must
@@ -102,7 +103,10 @@ struct TranscriptStore: Sendable {
         var hits: [Hit] = []
         guard limit > 0 else { return hits }
         for entry in try transcripts(folder: nil, limit: .max) {
-            let text = (try? String(contentsOf: root.appendingPathComponent(entry.path), encoding: .utf8)) ?? ""
+            // The file may have changed since enumeration; repeat discovery checks before reading it.
+            let file = root.appendingPathComponent(entry.path)
+            guard isFile(file), isContained(file), (Self.isTranscript(at: file) || Self.hasIdentity(file)),
+                  let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
             for (index, line) in text.components(separatedBy: .newlines).enumerated() {
                 guard let match = line.range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) else { continue }
                 hits.append(Hit(folder: entry.folder, name: entry.name, date: entry.date, line: index + 1,
@@ -151,8 +155,10 @@ struct TranscriptStore: Sendable {
             .filter { isFile($0) && isContained($0) && (Self.isTranscript(at: $0) || Self.hasIdentity($0)) }
     }
 
-    // The app maintains this index independently of the editable transcript header and audio.
+    // The index survives editable headers and audio retention, but a pathname alone does not
+    // prove that the document currently at that pathname owns the index.
     private struct Identity: Decodable { let version: Int; let id: String }
+    private static let identityAttribute = "com.bardya.nosy.transcript-id"
     private static func hasIdentity(_ transcript: URL) -> Bool {
         let file = transcript.deletingLastPathComponent().appendingPathComponent(
             "." + transcript.deletingPathExtension().lastPathComponent + ".nosy-identity.json")
@@ -160,7 +166,11 @@ struct TranscriptStore: Sendable {
         guard file.path.withCString({ lstat($0, &info) }) == 0, (info.st_mode & S_IFMT) == S_IFREG,
               let data = try? Data(contentsOf: file), let identity = try? JSONDecoder().decode(Identity.self, from: data),
               identity.version == 1, UUID(uuidString: identity.id) != nil else { return false }
-        return true
+        let size = getxattr(transcript.path, identityAttribute, nil, 0, 0, XATTR_NOFOLLOW)
+        guard size > 0 && size < 256 else { return false }
+        var bytes = [UInt8](repeating: 0, count: size)
+        let count = getxattr(transcript.path, identityAttribute, &bytes, size, 0, XATTR_NOFOLLOW)
+        return count == size && String(bytes: bytes, encoding: .utf8) == identity.id
     }
 
     // The header Nosy writes ("# Course — Session", "- Date:", "- Length:", "## Transcript").
