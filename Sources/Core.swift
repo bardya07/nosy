@@ -897,6 +897,11 @@ enum Core {
         return records.filter { $0.status == .done && ($0.transcribedAt ?? $0.startedAt) < now.addingTimeInterval(-Double(days) * 86_400) }
     }
     static func applyRetention(paths: AppPaths, now: Date = Date(), checkCancellation: () throws -> Void = {}) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try applyRetentionLocked(paths: paths, now: now, checkCancellation: checkCancellation)
+        }
+    }
+    private static func applyRetentionLocked(paths: AppPaths, now: Date, checkCancellation: () throws -> Void) throws {
         try checkCancellation()
         paths.purgeLegacyRouting()
         guard paths.safeSupportItem(paths.audio, directory: true) else { return }

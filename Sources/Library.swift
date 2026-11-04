@@ -486,14 +486,18 @@ final class TranscriptLibrary: ObservableObject {
         let list = ordered
         let index = list.firstIndex(where: { $0.url == url })
         do {
-            try Core.detachTranscripts(in: url, folder: false, paths: paths)
-            if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
-            try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-            // Sidecars go with their transcript; leftover names are reserved if Trash fails.
-            try? KeyMomentStore.trash(transcript: url)
-            try? TranscriptIdentity.trash(url)
-            paths.purgeLegacyNotes()
-            paths.purgeLegacyRouting()
+            try TranscriptCoordination.withLock(paths: paths) {
+                let indexID = TranscriptIdentity.indexID(url)
+                let expectedID = indexID == TranscriptIdentity.attributeValue(url) ? indexID : nil
+                try Core.detachTranscripts(in: url, folder: false, paths: paths)
+                if let summary = SummaryFiles.existing(for: url) { try FileManager.default.trashItem(at: summary, resultingItemURL: nil) }
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+                // Sidecars go with their transcript; leftover names are reserved if Trash fails.
+                try? KeyMomentStore.trash(transcript: url, expectedID: expectedID)
+                try? TranscriptIdentity.trash(url)
+                paths.purgeLegacyNotes()
+                paths.purgeLegacyRouting()
+            }
         } catch {
             let alert = NSAlert(error: error)
             alert.messageText = "Couldn't move this transcript to the Trash"
@@ -555,6 +559,11 @@ final class TranscriptLibrary: ObservableObject {
         }
     }
     func rename(_ item: TranscriptItem, to name: String, paths: AppPaths) throws {
+        try TranscriptCoordination.withLock(paths: paths) {
+            try renameLocked(item, to: name, paths: paths)
+        }
+    }
+    private func renameLocked(_ item: TranscriptItem, to name: String, paths: AppPaths) throws {
         guard items.contains(item), Core.isContained(item.url, in: paths.transcripts) else {
             throw LectureError.message("This transcript is outside the selected library.")
         }
