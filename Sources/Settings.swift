@@ -51,6 +51,7 @@ struct SettingsView: View {
     @State private var restartingDesktop = false
     @State private var connectionMessage: String?
     @State private var connectionFailed = false
+    @State private var connectorAccessAllowed = false
     @State private var pane: Pane
     @State private var highlightedTarget: SettingsFocusTarget?
     @State private var handledFocusID = 0
@@ -310,7 +311,7 @@ struct SettingsView: View {
             Toggle(isOn: $aiFeaturesEnabled) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("AI features").font(Theme.text(13, .semibold)).foregroundStyle(Theme.ink)
-                    Text("Summaries and key moments. Off keeps everything on this Mac.")
+                    Text("Controls summaries and key moments. Connector access is managed separately in Connect your AI.")
                         .font(Theme.text(10)).foregroundStyle(Theme.muted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -334,6 +335,16 @@ struct SettingsView: View {
     private var connectPane: some View {
         section("Connect your AI") {
             VStack(alignment: .leading, spacing: 12) {
+                Text("Connector access is separate from AI features. Connected apps can read the entire allowed library and may send its contents elsewhere. Changing libraries requires a new grant.")
+                    .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Library: \(abbreviated(model.paths.transcripts))")
+                    .font(Theme.text(10)).foregroundStyle(Theme.muted)
+                    .textSelection(.enabled)
+                Button(connectorAccessAllowed ? "Revoke connector access" : "Allow connector access to this library") {
+                    changeConnectorAccess(!connectorAccessAllowed)
+                }
+                .buttonStyle(PillButtonStyle(kind: .quiet, height: 30, fullWidth: false))
                 connectionStatus
                 switch connection {
                 case .added:
@@ -439,6 +450,18 @@ struct SettingsView: View {
     private func refreshConnection() {
         connection = connector.status()
         desktop = connector.desktop()
+        connectorAccessAllowed = ConnectorAccess.isAllowed(paths: model.paths)
+    }
+    private func changeConnectorAccess(_ allowed: Bool) {
+        do {
+            try ConnectorAccess.setAllowed(allowed, paths: model.paths)
+            connectionMessage = allowed ? "Connector access allowed for this library." : "Connector access revoked."
+            connectionFailed = false
+        } catch {
+            connectionMessage = error.localizedDescription
+            connectionFailed = true
+        }
+        refreshConnection()
     }
     private func changeConnection(adding: Bool) {
         do {

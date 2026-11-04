@@ -2,6 +2,34 @@ import AppKit
 import Foundation
 import Darwin
 
+// Separate from the provider toggle: connector clients may read the granted library and
+// can send its contents elsewhere. The helper reads this file afresh on every tool call.
+enum ConnectorAccess {
+    static func isAllowed(paths: AppPaths) -> Bool {
+        let file = paths.support.appendingPathComponent("connector-grant.json")
+        guard paths.safeSupportItem(file, directory: false),
+              let data = try? Data(contentsOf: file),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+              let library = object["library"], !library.isEmpty else { return false }
+        return URL(fileURLWithPath: library, isDirectory: true).resolvingSymlinksInPath().standardizedFileURL.path
+            == paths.transcripts.resolvingSymlinksInPath().standardizedFileURL.path
+    }
+
+    static func setAllowed(_ allowed: Bool, paths: AppPaths) throws {
+        try paths.createSupportDirectory(paths.support)
+        let file = paths.support.appendingPathComponent("connector-grant.json")
+        var info = stat()
+        if lstat(file.path, &info) == 0 {
+            guard paths.safeSupportItem(file, directory: false) else { throw LectureError.message("Unsafe connector access storage.") }
+        } else if errno != ENOENT {
+            throw LectureError.message("Could not update connector access.")
+        }
+        let library = allowed ? paths.transcripts.resolvingSymlinksInPath().standardizedFileURL.path : ""
+        let data = try JSONSerialization.data(withJSONObject: ["library": library])
+        try data.write(to: file, options: .atomic)
+    }
+}
+
 // Adds or removes Nosy's transcript server in Claude Desktop's config. Only the mcpServers.nosy
 // entry changes; every other key is kept. Nothing is written when the file is not valid JSON.
 enum ClaudeDesktopConfig {

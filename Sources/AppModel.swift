@@ -1055,6 +1055,10 @@ final class AppModel: ObservableObject {
         let folder = AppPaths.dedicatedTranscripts(for: url)
         do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
         catch { showError("Couldn't create \(folder.lastPathComponent): \(error.localizedDescription)"); return false }
+        if folder.resolvingSymlinksInPath().standardizedFileURL != paths.transcripts.resolvingSymlinksInPath().standardizedFileURL {
+            do { try ConnectorAccess.setAllowed(false, paths: paths) }
+            catch { showError("Couldn't revoke connector access: \(error.localizedDescription)"); return false }
+        }
         rememberLibrary(paths.transcripts)
         UserDefaults.standard.set(folder.path, forKey: AppPaths.transcriptsKey)
         reloadPaths()
