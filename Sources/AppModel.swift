@@ -242,17 +242,8 @@ final class AppModel: ObservableObject {
            UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) == nil {
             UserDefaults.standard.set(paths.transcripts.path, forKey: AppPaths.transcriptsKey)
         }
-        // A folder chosen before dedicated folders (e.g. ~/Downloads itself) moves to its own
-        // "Nosy Transcripts" inside it. Nothing is moved; a folder that holds transcripts stays.
-        if ProcessInfo.processInfo.environment["NOSY_TRANSCRIPTS_DIR"] == nil,
-           let stored = UserDefaults.standard.string(forKey: AppPaths.transcriptsKey) {
-            let dedicated = AppPaths.dedicatedTranscripts(for: URL(fileURLWithPath: stored, isDirectory: true))
-            if dedicated.path != URL(fileURLWithPath: stored).standardizedFileURL.path {
-                rememberLibrary(paths.transcripts)
-                UserDefaults.standard.set(dedicated.path, forKey: AppPaths.transcriptsKey)
-                paths = AppPaths()
-            }
-        }
+        // A saved root is already established, even when it is empty or temporarily unavailable.
+        // Dedicated subfolders are chosen only when the user selects a new location.
         summaries.waitReason = { [weak self] provider in self?.summaryWaitReason(provider) }
         refreshDependencies()
         rememberedLecture = UserDefaults.standard.string(forKey: "lastLecture")
@@ -728,6 +719,7 @@ final class AppModel: ObservableObject {
             let markdown = result.transcriptPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
             let outcome = markdown.map { Core.wordCount($0) == 0 } == true ? "No speech detected" : "Transcript saved"
             notify("\(outcome). \(result.lecture) · \(result.session)", path: result.transcriptPath)
+            if let warning = result.error { showError(warning) }
             if let path = result.transcriptPath, markdown.map({ Core.wordCount($0) > 0 }) == true {
                 summaries.transcriptSaved(URL(fileURLWithPath: path))
             }
@@ -1054,8 +1046,13 @@ final class AppModel: ObservableObject {
         guard panel.runModal() == .OK, let url = panel.url else { return false }
         guard finishLibraryEditing?() != false else { return false }
         let folder = AppPaths.dedicatedTranscripts(for: url)
-        do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
-        catch { showError("Couldn't create \(folder.lastPathComponent): \(error.localizedDescription)"); return false }
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try TranscriptIdentity.checkStorage(at: folder)
+        } catch {
+            showError("Couldn't use \(folder.lastPathComponent): \(error.localizedDescription)")
+            return false
+        }
         if folder.resolvingSymlinksInPath().standardizedFileURL != paths.transcripts.resolvingSymlinksInPath().standardizedFileURL {
             do { try ConnectorAccess.setAllowed(false, paths: paths) }
             catch { showError("Couldn't revoke connector access: \(error.localizedDescription)"); return false }

@@ -202,15 +202,25 @@ enum Transcriber {
             }
             let markdown = Core.markdown(record: record, duration: Core.audioDuration(id: record.id, paths: paths), text: text, body: body)
             try job.checkCancellation()
-            let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)
-            let transcriptID = UUID().uuidString
-            if (try? TranscriptIdentity.bind(target, id: transcriptID)) != nil { record.transcriptID = transcriptID }
+            let target = try TranscriptCoordination.withLock(paths: paths) {
+                let target = try Core.writeTranscript(markdown, folder: paths.lectureFolder(record.lecture), session: record.session)
+                let transcriptID = UUID().uuidString
+                do {
+                    try TranscriptIdentity.bind(target, id: transcriptID)
+                    record.transcriptID = transcriptID
+                } catch {
+                    // The transcript is already published. Keep it and its audio, and report the
+                    // failure rather than treating the recording as a failed transcription.
+                    record.error = "Transcript saved, but its identity could not be established: \(error.localizedDescription) Audio will be kept; automatic retention and key moments are unavailable until this is resolved."
+                }
+                record.transcriptPath = target.path
+                record.status = .done
+                record.transcribedAt = Date()
+                try record.save(in: paths)
+                return target
+            }
             // Timings sit beside the transcript for later key moments, so they outlive the audio. A failure never fails the transcript.
-            try? KeyMomentStore.start(transcript: target, segments: segments?.transcription, text: text)
-            record.transcriptPath = target.path
-            record.status = .done
-            record.transcribedAt = Date()
-            try record.save(in: paths)
+            if record.transcriptID != nil { try? KeyMomentStore.start(transcript: target, segments: segments?.transcription, text: text) }
             // The transcript is already committed: cancellation here leaves it .done and stops the optional work.
             if UserDefaults.standard.object(forKey: "compressAudio") as? Bool ?? true {
                 do { try AudioFiles.compress(id: record.id, paths: paths, checkCancellation: checkCancellation) }

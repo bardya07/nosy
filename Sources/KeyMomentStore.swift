@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import Darwin
 
 // Durable storage for Find key moments. New files use the transcript identity in their name and
 // contents. Older name-based files are readable but are never overwritten, moved or trashed.
@@ -74,6 +75,34 @@ struct KeyMomentsFile: Codable, Sendable, Equatable {
 
 enum KeyMomentStore {
     static let suffix = ".key-moments.json"
+    // Lock ordering is transcript coordination, then sidecar coordination. The latter
+    // also uses a separate support file so a headless process cannot race the GUI.
+    private static let sidecarLock = NSRecursiveLock()
+    nonisolated(unsafe) private static var sidecarDepth = 0 // guarded by sidecarLock
+    static func withSidecarLock<T>(_ body: () throws -> T) throws -> T {
+        sidecarLock.lock()
+        defer { sidecarLock.unlock() }
+        if sidecarDepth > 0 { return try body() }
+        let paths = AppPaths()
+        try paths.createSupportDirectory(paths.support)
+        let file = paths.support.appendingPathComponent("key-moment-mutation.lock")
+        let fd = open(file.path, O_RDWR | O_CREAT | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard fd >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        defer { close(fd) }
+        var info = stat()
+        guard fstat(fd, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG,
+              info.st_uid == getuid(), info.st_nlink == 1,
+              paths.safeSupportItem(file, directory: false) else {
+            throw LectureError.message("Unsafe key moment coordination storage.")
+        }
+        while flock(fd, LOCK_EX) != 0 {
+            guard errno == EINTR else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+        }
+        defer { _ = flock(fd, LOCK_UN) }
+        sidecarDepth = 1
+        defer { sidecarDepth = 0 }
+        return try body()
+    }
 
     // `.<name>.key-moments.json`, in the same folder as the transcript.
     static func url(for transcript: URL) -> URL {
@@ -97,7 +126,7 @@ enum KeyMomentStore {
         return try? JSONDecoder().decode(KeyMomentsFile.self, from: data)
     }
     private static func rawRead(_ transcript: URL) -> (file: KeyMomentsFile, owned: Bool)? {
-        if let id = TranscriptIdentity.indexID(transcript) {
+        if let id = TranscriptIdentity.indexID(transcript), TranscriptIdentity.attributeValue(transcript) == id {
             let destination = ownedURL(transcript, id: id)
             if entryExists(destination) {
                 guard let file = decode(destination), file.ownerID == id else { return nil }
@@ -113,15 +142,18 @@ enum KeyMomentStore {
     }
     // Unbound legacy text and stale anchors are never trusted, even if rewriting fails.
     static func read(_ transcript: URL) -> KeyMomentsFile? {
-        guard let stored = rawRead(transcript) else { return nil }
-        var file = stored.file
-        let current = try? String(contentsOf: transcript, encoding: .utf8)
-        if current == nil || file.transcriptHash == nil || file.transcriptHash != current.map(hash) {
-            let original = file
-            scrub(&file)
-            if stored.owned && file != original { try? write(file, for: transcript) }
+        return try? withSidecarLock {
+            guard let stored = rawRead(transcript) else { return nil }
+            var file = stored.file
+            let current = try? String(contentsOf: transcript, encoding: .utf8)
+            if current == nil || file.transcriptHash == nil || file.transcriptHash != current.map(hash) {
+                let original = file
+                scrub(&file)
+                if stored.owned && file != original { try? write(file, for: transcript) }
+            }
+            return file
+        
         }
-        return file
     }
     private static func scrub(_ file: inout KeyMomentsFile) {
         file.transcriptHash = nil
@@ -134,46 +166,81 @@ enum KeyMomentStore {
     }
     // Invalidate before committing an edit, so old speech is not retained by the sidecar.
     static func invalidateForEdit(_ transcript: URL) throws {
-        guard let stored = rawRead(transcript) else { return }
-        var file = stored.file
-        scrub(&file)
-        // A legacy file or a transcript replaced by another program may have no verifiable
-        // owner. Ignore its text in memory without overwriting that potentially unrelated file.
-        if let id = TranscriptIdentity.indexID(transcript), TranscriptIdentity.attributeValue(transcript) != id { return }
-        try write(file, for: transcript)
+        return try withSidecarLock {
+            guard let stored = rawRead(transcript) else { return }
+            var file = stored.file
+            scrub(&file)
+            // A legacy file or a transcript replaced by another program may have no verifiable
+            // owner. Ignore its text in memory without overwriting that potentially unrelated file.
+            if let id = TranscriptIdentity.indexID(transcript), TranscriptIdentity.attributeValue(transcript) != id { return }
+            try write(file, for: transcript)
+        
+        }
+    }
+    // Only a recording bound by both the document attribute and index can authorize
+    // changes to its old timing files. Ambiguous name-based files remain untouched.
+    static func cleanupLegacyTiming(transcript: URL, paths: AppPaths) throws {
+        try withSidecarLock {
+            guard let id = TranscriptIdentity.indexID(transcript),
+                  TranscriptIdentity.attributeValue(transcript) == id else { return }
+            // Some legacy-name files carry an explicit owner. Older files without one
+            // are ambiguous and must not be overwritten merely because of their name.
+            let legacyURL = url(for: transcript)
+            if var legacy = decode(legacyURL), legacy.version == 1, legacy.ownerID == id {
+                let original = legacy
+                scrub(&legacy)
+                if legacy != original {
+                    let encoder = JSONEncoder()
+                    encoder.outputFormatting = [.sortedKeys]
+                    try encoder.encode(legacy).write(to: legacyURL, options: .atomic)
+                }
+            }
+            try invalidateLegacyForEdit(transcript, paths: paths)
+        }
     }
     // Older versions kept segments and AI anchors with the recording instead.
     static func invalidateLegacyForEdit(_ transcript: URL, paths: AppPaths) throws {
-        guard let record = Core.record(forTranscript: transcript, paths: paths) else { return }
-        let segmentsURL = paths.audioFile(record.id, "segments.json")
-        if FileManager.default.fileExists(atPath: segmentsURL.path) {
-            guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
-            let data = try Data(contentsOf: segmentsURL)
-            if var segments = try? JSONDecoder().decode(SavedSegments.self, from: data) {
-                segments.transcriptHash = nil
-                for index in segments.segments.indices { segments.segments[index].text = "" }
-                try JSONEncoder().encode(segments).write(to: segmentsURL, options: .atomic)
+        return try withSidecarLock {
+            guard let id = TranscriptIdentity.indexID(transcript),
+                  TranscriptIdentity.attributeValue(transcript) == id,
+                  let record = Core.record(forTranscript: transcript, paths: paths),
+                  record.transcriptID == id,
+                  paths.safeSupportItem(paths.audioFile(record.id, "json"), directory: false) else { return }
+            let segmentsURL = paths.audioFile(record.id, "segments.json")
+            if FileManager.default.fileExists(atPath: segmentsURL.path) {
+                guard paths.safeSupportItem(segmentsURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+                let data = try Data(contentsOf: segmentsURL)
+                if var segments = try? JSONDecoder().decode(SavedSegments.self, from: data) {
+                    segments.transcriptHash = nil
+                    for index in segments.segments.indices { segments.segments[index].text = "" }
+                    try JSONEncoder().encode(segments).write(to: segmentsURL, options: .atomic)
+                }
             }
-        }
-        let recordURL = paths.audioFile(record.id, "json")
-        guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
-        let data = try Data(contentsOf: recordURL)
-        if var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-           var markers = object["aiMarkers"] as? [[String: Any]] {
-            for index in markers.indices { markers[index]["anchor"] = "" }
-            object["aiMarkers"] = markers
-            try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: recordURL, options: .atomic)
+            let recordURL = paths.audioFile(record.id, "json")
+            guard paths.safeSupportItem(recordURL, directory: false) else { throw LectureError.message("Unsafe audio storage.") }
+            let data = try Data(contentsOf: recordURL)
+            if var object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+               var markers = object["aiMarkers"] as? [[String: Any]],
+               markers.contains(where: { ($0["anchor"] as? String).map { !$0.isEmpty } ?? false }) {
+                for index in markers.indices { markers[index]["anchor"] = "" }
+                object["aiMarkers"] = markers
+                try JSONSerialization.data(withJSONObject: object, options: [.sortedKeys]).write(to: recordURL, options: .atomic)
+            }
+        
         }
     }
     static func write(_ file: KeyMomentsFile, for transcript: URL) throws {
-        if TranscriptIdentity.indexID(transcript) == nil { try TranscriptIdentity.index(transcript) }
-        guard let id = TranscriptIdentity.indexID(transcript) else {
-            throw LectureError.message("This transcript has no usable identity.")
+        return try withSidecarLock {
+            if TranscriptIdentity.indexID(transcript) == nil { try TranscriptIdentity.index(transcript) }
+            guard let id = TranscriptIdentity.indexID(transcript) else {
+                throw LectureError.message("This transcript has no usable identity.")
+            }
+            guard TranscriptIdentity.attributeValue(transcript) == id else {
+                throw LectureError.message("The transcript identity could not be verified. Its existing key moments were kept.")
+            }
+            try writeOwned(file, for: transcript, id: id)
+        
         }
-        guard TranscriptIdentity.attributeValue(transcript) == id else {
-            throw LectureError.message("The transcript identity could not be verified. Its existing key moments were kept.")
-        }
-        try writeOwned(file, for: transcript, id: id)
     }
     private static func writeOwned(_ file: KeyMomentsFile, for transcript: URL, id: String) throws {
         var file = file
@@ -194,17 +261,20 @@ enum KeyMomentStore {
 
     // Called once a transcript is written. Never replace a file that took the name in the meantime.
     static func start(transcript: URL, segments: [TranscriptSegments.Segment]?, text: String) throws {
-        let markdown = try String(contentsOf: transcript, encoding: .utf8)
-        guard let segments else { return try create(KeyMomentsFile(transcriptHash: hash(markdown)), for: transcript) }
-        var lines = text.components(separatedBy: "\n")
-        if lines.last == "" { lines.removeLast() }
-        // Lines match Whisper's segments one to one, so later anchors match the text the reader shows.
-        let aligned = lines.count == segments.count
-        let items = segments.enumerated().map { index, segment in
-            SavedSegments.Item(from: segment.offsets.from, to: segment.offsets.to,
-                               text: Core.collapseWhitespace(aligned ? lines[index] : (segment.text ?? "")))
+        return try withSidecarLock {
+            let markdown = try String(contentsOf: transcript, encoding: .utf8)
+            guard let segments else { return try create(KeyMomentsFile(transcriptHash: hash(markdown)), for: transcript) }
+            var lines = text.components(separatedBy: "\n")
+            if lines.last == "" { lines.removeLast() }
+            // Lines match Whisper's segments one to one, so later anchors match the text the reader shows.
+            let aligned = lines.count == segments.count
+            let items = segments.enumerated().map { index, segment in
+                SavedSegments.Item(from: segment.offsets.from, to: segment.offsets.to,
+                                   text: Core.collapseWhitespace(aligned ? lines[index] : (segment.text ?? "")))
+            }
+            try create(KeyMomentsFile(transcriptHash: hash(markdown), segments: SavedSegments(transcriptHash: hash(markdown), segments: items)), for: transcript)
+        
         }
-        try create(KeyMomentsFile(transcriptHash: hash(markdown), segments: SavedSegments(transcriptHash: hash(markdown), segments: items)), for: transcript)
     }
 
     private static func create(_ file: KeyMomentsFile, for transcript: URL) throws {
@@ -227,17 +297,23 @@ enum KeyMomentStore {
     // The stored file. When this transcript has none yet, a recording sidecar from before this store is
     // read once and copied across. Nothing here needs the recording to still exist.
     static func file(for transcript: URL, paths: AppPaths) -> KeyMomentsFile? {
-        if let stored = read(transcript) { return stored }
-        guard let record = Core.record(forTranscript: transcript, paths: paths),
-              let legacy = legacyFile(record: record, paths: paths) else { return nil }
-        try? write(legacy, for: transcript)
-        return legacy
+        return try? withSidecarLock {
+            if let stored = read(transcript) { return stored }
+            guard let record = Core.record(forTranscript: transcript, paths: paths),
+                  let legacy = legacyFile(record: record, paths: paths) else { return nil }
+            try? write(legacy, for: transcript)
+            return legacy
+        
+        }
     }
     // Retention deletes the audio and its sidecar, so legacy data is copied across first. Throws when the
     // copy fails, and the caller then keeps the audio.
     static func preserveLegacy(record: SessionRecord, transcript: URL, paths: AppPaths) throws {
-        guard read(transcript) == nil, let legacy = legacyFile(record: record, paths: paths) else { return }
-        try write(legacy, for: transcript)
+        return try withSidecarLock {
+            guard read(transcript) == nil, let legacy = legacyFile(record: record, paths: paths) else { return }
+            try write(legacy, for: transcript)
+        
+        }
     }
     private struct LegacySidecar: Decodable { let aiMarkers: [Lossy<AIMarker>]? }
     static func legacyFile(record: SessionRecord, paths: AppPaths) -> KeyMomentsFile? {
@@ -264,12 +340,15 @@ enum KeyMomentStore {
 
     // Read-modify-write of the AI markers only. Timings and manual markers are never touched here.
     static func update(transcript: URL, paths: AppPaths, _ change: (inout [AIMarker]) -> Void) throws {
-        var file = file(for: transcript, paths: paths) ?? KeyMomentsFile()
-        let before = file.markers
-        change(&file.markers)
-        guard file.markers != before else { return }
-        if let text = try? String(contentsOf: transcript, encoding: .utf8) { file.transcriptHash = hash(text) }
-        try write(file, for: transcript)
+        return try withSidecarLock {
+            var file = file(for: transcript, paths: paths) ?? KeyMomentsFile()
+            let before = file.markers
+            change(&file.markers)
+            guard file.markers != before else { return }
+            if let text = try? String(contentsOf: transcript, encoding: .utf8) { file.transcriptHash = hash(text) }
+            try write(file, for: transcript)
+        
+        }
     }
     static func replace(_ markers: [AIMarker], transcript: URL, paths: AppPaths) throws {
         try update(transcript: transcript, paths: paths) { $0 = markers }
@@ -286,27 +365,33 @@ enum KeyMomentStore {
     // The identity-named file stays in the same folder on rename. Copy legacy data to an
     // owned file first, leaving the unowned original untouched.
     static func move(from old: URL, to new: URL) throws {
-        guard old.deletingLastPathComponent().standardizedFileURL == new.deletingLastPathComponent().standardizedFileURL else {
-            throw LectureError.message("Key moments can only be renamed within their folder.")
+        return try withSidecarLock {
+            guard old.deletingLastPathComponent().standardizedFileURL == new.deletingLastPathComponent().standardizedFileURL else {
+                throw LectureError.message("Key moments can only be renamed within their folder.")
+            }
+            guard let stored = rawRead(old), !stored.owned, var file = read(old) else { return }
+            guard let id = TranscriptIdentity.indexID(old), TranscriptIdentity.attributeValue(new) == id else { return }
+            // `old` has already moved; its current contents are at `new`.
+            if let text = try? String(contentsOf: new, encoding: .utf8), stored.file.transcriptHash == hash(text) {
+                file = stored.file
+            }
+            try writeOwned(file, for: old, id: id)
+        
         }
-        guard let stored = rawRead(old), !stored.owned, var file = read(old) else { return }
-        guard let id = TranscriptIdentity.indexID(old), TranscriptIdentity.attributeValue(new) == id else { return }
-        // `old` has already moved; its current contents are at `new`.
-        if let text = try? String(contentsOf: new, encoding: .utf8), stored.file.transcriptHash == hash(text) {
-            file = stored.file
-        }
-        try writeOwned(file, for: old, id: id)
     }
     // Trash moves the file to the Trash beside its transcript, so restoring either restores both.
     static func trash(transcript: URL, expectedID: String?) throws {
-        guard let id = expectedID, TranscriptIdentity.indexID(transcript) == id else { return }
-        let file = ownedURL(transcript, id: id)
-        guard entryExists(file) else { return }
-        var info = stat()
-        guard file.path.withCString({ lstat($0, &info) }) == 0,
-              (info.st_mode & S_IFMT) == S_IFREG, decode(file)?.ownerID == id else {
-            throw LectureError.message("A different item occupies the key moments file name.")
+        return try withSidecarLock {
+            guard let id = expectedID, TranscriptIdentity.indexID(transcript) == id else { return }
+            let file = ownedURL(transcript, id: id)
+            guard entryExists(file) else { return }
+            var info = stat()
+            guard file.path.withCString({ lstat($0, &info) }) == 0,
+                  (info.st_mode & S_IFMT) == S_IFREG, decode(file)?.ownerID == id else {
+                throw LectureError.message("A different item occupies the key moments file name.")
+            }
+            try FileManager.default.trashItem(at: file, resultingItemURL: nil)
+        
         }
-        try FileManager.default.trashItem(at: file, resultingItemURL: nil)
     }
 }

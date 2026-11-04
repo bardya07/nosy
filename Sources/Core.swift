@@ -687,13 +687,30 @@ enum Core {
         ((try? FileManager.default.attributesOfItem(atPath: url.path)[.size]) as? NSNumber)?.int64Value ?? 0
     }
     static func saveTranscriptEdits(_ text: String, to url: URL, expectedText: String) throws {
-        guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
-            throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+        try KeyMomentStore.withSidecarLock {
+            guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
+                throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+            }
+            try KeyMomentStore.invalidateForEdit(url)
+            let identity = TranscriptIdentity.attributeValue(url)
+            let temporary = url.deletingLastPathComponent().appendingPathComponent(".\(UUID().uuidString).tmp")
+            guard try exclusiveWrite(Data(text.utf8), to: temporary) else {
+                throw LectureError.message("Could not prepare the transcript edit.")
+            }
+            defer { try? FileManager.default.removeItem(at: temporary) }
+            if let mode = try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions] {
+                try FileManager.default.setAttributes([.posixPermissions: mode], ofItemAtPath: temporary.path)
+            }
+            // Establish the identity on the replacement before publishing it. If the volume
+            // rejects attributes, leave the current transcript and its identity intact.
+            if let identity { try TranscriptIdentity.setAttribute(identity, on: temporary) }
+            guard try String(contentsOf: url, encoding: .utf8) == expectedText else {
+                throw LectureError.message("This transcript changed outside Nosy. Copy your draft before reloading the updated file.")
+            }
+            guard rename(temporary.path, url.path) == 0 else {
+                throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+            }
         }
-        try KeyMomentStore.invalidateForEdit(url)
-        let identity = TranscriptIdentity.attributeValue(url)
-        try Data(text.utf8).write(to: url, options: .atomic)
-        if let identity { try? TranscriptIdentity.setAttribute(identity, on: url) }
     }
     static func duration(pcmBytes: Int64) -> TimeInterval { Double(max(0, pcmBytes)) / Double(bytesPerSecond) }
     static func audioDuration(id: String, paths: AppPaths) -> TimeInterval {
@@ -845,7 +862,15 @@ enum Core {
         return subfolders.contains { sub in
             guard isContained(sub, in: folder), (try? sub.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else { return false }
             let files = (try? manager.contentsOfDirectory(at: sub, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])) ?? []
-            return files.contains { isContained($0, in: folder) && isTranscript(at: $0) }
+            return files.contains { file in
+                guard isContained(file, in: folder), file.pathExtension.lowercased() == "md" else { return false }
+                var info = stat()
+                guard file.path.withCString({ lstat($0, &info) }) == 0,
+                      (info.st_mode & S_IFMT) == S_IFREG else { return false }
+                if isTranscript(at: file) { return true }
+                guard let id = TranscriptIdentity.indexID(file) else { return false }
+                return TranscriptIdentity.attributeValue(file) == id
+            }
         }
     }
     static func markdown(record: SessionRecord, duration: TimeInterval, text: String, body: String? = nil) -> String {
@@ -868,8 +893,10 @@ enum Core {
             .sorted { $0.startedAt > $1.startedAt }
     }
     static func record(forTranscript url: URL, paths: AppPaths) -> SessionRecord? {
-        records(in: paths).first {
-            guard let path = $0.transcriptPath else { return false }
+        guard let identity = TranscriptIdentity.indexID(url),
+              TranscriptIdentity.attributeValue(url) == identity else { return nil }
+        return records(in: paths).first {
+            guard $0.transcriptID == identity, let path = $0.transcriptPath else { return false }
             return URL(fileURLWithPath: path).standardizedFileURL.path == url.standardizedFileURL.path
         }
     }
