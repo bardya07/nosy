@@ -329,6 +329,8 @@ enum CoreTests {
         try Core.applyRetention(paths: paths, now: now)
         check(FileManager.default.fileExists(atPath: wav.path), "retention preserves audio when its transcript is missing")
         record.transcriptPath = first.path
+        record.transcriptID = UUID().uuidString
+        try TranscriptIdentity.bind(first, id: record.transcriptID!)
         try record.save(in: paths)
         try Core.applyRetention(paths: paths, now: now)
         check(!FileManager.default.fileExists(atPath: wav.path), "retention deletes old done audio")

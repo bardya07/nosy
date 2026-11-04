@@ -401,6 +401,7 @@ enum KeyMomentsTests {
         try KeyMomentStore.replace([AIMarker(t: 120, label: "Survives retention", anchor: "")], transcript: transcript, paths: paths)
         var old = record
         old.transcribedAt = started.addingTimeInterval(-40 * 86_400)
+        old.transcriptID = TranscriptIdentity.indexID(transcript)
         try old.save(in: paths)
         try Data("audio".utf8).write(to: paths.audioFile(record.id, "m4a"))
         try Core.applyRetention(paths: paths)
@@ -408,17 +409,17 @@ enum KeyMomentsTests {
         check(!manager.fileExists(atPath: paths.audioFile(record.id, "m4a").path), "retention deletes the audio")
         check(KeyMomentStore.markers(for: transcript, paths: paths).map(\.label) == ["Survives retention"], "AI markers survive retention")
 
-        // Transcripts from before this store kept markers and timings in the recording folder. Retention copies them across first.
+        // Unbound legacy records cannot authorize audio deletion from a pathname alone.
         let legacyTranscript = folder.appendingPathComponent("2026-08-01.md")
         try Data("# MBB322 — 2026-08-01\n\n- Length: 50 min\n\n## Transcript\n\nHello there.\n".utf8).write(to: legacyTranscript)
         let legacySidecar = #"{"id":"20260801-100000","lecture":"MBB322","session":"2026-08-01","startedAt":"2026-08-01T10:00:00Z","endedAt":"2026-08-01T10:50:00Z","status":"done","transcribedAt":"2026-08-01T11:00:00Z","transcriptPath":"\#(legacyTranscript.path)","markers":[{"t":5,"label":"Old marker"}],"aiMarkers":[{"t":60,"label":"Legacy AI marker","anchor":"hello there"},{"t":-4,"label":"Damaged"}]}"#
         try Data(legacySidecar.utf8).write(to: paths.audioFile("20260801-100000", "json"))
         try Data(#"{"version":1,"segments":[{"from":0,"to":1500,"text":"Hello there."}]}"#.utf8).write(to: paths.audioFile("20260801-100000", "segments.json"))
         try Core.applyRetention(paths: paths)
-        check(!manager.fileExists(atPath: paths.audioFile("20260801-100000", "json").path), "retention deletes the legacy sidecar")
-        check(!manager.fileExists(atPath: paths.audioFile("20260801-100000", "segments.json").path), "retention deletes the legacy segments file")
+        check(manager.fileExists(atPath: paths.audioFile("20260801-100000", "json").path), "retention keeps an unbound legacy sidecar")
+        check(manager.fileExists(atPath: paths.audioFile("20260801-100000", "segments.json").path), "retention keeps unbound legacy segments")
         check(KeyMomentStore.markers(for: legacyTranscript, paths: paths).map(\.label) == ["Legacy AI marker"], "legacy AI markers survive retention, damaged ones dropped")
-        check(KeyMomentStore.segments(for: legacyTranscript, paths: paths)?.segments.map(\.text) == ["Hello there."], "legacy timings survive retention")
+        check(KeyMomentStore.segments(for: legacyTranscript, paths: paths)?.segments.map(\.text) == [""], "unbound legacy timing text is scrubbed in memory")
 
         // A damaged marker in the file is dropped, and the rest still load.
         let damaged = Data(#"{"version":1,"markers":[{"t":"soon","label":"Broken"},{"t":-4,"label":"Negative"},{"t":50,"label":"Kept marker","anchor":"kept words"}]}"#.utf8)
@@ -429,22 +430,29 @@ enum KeyMomentsTests {
         let json = Data(#"{"transcription":[{"offsets":{"from":0,"to":1500},"text":" raw one"},{"offsets":{"from":1500,"to":3000},"text":" raw two"}]}"#.utf8)
         let decoded = try JSONDecoder().decode(TranscriptSegments.self, from: json)
         let aligned = folder.appendingPathComponent("aligned.md")
+        try Data("Final one.\nFinal two.\n".utf8).write(to: aligned)
         try KeyMomentStore.start(transcript: aligned, segments: decoded.transcription, text: "Final one.\nFinal two.\n")
         check(KeyMomentStore.segments(for: aligned, paths: paths)?.segments.map(\.text) == ["Final one.", "Final two."], "aligned lines give the final text")
         let misaligned = folder.appendingPathComponent("misaligned.md")
+        try Data("Only one line.\n".utf8).write(to: misaligned)
         try KeyMomentStore.start(transcript: misaligned, segments: decoded.transcription, text: "Only one line.\n")
         check(KeyMomentStore.segments(for: misaligned, paths: paths)?.segments.map(\.text) == ["raw one", "raw two"],
               "misaligned text falls back to Whisper's own segment text")
 
-        // A new transcript never inherits an old file's markers, and a rename carries the file along.
+        // A colliding owned sidecar is never overwritten, and identity follows a rename.
         let stale = folder.appendingPathComponent("stale.md")
+        try Data("Old transcript".utf8).write(to: stale)
         try KeyMomentStore.replace([AIMarker(t: 1, label: "Stale marker", anchor: "")], transcript: stale, paths: paths)
-        try KeyMomentStore.start(transcript: stale, segments: decoded.transcription, text: "Final one.\nFinal two.\n")
-        check(KeyMomentStore.markers(for: stale, paths: paths).isEmpty, "a new transcript never inherits an old file's markers")
+        var collisionRejected = false
+        do { try KeyMomentStore.start(transcript: stale, segments: decoded.transcription, text: "Final one.\nFinal two.\n") }
+        catch { collisionRejected = true }
+        check(collisionRejected && KeyMomentStore.markers(for: stale, paths: paths).map(\.label) == ["Stale marker"],
+              "creation preserves a colliding owned sidecar")
         let renamed = folder.appendingPathComponent("renamed.md")
+        try manager.moveItem(at: aligned, to: renamed)
         try KeyMomentStore.move(from: aligned, to: renamed)
-        check(!manager.fileExists(atPath: KeyMomentStore.url(for: aligned).path), "the old name no longer has a file")
-        check(KeyMomentStore.segments(for: renamed, paths: paths)?.segments.count == 2, "rename moves the timings with the transcript")
+        try TranscriptIdentity.move(from: aligned, to: renamed)
+        check(KeyMomentStore.segments(for: renamed, paths: paths)?.segments.count == 2, "rename retains the identity-owned timings")
 
         // A transcript whose recording is gone still plans key moments from its text and header length.
         let orphan = folder.appendingPathComponent("orphan.md")

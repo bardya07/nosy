@@ -267,6 +267,8 @@ enum BackendTests {
         let retainedTranscript = root.appendingPathComponent("retained-transcript.md")
         try Data("Saved transcript".utf8).write(to: retainedTranscript)
         old.transcriptPath = retainedTranscript.path
+        old.transcriptID = UUID().uuidString
+        try TranscriptIdentity.bind(retainedTranscript, id: old.transcriptID!)
         try old.save(in: rehearsal)
         try Core.applyRetention(paths: rehearsal, now: now)
         check(!manager.fileExists(atPath: rehearsal.audioFile(old.id, "m4a").path)
