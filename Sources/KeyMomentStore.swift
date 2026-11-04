@@ -85,13 +85,21 @@ enum KeyMomentStore {
     static func write(_ file: KeyMomentsFile, for transcript: URL) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        try encoder.encode(file).write(to: url(for: transcript), options: .atomic)
+        let data = try encoder.encode(file)
+        let destination = url(for: transcript)
+        if try Core.exclusiveWrite(data, to: destination) { return }
+        // Never replace a directory, link, or unrecognised file at the reserved name.
+        var info = stat()
+        guard destination.path.withCString({ lstat($0, &info) }) == 0,
+              (info.st_mode & S_IFMT) == S_IFREG, read(transcript) != nil else {
+            throw LectureError.message("A different item already occupies the key moments file name.")
+        }
+        try data.write(to: destination, options: .atomic)
     }
 
-    // Called once a transcript is written. It replaces anything left under the same name, so an old file
-    // can never attach its markers to a new transcript. `text` is the final transcript text.
+    // Called once a transcript is written. Never replace a file that took the name in the meantime.
     static func start(transcript: URL, segments: [TranscriptSegments.Segment]?, text: String) throws {
-        guard let segments else { return try write(KeyMomentsFile(), for: transcript) }
+        guard let segments else { return try create(KeyMomentsFile(), for: transcript) }
         var lines = text.components(separatedBy: "\n")
         if lines.last == "" { lines.removeLast() }
         // Lines match Whisper's segments one to one, so later anchors match the text the reader shows.
@@ -100,7 +108,15 @@ enum KeyMomentStore {
             SavedSegments.Item(from: segment.offsets.from, to: segment.offsets.to,
                                text: Core.collapseWhitespace(aligned ? lines[index] : (segment.text ?? "")))
         }
-        try write(KeyMomentsFile(segments: SavedSegments(segments: items)), for: transcript)
+        try create(KeyMomentsFile(segments: SavedSegments(segments: items)), for: transcript)
+    }
+
+    private static func create(_ file: KeyMomentsFile, for transcript: URL) throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        guard try Core.exclusiveWrite(encoder.encode(file), to: url(for: transcript)) else {
+            throw LectureError.message("A different item already occupies the key moments file name.")
+        }
     }
 
     // The stored file. When this transcript has none yet, a recording sidecar from before this store is
@@ -159,12 +175,10 @@ enum KeyMomentStore {
         try update(transcript: transcript, paths: paths) { $0.removeAll() }
     }
 
-    // Rename moves the file with its transcript. A stale file under the new name is replaced, because a
-    // transcript at that name is new, and only Nosy writes these files.
+    // Rename moves the file with its transcript without replacing an existing destination.
     static func move(from old: URL, to new: URL) throws {
         let source = url(for: old)
         guard FileManager.default.fileExists(atPath: source.path) else { return }
-        try? FileManager.default.removeItem(at: url(for: new))
         try FileManager.default.moveItem(at: source, to: url(for: new))
     }
     // Trash moves the file to the Trash beside its transcript, so restoring either restores both.

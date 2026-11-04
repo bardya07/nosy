@@ -618,7 +618,8 @@ enum Core {
             let name = number == 1 ? session : "\(session)-\(number)"
             let url = folder.appendingPathComponent(name).appendingPathExtension("md")
             let summary = folder.appendingPathComponent(name + " summary.md")
-            if !pathEntryExists(at: url), !pathEntryExists(at: summary) { return url }
+            if !pathEntryExists(at: url), !pathEntryExists(at: summary),
+               !pathEntryExists(at: KeyMomentStore.url(for: url)) { return url }
             number += 1
         }
     }
