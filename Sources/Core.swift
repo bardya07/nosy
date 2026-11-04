@@ -876,8 +876,10 @@ enum Core {
             .sorted { $0.startedAt > $1.startedAt }
     }
     static func record(forTranscript url: URL, paths: AppPaths) -> SessionRecord? {
-        records(in: paths).first {
-            guard let path = $0.transcriptPath else { return false }
+        guard let identity = TranscriptIdentity.indexID(url),
+              TranscriptIdentity.attributeValue(url) == identity else { return nil }
+        return records(in: paths).first {
+            guard $0.transcriptID == identity, let path = $0.transcriptPath else { return false }
             return URL(fileURLWithPath: path).standardizedFileURL.path == url.standardizedFileURL.path
         }
     }
